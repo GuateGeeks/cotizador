@@ -11,8 +11,8 @@
   const modes = {
     BUY: {title:'INTEGRA',months:8,description:''},
     RENT: {title:'FLEX',months:2,description:'Incluye el equipo, el programa, capacitación docente, integración tecnológica, seguimiento y soporte durante la renta. El colegio puede cambiar de tecnología al iniciar cada bimestre; al terminar, devuelve el equipo.'},
-    EVO8: {title:'EVOLUCIONA 8',months:8,description:'Incluye equipo, Socrates Aprende, capacitación docente, integración tecnológica, seguimiento y soporte durante 8 meses. Se paga en cuotas y, al completar el programa, el equipo queda en propiedad del colegio.'},
-    EVO16: {title:'EVOLUCIONA 16',months:16,description:'Incluye equipo, Socrates Aprende, capacitación docente, integración tecnológica, seguimiento y soporte durante 16 meses. Se paga en cuotas y, al completar el programa, el equipo queda en propiedad del colegio.'}
+    EVO8: {title:'EVOLUCIONA 8',months:8,description:'Incluye equipo, capacitación docente, integración tecnológica, seguimiento y soporte durante 8 meses. Se paga en cuotas y, al completar el programa, el equipo queda en propiedad del colegio.'},
+    EVO16: {title:'EVOLUCIONA 16',months:16,description:'Incluye equipo, capacitación docente, integración tecnológica, seguimiento y soporte durante 16 meses. Se paga en cuotas y, al completar el programa, el equipo queda en propiedad del colegio.'}
   };
   function includedItems(mode, program, months) {
     const equipment = mode === 'BUY'
@@ -21,7 +21,7 @@
         ? `${program.name} disponible en renta durante ${months} meses; el equipo permanece en propiedad de GuateGeeks.`
         : `${program.name} para el aula; pasa a ser propiedad del colegio al completar ${months} meses.`;
     const items = [{title:'Equipamiento educativo',detail:equipment}];
-    if (mode !== 'BUY') items.push({title:'Socrates Aprende',detail:`Acceso a la plataforma educativa durante ${months} meses, con semanas, lecciones y actividades interactivas.`});
+    if (mode !== 'BUY') items.push({title:'Socrates Aprende',detail:'Acceso para docentes y, según el grado, contenido para estudiantes disponible por fases.'});
     if (mode === 'BUY') {
       items.push({title:'Implementación inicial',detail:'Orientación para poner en marcha el equipamiento en el aula.'});
       items.push({title:'Capacitación de uso',detail:'Incluye 1 hora de capacitación para el uso del equipo. El tiempo adicional se cotiza por separado.'});
@@ -44,17 +44,17 @@
     },
     RENT: {
       eyebrow:'RENTA BIMESTRAL', description:'FLEX da acceso temporal al equipo y al programa; la tecnología puede cambiar al iniciar un nuevo bimestre.',
-      pros:['El colegio puede elegir otra tecnología al iniciar cada bimestre.','Incluye capacitación docente, integración tecnológica, seguimiento y soporte.','Socrates Aprende está incluida durante el período contratado.'],
+      pros:['El colegio puede elegir otra tecnología al iniciar cada bimestre.','Incluye capacitación docente, integración tecnológica, seguimiento y soporte.','Incluye Socrates Aprende; el contenido para estudiantes depende del grado y la fase.'],
       cons:['El equipo sigue siendo propiedad de GuateGeeks y debe devolverse al terminar la renta.','El precio cambia según la tecnología, la cantidad de equipos y los bimestres seleccionados.','El cambio de tecnología aplica al siguiente bimestre, no durante uno que ya comenzó.']
     },
     EVO8: {
       eyebrow:'PROGRAMA DE 8 MESES', description:'Se paga en formato de renta y cuotas; al completar el plazo, el equipo queda en propiedad del colegio.',
-      pros:['El pago se distribuye durante 8 meses, con un pago inicial del 20 %.','Incluye Socrates Aprende, capacitación docente, integración tecnológica, seguimiento y soporte.','Al completar el programa, el equipo queda en propiedad del colegio.'],
+      pros:['El pago se distribuye durante 8 meses, con un pago inicial del 20 %.','Incluye capacitación docente, integración tecnológica, seguimiento y soporte; el contenido de Socrates para estudiantes depende del grado y la fase.','Al completar el programa, el equipo queda en propiedad del colegio.'],
       cons:['Para que el equipo pase a propiedad del colegio, debe completarse el plazo de 8 meses.','El programa se desarrolla con la tecnología seleccionada para ese ciclo.','La estimación no incluye gastos propios de operación del colegio.']
     },
     EVO16: {
       eyebrow:'PROGRAMA DE 16 MESES', description:'Se paga en formato de renta y cuotas; al completar el plazo, el equipo queda en propiedad del colegio.',
-      pros:['El pago se distribuye durante 16 meses, con un pago inicial del 20 %.','Incluye Socrates Aprende, capacitación docente, integración tecnológica, seguimiento y soporte.','Al completar el programa, el equipo queda en propiedad del colegio.'],
+      pros:['El pago se distribuye durante 16 meses, con un pago inicial del 20 %.','Incluye capacitación docente, integración tecnológica, seguimiento y soporte; el contenido de Socrates para estudiantes depende del grado y la fase.','Al completar el programa, el equipo queda en propiedad del colegio.'],
       cons:['Para que el equipo pase a propiedad del colegio, debe completarse el plazo de 16 meses.','El programa se desarrolla con la tecnología seleccionada para ese ciclo.','La estimación no incluye gastos propios de operación del colegio.']
     }
   };
@@ -78,6 +78,24 @@
     programFilter.value = eligible.some(([id]) => id === previous) ? previous : (eligible[0]?.[0] || 'all');
   }
   function selectedProgramId() { return programFilter.value || eligiblePrograms()[0]?.[0] || 'Spike'; }
+  function socratesAudience(level, programId) {
+    if (level === 'primaria' && programId === 'Spike') return {
+      badge:'FASE ACTUAL · 4.º–6.º PRIMARIA',
+      description:'Los estudiantes de 4.º a 6.º primaria pueden utilizar contenido de Socrates Aprende en la fase actual. La expansión continuará con básico y después bachillerato.'
+    };
+    if (level === 'preprimaria' || (level === 'primaria' && programId === 'Robot Master')) return {
+      badge:'ACCESO PARA DOCENTES',
+      description:'En preprimaria y de 1.º a 3.º primaria, Socrates Aprende se contempla como recurso docente; por ahora no incluye contenido para estudiantes. La fase actual de contenido estudiantil abarca 4.º a 6.º primaria.'
+    };
+    if (level === 'secundaria') return {
+      badge:'ESTUDIANTES · FASE 2',
+      description:'Para este nivel, Socrates Aprende está disponible actualmente como recurso docente. El acceso estudiantil se incorporará progresivamente en la fase 2: primero básico y luego bachillerato.'
+    };
+    return {
+      badge:'CONTENIDO ESTUDIANTIL POR FASE',
+      description:'La fase actual ofrece contenido para estudiantes de 4.º a 6.º primaria. En preprimaria y de 1.º a 3.º primaria, el acceso es solo para docentes. En la fase 2 se incorporará básico y, después, bachillerato.'
+    };
+  }
   function totals(program, mode, quantity) {
     let net, months = modes[mode].months;
     if (mode === 'BUY') net = program.buy * quantity;
@@ -185,8 +203,8 @@
     $('included-intro').textContent = mode === 'BUY'
       ? ''
       : mode === 'RENT'
-        ? `FLEX incluye el equipo de ${program.name.toLowerCase()}, el programa, Socrates Aprende, capacitación docente, integración tecnológica, seguimiento y soporte durante ${quote.months} meses. Puedes cambiar de tecnología al iniciar cada bimestre; al terminar, el equipo se devuelve.`
-        : `${model.title} incluye ${program.name.toLowerCase()}, Socrates Aprende, capacitación docente, integración tecnológica, seguimiento y soporte durante ${quote.months} meses. Al completar el programa, el equipo pasa a propiedad del colegio.`;
+        ? `FLEX incluye el equipo de ${program.name.toLowerCase()}, capacitación docente, integración tecnológica, seguimiento y soporte durante ${quote.months} meses. Puedes cambiar de tecnología al iniciar cada bimestre; al terminar, el equipo se devuelve.`
+        : `${model.title} incluye ${program.name.toLowerCase()}, capacitación docente, integración tecnológica, seguimiento y soporte durante ${quote.months} meses. Al completar el programa, el equipo pasa a propiedad del colegio.`;
     $('included-features').replaceChildren(...includedItems(mode,program,quote.months).map(item => {
       const article=document.createElement('article'); article.className='included-feature';
       const heading=document.createElement('h3'); heading.textContent=item.title;
@@ -195,7 +213,10 @@
     }));
     const platformIncluded = mode !== 'BUY';
     $('socrates-inclusion').hidden = !platformIncluded;
-    $('socrates-description').textContent = `Acceso durante ${quote.months} meses a semanas de aprendizaje, lecciones y actividades interactivas para acompañar el trabajo en clase.`;
+    const audience = socratesAudience(levelFilter.value,programId);
+    $('socrates-audience-badge').textContent = audience.badge;
+    $('socrates-description').textContent = audience.description;
+    $('socrates-term').textContent = `La vigencia del acceso se acuerda con GuateGeeks según el modelo ${model.title}.`;
     $('fineprint').textContent = isBuy
       ? `Precio de INTEGRA para ${quantity} ${quantity===1?'equipo':'equipos'}. La cotización final se confirma con GuateGeeks.`
       : `Estimación para ${quantity} ${quantity===1?'equipo':'equipos'} y ${studentsInput.value || 'el grupo seleccionado'} estudiantes. La inversión corresponde al modelo ${model.title}; la cuota del colegio se puede ajustar. La cotización final se confirma con GuateGeeks.`;

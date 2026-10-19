@@ -12,4 +12,4 @@ El sitio está preparado para servirse desde la raíz de GitHub Pages. Activa Pa
 - `costa-sur.css` y `costa-sur.js`: presentación y cálculos del escenario.
 - `assets/`: únicamente logo e imágenes utilizadas por esta propuesta.
 
-La plataforma Socrates Aprende abre desde su enlace público. Los importes son estimaciones comerciales y se confirman con GuateGeeks.
+Socrates Aprende está disponible para estudiantes de 4.º a 6.º primaria en la fase actual. Para preprimaria y de 1.º a 3.º primaria se ofrece como recurso docente, sin contenido estudiantil. La ampliación para estudiantes se realizará por fases: primero básico y después bachillerato. El acceso y su vigencia se acuerdan con GuateGeeks según el modelo. La plataforma abre desde su enlace público. Los importes son estimaciones comerciales y se confirman con GuateGeeks.
