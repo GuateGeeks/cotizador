@@ -135,6 +135,7 @@
     else if (mode === 'RENT') $('quote-basis').textContent = `Renta de ${quantity} ${quantity === 1 ? 'equipo' : 'equipos'} durante ${quote.months} meses · ${fmt(quote.net)} sin IVA`;
     else $('quote-basis').textContent = `${model.title} para ${quantity} ${quantity === 1 ? 'equipo' : 'equipos'} · ${quote.months} meses`;
     const isEvol = mode === 'EVO8' || mode === 'EVO16';
+    document.querySelector('.payment-block').hidden = !isEvol;
     $('explorer').hidden = isBuy;
     const guidance = modalityGuidance[mode];
     $('integra-details').hidden = false;
