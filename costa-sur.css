@@ -36,8 +36,7 @@ button, input { font: inherit; }
 }
 .brand { min-width: 0; display: inline-flex; align-items: center; color: var(--gg-plum-dark); text-decoration: none; }
 .brand img { display: block; width: 72px; height: auto; max-height: 48px; object-fit: contain; }
-.proposal-label { display: inline-flex; align-items: center; gap: 9px; color: var(--gg-muted); font-size: 14px; font-weight: 650; }
-.proposal-label > span, .live-badge i { width: 8px; height: 8px; display: inline-block; border-radius: 50%; background: var(--gg-coral); }
+.live-badge i { width: 8px; height: 8px; display: inline-block; border-radius: 50%; background: var(--gg-coral); }
 .page-shell { width: min(1200px, calc(100% - 48px)); margin: 30px auto 52px; }
 
 .intro {
@@ -58,8 +57,7 @@ button, input { font: inherit; }
 .intro h1 { max-width: 670px; margin: 0; color: #fff; font-size: clamp(34px, 5vw, 58px); line-height: 1.03; letter-spacing: -.055em; }
 .intro h1 em { color: #ffd0b6; font-style: normal; }
 .intro-lead { max-width: 610px; margin: 18px 0 22px; color: #f0eaf5; font-size: clamp(16px, 2vw, 19px); }
-.intro-tags { display: flex; flex-wrap: wrap; gap: 9px; }
-.intro-tags span { padding: 7px 11px; border: 1px solid rgba(255,255,255,.23); border-radius: 9px; background: rgba(255,255,255,.1); color: #fff; font-size: 13px; font-weight: 700; }
+.intro-tags { margin: 0; color: #f0eaf5; font-size: 14px; font-weight: 650; line-height: 1.5; }
 .intro-orbit { width: 310px; height: 310px; position: absolute; right: 20px; bottom: -120px; display: grid; place-items: center; border: 24px solid rgba(239,133,86,.22); border-radius: 50%; }
 .intro-orbit::before, .intro-orbit::after { content: ""; position: absolute; border: 1px solid rgba(255,255,255,.2); border-radius: 50%; }
 .intro-orbit::before { inset: 18px; }
@@ -210,7 +208,6 @@ button, input { font: inherit; }
   .catalog-filters { grid-template-columns: 1fr; gap: 11px; }
   .included-features { grid-template-columns: 1fr; }
   .topbar { min-height: 68px; flex-wrap: wrap; padding: 12px 20px; }
-  .proposal-label { width: 100%; font-size: 12px; }
   .page-shell { width: min(100% - 32px, 560px); margin-top: 16px; }
   .intro { min-height: 300px; padding: 27px 23px; border-radius: 20px; }
   .intro h1 { max-width: 450px; font-size: clamp(34px, 9vw, 45px); }
@@ -241,8 +238,6 @@ button, input { font: inherit; }
 @media (max-width: 380px) {
   .page-shell { width: calc(100% - 24px); }
   .intro { padding: 24px 19px; }
-  .intro-tags { gap: 6px; }
-  .intro-tags span { padding: 6px 8px; font-size: 11px; }
   .term-badge { padding: 7px 9px; font-size: 12px; }
   .payment-block { grid-template-columns: 1fr; }
   .payment-rounding-note { grid-column: auto; }
