@@ -1,4 +1,4 @@
-name: Deploy Colegio Costa Sur to GitHub Pages
+name: Deploy asesor de programas educativos to GitHub Pages
 
 on:
   push:
@@ -27,11 +27,16 @@ jobs:
         uses: actions/checkout@v4
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
-      - name: Prepare the Costa Sur site
+      - name: Prepare the site (asesor de programas educativos)
         run: |
           mkdir -p _site
-          cp index.html costa-sur.css costa-sur.js README.md _site/
+          cp asesor/index.html asesor/asesor.css asesor/asesor.js asesor/config.js asesor/motor.js asesor/pdf.js asesor/propuesta-pdf.js _site/
+          cp -R asesor/vendor _site/vendor
           cp -R assets _site/assets
+          # el asesor vive en la raíz del sitio: sus rutas ../assets pasan a assets
+          sed -i.bak 's#\.\./assets/#assets/#g' _site/index.html _site/asesor.js _site/config.js
+          rm -f _site/*.bak
+          if grep -rn '\.\./' _site/*.html _site/*.js; then echo 'Quedaron rutas relativas fuera del sitio'; exit 1; fi
       - name: Upload the site artifact
         uses: actions/upload-pages-artifact@v3
         with:
