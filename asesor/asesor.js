@@ -1,0 +1,1029 @@
+'use strict';
+/*
+ * Interfaz del asesor GuateGeeks (diseño 2.1). La lógica de cálculo vive en motor.js
+ * y los datos editables en config.js; aquí solo se dibuja y se guarda el borrador.
+ */
+const { LEVELS, PROGRAMS, PLANS, TARIFFS, FISCAL, GUIDANCE, SOCRATES, PHOTOS } = window.GG_CONFIG;
+const M = window.GGMotor;
+const KEY = 'gg_asesor_v1';
+
+// ---------- Estado y borrador ----------
+const initial = () => ({ v: 1, step: 0, levels: [], enroll: {}, levelIndex: 0, selected: [], selectedIndex: 0, fees: {}, useSuggested: true });
+let state = initial();
+const ui = { review: false, single: false, lb: null, notice: '', photoIdx: {}, sub: 0, focusTitle: false, labLevel: 'bas' };
+try {
+  const raw = localStorage.getItem(KEY);
+  if (raw) {
+    const obj = JSON.parse(raw);
+    if (obj && obj.v === 1 && Array.isArray(obj.levels) && Array.isArray(obj.selected) && obj.enroll && typeof obj.enroll === 'object') state = { ...initial(), ...obj };
+    else ui.notice = 'Tu avance guardado era de otra versión y se reinició.';
+  }
+} catch (e) {
+  ui.notice = 'No se pudo leer tu avance guardado; se empezó uno nuevo.';
+}
+Object.values(state.enroll || {}).forEach(g => { if (g && Array.isArray(g.sections)) g.sections.forEach((s, i) => { s.name = String.fromCharCode(65 + (i % 26)); }); });
+function store() {
+  try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* almacenamiento no disponible: el recorrido sigue funcionando */ }
+}
+
+// ---------- Utilidades ----------
+const $ = document.getElementById('app');
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const Q = n => 'Q' + Math.round(n).toLocaleString('es-GT');
+const findL = id => LEVELS.find(x => x.id === id);
+const findP = id => PROGRAMS.find(x => x.id === id);
+const planOf = id => PLANS.find(x => x.id === id) || PLANS[0];
+const gradeName = id => LEVELS.flatMap(l => l.grades).find(g => g[0] === id)?.[1] || id;
+// Un programa puede abarcar varios niveles (p. ej. SPIKE Prime: 6.º Primaria, Básico y Bachillerato).
+const entryLevels = s => LEVELS.filter(l => entryGroups(s).some(g => g.levelId === l.id));
+const joinY = list => list.length < 2 ? list.join('') : list.slice(0, -1).join(', ') + ' y ' + list[list.length - 1];
+const levelsLabel = s => joinY(entryLevels(s).map(l => l.name));
+const levelKey = s => { const l = entryLevels(s); return l.length === 1 ? l[0].id : 'all'; };
+const progTitle = s => findP(s.programId).name + ' · ' + levelsLabel(s);
+const plural = (n, one, many) => n === 1 ? one : many;
+const uid = () => Math.random().toString(36).slice(2, 7);
+
+const ICONS = {
+  arrow: '<path d="M4 12h15m-6-6 6 6-6 6"/>', check: '<path d="m5 12 4 4L19 6"/>',
+  photo: '<rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.4"/><path d="m3 17 6-6 4 4 3-3 5 5"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>', edit: '<path d="m14 5 5 5M4 20l5-1L20 8a2 2 0 0 0-5-5L4 14z"/>',
+  trash: '<path d="M4 6h16M9 6V3h6v3M6 6l1 15h10l1-15M10 10v7M14 10v7"/>',
+  school: '<path d="m3 9 9-6 9 6M5 9v12h14V9M10 21v-6h4v6M8 11h.01M16 11h.01"/>',
+  users: '<circle cx="9" cy="8" r="3"/><path d="M3 21v-3a6 6 0 0 1 12 0v3M16 5a3 3 0 0 1 0 6M18 15a5 5 0 0 1 3 4v2"/>',
+  book: '<path d="M12 5v16M3 4c5-1 7 0 9 1 2-1 4-2 9-1v15c-5-1-7 0-9 1-2-1-4-2-9-1z"/>',
+  grid: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l4 2"/>', info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/>',
+  download: '<path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/>', file: '<path d="M14 3H5v18h14V8zM14 3v5h5M8 12h8M8 16h8"/>',
+  send: '<path d="m22 2-11 11M22 2l-7 20-4-9-9-4z"/>',
+  chart: '<path d="M4 20V11M10 20V4M16 20v-6M22 20H2"/>',
+  play: '<path d="M7 4.5v15l12-7.5z"/>'
+};
+const icon = name => `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name] || ICONS.grid}</svg>`;
+
+// ---------- Datos derivados (todo sale del motor) ----------
+const groups = () => M.groupsOf(state.enroll, LEVELS, state.levels);
+const activeLevels = () => LEVELS.filter(l => state.levels.includes(l.id));
+const compatible = (p, g) => p.grades.includes(g.gradeId);
+const entryGroups = s => groups().filter(g => s.groupIds.includes(g.id));
+const participation = s => entryGroups(s).reduce((n, g) => n + (g.students || 0), 0);
+const registered = () => groups().reduce((n, g) => n + (g.students || 0), 0);
+const selectedParticipants = () => M.uniqueStudents(groups(), [...new Set(state.selected.flatMap(s => s.groupIds))]);
+const hasStudents = () => groups().some(g => g.students > 0);
+const keyOf = (id, level) => id + '@' + level;
+const unitsOf = s => M.effectiveUnits(s, findP(s.programId), groups());
+const analysis = s => {
+  const p = findP(s.programId);
+  return M.analyze({ groups: entryGroups(s), ratio: p.ratio, units: unitsOf(s), sharing: s.sharing, simIds: s.simIds });
+};
+const sectionsOf = gid => M.gradeData(state.enroll, gid).sections;
+
+function ensureGrade(gid) {
+  if (!state.enroll[gid]) state.enroll[gid] = JSON.parse(JSON.stringify(M.gradeData(state.enroll, gid)));
+  return state.enroll[gid];
+}
+// Quita de las propuestas los grupos que ya no existen y los programas que se quedan sin grupos.
+function pruneEntries() {
+  const valid = new Set(groups().map(g => g.id));
+  state.selected.forEach(s => { s.groupIds = s.groupIds.filter(id => valid.has(id)); s.simIds = s.simIds.filter(id => s.groupIds.includes(id)); });
+  state.selected = state.selected.filter(s => s.groupIds.length);
+  state.selectedIndex = Math.min(state.selectedIndex, Math.max(0, state.selected.length - 1));
+}
+
+// ---------- Fotografías por nivel ----------
+const gallery = (pid, level) => { const all = PHOTOS[pid] || []; const f = all.filter(x => x.levels.includes(level)); return f.length ? f : all; };
+function photoState(pid, level) {
+  const gl = gallery(pid, level);
+  const i = gl.length ? (ui.photoIdx[pid + '@' + level] || 0) % gl.length : 0;
+  return { gl, i, ph: gl[i] };
+}
+// Galería: flechas para cambiar de foto y clic para ampliar (cierra con la X, Esc o fuera de la foto).
+function paintPhoto(k) {
+  const [pid, level] = k.split('@'), { gl, i, ph } = photoState(pid, level);
+  document.querySelectorAll(`[data-media="${k}"]`).forEach(box => {
+    const img = box.querySelector('img'); img.src = ph.src; img.alt = ph.alt;
+    const c = box.querySelector('.media-count'); if (c) c.textContent = (i + 1) + '/' + gl.length;
+    const b = box.querySelector('.media-badge'); if (b) { b.textContent = ph.caption || ''; b.hidden = !ph.caption; }
+  });
+  if (ui.lb && ui.lb.pid === pid && ui.lb.level === level) paintLightbox();
+}
+function shiftPhoto(pid, level, d) {
+  if (!pid && ui.lb) ({ pid, level } = ui.lb);
+  const gl = gallery(pid, level); if (gl.length < 2) return;
+  const k = pid + '@' + level;
+  ui.photoIdx[k] = ((ui.photoIdx[k] || 0) + d + gl.length) % gl.length;
+  paintPhoto(k);
+}
+function paintLightbox() {
+  const { pid, level } = ui.lb, { gl, i, ph } = photoState(pid, level);
+  const img = document.getElementById('lb-img'); img.src = ph.src; img.alt = ph.alt;
+  document.getElementById('lb-cap').textContent = findP(pid).hardware + (gl.length > 1 ? ' · foto ' + (i + 1) + ' de ' + gl.length : '') + (ph.caption ? ' · ' + ph.caption : '');
+  document.querySelectorAll('#lightbox .media-nav').forEach(b => b.hidden = gl.length < 2);
+}
+function openPhoto(pid, level) { ui.lb = { pid, level }; paintLightbox(); document.getElementById('lightbox').showModal(); }
+function closePhoto() { const d = document.getElementById('lightbox'); if (d.open) d.close(); ui.lb = null; }
+function media(p, level, mode = 'normal', withAction = true) {
+  const { gl, i, ph } = photoState(p.id, level);
+  if (!ph) return `<div class="product-media ${mode}"><div class="photo-placeholder"><span class="photo-icon">${icon('photo')}</span><b>${esc(p.hardware)}</b><small>Fotografía por incorporar</small></div></div>`;
+  const many = withAction && gl.length > 1;
+  return `<div class="product-media ${mode}" data-media="${p.id}@${level}"><button type="button" class="media-open" onclick="openPhoto('${p.id}','${level}')" aria-label="Ampliar la fotografía de ${esc(p.hardware)}"><img src="${ph.src}" width="900" height="600" alt="${esc(ph.alt)}" decoding="async" loading="lazy"></button><span class="media-badge" ${ph.caption ? '' : 'hidden'}>${esc(ph.caption || '')}</span>${many ? `<button type="button" class="media-nav prev" onclick="shiftPhoto('${p.id}','${level}',-1)" aria-label="Foto anterior de ${esc(p.hardware)}">‹</button><button type="button" class="media-nav next" onclick="shiftPhoto('${p.id}','${level}',1)" aria-label="Foto siguiente de ${esc(p.hardware)}">›</button><span class="media-count" aria-hidden="true">${i + 1}/${gl.length}</span>` : ''}</div>`;
+}
+const miniature = s => { const { ph } = photoState(s.programId, levelKey(s)); return `<span class="small-photo">${ph ? `<img src="${ph.src}" alt="" width="40" height="40">` : icon('photo')}</span>`; };
+
+// ---------- Navegación y marco ----------
+let previousStep = -1, toastTimer;
+function notify(message) { const t = document.getElementById('notification'); t.textContent = message; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => t.hidden = true, 4200); }
+function canStep(n) { return n === 1 || (n === 2 && state.levels.length > 0) || (n === 3 && hasStudents()) || (n >= 4 && state.selected.length > 0); }
+function step(n) {
+  n = Math.max(0, Math.min(5, n));
+  if (n === 4 && state.step !== 4) pickConfigTarget();
+  state.step = n; render();
+}
+function start() { step(1); }
+// Confirmación propia (los cuadros nativos pueden estar bloqueados en algunos navegadores).
+function askChoice(title, text, choices) {
+  const d = document.getElementById('confirm'), box = document.getElementById('cf-actions');
+  document.getElementById('cf-title').textContent = title; document.getElementById('cf-text').textContent = text;
+  box.innerHTML = '';
+  choices.forEach((c, k) => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'btn ' + (c.primary ? 'btn-primary' : 'btn-outline'); b.textContent = c.label;
+    b.onclick = () => { d.close(); if (c.fn) c.fn(); }; box.appendChild(b);
+  });
+  d.showModal(); box.querySelector('button').focus();
+}
+function askConfirm(title, text, yesLabel, onYes) {
+  askChoice(title, text, [{ label: 'Cancelar' }, { label: yesLabel, primary: true, fn: onYes }]);
+}
+function resetAll() {
+  askConfirm('¿Empezar de nuevo?', 'Se borrarán los niveles, estudiantes y programas que llevas. Esta acción no se puede deshacer.', 'Sí, borrar todo', () => {
+    state = initial(); ui.photoIdx = {}; ui.sub = 0;
+    try { localStorage.removeItem(KEY); } catch (e) { /* sin almacenamiento */ }
+    render(); notify('Empezaste una propuesta nueva.');
+  });
+}
+
+function updateHeader() {
+  document.querySelector('.top').innerHTML = `<div class="top-inner"><button class="brand" onclick="step(0)" aria-label="GuateGeeks, ir al inicio"><img src="../assets/brand/guategeeks-logo.png" alt="GuateGeeks" width="82" height="54"></button><div class="brand-caption">Experiencias STEAM<br>para instituciones educativas</div><div style="flex:1"></div><div class="top-right"></div></div>`;
+  const n = document.getElementById('notice');
+  n.hidden = !ui.notice; n.querySelector('span').textContent = ui.notice;
+}
+// Redibuja la pantalla sin mover al usuario: se fija la altura mientras se cambia el contenido
+// (para que el navegador no recorte el desplazamiento) y solo se sube al inicio al cambiar de paso.
+function html(markup) {
+  const changed = previousStep !== state.step || ui.focusTitle, y = window.scrollY; ui.focusTitle = false;
+  if (!changed) $.style.minHeight = $.offsetHeight + 'px';
+  if (lab) { lab.dispose(); lab = null; labOpen = false; }
+  $.classList.toggle('landing', state.step === 0);
+  $.innerHTML = markup; updateHeader(); store(); placeMascot(); placeDuck(); placeProgressLine();
+  if (changed) {
+    $.style.minHeight = '';
+    window.scrollTo(0, 0);
+    const h = $.querySelector('h1'); if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); }
+  } else {
+    window.scrollTo(0, y);
+    requestAnimationFrame(() => { $.style.minHeight = ''; });
+  }
+  previousStep = state.step;
+}
+// Pato robot que acompaña el avance: espera sobre el paso actual y, al cambiar de paso, sale corriendo hacia el siguiente.
+const DUCK_SVG = `<svg viewBox="0 0 64 64" width="46" height="46" focusable="false"><ellipse class="d-shadow" cx="32" cy="60" rx="15" ry="3" fill="#241d38" opacity=".22"/>
+<g class="d-leg l"><rect x="22" y="49" width="6" height="9" rx="3" fill="#ef8556"/><rect x="19" y="56" width="12" height="4" rx="2" fill="#ef8556"/></g><g class="d-leg r"><rect x="36" y="49" width="6" height="9" rx="3" fill="#ef8556"/><rect x="33" y="56" width="12" height="4" rx="2" fill="#ef8556"/></g>
+<g class="d-body"><ellipse cx="30" cy="38" rx="19" ry="15" fill="#ffd36e"/><ellipse cx="30" cy="45" rx="15" ry="8" fill="#f5b942" opacity=".55"/>
+<g class="d-wing"><path d="M18 36c4-6 13-6 17 1-3 7-12 9-17-1z" fill="#f5b942"/><circle cx="26" cy="38" r="2.2" fill="#685599"/></g>
+<rect x="10" y="30" width="5" height="9" rx="2.5" fill="#5fbad6"/>
+<g class="d-head"><line class="d-ant" x1="43" y1="12" x2="45" y2="3" stroke="#45335f" stroke-width="1.6" stroke-linecap="round"/><circle class="d-ant-b" cx="45.5" cy="3" r="2.6" fill="#5fbad6"/><circle cx="42" cy="22" r="13" fill="#ffd36e"/><rect x="36" y="16" width="18" height="11" rx="5.5" fill="#241d38"/><g class="d-eye"><circle cx="43" cy="21.5" r="2.4" fill="#5fbad6"/><circle cx="49" cy="21.5" r="2.4" fill="#5fbad6"/></g><path d="M52 24c5-1 9 0 9 2.5S57 30 52 29z" fill="#ef8556"/><circle cx="37" cy="29" r="2.4" fill="#ef8556" opacity=".45"/></g></g></svg>`;
+let duck3 = null, duckHost = null, duck3Step = 0, progIO = null;
+let duckEl = null, duckX = null, duckStep = 0, duckTimer = 0;
+function duckTarget(lane) {
+  const btn = lane.parentElement.querySelectorAll('.step-nav')[state.step - 1]; if (!btn) return null;
+  const slot = btn.querySelector('i') || btn, lr = lane.getBoundingClientRect(), sr = slot.getBoundingClientRect(); return sr.left - lr.left + sr.width / 2;
+}
+function placeDuckSvg() {
+  const lane = document.querySelector('.duck-lane');
+  if (!lane || state.step < 1) { duckX = null; duckStep = 0; return; }
+  const x = duckTarget(lane); if (x === null) return;
+  if (!duckEl) { duckEl = document.createElement('div'); duckEl.className = 'duck wait'; duckEl.innerHTML = DUCK_SVG; }
+  lane.appendChild(duckEl);
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches, moved = duckX !== null && duckStep !== state.step && Math.abs(x - duckX) > 3;
+  clearTimeout(duckTimer);
+  if (!moved || reduce) { duckEl.style.transition = 'none'; duckEl.style.left = x + 'px'; duckEl.className = 'duck wait'; duckX = x; duckStep = state.step; return; }
+  // vuelve a su sitio anterior (la barra se redibujó) y de ahí corre al paso nuevo
+  const from = duckX, ms = Math.min(1500, 520 + Math.abs(x - from) * 2.6);
+  duckEl.style.transition = 'none'; duckEl.style.left = from + 'px'; duckEl.className = 'duck run' + (x < from ? ' left' : '');
+  void duckEl.offsetWidth;
+  duckEl.style.transition = 'left ' + ms + 'ms cubic-bezier(.45,.05,.35,1)'; duckEl.style.left = x + 'px';
+  duckTimer = setTimeout(() => { if (duckEl) duckEl.className = 'duck wait hop' + (x < from ? ' left' : ''); }, ms);
+  duckX = x; duckStep = state.step;
+}
+window.addEventListener('resize', () => { const lane = document.querySelector('.duck-lane'); if (!lane || !duckEl) return; const x = duckTarget(lane); if (x !== null) { duckEl.style.transition = 'none'; duckEl.style.left = x + 'px'; duckX = x; } });
+function progressMarkup() {
+  const names = ['Niveles', 'Estudiantes', 'Programas', 'Personalizar', 'Resumen'];
+  return `<div class="steps-sticky"><nav class="steps-small" aria-label="Pasos de la propuesta"><span class="duck-lane" aria-hidden="true"></span>${names.map((name, i) => `<button class="step-nav ${state.step === i + 1 ? 'active' : state.step > i + 1 ? 'done' : ''}" onclick="step(${i + 1})" aria-label="Paso ${i + 1}: ${name}" ${state.step === i + 1 ? 'aria-current="step"' : ''} ${canStep(i + 1) ? '' : 'disabled'}><i aria-hidden="true">${state.step > i + 1 ? '✓' : i + 1}</i><span>${name}</span></button>`).join('')}</nav><div class="progress" aria-hidden="true"><div style="width:${state.step * 20}%"></div></div></div>`;
+}
+function summaryAside() {
+  const t = M.proposalTotals(state.selected, PROGRAMS, groups(), TARIFFS, FISCAL);
+  return `<aside class="side-panel" aria-label="Resumen de tu propuesta"><h2 class="side-head">Tu propuesta</h2><p class="side-summary">${state.selected.length} ${plural(state.selected.length, 'programa elegido', 'programas elegidos')}</p><div class="side-metrics"><div><b data-participants>${selectedParticipants()}</b><small>estudiantes únicos</small></div></div>${state.selected.map((s, i) => { const p = findP(s.programId); const r = t.rows[i]; return `<div class="side-item">${miniature(s)}<div style="min-width:0"><b>${esc(p.name)}</b><small>${esc(levelsLabel(s))} · ${p.ratio && r.units ? r.units + ' equipos' : 'por definir'}</small><button class="text-btn" onclick="editProgram(${i})" style="font-size:12px;margin-top:3px">${esc(planOf(s.plan).tag)} · Editar</button></div></div>`; }).join('') || '<div class="empty" style="margin-top:18px">Tu propuesta empieza con tus estudiantes. Después podrás agregar los programas.</div>'}<div class="side-actions">${state.selected.length ? `<button class="btn btn-primary" onclick="step(5)">Revisar mi propuesta ${icon('arrow')}</button>` : ''}<button class="btn btn-outline" onclick="resetAll()">Empezar de nuevo</button></div><p class="side-note">${icon('info')} Tu avance se guarda en este navegador. Los importes se confirman con GuateGeeks.</p></aside>`;
+}
+function frame(title, description, content) {
+  const mobile = state.step > 0 ? `<div class="mobile-summary"><div><b>Mi propuesta · ${state.selected.length} ${plural(state.selected.length, 'programa', 'programas')}</b><small>${selectedParticipants()} participantes únicos</small></div><button class="btn btn-primary" onclick="step(5)" ${state.selected.length ? '' : 'disabled'}>Ver propuesta ${icon('arrow')}</button></div>` : '';
+  html(`<div class="layout"><section class="main-panel">${progressMarkup()}<h1 class="step-title">${title}</h1><p class="step-desc">${description}</p>${content}</section>${summaryAside()}</div>${mobile}`);
+}
+
+// ---------- Paso 0: inicio ----------
+const AREA_LABEL = { 'Experiencias inmersivas': 'Realidad virtual' };
+let lab = null;
+const labSvg = `<svg class="lab-fallback" viewBox="0 0 620 470" aria-hidden="true" focusable="false">
+<ellipse cx="310" cy="392" rx="270" ry="64" fill="#52407a"/><ellipse cx="310" cy="384" rx="270" ry="64" fill="#5d4a88"/><ellipse cx="310" cy="384" rx="246" ry="52" fill="none" stroke="#5fbad6" stroke-opacity=".6" stroke-width="3"/>
+<g class="lab-screen"><ellipse cx="108" cy="322" rx="52" ry="12" fill="#2a2340" opacity=".5"/><rect x="62" y="182" width="104" height="82" rx="10" fill="#2a2340" transform="skewY(-6)"/><rect x="70" y="190" width="88" height="62" rx="6" fill="#33284f" transform="skewY(-6)"/><rect x="78" y="198" width="60" height="9" rx="4" fill="#ef8556" transform="skewY(-6)"/><rect x="78" y="214" width="48" height="9" rx="4" fill="#5fbad6" transform="skewY(-6)"/><rect x="78" y="230" width="56" height="9" rx="4" fill="#8e7bbd" transform="skewY(-6)"/><rect x="104" y="262" width="8" height="46" fill="#2a2340"/><rect x="82" y="304" width="52" height="12" rx="6" fill="#f4f0fa"/></g>
+<ellipse cx="330" cy="340" rx="150" ry="26" fill="#1b1230" opacity=".45"/>
+<g class="lab-robot"><rect x="188" y="236" width="270" height="62" rx="24" fill="#f4f0fa"/><rect x="224" y="168" width="170" height="86" rx="30" fill="#685599"/><rect x="258" y="148" width="104" height="26" rx="13" fill="#ef8556"/><rect x="430" y="248" width="52" height="46" rx="16" fill="#f4f0fa"/><circle cx="470" cy="270" r="13" fill="#2a2340"/><circle cx="472" cy="270" r="7" fill="#5fbad6"/><rect x="214" y="118" width="5" height="56" fill="#2a2340"/><circle cx="216" cy="114" r="12" fill="#ef8556"/>
+<g><circle cx="258" cy="306" r="40" fill="#2a2340"/><circle cx="258" cy="306" r="21" fill="#5fbad6"/><circle cx="258" cy="306" r="8" fill="#ef8556"/><circle cx="414" cy="306" r="40" fill="#2a2340"/><circle cx="414" cy="306" r="21" fill="#5fbad6"/><circle cx="414" cy="306" r="8" fill="#ef8556"/></g></g>
+<g class="lab-blocks"><rect x="160" y="394" width="64" height="34" rx="12" fill="#ef8556"/><rect x="230" y="394" width="64" height="34" rx="12" fill="#5fbad6"/><rect x="300" y="394" width="64" height="34" rx="12" fill="#8e7bbd"/><rect x="370" y="394" width="64" height="34" rx="12" fill="#f4f0fa"/><path d="M182 411l14-8v16z M262 420v-18m-7 7l7-8 7 8" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></g>
+<g class="lab-acc lab-acc-pre"><rect x="498" y="270" width="6" height="86" fill="#f4f0fa"/><path d="M504 272l52 14-52 18z" fill="#ef8556"/><rect x="480" y="352" width="44" height="12" rx="6" fill="#f4f0fa"/></g>
+<g class="lab-acc lab-acc-prim"><circle cx="514" cy="300" r="40" fill="#ef8556"/><circle cx="514" cy="300" r="14" fill="#52407a"/><circle cx="568" cy="344" r="26" fill="#5fbad6"/><circle cx="568" cy="344" r="9" fill="#52407a"/></g>
+<g class="lab-acc lab-acc-bas"><rect x="518" y="300" width="9" height="62" fill="#2a2340"/><rect x="492" y="268" width="58" height="38" rx="14" fill="#f4f0fa"/><circle cx="500" cy="287" r="9" fill="#5fbad6"/><path d="M470 270q-14 17 0 34M456 262q-24 25 0 48" fill="none" stroke="#5fbad6" stroke-width="4" stroke-linecap="round"/></g>
+<g class="lab-acc lab-acc-bach"><rect x="470" y="318" width="116" height="44" rx="10" fill="#7a68a8"/><rect x="484" y="326" width="34" height="24" rx="5" fill="#2a2340"/><path d="M528 336h40M528 346h28" stroke="#ef8556" stroke-width="4" stroke-linecap="round"/><circle cx="574" cy="352" r="5" fill="#ef8556"/></g>
+</svg>`;
+function labLevelButtons(cur) {
+  return LEVELS.map(l => `<button type="button" role="radio" class="lab-level" data-lab-level="${l.id}" aria-checked="${l.id === cur}" tabindex="${l.id === cur ? 0 : -1}" onclick="setLabLevel('${l.id}')" onkeydown="labLevelKey(event)">${esc(l.name)}</button>`).join('');
+}
+function setLabLevel(id) {
+  if (!LEVELS.some(l => l.id === id)) return;
+  ui.labLevel = id;
+  document.querySelectorAll('[data-lab-level]').forEach(b => { const on = b.dataset.labLevel === id; b.setAttribute('aria-checked', on); b.tabIndex = on ? 0 : -1; });
+  const st = document.getElementById('lab-stage'); if (st) st.dataset.level = id;
+  if (lab) lab.setLevel(id);
+}
+function labLevelKey(e) {
+  const k = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key]; if (!k) return;
+  e.preventDefault();
+  const ids = LEVELS.map(l => l.id), next = ids[(ids.indexOf(ui.labLevel || 'bas') + k + ids.length) % ids.length];
+  setLabLevel(next); const b = document.querySelector(`[data-lab-level="${next}"]`); if (b) b.focus();
+}
+let labOpen = false;
+function labExplode() {
+  labOpen = !labOpen;
+  const b = document.getElementById('lab-explode'); if (b) { b.setAttribute('aria-pressed', labOpen); b.textContent = labOpen ? 'Armar de nuevo' : 'Desarmar el robot'; }
+  if (lab) lab.setExplode(labOpen); else notify('La escena 3D no está disponible en este navegador, pero la propuesta funciona igual.');
+}
+function labRun() { if (lab) { if (labOpen) { labOpen = false; const b = document.getElementById('lab-explode'); if (b) { b.setAttribute('aria-pressed', false); b.textContent = 'Desarmar el robot'; } } lab.run(); } else notify('La escena 3D no está disponible en este navegador, pero la propuesta funciona igual.'); }
+function webglOk() { try { const c = document.createElement('canvas'); return !!(window.WebGLRenderingContext && (c.getContext('webgl2') || c.getContext('webgl'))); } catch (e) { return false; } }
+function loadLab(cb) {
+  if (window.GGLab) { cb(); return; }
+  if (loadLab.queue) { loadLab.queue.push(cb); return; }
+  loadLab.queue = [cb];
+  const sc = document.createElement('script'); sc.src = 'vendor/lab-scene.min.js?v=36'; sc.async = true;
+  sc.onload = () => { const q = loadLab.queue; loadLab.queue = null; q.forEach(f => f()); };
+  sc.onerror = () => { loadLab.queue = null; /* se queda la ilustración estática */ };
+  document.head.appendChild(sc);
+}
+function initLab() {
+  const stage = document.getElementById('lab-stage'); if (!stage || lab || !webglOk()) return;
+  loadLab(() => {
+    const st = document.getElementById('lab-stage'); if (!st || lab || !window.GGLab) return;
+    try {
+      lab = window.GGLab.createLab(st.querySelector('.lab-canvas-wrap'), {
+        level: ui.labLevel || 'bas', reduceMotion: matchMedia('(prefers-reduced-motion: reduce)').matches,
+        onReady: () => st.classList.add('is-3d'), onLost: () => { st.classList.remove('is-3d'); }
+      });
+    } catch (e) { lab = null; st.classList.remove('is-3d'); }
+  });
+}
+// Mini colegio 3D del recorrido: crece con la propuesta (niveles, estudiantes, programas) y se puede recorrer jugando.
+// Vive arriba del resumen lateral (solo escritorio) y se cambia de lugar tras cada pantalla sin recrear el WebGL.
+let mascot = null, mascotHost = null;
+let animPaused = false; try { animPaused = localStorage.getItem('gg_asesor_pause') === '1'; } catch (e) { /* sin almacenamiento */ }
+function setAnimPaused(v) {
+  animPaused = !!v; try { localStorage.setItem('gg_asesor_pause', v ? '1' : '0'); } catch (e) { /* ignorar */ }
+  if (mascot) mascot.setPaused(animPaused); if (duck3) duck3.setPaused(animPaused); syncPauseBtn();
+}
+function syncPauseBtn() { const b = mascotHost && mascotHost.querySelector('.mascot-pause'); if (!b) return; b.setAttribute('aria-pressed', String(animPaused)); b.setAttribute('aria-label', animPaused ? 'Reanudar la animación del colegio y del robot' : 'Pausar la animación del colegio y del robot'); b.innerHTML = (animPaused ? '▶' : '❚❚') + '<span>' + (animPaused ? 'Reanudar' : 'Pausar') + '</span>'; }
+const STATION_OF = { tale: 'robotics', master: 'robotics', spike: 'robotics', electronics: 'electronics', drones: 'drones', immersive: 'immersive' };
+function mascotData() { return { step: state.step, levels: state.levels.slice(), students: registered(), programs: [...new Set(state.selected.map(s => s.programId))] }; }
+function placeMascot() {
+  const panel = document.querySelector('.side-panel');
+  if (state.step < 1 || !panel || innerWidth <= 980 || !webglOk() || matchMedia('(prefers-reduced-motion: reduce)').matches) { if (mascotHost && mascotHost.parentNode) mascotHost.remove(); return; }
+  if (!mascotHost) { mascotHost = document.createElement('div'); mascotHost.className = 'mascot'; const pb = document.createElement('button'); pb.type = 'button'; pb.className = 'mascot-pause'; pb.addEventListener('click', e => { e.stopPropagation(); setAnimPaused(!animPaused); }); pb.addEventListener('pointerdown', e => e.stopPropagation()); mascotHost.appendChild(pb); syncPauseBtn(); }
+  panel.insertBefore(mascotHost, panel.firstChild);
+  if (mascot) { mascot.resize(); mascot.update(mascotData()); return; }
+  loadLab(() => {
+    if (mascot || !window.GGLab || !mascotHost || !mascotHost.isConnected) return;
+    try { mascot = window.GGLab.createMascot(mascotHost, {}); mascot.setPaused(animPaused); mascot.update(mascotData()); } catch (e) { mascot = null; }
+  });
+}
+function renderLanding() {
+  const cur = ui.labLevel || 'bas', saved = state.levels.length > 0;
+  html(`<section class="lab-hero" aria-labelledby="lab-title"><div class="lab-inner">
+<div class="lab-copy"><p class="lab-label">Experiencias STEAM para instituciones educativas</p><h1 id="lab-title">Transforma cómo enseñan tus docentes y <em>cómo aprenden tus estudiantes.</em></h1>
+<p class="lab-lead">Integramos robótica, electrónica, drones y realidad virtual en tu aula con equipos, formación docente y programas listos para usar. Arma tu propuesta en minutos.</p>
+<div class="hero-actions"><button class="btn btn-primary" onclick="start()">${saved ? 'Continuar mi propuesta' : 'Crear mi propuesta'} ${icon('arrow')}</button><button class="btn btn-ghost" onclick="previewExample()">Ver propuesta de ejemplo</button></div>
+<ul class="lab-chips"><li>${icon('check')} Sin registro para explorar</li><li>${icon('check')} Equipos que pueden compartir tus grupos</li></ul></div>
+<div class="lab-stage" id="lab-stage" data-level="${cur}" role="img" aria-label="Escena ilustrada: un robot con ruedas que se puede desarmar, bloques de programación y piezas para construir sobre una plataforma de trabajo.">${labSvg}<div class="lab-canvas-wrap"></div></div>
+<div class="lab-controls"><div class="lab-levels" role="radiogroup" aria-label="Nivel educativo de la escena">${labLevelButtons(cur)}</div><div class="lab-tools"><button type="button" class="lab-run" onclick="labRun()">${icon('play')} Probar la secuencia</button><button type="button" class="lab-run" id="lab-explode" aria-pressed="false" onclick="labExplode()">Desarmar el robot</button></div><p class="lab-hint">Arrastra para girar la escena y toca los puntos para ver cada parte.</p></div>
+</div></section>
+<div class="landing-content"><section class="land-sec" aria-labelledby="lv-title"><h2 id="lv-title">Un colegio, muchas experiencias</h2><p class="land-lead">Cada nivel vive la tecnología de una forma distinta. Tú eliges qué combinar y nosotros te ayudamos a organizarlo.</p>
+<div class="level-grid">${LEVELS.map((l, i) => { const areas = [...new Set(PROGRAMS.filter(p => p.levels.includes(l.id)).map(p => AREA_LABEL[p.area] || p.area))]; const pid = { pre: 'tale', prim: 'master', bas: 'spike', bach: 'electronics' }[l.id], { ph } = photoState(pid, l.id); return `<article class="level-card lc-${i}"><div class="lc-photo">${ph ? `<img src="${ph.src}" alt="" loading="lazy">` : icon(l.icon)}</div><div class="lc-body"><h3>${esc(l.name)}</h3><p>${esc(l.hint)}</p><ul>${areas.map(a => `<li>${esc(a)}</li>`).join('')}</ul></div></article>`; }).join('')}</div>
+<p class="land-note">${icon('clock')} Los equipos pueden atender varios grupos en horarios diferentes: se comparten, no se multiplican.</p></section>
+<section class="land-sec" aria-labelledby="st-title"><h2 id="st-title">Así se construye tu propuesta</h2>
+<ol class="land-steps"><li><span>1</span><div><b>Cuéntanos de tus estudiantes</b><p>Ingresa los grados y secciones. No necesitas saber cuántos equipos elegir.</p></div></li><li><span>2</span><div><b>Elige qué aprenderán</b><p>Explora robótica, electrónica, drones y experiencias inmersivas.</p></div></li><li><span>3</span><div><b>Reúne todos tus programas</b><p>Revisa el equipamiento, las modalidades y la inversión de tu colegio.</p></div></li></ol></section>
+<section class="land-cta"><div><h2>El mismo recorrido. Una propuesta más clara.</h2><p>Los importes son estimaciones comerciales que GuateGeeks confirma.</p></div><button class="btn btn-primary" onclick="start()">${saved ? 'Continuar mi propuesta' : 'Crear mi propuesta'} ${icon('arrow')}</button></section></div></div>`);
+  initLab();
+}
+function example() {
+  state = initial();
+  state.levels = ['pre', 'prim'];
+  const sec = (gid, list) => ({ confirmed: true, sections: list.map(([name, n], i) => ({ id: gid + '-' + (i + 1), name, students: n })) });
+  state.enroll = { pk: sec('pk', [['A', 18]]), ki: sec('ki', [['A', 12], ['B', 12]]), pr: sec('pr', [['A', 20]]), p1: sec('p1', [['A', 24]]), p2: sec('p2', [['A', 27]]), p3: sec('p3', [['A', 21]]), p4: sec('p4', [['A', 30]]), p5: sec('p5', [['A', 22]]), p6: sec('p6', [['A', 25]]) };
+  const mk = (pid, level, ids) => ({ id: keyOf(pid, level), programId: pid, groupIds: ids, sharing: 'separate', simIds: [], units: null, stations: false, plan: 'EV8', flexBimestres: 1, confirmed: true, calc: null });
+  state.selected = [mk('tale', 'pre', ['pk-1', 'ki-1', 'ki-2', 'pr-1']), mk('master', 'prim', ['p1-1', 'p2-1', 'p3-1', 'p4-1', 'p5-1', 'p6-1'])];
+  state.selected.forEach(s => { s.calc = M.entrySignature(s, groups()); });
+}
+function previewExample() {
+  const load = () => { example(); state.step = 5; render(); notify('Colegio de ejemplo: ' + registered() + ' estudiantes y 2 programas.'); };
+  if (state.selected.length) askConfirm('¿Cargar el colegio de ejemplo?', 'Reemplazará lo que llevas hasta ahora.', 'Sí, cargar ejemplo', load); else load();
+}
+
+// ---------- Paso 1: niveles ----------
+function toggleLevel(id) {
+  state.levels.includes(id) ? state.levels = state.levels.filter(x => x !== id) : state.levels.push(id);
+  state.levels = LEVELS.filter(l => state.levels.includes(l.id)).map(l => l.id);
+  state.levelIndex = 0; pruneEntries(); render();
+}
+function nextFromLevels() { if (!state.levels.length) { notify('Selecciona al menos un nivel educativo.'); return; } state.levelIndex = 0; step(2); }
+function renderLevels() {
+  frame('¿Qué niveles quieres atender?', 'Selecciona uno o varios niveles. En el siguiente paso registraremos los estudiantes de cada uno. Podrás agregar más niveles después sin perder lo que ya configuraste.',
+    `<div class="chooser">${LEVELS.map(l => `<button class="option ${state.levels.includes(l.id) ? 'selected' : ''}" onclick="toggleLevel('${l.id}')" aria-pressed="${state.levels.includes(l.id)}"><span class="option-icon">${icon(l.icon)}</span><strong>${esc(l.name)}</strong><small>${esc(l.hint)}</small></button>`).join('')}</div><div class="tip">No necesitas datos de contacto para explorar. Puedes trabajar cada nivel por separado.</div><div class="foot"><button class="btn btn-outline" onclick="step(0)">← Atrás</button><button class="btn btn-primary" onclick="nextFromLevels()" ${!state.levels.length ? 'disabled' : ''}>Continuar ${icon('arrow')}</button></div>`);
+}
+
+// ---------- Paso 2: estudiantes por grado y sección ----------
+function selectLevel(i) { state.levelIndex = i; ui.focusTitle = true; render(); }
+function navEnrollment(d) {
+  const n = activeLevels().length;
+  if (d === 1 && state.levelIndex < n - 1) { state.levelIndex++; ui.focusTitle = true; render(); }
+  else if (d === -1 && state.levelIndex > 0) { state.levelIndex--; ui.focusTitle = true; render(); }
+  else if (d === 1) { if (!hasStudents()) { notify('Ingresa estudiantes en al menos un grado.'); return; } step(3); }
+  else step(1);
+}
+function findSection(sid) { for (const [gid, g] of Object.entries(state.enroll)) { const s = g.sections.find(x => x.id === sid); if (s) return { gid, s }; } return null; }
+function refreshTotals(gid) {
+  const lv = activeLevels()[state.levelIndex];
+  const gt = document.querySelector(`[data-grade-total="${gid}"]`);
+  if (gt) gt.textContent = gradeTotalText(gid);
+  const st = document.querySelector('[data-level-total]'); if (st && lv) st.textContent = levelTotalText(lv);
+  document.querySelectorAll('[data-registered]').forEach(e => e.textContent = registered());
+  document.querySelectorAll('[data-participants]').forEach(e => e.textContent = selectedParticipants());
+}
+function gradeTotalText(gid) {
+  const secs = sectionsOf(gid), n = secs.reduce((a, s) => a + (s.students || 0), 0), pend = secs.filter(s => s.students == null).length;
+  return `${n} ${plural(n, 'estudiante', 'estudiantes')}${pend ? ' · ' + pend + ' sin confirmar' : ''}`;
+}
+function levelTotalText(lv) {
+  const gs = groups().filter(g => g.levelId === lv.id), n = gs.reduce((a, g) => a + (g.students || 0), 0), pend = gs.filter(g => g.students == null).length;
+  return `${n} estudiantes${pend ? ' (' + pend + ' ' + plural(pend, 'grupo', 'grupos') + ' sin confirmar)' : ''}`;
+}
+function setError(input, msg) { const e = document.getElementById('err-' + input.id); if (e) { e.hidden = !msg; e.textContent = msg; } input.setAttribute('aria-invalid', String(!!msg)); }
+function writeQty(gid, sid, value, input) {
+  const v = value.trim();
+  if (v !== '' && (!/^\d+$/.test(v) || Number(v) > 1000)) { setError(input, 'Escribe un número entero entre 0 y 1000. Deja el campo vacío si aún no lo sabes.'); return; }
+  setError(input, '');
+  const g = ensureGrade(gid), s = g.sections.find(x => x.id === sid);
+  s.students = v === '' ? null : Number(v);
+  store(); refreshTotals(gid);
+}
+function stepQty(gid, sid, d) {
+  const g = ensureGrade(gid), s = g.sections.find(x => x.id === sid);
+  s.students = Math.max(0, Math.min(1000, (s.students ?? 0) + d)); render();
+}
+// Los nombres de sección son siempre A, B, C... en orden; no se editan.
+function letterize(g) { g.sections.forEach((s, i) => { s.name = String.fromCharCode(65 + (i % 26)); }); }
+function addSection(gid) {
+  const g = ensureGrade(gid); if (g.sections.length >= 12) return;
+  g.sections.push({ id: gid + '-' + uid(), name: '', students: null }); letterize(g); render();
+}
+function removeSection(gid, sid) {
+  const g = ensureGrade(gid); g.sections = g.sections.filter(s => s.id !== sid);
+  if (!g.sections.length) g.sections = [{ id: gid + '-' + uid(), name: 'A', students: null }];
+  letterize(g); pruneEntries(); render();
+}
+function sectionRow(gid, s, count) {
+  const gname = esc(gradeName(gid));
+  return `<div class="section-row"><div class="sec-label"><span class="sec-name">Sección ${esc(s.name)}</span></div><div class="number"><button type="button" aria-label="Restar un estudiante en ${gname}, sección ${esc(s.name)}" onclick="stepQty('${gid}','${s.id}',-1)">−</button><input id="qty-${s.id}" aria-label="Estudiantes en ${gname}, sección ${esc(s.name)}" aria-describedby="err-qty-${s.id}" type="text" inputmode="numeric" autocomplete="off" placeholder="—" value="${s.students ?? ''}" oninput="writeQty('${gid}','${s.id}',this.value,this)"><button type="button" aria-label="Agregar un estudiante en ${gname}, sección ${esc(s.name)}" onclick="stepQty('${gid}','${s.id}',1)">+</button>${count > 1 ? `<button type="button" aria-label="Quitar la sección ${esc(s.name)} de ${gname}" onclick="removeSection('${gid}','${s.id}')">×</button>` : ''}</div><p class="field-error" id="err-qty-${s.id}" hidden></p></div>`;
+}
+function renderEnrollment() {
+  const levels = activeLevels(); if (!levels.length) { step(1); return; }
+  state.levelIndex = Math.min(state.levelIndex, levels.length - 1);
+  const l = levels[state.levelIndex];
+  frame('¿Cuántos estudiantes tienes en ' + l.name.toLowerCase() + '?',
+    l.free ? 'Agrega las secciones u opciones de tu oferta, por ejemplo carreras o especialidades. No imponemos una lista de grados.' : 'Indica los estudiantes por grado y sección. Usa «Añadir sección» cuando un grado tenga varios grupos. Deja vacío lo que aún no sepas; un 0 significa que confirmaste que no hay estudiantes.',
+    `<div class="level-tabs" aria-label="Niveles a completar">${levels.map((lv, i) => `<button class="level-tab ${i === state.levelIndex ? 'active' : ''}" aria-pressed="${i === state.levelIndex}" onclick="selectLevel(${i})">${i + 1}. ${esc(lv.name)}</button>`).join('')}</div>${l.grades.map(([gid, name]) => {
+      const secs = sectionsOf(gid);
+      return `<div class="grade"><div class="grade-head"><strong>${esc(name)}</strong><span data-grade-total="${gid}">${gradeTotalText(gid)}</span></div>${secs.map(s => sectionRow(gid, s, secs.length)).join('')}<button class="mini" onclick="addSection('${gid}')">+ Añadir sección</button></div>`;
+    }).join('')}<div class="tip">Total ingresado para ${esc(l.name)}: <b data-level-total>${levelTotalText(l)}</b>. Los mismos equipos podrán utilizarse en distintos grupos si sus horarios lo permiten.</div><div class="foot"><button class="btn btn-outline" onclick="navEnrollment(-1)">← Atrás</button><button class="btn btn-primary" onclick="navEnrollment(1)">${state.levelIndex < levels.length - 1 ? 'Siguiente nivel' : 'Ver programas'} ${icon('arrow')}</button></div>`);
+}
+
+// ---------- Paso 3: catálogo ----------
+// Agrega el programa con un solo conjunto de equipos para todos los niveles compatibles (se puede separar por nivel al configurarlo).
+function entryAt(pid, level) { return state.selected.findIndex(s => s.programId === pid && entryGroups(s).some(g => g.levelId === level)); }
+function addProgram(id, level) {
+  const p = findP(id), others = state.selected.filter(s => s.programId === id);
+  if (entryAt(id, level) !== -1) return;
+  const used = new Set(others.flatMap(s => s.groupIds));
+  let pool = groups().filter(g => g.students > 0 && compatible(p, g) && !used.has(g.id));
+  if (others.length) pool = pool.filter(g => g.levelId === level);
+  if (!pool.length) return;
+  const lv = [...new Set(pool.map(g => g.levelId))];
+  state.selected.push({ id: id + '@' + lv.join('+'), programId: id, groupIds: pool.map(g => g.id), sharing: pool.length > 1 ? null : 'separate', simIds: [], units: null, stations: false, plan: 'UNDECIDED', flexBimestres: 1, confirmed: false, calc: null });
+  render();
+  notify(lv.length > 1 ? p.hardware + ' se agregó para ' + joinY(lv.map(x => findL(x).name)) + ' con el mismo equipo. Puedes separarlo por nivel al configurarlo.' : 'Programa agregado. Puedes seguir explorando otros niveles.');
+}
+// Separa un programa compartido en un conjunto de equipos por nivel.
+function splitByLevel() {
+  const s = cur(), lv = entryLevels(s); if (lv.length < 2) return;
+  const parts = lv.map(l => { const ids = s.groupIds.filter(id => groups().find(g => g.id === id)?.levelId === l.id); return { ...s, id: s.programId + '@' + l.id, groupIds: ids, sharing: ids.length > 1 ? null : 'separate', simIds: [], units: null, stations: false, confirmed: false, calc: null }; });
+  state.selected.splice(state.selectedIndex, 1, ...parts); ui.sub = 0; ui.focusTitle = true; render();
+  notify('Separamos ' + findP(s.programId).hardware + ' por nivel. Configura cada uno por separado.');
+}
+// Vuelve a compartir el mismo equipo entre todos los niveles de este programa.
+function mergeLevels() {
+  const s = cur(), same = state.selected.filter(x => x.programId === s.programId);
+  s.groupIds = [...new Set(same.flatMap(x => x.groupIds))]; s.sharing = null; s.simIds = []; s.units = null; s.stations = false; s.confirmed = false; s.calc = null;
+  s.id = s.programId + '@' + entryLevels(s).map(l => l.id).join('+');
+  state.selected = state.selected.filter(x => x.programId !== s.programId || x === s); state.selectedIndex = state.selected.indexOf(s); ui.sub = 0; ui.focusTitle = true; render();
+  notify(findP(s.programId).hardware + ' ahora se comparte entre todos los niveles.');
+}
+function removeProgram(i) {
+  const s = state.selected[i]; if (!s) return;
+  askConfirm('¿Quitar este programa?', progTitle(s) + ' saldrá de tu propuesta.', 'Sí, quitar', () => {
+    state.selected = state.selected.filter(x => x.id !== s.id); state.selectedIndex = Math.min(state.selectedIndex, Math.max(0, state.selected.length - 1)); render(); notify('Programa quitado de tu propuesta.');
+  });
+}
+function nextFromPrograms() { if (!state.selected.length) { notify('Agrega al menos un programa a tu propuesta.'); return; } step(4); }
+function renderPrograms() {
+  const active = activeLevels().filter(l => groups().some(g => g.levelId === l.id && g.students > 0));
+  frame('¿Qué les gustaría aprender?', 'Descubre programas adecuados para los niveles con estudiantes. Agrega todos los que te interesan: luego podrás ajustar grados, equipos y modalidad de cada uno.',
+    `${active.map(l => {
+      const list = PROGRAMS.filter(p => p.levels.includes(l.id) && groups().some(g => g.levelId === l.id && g.students > 0 && compatible(p, g)));
+      return `<div class="catalog-level"><h2>${esc(l.name)}</h2><small>${l.grades.reduce((n, g) => n + groups().filter(x => x.gradeId === g[0]).reduce((a, x) => a + (x.students || 0), 0), 0)} estudiantes registrados</small></div><div class="program-grid">${list.map(p => {
+        const idx = entryAt(p.id, l.id), selected = idx !== -1, shared = selected && entryLevels(state.selected[idx]).length > 1;
+        return `<article class="prog ${selected ? 'chosen' : ''}">${media(p, l.id)}<div class="prog-body"><div class="eyebrow">${esc(p.area)}</div><h3>${esc(p.name)}</h3><p>${esc(p.short)}</p><details><summary>Ver qué incluye</summary><p>Equipo sugerido: ${esc(p.hardware)}. Los grados participantes y las condiciones se revisan en el siguiente paso. Lo que incluye cada modalidad (equipamiento, capacitación, recursos, Sócrates y soporte) se detalla al elegirla; no todas incluyen lo mismo.</p></details></div><footer><div class="equip-label"><strong>${esc(p.hardware)}</strong>${p.ratio ? 'Hasta ' + p.ratio + ' estudiantes por equipo' : 'Equipamiento por definir con GuateGeeks'}</div>${selected ? `<div class="status green" style="align-self:start">Agregado a tu propuesta</div>${shared ? `<p class="help-line" style="margin:0">Equipo compartido entre ${esc(levelsLabel(state.selected[idx]))}.</p>` : ''}<div class="prog-actions"><button class="btn btn-outline" onclick="editProgram(${idx})">Configurar este programa ${icon('arrow')}</button><button class="icon-btn" onclick="removeProgram(${idx})" aria-label="Quitar ${esc(p.name)}">${icon('trash')}</button></div>` : `<button class="btn btn-primary" onclick="addProgram('${p.id}','${l.id}')">Agregar a mi propuesta ${icon('plus')}</button>`}</footer></article>`;
+      }).join('')}</div>`;
+    }).join('') || '<div class="empty">Registra estudiantes para descubrir los programas compatibles.</div>'}<div class="foot"><button class="btn btn-outline" onclick="step(2)">← Editar estudiantes</button><button class="btn btn-primary" onclick="nextFromPrograms()" ${!state.selected.length ? 'disabled' : ''}>Configurar mis programas ${icon('arrow')}</button></div>`);
+}
+
+// ---------- Paso 4: configurar un programa (una decisión a la vez) ----------
+const cur = () => state.selected[state.selectedIndex];
+// Decisiones que aplican a este programa: sin ratio no hay equipos que calcular y con un solo grupo no hay nada que compartir.
+function stepKeys(s) {
+  const p = findP(s.programId);
+  if (!p.ratio) return ['groups', 'plan'];
+  return ['groups', ...(s.groupIds.length > 1 ? ['sharing'] : []), 'quantity', 'plan'];
+}
+function changeConfig(prop, val) {
+  const s = cur(); if (!s) return; s[prop] = val;
+  if (prop === 'sharing') { if (val !== 'simultaneous') s.simIds = []; s.stations = false; }
+  render();
+}
+function toggleGroup(gid) {
+  const s = cur(), before = s.groupIds.length;
+  if (s.groupIds.includes(gid)) {
+    if (before === 1) { notify('Debe quedar al menos un grupo participante.'); return; }
+    s.groupIds = s.groupIds.filter(x => x !== gid); s.simIds = s.simIds.filter(x => x !== gid);
+  } else s.groupIds.push(gid);
+  if (s.groupIds.length < 2) { s.sharing = 'separate'; s.simIds = []; }
+  else if (before < 2) s.sharing = null; // ahora sí hay que preguntar cómo se comparten
+  s.units = null; s.stations = false; render();
+}
+function toggleSim(gid) { const s = cur(); s.simIds = s.simIds.includes(gid) ? s.simIds.filter(x => x !== gid) : [...s.simIds, gid]; s.units = null; s.stations = false; render(); }
+function adjustUnits(d) { const s = cur(); s.units = Math.max(1, Math.min(1000, (unitsOf(s) || 1) + d)); s.stations = false; render(); }
+function useRecommended() { const s = cur(); s.units = null; s.stations = false; render(); }
+function chooseStations() { cur().stations = true; render(); }
+function useTeams(n) { const s = cur(); s.units = n; s.stations = false; render(); }
+function commit(s) { s.confirmed = true; s.calc = M.entrySignature(s, groups()); }
+
+function canProceed(s, key) {
+  if (key === 'groups') return s.groupIds.length ? '' : 'Elige al menos un grupo.';
+  if (key === 'sharing') {
+    if (!s.sharing) return 'Elige una opción para continuar.';
+    return s.sharing === 'simultaneous' && s.simIds.length < 2 ? 'Elige al menos dos grupos que coincidan en horario.' : '';
+  }
+  if (key === 'quantity') {
+    if (unitsOf(s) == null) return 'Indica cuántos equipos usarás.';
+    return analysis(s).state === 'limited' && !s.stations ? 'Elige cómo resolver la capacidad limitada.' : '';
+  }
+  if (key === 'plan') return s.plan === 'UNDECIDED' ? 'Elige una modalidad para continuar.' : '';
+  return '';
+}
+// ---- Navegación entre programas: siempre al siguiente pendiente; lo ya guardado se revisa sin repetir ----
+function nextPending(from) {
+  const n = state.selected.length;
+  for (let k = 1; k <= n; k++) { const i = (from + k) % n; if (!state.selected[i].confirmed) return i; }
+  return -1;
+}
+// Al entrar a «Personalizar» desde el menú: primero lo pendiente; si todo está guardado, la revisión del actual.
+function pickConfigTarget() {
+  const k = state.selected.findIndex(s => !s.confirmed);
+  state.selectedIndex = k >= 0 ? k : Math.min(state.selectedIndex, Math.max(0, state.selected.length - 1));
+  ui.review = !!state.selected[state.selectedIndex]?.confirmed; ui.sub = 0; ui.single = false;
+}
+function openProgram(i) {
+  state.selectedIndex = i; ui.sub = 0; ui.single = false; ui.review = !!state.selected[i].confirmed;
+  state.step = 4; ui.focusTitle = true; store(); render();
+}
+function editProgram(i) { openProgram(i); }
+function jumpTo(key) { const keys = stepKeys(cur()); ui.review = false; ui.single = true; ui.sub = Math.max(0, keys.indexOf(key)); ui.focusTitle = true; render(); }
+function cfgNav(d) {
+  const s = cur(), keys = stepKeys(s);
+  ui.sub = Math.min(ui.sub, keys.length - 1); ui.focusTitle = true;
+  if (d === -1) {
+    if (ui.single) { ui.single = false; ui.review = true; render(); return; }
+    if (ui.sub > 0) { ui.sub--; render(); } else step(3);
+    return;
+  }
+  const why = canProceed(s, keys[ui.sub]); if (why) { notify(why); return; }
+  if (ui.single) { commit(s); ui.single = false; ui.review = true; render(); notify('Cambio guardado.'); return; }
+  if (ui.sub < keys.length - 1) { ui.sub++; render(); return; }
+  commit(s);
+  const nx = nextPending(state.selectedIndex);
+  if (nx >= 0) { state.selectedIndex = nx; ui.sub = 0; ui.review = false; render(); } else step(5);
+}
+function goNextPending() { const nx = nextPending(state.selectedIndex); if (nx >= 0) openProgram(nx); else step(5); }
+
+function equipHead(s, p) {
+  return `<div class="equipment-focus">${media(p, levelKey(s), 'compact')}<div class="equipment-meta"><div class="eyebrow">Programa ${state.selectedIndex + 1} de ${state.selected.length}</div><h2>${esc(progTitle(s))}</h2><p>${esc(p.hardware)}${p.ratio ? ' · hasta ' + p.ratio + ' estudiantes por equipo' : ' · por definir'}<br>${esc(levelsLabel(s))} · ${participation(s)} estudiantes participantes</p></div></div>`;
+}
+// Revisión de un programa ya guardado: se cambia solo lo necesario.
+function cfgReview(s, p) {
+  const gs = entryGroups(s), u = unitsOf(s), an = analysis(s);
+  const sharingTxt = { separate: 'Sí, en horarios distintos', simultaneous: 'Algunos grupos trabajan al mismo tiempo', unknown: 'Todavía no lo sé' }[s.sharing] || '—';
+  const rows = [['groups', 'Grupos', `${gs.length} ${plural(gs.length, 'grupo', 'grupos')} · ${participation(s)} estudiantes`]];
+  if (stepKeys(s).includes('sharing')) rows.push(['sharing', 'Horarios', sharingTxt]);
+  if (p.ratio) rows.push(['quantity', 'Equipos', `${u ?? '—'} ${p.hardware}${an.state === 'limited' ? ' · trabajo por estaciones' : an.state === 'full' ? ' · cobertura completa' : ''}`]);
+  rows.push(['plan', 'Modalidad', planOf(s.plan).tag + (s.plan === 'FLEX' ? ` · ${s.flexBimestres} ${plural(s.flexBimestres, 'bimestre', 'bimestres')}` : '')]);
+  const pend = nextPending(state.selectedIndex);
+  return `<div class="review-list">${rows.map(([k, t, v]) => `<div class="review-row"><div><span>${t}</span><b>${esc(v)}</b></div><button class="btn btn-small btn-outline" onclick="jumpTo('${k}')" aria-label="Cambiar ${t.toLowerCase()}">Cambiar</button></div>`).join('')}</div><div class="foot"><button class="btn btn-outline" onclick="step(5)">Volver a mi propuesta</button>${pend >= 0 ? `<button class="btn btn-primary" onclick="goNextPending()">Configurar el siguiente pendiente ${icon('arrow')}</button>` : `<button class="btn btn-primary" onclick="step(5)">Listo, ver mi propuesta ${icon('arrow')}</button>`}</div>`;
+}
+
+function explanation(s, p, an) {
+  const sized = entryGroups(s).filter(g => g.students > 0), rec = an.rec;
+  const prov = sized.some(g => !g.confirmed) ? ' Parte de la matrícula está como total sin secciones, así que esta cifra es provisional.' : '';
+  if (!rec) return 'Ingresa estudiantes en los grupos participantes para obtener una recomendación.';
+  if (rec.basis === 'unknown') return `Sin horarios confirmados no podemos garantizar la cobertura: podrías necesitar entre <b>${rec.scenarios[0].teams}</b> y <b>${rec.scenarios[1].teams}</b> ${esc(p.hardware)}, según cuántos grupos coincidan.${prov}`;
+  if (rec.basis === 'separate') {
+    const big = sized.reduce((a, b) => M.teamsFor(b.students, p.ratio) > M.teamsFor(a.students, p.ratio) ? b : a);
+    return `Tu grupo más grande tiene <b>${big.students} estudiantes</b> (${esc(big.label)}). Recomendamos <b>${rec.teams} ${esc(p.hardware)}</b>, con hasta ${p.ratio} estudiantes por equipo.${sized.length > 1 ? ' Los demás grupos pueden usar los mismos equipos en horarios distintos.' : ''}${prov}`;
+  }
+  return `Los grupos que trabajan al mismo tiempo necesitan <b>${rec.blockTeams} ${esc(p.hardware)}</b> entre ellos. Recomendamos <b>${rec.teams}</b>: el mayor entre ese bloque y los demás grupos, que usan los equipos en horarios distintos.${prov}`;
+}
+function coverageHTML(s, p, an) {
+  const u = unitsOf(s);
+  if (an.state === 'none') return '';
+  if (an.state === 'unconfirmed') return '<div class="warning">Cobertura no confirmada. Si confirmas cuáles grupos coinciden en horario, podemos darte una cantidad exacta.</div>';
+  if (an.state === 'full') return `<div class="tip"><b>${u} equipos</b> permiten trabajar a <b>${u * p.ratio} estudiantes</b> al mismo tiempo. Cobertura completa para los grupos seleccionados.</div>`;
+  return `<div class="warning" role="alert"><b>Cobertura limitada.</b> Con ${u} equipos pueden trabajar <b>${an.cap} estudiantes</b> al mismo tiempo, así que algunos grupos tendrían que rotar: ${an.rotations.map(r => `${esc(r.label)}, ${r.rotations} ${plural(r.rotations, 'rotación', 'rotaciones')}`).join('; ')}.${s.sharing === 'simultaneous' ? ' Las rotaciones de grupos que comparten horario deben validarse con el colegio.' : ''} Menos equipos implican una metodología y un horario por validar; no es una experiencia equivalente a la cobertura completa.<div class="links" style="margin-top:12px"><button class="btn btn-small ${s.stations ? 'btn-primary' : 'btn-outline'}" onclick="chooseStations()" aria-pressed="${!!s.stations}">${s.stations ? '✓ ' : ''}Trabajar por estaciones con ${u} equipos</button><button class="btn btn-small btn-outline" onclick="useTeams(${an.rec.teams})">Usar ${an.rec.teams} equipos (cobertura completa)</button></div>${s.stations ? '' : '<p style="margin:10px 0 0">Elige una opción para continuar.</p>'}</div>`;
+}
+
+function cfgGroups(s, p) {
+  const taken = new Set(state.selected.filter(x => x !== s && x.programId === s.programId).flatMap(x => x.groupIds));
+  const opts = groups().filter(g => g.students > 0 && compatible(p, g) && !taken.has(g.id));
+  const lv = entryLevels(s), others = state.selected.some(x => x !== s && x.programId === s.programId);
+  const share = lv.length > 1
+    ? `<div class="sub-pick"><b>Mismo equipo para ${esc(levelsLabel(s))}</b><p class="help-line" style="margin:6px 0 10px">${esc(p.hardware)} puede usarse en estos niveles, así que sugerimos un solo conjunto de equipos que se comparte entre los grupos en horarios distintos. Si cada nivel tendrá su propio equipo, sepáralos.</p><button class="btn btn-small btn-outline" onclick="splitByLevel()">Usar un equipo distinto por nivel</button></div>`
+    : others ? `<div class="sub-pick"><p class="help-line" style="margin:0 0 10px">Este equipo es solo para ${esc(levelsLabel(s))}. ${esc(p.hardware)} también puede compartirse con los demás niveles.</p><button class="btn btn-small btn-outline" onclick="mergeLevels()">Compartir el mismo equipo entre niveles</button></div>` : '';
+  return `<div class="chips big">${opts.map(g => `<button class="chip ${s.groupIds.includes(g.id) ? 'on' : ''}" onclick="toggleGroup('${g.id}')" aria-pressed="${s.groupIds.includes(g.id)}">${s.groupIds.includes(g.id) ? '✓ ' : ''}${esc(g.label)} · ${g.students}${g.confirmed ? '' : ' (provisional)'}</button>`).join('')}</div><p class="help-line">Participan <b>${participation(s)} estudiantes</b>. Todos vienen marcados; quita los que no cursarán este programa.</p>${share}`;
+}
+function cfgSharing(s, p) {
+  const opts = [['separate', 'Sí, en horarios distintos', 'Un mismo conjunto de equipos se usa con un grupo a la vez.'], ['simultaneous', 'Algunos grupos trabajan al mismo tiempo', 'Elige cuáles coinciden; los demás se tratan como sesiones independientes.'], ['unknown', 'Todavía no lo sé', 'Verás un escenario mínimo y uno máximo hasta confirmar los horarios.']];
+  return `<div class="radios">${opts.map(([v, t, d]) => `<label class="radio ${s.sharing === v ? 'selected' : ''}"><input type="radio" name="sharing" ${s.sharing === v ? 'checked' : ''} onchange="changeConfig('sharing','${v}')"><span><strong>${t}</strong><small>${d}</small></span></label>`).join('')}</div>${s.sharing === 'simultaneous' ? `<div class="sub-pick"><span class="label">¿Cuáles grupos coinciden en horario? Elige al menos dos.</span><div class="chips big">${s.groupIds.map(id => groups().find(g => g.id === id)).filter(Boolean).map(g => `<button class="chip ${s.simIds.includes(g.id) ? 'on' : ''}" onclick="toggleSim('${g.id}')" aria-pressed="${s.simIds.includes(g.id)}">${s.simIds.includes(g.id) ? '✓ ' : ''}${esc(g.label)}</button>`).join('')}</div></div>` : ''}`;
+}
+function cfgQuantity(s, p) {
+  const an = analysis(s), rec = an.rec, u = unitsOf(s);
+  if (!rec) return '<div class="warning">Ingresa estudiantes en los grupos participantes para obtener una recomendación.</div>';
+  const unknown = rec.basis === 'unknown', num = unknown ? rec.scenarios[0].teams : rec.teams;
+  const applied = s.units == null || s.units === rec.suggested;
+  return `<div class="rec-card"><div class="rec-num"><b>${num}</b><span>${esc(p.hardware)}<br>${unknown ? 'como mínimo' : 'recomendados'}</span></div><div class="rec-body"><p>${explanation(s, p, an)}</p>${unknown ? `<ul>${rec.scenarios.map(x => `<li>${esc(x.label)}: <b>${x.teams}</b> equipos</li>`).join('')}</ul>` : ''}<button class="btn btn-primary" onclick="useRecommended()" ${applied ? 'aria-pressed="true"' : ''}>${applied ? '✓ Recomendación aplicada' : 'Usar recomendación (' + rec.suggested + ')'}</button></div></div><div class="adjust"><span>¿Prefieres otra cantidad?</span><div class="number-lg"><button onclick="adjustUnits(-1)" aria-label="Reducir equipos">−</button><strong aria-live="polite">${u ?? '—'}</strong><button onclick="adjustUnits(1)" aria-label="Aumentar equipos">+</button></div></div><div id="coverage">${coverageHTML(s, p, an)}</div>`;
+}
+const PLAN_CARDS = [
+  { pick: 'INTEGRA', ids: ['INTEGRA'], title: 'Comprar el equipo', tag: 'Integra', sum: 'Compras el equipo y queda en tu colegio desde el primer día.',
+    inc: ['Equipamiento educativo, propiedad del colegio desde la compra', 'Orientación inicial para ponerlo en marcha', '1 hora de capacitación de uso; el tiempo adicional se cotiza aparte'], foot: 'No incluye Sócrates Aprende.' },
+  { pick: 'FLEX', ids: ['FLEX'], title: 'Rentar por bimestres', tag: 'Flex', sum: 'Rentas el equipo y puedes cambiar de tecnología al iniciar cada bimestre.',
+    inc: ['Equipo de GuateGeeks durante la renta; se devuelve al terminar', 'Capacitación docente e integración tecnológica', 'Seguimiento y soporte', 'Sócrates Aprende'], foot: 'Pruebas, ajustas y evolucionas la tecnología bimestre a bimestre.' },
+  { pick: 'EV8', ids: ['EV8', 'EV16'], title: 'Pagar en cuotas para adquirir', tag: 'Evoluciona', sum: 'Pago inicial del 20 % y cuotas mensuales; al completar el plazo, el equipo pasa a ser del colegio.',
+    inc: ['Equipamiento que pasa a ser del colegio al terminar de pagar', 'Capacitación docente e integración tecnológica', 'Recursos para el aula', 'Seguimiento y soporte', 'Sócrates Aprende'], foot: 'Construimos e integramos contigo un programa que se sostiene, evoluciona y crece en el tiempo.' }
+];
+function cfgPlan(s, p) {
+  const cards = PLAN_CARDS.map(c => {
+    const on = c.ids.includes(s.plan);
+    return `<label class="plan-card ${on ? 'selected' : ''}"><input type="radio" name="plan" ${on ? 'checked' : ''} onchange="changeConfig('plan','${c.pick}')"><span class="pc-head"><strong>${esc(c.title)}</strong><span class="pill-light">${esc(c.tag)}</span></span><span class="pc-sum">${esc(c.sum)}</span><span class="pc-inc-title">Qué incluye</span><ul class="pc-inc">${c.inc.map(x => `<li>${icon('check')}<span>${esc(x)}</span></li>`).join('')}</ul><span class="pc-foot">${icon('info')}<span>${esc(c.foot)}</span></span></label>`;
+  }).join('');
+  const terms = ['EV8', 'EV16'].includes(s.plan) ? `<div class="sub-pick"><div class="label" id="term-l">Elige el plazo de Evoluciona</div><div class="term-grid" role="radiogroup" aria-labelledby="term-l">${[['EV8', 8, 'Terminas de pagar antes. Acompañamiento durante 8 meses.'], ['EV16', 16, 'Cuotas mensuales más bajas. Acompañamiento durante 16 meses.']].map(([id, m, t]) => `<button type="button" role="radio" aria-checked="${s.plan === id}" class="term-card ${s.plan === id ? 'on' : ''}" onclick="changeConfig('plan','${id}')"><b>${planOf(id).tag}</b><span class="tc-m">${m} meses</span><small>Pago inicial del 20 % y ${m} cuotas mensuales.</small><small>${t}</small></button>`).join('')}</div></div>` : '';
+  return `<div class="plan-list">${cards}</div>${terms}${s.plan === 'FLEX' ? `<div class="sub-pick"><label class="label" for="flexb">Bimestres de renta</label><select class="field" id="flexb" onchange="changeConfig('flexBimestres',Number(this.value))">${[1, 2, 3, 4].map(n => `<option value="${n}" ${s.flexBimestres === n ? 'selected' : ''}>${n} ${plural(n, 'bimestre', 'bimestres')}${FISCAL.rentDiscount[n] ? ' · ' + Math.round(FISCAL.rentDiscount[n] * 100) + ' % de descuento' : ''}</option>`).join('')}</select></div>` : ''}${!p.ratio ? '<div class="warning">Equipamiento por definir con GuateGeeks: no calculamos equipos ni importes para este programa. Quedará como «Requiere cotización personalizada».</div>' : ''}`;
+}
+function renderConfig() {
+  if (!state.selected.length) { step(3); return; }
+  state.selectedIndex = Math.min(state.selectedIndex, state.selected.length - 1);
+  const s = cur(), p = findP(s.programId), keys = stepKeys(s);
+  ui.sub = Math.min(ui.sub, keys.length - 1);
+  if (ui.review && s.confirmed) { frame('Ya configuraste este programa', 'Está guardado. Cambia solo lo que necesites; el resto se conserva.', equipHead(s, p) + cfgReview(s, p)); return; }
+  const key = keys[ui.sub], why = canProceed(s, key), last = ui.sub === keys.length - 1;
+  const an = analysis(s);
+  const titles = { groups: '¿Qué grupos participarán?', sharing: '¿Los grupos usan los mismos equipos en horarios distintos?', quantity: an.rec && an.rec.basis !== 'unknown' ? 'Te recomendamos ' + an.rec.teams + ' ' + p.hardware : 'Cantidad de equipos', plan: '¿Cómo quieres adquirirlo?' };
+  const descs = { groups: 'No todos los grados tienen que cursar este programa.', sharing: 'Esto define cuántos equipos necesitas. No hace falta un calendario completo.', quantity: 'Calculada con los grupos y horarios que indicaste. Puedes ajustarla.', plan: 'Cada modalidad incluye servicios distintos. Los importes los confirma GuateGeeks.' };
+  const body = { groups: cfgGroups, sharing: cfgSharing, quantity: cfgQuantity, plan: cfgPlan }[key](s, p);
+  const label = ui.single ? 'Guardar cambio' : last ? (nextPending(state.selectedIndex) >= 0 ? 'Guardar y configurar el siguiente' : 'Guardar y ver mi propuesta') : 'Siguiente';
+  frame(titles[key], descs[key],
+    `${equipHead(s, p)}<div class="decision-dots" ${ui.single ? 'hidden' : ''} role="group" aria-label="Decisión ${ui.sub + 1} de ${keys.length}">${keys.map((k, i) => `<span class="${i <= ui.sub ? 'on' : ''}"></span>`).join('')}<small>Decisión ${ui.sub + 1} de ${keys.length}</small></div>${body}<div class="foot"><button class="btn btn-outline" onclick="cfgNav(-1)">← Atrás</button><span class="fineprint" role="status">${why}</span><button class="btn btn-primary" onclick="cfgNav(1)" ${why ? 'disabled' : ''}>${label} ${icon('arrow')}</button></div>`);
+}
+
+// ---------- Paso 5: propuesta ----------
+const STATUS = {
+  draft: ['amber', 'Pendiente de configurar'], plan: ['amber', 'Modalidad por elegir'], quote: ['amber', 'Requiere cotización personalizada'],
+  stale: ['amber', 'Importe pendiente de actualizar'], priced: ['green', 'Importe calculado']
+};
+const statusChip = st => `<span class="status ${STATUS[st][0]}">${STATUS[st][1]}</span>`;
+function recalc(i) { commit(state.selected[i]); render(); notify('Importe recalculado con los datos actuales.'); }
+function socratesLines(s) {
+  const kinds = new Set(entryGroups(s).map(g => SOCRATES[g.gradeId]));
+  const out = [];
+  if (kinds.has('ahora')) out.push('Sócrates Aprende: contenido para estudiantes de 4.º a 6.º primaria en la fase actual.');
+  if (kinds.has('fase2')) out.push('Sócrates Aprende: el acceso estudiantil de básico y bachillerato llegará en una fase posterior; hoy es solo para docentes.');
+  if (kinds.has('docente')) out.push('Sócrates Aprende: acceso para docentes en preprimaria y de 1.º a 3.º primaria.');
+  return out.length ? `<p>${out.join('<br>')} <i>(pendiente de confirmar con GuateGeeks)</i></p>` : '';
+}
+function noteFor(s, p, an) {
+  const sized = entryGroups(s).filter(g => g.students > 0), prov = sized.some(g => !g.confirmed);
+  if (!p.ratio) return { pending: true, text: 'Equipamiento por definir con GuateGeeks. Las estaciones y la propuesta económica se definen en la cotización.' };
+  if (an.state === 'unconfirmed') return { pending: true, text: `Horarios por confirmar: podrían requerirse entre ${an.rec.scenarios[0].teams} y ${an.rec.scenarios[1].teams} equipos. La selección no confirma cobertura completa.` };
+  if (an.state === 'limited') return { pending: true, text: `Con ${unitsOf(s)} equipos pueden trabajar ${an.cap} estudiantes a la vez; el grupo más grande necesitaría ${an.maxRot} ${plural(an.maxRot, 'rotación', 'rotaciones')}. Se trabaja por estaciones y la metodología y el horario deben validarse.` };
+  if (an.state === 'none') return { pending: true, text: 'Falta definir la cantidad de equipos.' };
+  const n = sized.length;
+  return { pending: prov, text: `${s.sharing === 'simultaneous' ? 'Los grupos que coinciden usan equipos distintos entre sí; los demás comparten el conjunto.' : (n > 1 ? `Los ${n} grupos pueden utilizar los mismos equipos en horarios distintos.` : 'Equipamiento para el grupo seleccionado.')} Cobertura completa con ${unitsOf(s)} equipos.${prov ? ' Provisional: hay grupos con total sin secciones.' : ''}` };
+}
+function scheduleItems(s, q) {
+  if (q.schedule.length === 1) return [s.plan === 'FLEX' ? `Pago único por la renta (${s.flexBimestres} ${plural(s.flexBimestres, 'bimestre', 'bimestres')}): ${Q(q.total)}` : `Pago único: ${Q(q.total)}`];
+  const last = q.schedule.length - 1;
+  return q.schedule.map((v, i) => i === 0 ? `Pago inicial: ${Q(v)}` : `Cuota ${i}: ${Q(v)}`);
+}
+// Cuántos participan, cuántos equipos y cuántos estudiantes trabajan a la vez (explicado en lenguaje claro).
+function capacityText(s, p, u, an) {
+  if (!p.ratio || !u) return 'Las estaciones y la propuesta económica de este programa se definen con GuateGeeks.';
+  const cap = u * p.ratio;
+  const how = an.state === 'limited'
+    ? 'Como hay menos equipos de los recomendados, los estudiantes de cada grupo se turnan para usarlos.'
+    : s.sharing === 'simultaneous' ? 'Los grupos que coinciden en horario usan equipos distintos; los demás grupos usan los mismos equipos en otro horario.'
+    : s.sharing === 'unknown' || !s.sharing ? 'Los horarios aún no están confirmados, así que esta capacidad es una estimación.'
+    : 'Cada grupo usa los equipos en su propio horario, por eso los mismos equipos sirven para todos los grupos.';
+  return `Cada equipo lo usan hasta ${p.ratio} estudiantes a la vez: con ${u} ${p.hardware} trabajan ${cap} estudiantes al mismo tiempo. ${how}`;
+}
+function capacityTiles(s, p, u, an) {
+  const n = participation(s);
+  if (!p.ratio || !u) return `<div class="proposal-data"><div><b>${n}</b><small>estudiantes participan en este programa</small></div><div><b>Por definir</b><small>equipos y estudiantes<br>por equipo</small></div></div>`;
+  const cap = u * p.ratio;
+  const how = an.state === 'limited'
+    ? 'Como hay menos equipos de los recomendados, los estudiantes de cada grupo se turnan para usarlos.'
+    : s.sharing === 'simultaneous' ? 'Los grupos que coinciden en horario usan equipos distintos; los demás grupos usan los mismos equipos en otro horario.'
+    : s.sharing === 'unknown' || !s.sharing ? 'Los horarios aún no están confirmados, así que esta capacidad es una estimación.'
+    : 'Cada grupo usa los equipos en su propio horario, por eso los mismos equipos sirven para todos los grupos.';
+  return `<div class="proposal-data"><div><b>${n}</b><small>estudiantes participan en este programa</small></div><div><b>${u}</b><small>${esc(p.hardware)} en total</small></div><div><b>${cap}</b><small>estudiantes trabajan a la vez</small></div></div><p class="cap-explain">Cada equipo lo usan hasta ${p.ratio} estudiantes a la vez: con ${u} ${esc(p.hardware)} trabajan ${cap} estudiantes al mismo tiempo. ${how}</p>`;
+}
+// Servicios incluidos según la modalidad (textos del cotizador vigente).
+function includedItems(plan, p, months) {
+  const eq = p.hardware;
+  if (plan === 'INTEGRA') return [
+    ['Equipamiento educativo', `${eq} para el aula; propiedad del colegio desde la compra.`],
+    ['Implementación inicial', 'Orientación para poner en marcha el equipamiento en el aula.'],
+    ['Capacitación de uso', 'Incluye 1 hora de capacitación para el uso del equipo. El tiempo adicional se cotiza por separado.']
+  ];
+  if (plan === 'FLEX') return [
+    ['Equipamiento educativo', `${eq} disponible en renta durante ${months} meses. Se puede cambiar de tecnología al comenzar cada bimestre; el equipo, propiedad de GuateGeeks, debe devolverse al finalizar la renta.`],
+    ['Sócrates Aprende', 'Acceso para docentes y, según el grado, contenido para estudiantes disponible por fases.'],
+    ['Capacitación docente e integración tecnológica', 'Capacitación para docentes e integración de la tecnología al trabajo del aula.'],
+    ['Seguimiento y soporte', `Seguimiento a la implementación y soporte durante los ${months} meses de renta.`]
+  ];
+  return [
+    ['Equipamiento educativo', `${eq} para el aula; pasa a ser propiedad del colegio al completar ${months} meses.`],
+    ['Sócrates Aprende', 'Acceso para docentes y, según el grado, contenido para estudiantes disponible por fases.'],
+    ['Capacitación docente e integración tecnológica', 'Capacitación para docentes e integración de la tecnología al trabajo del aula.'],
+    ['Recursos para el aula', 'Actividades prácticas y materiales de apoyo para integrar la tecnología al aprendizaje.'],
+    ['Seguimiento y soporte', `Seguimiento a la implementación y soporte durante los ${months} meses del programa.`]
+  ];
+}
+const OWNERSHIP = {
+  INTEGRA: 'El equipamiento queda en propiedad del colegio desde la compra.',
+  FLEX: 'El equipamiento se utiliza durante la renta; las condiciones finales se confirman con GuateGeeks.',
+  EV8: 'El equipamiento queda en propiedad del colegio al completar el contrato.',
+  EV16: 'El equipamiento queda en propiedad del colegio al completar el contrato.'
+};
+
+// Cotización de un programa: misma información y orden que el cotizador vigente.
+// ---- Así quedan tus pagos: línea de tiempo de toda la propuesta ----
+const PAY_COLORS = ['#685599', '#5fbad6', '#ef8556', '#1d6a58', '#a34825', '#45335f'];
+function paymentPlan(t) {
+  const rows = t.rows.filter(r => r.quote);
+  if (!rows.length) return null;
+  const len = Math.max(...rows.map(r => r.quote.schedule.length));
+  const cols = Array.from({ length: len }, (_, m) => rows.map(r => r.quote.schedule[m] || 0));
+  const totals = cols.map(c => c.reduce((a, b) => a + b, 0));
+  // Tramos de cuota mensual: cambian cuando termina el plazo de algún programa.
+  const monthly = rows.filter(r => r.quote.schedule.length > 1);
+  const ends = [...new Set(monthly.map(r => r.quote.schedule.length - 1))].sort((a, b) => a - b);
+  const phases = []; let from = 1;
+  ends.forEach(end => { phases.push({ from, to: end, amount: monthly.filter(r => r.quote.schedule.length - 1 >= end).reduce((s, r) => s + r.quote.schedule[1], 0) }); from = end + 1; });
+  return { rows, cols, totals, len, phases, initial: totals[0], grand: totals.reduce((a, b) => a + b, 0) };
+}
+function paymentsHTML(t) {
+  const pp = paymentPlan(t); if (!pp) return '';
+  const names = pp.rows.map(r => progTitle(r.entry));
+  const max = Math.max(...pp.totals);
+  const phaseTxt = pp.phases.map(f => `<b>${Q(f.amount)}</b> al mes (${f.from === f.to ? 'mes ' + f.from : 'meses ' + f.from + ' a ' + f.to})`);
+  const lead = pp.phases.length
+    ? `Pagarías <b>${Q(pp.initial)}</b> al iniciar${pp.phases.length ? ' y después ' + phaseTxt.join(', luego ') : ''}.`
+    : 'Es un pago único.';
+  const aria = `Pagos de la propuesta: ${Q(pp.initial)} al inicio` + (pp.phases.length ? ', luego ' + pp.phases.map(f => `${Q(f.amount)} al mes de los meses ${f.from} a ${f.to}`).join(', ') : '') + `. Total con IVA: ${Q(pp.grand)}.`;
+  const label = m => m === 0 ? 'Inicio' : String(m);
+  return `<div class="pay-block"><h3>Así quedan tus pagos</h3><p class="pay-lead">${lead}${pp.rows.length > 1 && pp.phases.length > 1 ? ' La cuota cambia cuando termina el plazo de un programa.' : ''}</p>
+  <div class="pay-facts">${pp.phases.length ? `<div><span>Al iniciar</span><strong>${Q(pp.initial)}</strong></div>${pp.phases.map(f => `<div><span>${f.from === f.to ? 'Mes ' + f.from : 'Meses ' + f.from + ' a ' + f.to}</span><strong>${Q(f.amount)}<small> al mes</small></strong></div>`).join('')}<div class="sum"><span>Total con IVA</span><strong>${Q(pp.grand)}</strong></div>` : `<div class="sum"><span>Pago único · total con IVA</span><strong>${Q(pp.grand)}</strong></div>`}</div>
+  ${pp.len > 1 ? `<details><summary>Ver tabla de pagos mes a mes</summary><div class="pay-table-wrap"><table class="pay-table"><thead><tr><th scope="col">Mes</th>${names.map(n => `<th scope="col">${esc(n)}</th>`).join('')}<th scope="col">Total</th></tr></thead><tbody>${pp.cols.map((c, m) => `<tr><th scope="row">${m === 0 ? 'Al iniciar' : 'Mes ' + m}</th>${c.map(v => `<td>${v ? Q(v) : '—'}</td>`).join('')}<td><b>${Q(pp.totals[m])}</b></td></tr>`).join('')}</tbody></table></div><p class="fineprint">Importes con IVA incluido, en quetzales enteros. La última cuota de cada programa se ajusta por redondeo para que todo sume exacto.</p></details>` : ''}</div>`;
+}
+
+// ---- Modalidad: se elige y se compara dentro de la misma tarjeta del programa ----
+function setPlan(i, plan) {
+  const s = state.selected[i]; if (!s) return;
+  s.plan = plan; commit(s); render();
+  notify(progTitle(s) + ': ahora con ' + planOf(plan).tag + '.');
+}
+function setBim(i, n) {
+  const s = state.selected[i]; if (!s) return;
+  s.flexBimestres = Number(n); if (s.plan === 'FLEX') commit(s); render();
+}
+// Aviso destacado: solo Evoluciona deja el equipo en la institución al completar el plazo.
+const isEvo = plan => plan === 'EV8' || plan === 'EV16';
+function ownCallout(s, p, u, months) {
+  return `<div class="own-callout">${icon('check')}<div><b>El equipo se queda en tu institución</b><span>Al completar los ${months} meses, ${u ? `los ${u} ${esc(p.hardware)}` : 'el equipo'} pasan a ser propiedad del colegio.</span></div></div>`;
+}
+const PLAN_SHORT = { INTEGRA: 'Comprar', FLEX: 'Rentar', EV8: 'Cuotas, 8 meses', EV16: 'Cuotas, 16 meses' };
+
+// Selector de modalidad + el detalle de la modalidad elegida, todo en un solo bloque.
+function programPrice(s, i, row) {
+  const p = findP(s.programId), u = row.units;
+  if (!s.confirmed) return `<div class="price-panel pending"><p>Falta configurar este programa para ver su inversión.</p><button class="btn btn-small btn-primary" onclick="editProgram(${i})">Configurar ahora</button></div>`;
+  if (!p.ratio || !TARIFFS[p.id] || !u) return '<div class="price-panel pending"><p><b>Requiere cotización personalizada.</b> El equipamiento de este programa está por definir con GuateGeeks.</p></div>';
+  if (row.status === 'stale') return `<div class="price-panel pending"><p>Cambió algo que afecta el importe de este programa.</p><button class="btn btn-small btn-primary" onclick="recalc(${i})">Recalcular importe</button></div>`;
+  const quotes = {};
+  ['INTEGRA', 'FLEX', 'EV8', 'EV16'].forEach(pl => { quotes[pl] = M.quoteFor(pl, s.flexBimestres, u, TARIFFS[p.id], FISCAL); });
+  const seg = ['INTEGRA', 'FLEX', 'EV8', 'EV16'].map(pl => {
+    const q = quotes[pl], on = s.plan === pl;
+    return `<button type="button" role="radio" aria-checked="${on}" class="seg-btn ${on ? 'on' : ''}" onclick="setPlan(${i},'${pl}')"><b>${PLAN_SHORT[pl]}</b><span>${Q(q.net)}</span><small>sin IVA${pl === 'FLEX' ? ' · ' + s.flexBimestres + ' ' + plural(s.flexBimestres, 'bimestre', 'bimestres') : ''}</small></button>`;
+  }).join('');
+  let detail;
+  if (s.plan === 'UNDECIDED') {
+    detail = '<p class="pp-hint">Elige una modalidad para ver el detalle de pagos y lo que incluye.</p>';
+  } else {
+    const q = quotes[s.plan], plan = planOf(s.plan), isOne = q.schedule.length === 1, cuotas = q.schedule.length - 1;
+    const base = isOne ? 0 : q.schedule[1], last = q.schedule[q.schedule.length - 1], g = GUIDANCE[s.plan];
+    const pay = isOne ? (s.plan === 'FLEX' ? `Pago único por la renta de ${s.flexBimestres} ${plural(s.flexBimestres, 'bimestre', 'bimestres')} (${q.months} meses).` : 'Pago único por la compra del equipo.')
+      : `Pago inicial de <b>${Q(q.initial)}</b> y ${cuotas} cuotas mensuales de <b>${Q(base)}</b>.`;
+    const bim = s.plan === 'FLEX' ? `<label class="pp-bim" for="cb-${i}">Bimestres de renta<select id="cb-${i}" onchange="setBim(${i},this.value)">${[1, 2, 3, 4].map(n => `<option value="${n}" ${s.flexBimestres === n ? 'selected' : ''}>${n} ${plural(n, 'bimestre', 'bimestres')}${FISCAL.rentDiscount[n] ? ' (' + Math.round(FISCAL.rentDiscount[n] * 100) + ' % de descuento)' : ''}</option>`).join('')}</select></label>` : '';
+    detail = `<div class="pp-main"><div><span>Inversión sin IVA</span><strong>${Q(q.net)}</strong><small>Con IVA: ${Q(q.total)}</small></div><p>${pay}</p></div>${isEvo(s.plan) ? ownCallout(s, p, u, q.months) : ''}${bim}<p class="pp-note">${isEvo(s.plan) ? '' : OWNERSHIP[s.plan]}${u < FISCAL.minUnits ? ` Escenario informativo · mínimo comercial: ${FISCAL.minUnits} equipos.` : ''}</p>
+    <details><summary>Qué incluye, ventajas y calendario de pagos</summary>
+      <p><b>Qué incluye ${esc(plan.tag)}</b></p><ul>${includedItems(s.plan, p, q.months || FISCAL.sim.buyMonths).map(([t, d]) => `<li><b>${esc(t)}.</b> ${esc(d)}</li>`).join('')}</ul>${s.plan !== 'INTEGRA' ? socratesLines(s) : ''}
+      ${g.pros.length ? `<p><b>Ventajas</b></p><ul>${g.pros.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}<p><b>Para tomar en cuenta</b></p><ul>${g.cons.map(x => `<li>${esc(x)}</li>`).join('')}</ul>
+      <p><b>Calendario de pagos</b></p><ol>${scheduleItems(s, q).map(x => `<li>${x}</li>`).join('')}</ol><p class="fineprint">Importes con IVA incluido, en quetzales enteros.</p>
+    </details>`;
+  }
+  return `<div class="price-panel"><div class="seg-title" id="seg-${i}">Modalidad</div><div class="seg" role="radiogroup" aria-labelledby="seg-${i}">${seg}</div>${detail}</div>`;
+}
+
+function proposalCard(s, i, row) {
+  const p = findP(s.programId), an = analysis(s), note = noteFor(s, p, an), u = row.units;
+  return `<article class="proposal-card"><div class="proposal-main">${media(p, levelKey(s), 'summary-media')}<div class="proposal-content"><div class="proposal-heading"><div><div class="eyebrow">${esc(p.area)}</div><h3>${esc(progTitle(s))}</h3></div><div class="proposal-tools"><button class="icon-btn" onclick="editProgram(${i})" aria-label="Editar ${esc(p.name)}">${icon('edit')}</button><button class="icon-btn" onclick="removeProgram(${i})" aria-label="Quitar ${esc(p.name)}">${icon('trash')}</button></div></div><p>${esc(p.hardware)} · ${statusChip(row.status)}</p><div class="groups-line">${entryGroups(s).map(g => `<span>${esc(g.label.replace(', Sección ', ' · ').replace(' · Sección ', ' · '))}</span>`).join('')}</div>${capacityTiles(s, p, u, an)}</div></div>${note.pending && row.status !== 'draft' ? `<div class="proposal-note pending">${icon('info')}<span>${note.text}</span></div>` : ''}${programPrice(s, i, row)}</article>`;
+}
+
+function investmentHTML(t) {
+  const label = t.complete ? 'Total sin IVA' : 'Subtotal sin IVA de programas con precio disponible';
+  return `<section class="investment"><div class="section-heading" style="margin:0 0 8px"><h2>Inversión y formas de pago</h2><span class="status ${t.complete ? 'green' : 'amber'}">${t.complete ? 'Calculada' : 'Parcial'}</span></div><div class="invest-main"><small>${label}</small><b>${t.pricedCount ? Q(t.net) : '—'}</b>${t.pricedCount ? `<span class="inv-sub">Con IVA: ${Q(t.total)} (IVA de ${Q(t.tax)})</span>` : ''}</div>${!t.complete ? `<div class="warning">${t.pricedCount ? 'Este importe no es el total institucional completo. ' : 'Todavía no hay importes disponibles. '}${t.unpricedCount} ${plural(t.unpricedCount, 'programa está', 'programas están')} pendiente${t.unpricedCount === 1 ? '' : 's'} de modalidad, configuración, recálculo o cotización personalizada.</div>` : ''}${paymentsHTML(t)}<p class="fineprint" style="margin-top:12px">El importe principal es sin IVA; el total con IVA se muestra siempre como referencia. Los importes son estimaciones comerciales y la cotización final se confirma con GuateGeeks. Programas con plazos distintos se pagan según su propio calendario; no hay una cuota mensual única.</p></section>`;
+}
+
+// Simulador: misma política del cotizador vigente. Un solo valor de cuota por programa:
+// la sugerida de GuateGeeks o, al quitar la sugerencia, un valor editable para proyectar.
+// El simulador aplica a renta por bimestre (Flex) y a Evoluciona; no a la compra de equipos (Integra).
+function simRows(t) { return t.rows.filter(r => r.quote && r.entry.plan !== 'INTEGRA' && participation(r.entry) > 0); }
+function simResults(r, fee) {
+  if (!fee) return '<p class="fineprint">Escribe una cuota mensual para ver la proyección.</p>';
+  const s = r.entry, n = participation(s), sim = M.simulate(s.plan, r.quote, n, fee, FISCAL), pay = r.quote.total;
+  const covers = sim.diff >= 0, payPct = covers ? Math.round(pay / sim.income * 100) : 100;
+  const head = covers
+    ? `Con <b>${Q(fee)}</b> al mes por estudiante, el colegio recauda <b>${Q(sim.income)}</b> en ${sim.months} meses. Después de pagar a GuateGeeks le quedan <b>${Q(sim.diff)}</b> antes de sus gastos propios.`
+    : `Con <b>${Q(fee)}</b> al mes por estudiante, el colegio recauda <b>${Q(sim.income)}</b> y no alcanza a cubrir el pago a GuateGeeks: faltarían <b>${Q(-sim.diff)}</b>.`;
+  return `<p class="sim-head">${head}</p>
+  <div class="sim-bar" role="img" aria-label="De ${Q(sim.income)} recaudados, ${Q(pay)} corresponden al pago a GuateGeeks${covers ? ' y ' + Q(sim.diff) + ' quedan al colegio' : ' y no alcanzan'}"><span class="pay" style="width:${payPct}%"><b>Paga a GuateGeeks</b>${Q(pay)}</span>${covers ? `<span class="left" style="width:${100 - payPct}%"><b>Le queda al colegio</b>${Q(sim.diff)}</span>` : ''}</div>
+  <div class="sim-grid"><div><span>Cada estudiante aporta</span><strong>${Q(fee * sim.months)}</strong><small>${Q(fee)} × ${sim.months} meses</small></div><div><span>El programa cuesta por estudiante</span><strong>${Q(pay / n)}</strong><small>${Q(pay)} entre ${n} estudiantes</small></div><div class="hl"><span>Diferencia por estudiante</span><strong>${Q(sim.perStudent)}</strong><small>${Q(sim.perStudentMonth)} al mes</small></div></div>`;
+}
+function simOut(t) {
+  const rows = simRows(t);
+  if (!rows.length) return '<p class="fineprint">Disponible cuando haya programas con importe calculado y estudiantes participantes.</p>';
+  const useSug = state.useSuggested !== false;
+  return rows.map((r, i) => {
+    const s = r.entry, n = participation(s), sug = M.simulate(s.plan, r.quote, n, 0, FISCAL).suggested;
+    const fee = useSug ? sug : ((state.fees || {})[s.id] ?? sug);
+    return `<div class="sim-card"><h4>${esc(progTitle(s))}</h4>${isEvo(s.plan) ? ownCallout(s, findP(s.programId), r.units, r.quote.months) : ''}<div class="sim-fee">${useSug
+      ? `<span>Cuota mensual por estudiante, sugerida por GuateGeeks</span><strong>${Q(sug)}</strong><small>Con esta cuota, el pago a GuateGeeks equivale al ${Math.round(FISCAL.sim.coverage * 100)} % de lo que el colegio recauda.</small>`
+      : `<label for="fee-${i}">Cuota mensual por estudiante, en quetzales</label><input id="fee-${i}" class="field" type="text" inputmode="numeric" autocomplete="off" value="${fee}" oninput="setProjection(${i},this.value,this)" aria-describedby="err-fee-${i}"><small>Sugerida por GuateGeeks: ${Q(sug)}. Cambia el valor para proyectar otros escenarios.</small><p class="field-error" id="err-fee-${i}" hidden></p>`}</div><div id="sim-res-${i}">${simResults(r, fee)}</div></div>`;
+  }).join('') + '<p class="fineprint">Es una estimación antes de gastos, cobros e impuestos propios del colegio (incluida la morosidad); no representa utilidad neta. Si los mismos estudiantes cursan varios programas, cada uno se calcula por separado y no se suman cuotas ni ingresos de forma automática.</p>';
+}
+function setProjection(i, value, input) {
+  const v = value.trim();
+  if (v !== '' && (!/^\d+$/.test(v) || Number(v) > 10000)) { setError(input, 'Escribe una cuota en quetzales enteros, hasta 10,000.'); return; }
+  setError(input, '');
+  const r = simRows(M.proposalTotals(state.selected, PROGRAMS, groups(), TARIFFS, FISCAL))[i]; if (!r) return;
+  state.fees = state.fees || {}; if (v === '') delete state.fees[r.entry.id]; else state.fees[r.entry.id] = Number(v);
+  store();
+  document.getElementById('sim-res-' + i).innerHTML = simResults(r, v === '' ? null : Number(v));
+}
+function toggleSuggested(on) {
+  state.useSuggested = on; store();
+  document.getElementById('sim-out').innerHTML = simOut(M.proposalTotals(state.selected, PROGRAMS, groups(), TARIFFS, FISCAL)); // sin re-dibujar para no cerrar el simulador
+}
+
+// ---- Descarga de la cotización en PDF ----
+function downloadBlob(blob, name) { const u = URL.createObjectURL(blob), a = document.createElement('a'); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 1500); }
+
+// Texto plano de cómo se paga (el mismo criterio que la tarjeta del programa).
+function payPlain(s, q) {
+  if (q.schedule.length === 1) return s.plan === 'FLEX' ? `Pago único por la renta de ${s.flexBimestres} ${plural(s.flexBimestres, 'bimestre', 'bimestres')} (${q.months} meses).` : 'Pago único por la compra del equipo.';
+  const last = q.schedule[q.schedule.length - 1], base = q.schedule[1];
+  return `Pago inicial de ${Q(q.initial)} y ${q.schedule.length - 1} cuotas mensuales de ${Q(base)}.`;
+}
+// Todo el contenido del PDF, ya formateado. El diseño vive en propuesta-pdf.js.
+function pdfModel(includeSim = false) {
+  const t = M.proposalTotals(state.selected, PROGRAMS, groups(), TARIFFS, FISCAL), pp = paymentPlan(t);
+  const levels = LEVELS.filter(l => state.selected.some(s => entryLevels(s).some(x => x.id === l.id))).map(l => l.name);
+  const programs = t.rows.map(r => {
+    const s = r.entry, p = findP(s.programId), q = r.quote, an = analysis(s), note = noteFor(s, p, an), u = r.units, n = participation(s);
+    const tiles = [{ v: String(n), l: 'estudiantes participan' }];
+    if (p.ratio && u) tiles.push({ v: String(u), l: p.hardware + ' en total' }, { v: String(u * p.ratio), l: 'estudiantes trabajan a la vez' });
+    const price = q ? {
+      planName: planOf(s.plan).tag + ' · ' + planOf(s.plan).title, net: Q(q.net), withIva: Q(q.total), pay: payPlain(s, q),
+      own: isEvo(s.plan) ? { title: 'El equipo se queda en tu institución', text: `Al completar los ${q.months} meses, los ${u} ${p.hardware} pasan a ser propiedad del colegio.` } : null,
+      minNote: u < FISCAL.minUnits ? `Escenario informativo · mínimo comercial: ${FISCAL.minUnits} equipos.` : '',
+      includes: includedItems(s.plan, p, q.months || FISCAL.sim.buyMonths)
+    } : null;
+    return {
+      eyebrow: p.area, title: progTitle(s), sub: `${p.hardware} · ${price ? planOf(s.plan).tag : STATUS[r.status][1]}`, groups: entryGroups(s).map(g => g.label.replace(', Sección ', ' · ').replace(' · Sección ', ' · ')),
+      photo: s.id, planTag: price ? planOf(s.plan).tag : '', tiles, explain: capacityText(s, p, u, an), note: note.pending && r.status !== 'draft' ? note.text : '', price,
+      pending: price ? '' : (r.status === 'draft' ? 'Falta configurar este programa para calcular su inversión.' : r.status === 'quote' ? 'Requiere cotización personalizada.' : r.status === 'plan' ? 'Modalidad por elegir: el importe se calcula al elegirla.' : 'Importe pendiente de actualizar.')
+    };
+  });
+  // Pagos
+  let pay = null;
+  if (pp) {
+    const phaseTxt = pp.phases.map(f => `${Q(f.amount)} al mes (${f.from === f.to ? 'mes ' + f.from : 'meses ' + f.from + ' a ' + f.to})`);
+    pay = {
+      lead: pp.phases.length ? `Pagarías ${Q(pp.initial)} al iniciar y después ${phaseTxt.join(', luego ')}.` : 'Es un pago único.',
+      tiles: pp.phases.length
+        ? [{ l: 'Al iniciar', v: Q(pp.initial) }, ...pp.phases.map(f => ({ l: f.from === f.to ? 'Mes ' + f.from : 'Meses ' + f.from + ' a ' + f.to, v: Q(f.amount) + ' al mes' })), { l: 'Total con IVA', v: Q(pp.grand), dark: true }].slice(0, 4)
+        : [{ l: 'Pago único · total con IVA', v: Q(pp.grand), dark: true }],
+      table: pp.len > 1 ? { head: ['Mes', ...pp.rows.map(r => progTitle(r.entry)), 'Total'], rows: pp.cols.map((c, m) => [m === 0 ? 'Al iniciar' : 'Mes ' + m, ...c.map(v => v ? Q(v) : '-'), Q(pp.totals[m])]) } : null
+    };
+  }
+  // Proyección por estudiante: solo si la institución pidió incluirla (renta y Evoluciona)
+  const simList = includeSim ? simRows(t) : [], useSug = state.useSuggested !== false;
+  const sim = simList.length ? {
+    lead: 'Proyección con ' + (useSug ? 'la cuota sugerida por GuateGeeks' : 'la cuota que definiste') + ', para los programas en renta y en cuotas.',
+    note: 'Es una estimación antes de gastos, cobros e impuestos propios del colegio (incluida la morosidad); no representa utilidad neta. Si los mismos estudiantes cursan varios programas, cada uno se calcula por separado.',
+    items: simList.map(r => {
+      const s = r.entry, n = participation(s), sug = M.simulate(s.plan, r.quote, n, 0, FISCAL).suggested, fee = useSug ? sug : ((state.fees || {})[s.id] ?? sug), x = M.simulate(s.plan, r.quote, n, fee, FISCAL);
+      return {
+        title: progTitle(s), own: isEvo(s.plan) ? { title: 'El equipo se queda en tu institución', text: `Al completar los ${r.quote.months} meses, los ${r.units} ${findP(s.programId).hardware} pasan a ser propiedad del colegio.` } : null,
+        head: x.diff >= 0 ? `Con ${Q(fee)} al mes por estudiante, el colegio recauda ${Q(x.income)} en ${x.months} meses y, después de pagar a GuateGeeks, le quedan ${Q(x.diff)} antes de sus gastos propios.` : `Con ${Q(fee)} al mes por estudiante, el colegio recauda ${Q(x.income)} y no alcanza a cubrir el pago a GuateGeeks: faltarían ${Q(-x.diff)}.`,
+        rows: [['Cuota mensual por estudiante' + (useSug ? ' (sugerida)' : ''), Q(fee)], [`Recaudo estimado (${n} estudiantes × ${x.months} meses)`, Q(x.income)], ['Pago a GuateGeeks (total con IVA)', Q(r.quote.total)], ['Diferencia bruta antes de gastos propios', Q(x.diff), true], ['Diferencia por estudiante', Q(x.perStudent) + ' (' + Q(x.perStudentMonth) + ' al mes)']]
+      };
+    })
+  } : null;
+  const notes = [
+    `Importes en quetzales enteros. El importe principal es sin IVA; el total con IVA (IVA de ${Math.round(FISCAL.iva * 100)} %) se muestra como referencia.`,
+    'Los importes son estimaciones comerciales. La cotización final y las condiciones las confirma GuateGeeks.',
+    'No todas las modalidades incluyen los mismos servicios (equipamiento, capacitación, recursos para el aula, Sócrates Aprende y soporte).',
+    'Cuando los horarios de los grupos no están confirmados, la cantidad de equipos es una estimación y no una cobertura garantizada.'
+  ];
+  if (state.selected.some(s => s.plan !== 'INTEGRA' && s.plan !== 'UNDECIDED')) notes.push('Sócrates Aprende: contenido para estudiantes de 4.º a 6.º primaria en la fase actual; en los demás grados, acceso para docentes por ahora. Dato por confirmar con GuateGeeks.');
+  const overview = t.rows.map((r, k) => { const s = r.entry, p = findP(s.programId), q = r.quote, g = entryGroups(s); return { photo: s.id, title: progTitle(s), sub: g.length + ' ' + plural(g.length, 'grupo', 'grupos') + ' · ' + participation(s) + ' estudiantes', equip: p.ratio && r.units ? r.units + ' ' + p.hardware : 'Por definir', plan: q ? planOf(s.plan).tag : 'Por definir', net: q ? Q(q.net) : 'Pendiente', withIva: q ? 'Con IVA ' + Q(q.total) : '', pendiente: !q }; });
+  return {
+    title: 'Propuesta para tu colegio', subtitle: 'Programas de tecnología educativa elegidos con el asesor de GuateGeeks. Los importes son estimaciones que GuateGeeks confirma.',
+    legend: [...new Set(state.selected.filter(s => s.plan !== 'UNDECIDED').map(s => isEvo(s.plan) ? 'EVO' : s.plan))].map(k => ({ INTEGRA: ['Integra', 'Compras el equipo y queda en propiedad del colegio desde el inicio. Se paga una sola vez.'], FLEX: ['Flex', 'Rentas el equipo por bimestres (de 2 en 2 meses). Se paga una sola vez y el equipo se devuelve al terminar.'], EVO: ['Evoluciona', 'Pagas un inicial del 20 % y cuotas mensuales iguales (8 o 16 meses). Al terminar, el equipo pasa a ser del colegio.'] }[k])),
+    steps: [['Revisa', 'Comparte esta propuesta con tu equipo directivo y define qué programas empiezan primero.'], ['Confirma', 'GuateGeeks valida con tu colegio los grupos, los importes y las condiciones finales.'], ['Empieza', 'Se coordina la entrega de equipos y el acompañamiento a tus docentes.']],
+    date: new Date().toLocaleDateString('es-GT', { day: 'numeric', month: 'long', year: 'numeric' }),
+    stats: [{ v: String(selectedParticipants()), l: 'estudiantes únicos en la propuesta' }, { v: String(levels.length), l: plural(levels.length, 'nivel educativo', 'niveles educativos') }, { v: String(state.selected.length), l: plural(state.selected.length, 'programa seleccionado', 'programas seleccionados') }],
+    levelsLine: 'Niveles: ' + joinY(levels) + '. Matrícula registrada en la institución: ' + registered() + ' estudiantes.',
+    invest: {
+      label: t.complete ? 'Total sin IVA' : 'Subtotal sin IVA (parcial)', net: t.pricedCount ? Q(t.net) : 'Sin importe disponible',
+      withIva: t.pricedCount ? `Con IVA: ${Q(t.total)} (IVA de ${Q(t.tax)})` : '',
+      parts: t.pricedCount ? { net: Q(t.net), iva: Q(t.tax), total: Q(t.total), ivaPct: Math.round(FISCAL.iva * 100) + ' %' } : null,
+      warning: t.complete ? '' : `${t.pricedCount ? 'Este importe no es el total institucional completo. ' : ''}${t.unpricedCount} ${plural(t.unpricedCount, 'programa está', 'programas están')} pendiente${t.unpricedCount === 1 ? '' : 's'} de modalidad, configuración, recálculo o cotización personalizada.`
+    },
+    pay, overview, programs, sim, notes
+  };
+}
+// Foto del equipo para la cotización: la marcada con pdf: true en config.js (o la primera).
+function pdfPhoto(s) { const list = PHOTOS[s.programId] || []; return list.find(x => x.pdf) || list[0]; }
+// Logo con transparencia: se lee el PNG, se separa el color de la transparencia y se comprime.
+async function deflate(u8) {
+  if (!window.CompressionStream) return null;
+  const cs = new CompressionStream('deflate'), w = cs.writable.getWriter(); w.write(u8); w.close();
+  return new Uint8Array(await new Response(cs.readable).arrayBuffer());
+}
+async function pdfImg(src, width) {
+  const img = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = src; });
+  const w = width, h = Math.round(width * img.naturalHeight / img.naturalWidth), cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+  const cx = cv.getContext('2d'); cx.drawImage(img, 0, 0, w, h);
+  const { rgb, alpha } = window.GGPdf.splitRGBA(cx.getImageData(0, 0, w, h).data, w, h);
+  const [cRgb, cAlpha] = [await deflate(rgb), await deflate(alpha)];
+  return cRgb ? { w, h, comps: 3, data: cRgb, filter: 'FlateDecode', smask: { data: cAlpha, filter: 'FlateDecode' } } : { w, h, comps: 3, data: rgb, filter: null, smask: { data: alpha, filter: null } };
+}
+const pdfLogo = () => pdfImg('../assets/brand/guategeeks-logo.png', 360);
+const pdfEyes = () => pdfImg('../assets/brand/guategeeks-ojos.png', 420);
+// Antes de descargar se pregunta si se quiere incluir la proyección por estudiante (solo aplica a renta y cuotas).
+function downloadPdf() {
+  const t = M.proposalTotals(state.selected, PROGRAMS, groups(), TARIFFS, FISCAL);
+  if (!simRows(t).length) { makePdf(false); return; }
+  askChoice('¿Quieres incluir la proyección por estudiante en el PDF?', 'Muestra cuánto recaudaría el colegio con la cuota por estudiante y cuánto le quedaría, para los programas en renta y en cuotas. Es opcional.', [{ label: 'No, solo la cotización', fn: () => makePdf(false) }, { label: 'Sí, incluir la proyección', primary: true, fn: () => makePdf(true) }]);
+}
+async function makePdf(includeSim) {
+  if (!window.GGPropuestaPdf) { notify('No se pudo preparar el PDF en este navegador.'); return; }
+  notify('Preparando tu cotización en PDF…');
+  const photos = {};
+  await Promise.all(state.selected.map(async s => { // las fotos se incluyen cuando se pueden leer; si no, el PDF sale sin ellas
+    try {
+      const ph = pdfPhoto(s); if (!ph) return;
+      const res = await fetch(ph.src); if (res.ok) photos[s.id] = new Uint8Array(await res.arrayBuffer());
+    } catch (e) { /* sin foto */ }
+  }));
+  try { photos.logo = await pdfLogo(); } catch (e) { /* sin logo: el PDF usa el nombre escrito */ }
+  try { photos.ojos = await pdfEyes(); } catch (e) { /* sin los ojos: el PDF usa círculos de marca */ }
+  try {
+    const bytes = window.GGPropuestaPdf.build(pdfModel(includeSim), photos);
+    downloadBlob(new Blob([bytes], { type: 'application/pdf' }), 'GuateGeeks_Cotizacion.pdf');
+    notify('Tu cotización en PDF se descargó.');
+  } catch (e) { notify('No se pudo generar el PDF. Intenta de nuevo.'); }
+}
+
+function renderSummary() {
+  const list = state.selected;
+  if (!list.length) { frame('Tu propuesta educativa', 'Aquí se reunirán los programas y equipos que elijas para tu institución.', `<div class="empty">Todavía no has agregado programas. Tus niveles y estudiantes registrados se conservan.</div><div class="foot"><button class="btn btn-primary" onclick="step(${hasStudents() ? 3 : state.levels.length ? 2 : 1})">${hasStudents() ? 'Elegir programas' : 'Continuar mi propuesta'} ${icon('arrow')}</button></div>`); return; }
+  const t = M.proposalTotals(list, PROGRAMS, groups(), TARIFFS, FISCAL), nlevels = new Set(list.flatMap(s => entryLevels(s).map(l => l.id))).size;
+  const provisional = groups().some(g => list.some(s => s.groupIds.includes(g.id)) && !g.confirmed);
+  frame('Tu propuesta educativa', 'Estos son los programas y equipos que seleccionaste para tu institución. Revisa el alcance, compara tus decisiones y ajusta lo que necesites.',
+    `<div class="summary-hero"><div class="summary-top"><h2>Resumen de tu propuesta</h2></div><p>Matrícula registrada: ${registered()} estudiantes.</p><div class="summary-num"><div><b>${selectedParticipants()}</b><small>estudiantes únicos<br>sin duplicarlos</small></div><div><b>${nlevels}</b><small>${plural(nlevels, 'nivel educativo', 'niveles educativos')}<br>en la propuesta</small></div><div><b>${list.length}</b><small>${plural(list.length, 'programa seleccionado', 'programas seleccionados')}<br>para tu institución</small></div></div></div>${provisional ? '<div class="warning">Algunos grupos están como total sin secciones. Las cantidades de equipos son provisionales hasta confirmar cómo se agrupan.</div>' : ''}<div class="section-heading"><h2>Programas que elegiste</h2><button class="text-btn" onclick="step(3)">+ Agregar programa</button></div>${list.map((s, i) => proposalCard(s, i, t.rows[i])).join('')}<div class="links"><button class="btn btn-outline" onclick="step(3)">+ Agregar otro programa</button><button class="btn btn-outline" onclick="step(1)">+ Agregar otro nivel</button></div>${investmentHTML(t)}${simRows(t).length ? `<details class="optional-block" id="sim-block"><summary><span class="sim-ico">${icon('chart')}</span><span class="sim-txt"><b>¿Quieres explorar cuánto representaría esta inversión por estudiante?</b><small>Proyecta cuánto recaudaría el colegio con la cuota sugerida y cuánto le quedaría, para renta y cuotas.</small></span><span class="sim-cta">Ver mi proyección</span></summary><div class="sim-body"><p>Parte de la cuota sugerida por GuateGeeks y de los estudiantes e importes de tu propuesta. Puedes cambiar la cuota para proyectar otros escenarios.</p><label class="suggested-toggle" for="use-sug"><input id="use-sug" type="checkbox" ${state.useSuggested !== false ? 'checked' : ''} onchange="toggleSuggested(this.checked)"> Seguir la sugerencia de GuateGeeks</label><div id="sim-out" style="margin-top:12px">${simOut(t)}</div></div></details>` : ''}<section class="next-panel"><h3>Tu cotización, lista para descargar.</h3><p>Descarga un PDF con el alcance, los programas, los equipos, los importes y la forma de pago de tu propuesta.</p><div class="links"><button class="btn btn-primary" onclick="downloadPdf()">Descargar cotización en PDF ${icon('download')}</button></div></section><div class="foot"><button class="btn btn-outline" onclick="step(1)">+ Agregar otro nivel</button><button class="btn btn-outline" onclick="resetAll()">Empezar de nuevo</button></div>`);
+}
+
+function render() {
+  if (state.step === 0) renderLanding();
+  else if (state.step === 1) renderLevels();
+  else if (state.step === 2) renderEnrollment();
+  else if (state.step === 3) renderPrograms();
+  else if (state.step === 4) renderConfig();
+  else renderSummary();
+}
+const lbox = document.getElementById('lightbox');
+lbox.addEventListener('click', e => { if (e.target === lbox) closePhoto(); });
+lbox.addEventListener('close', () => { ui.lb = null; });
+lbox.addEventListener('keydown', e => { if (e.key === 'ArrowLeft') shiftPhoto(null, null, -1); if (e.key === 'ArrowRight') shiftPhoto(null, null, 1); });
+document.getElementById('notice').querySelector('button').addEventListener('click', () => { ui.notice = ''; updateHeader(); });
+if (location.hash === '#ejemplo') { example(); state.step = 5; }
+if (state.step > 1 && !state.levels.length) state.step = 1;
+render();
+
+// Pato robot 3D: camina por la barra de pasos, mira hacia arriba a lo que haces y espera. Si no hay WebGL queda el pato SVG.
+function placeDuck() {
+  const lane = document.querySelector('.duck-lane');
+  if (!lane || state.step < 1) { duck3Step = 0; return; }
+  if (!webglOk()) { placeDuckSvg(); return; }
+  if (!duckHost) { duckHost = document.createElement('div'); duckHost.className = 'duck-host'; }
+  lane.appendChild(duckHost);
+  const x = duckTarget(lane); if (x === null) return;
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches, first = duck3Step === 0;
+  if (duck3) { duck3.resize(); duckHideSay(); duck3.moveTo(x, { instant: first, silent: true }); duck3.setStage(state.step); if (first) duckSay(); duck3Step = state.step; return; }
+  duck3Step = state.step;
+  loadLab(() => {
+    if (duck3 || !window.GGLab || !duckHost.isConnected) return;
+    try { duck3 = window.GGLab.createDuck(duckHost, { reduceMotion: reduce, onArrive: duckSay, onLand: duckStomp }); duck3.setPaused(animPaused); duck3.setStage(state.step, true); const l = document.querySelector('.duck-lane'), t = l && duckTarget(l); if (t !== null) duck3.moveTo(t, { instant: true }); } catch (e) { duck3 = null; }
+  });
+}
+function duckStomp() { const b = document.querySelectorAll('.step-nav')[state.step - 1]; if (!b) return; b.classList.remove('squish'); void b.offsetWidth; b.classList.add('squish'); }
+const STAGE_SAY = ['', 'Niveles', 'Estudiantes', 'Programas', 'Personalizar', 'Resumen'];
+let duckSayOn = false;
+function duckHideSay() {}
+function duckSay() {}
+document.addEventListener('pointermove', e => { if (duck3) duck3.look(e.clientX, e.clientY); }, { passive: true });
+document.addEventListener('pointerdown', e => { if (duck3 && e.target.closest && e.target.closest('#app')) duck3.react('click'); }, { passive: true });
+document.addEventListener('input', () => { if (duck3) duck3.react('type'); }, { passive: true });
+window.addEventListener('resize', () => { if (!duck3) return; const lane = document.querySelector('.duck-lane'), x = lane && duckTarget(lane); if (x !== null && x !== undefined) duck3.moveTo(x, { instant: true, silent: true }); if (duckSayOn) duckSay(); });
+
+// El avance no se queda fijo ocupando espacio: al bajar solo queda una línea fina arriba (sin texto ni robot).
+function placeProgressLine() {
+  let el = document.getElementById('progress-line');
+  if (!el) { el = document.createElement('div'); el.id = 'progress-line'; el.setAttribute('aria-hidden', 'true'); el.innerHTML = '<i></i>'; document.body.appendChild(el); }
+  if (progIO) { progIO.disconnect(); progIO = null; }
+  const nav = document.querySelector('.steps-small');
+  if (!nav || state.step < 1) { el.classList.remove('on'); return; }
+  el.firstChild.style.width = state.step * 20 + '%';
+  progIO = new IntersectionObserver(es => { el.classList.toggle('on', !es[0].isIntersecting); }, { threshold: 0 }); progIO.observe(nav);
+}
