@@ -145,7 +145,7 @@
     // Grados y estudiantes considerados: deja claro quién está incluido en la cotización
     if (model.coverage && model.coverage.rows.length) {
       heading('Grados y estudiantes considerados', model.coverage.summary, 120);
-      const cc = [{ w: 190, a: 'left', t: 'Grado' }, { w: 90, a: 'right', t: 'Estudiantes' }, { w: CW - 280, a: 'left', t: 'Programas' }];
+      const cc = [{ w: 190, a: 'left', t: 'Grados' }, { w: 90, a: 'right', t: 'Estudiantes' }, { w: CW - 280, a: 'left', t: 'Programa' }];
       const head = () => { ensure(26 + 40); pdf.rect(M, y, CW, 26, { fill: C.plumDark, r: 6 }); let cx = M; cc.forEach(c => { pdf.text(c.a === 'right' ? cx + c.w - 10 : cx + 10 + (c === cc[2] ? 10 : 0), y + 17, c.t, { size: T.small, bold: true, color: C.white, align: c.a }); cx += c.w; }); y += 28; };
       head();
       model.coverage.rows.forEach((r, ri) => {
@@ -158,7 +158,7 @@
         y += h;
       });
       y += 14;
-      if (model.coverage.missing) { const msg = model.coverage.missing + ' estudiantes registrados no están incluidos en los precios de esta cotización.'; const h = calloutH(CW, '', msg); ensure(h + 8); callout(M, CW, y, '', msg, 'amber'); y += h + 14; }
+      if (model.coverage.missing) { const msg = model.coverage.missing + ' estudiantes registrados no entran en los precios de esta cotización; el resto sí está incluido.'; const h = calloutH(CW, '', msg); ensure(h + 8); callout(M, CW, y, '', msg, 'amber'); y += h + 14; }
     }
 
     // Inversión agrupada por modalidad: cada monto reúne los programas que comparten modalidad

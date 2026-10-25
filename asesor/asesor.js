@@ -697,25 +697,46 @@ const groupGrade = g => g.label.split(' · ')[0];
 function coverage() {
   const covered = new Set(state.selected.flatMap(s => s.groupIds)), skipped = new Set(state.skipped || []);
   const gs = groups().filter(g => g.students > 0), miss = gs.filter(g => !covered.has(g.id));
-  return { gs, covered, uncovered: miss.filter(g => !skipped.has(g.id)), skipped: miss.filter(g => skipped.has(g.id)), students: gs.filter(g => covered.has(g.id)).reduce((n, g) => n + g.students, 0), total: gs.reduce((n, g) => n + g.students, 0) };
+  const open = miss.filter(g => !skipped.has(g.id)), hosted = g => hostsFor([g]).length > 0;
+  return { gs, covered, uncovered: open, pending: open.filter(hosted), outside: open.filter(g => !hosted(g)), skipped: miss.filter(g => skipped.has(g.id)), students: gs.filter(g => covered.has(g.id)).reduce((n, g) => n + g.students, 0), total: gs.reduce((n, g) => n + g.students, 0) };
 }
 const hostsFor = gs => state.selected.filter(s => gs.some(g => compatible(findP(s.programId), g)));
-const assignPending = () => coverage().uncovered.filter(g => hostsFor([g]).length);
-// Una fila por grado: estudiantes y programas que lo incluyen.
+const assignPending = () => coverage().pending;
+// Una fila por grado con su estado: incluido, pendiente (hay un programa elegido compatible), fuera (ningún programa elegido aplica) o descartado.
 function coverageRows() {
   const cov = coverage(), skipped = new Set(state.skipped || []), rows = [];
   groups().filter(g => g.students > 0).forEach(g => {
     let r = rows.find(x => x.gradeId === g.gradeId);
-    if (!r) rows.push(r = { gradeId: g.gradeId, levelId: g.levelId, grade: groupGrade(g), students: 0, progs: [], covered: false, skipped: false });
+    if (!r) rows.push(r = { gradeId: g.gradeId, levelId: g.levelId, grade: groupGrade(g), students: 0, progs: [], status: 'outside' });
     r.students += g.students;
     state.selected.filter(s => s.groupIds.includes(g.id)).forEach(s => { const n = findP(s.programId).name; if (!r.progs.includes(n)) r.progs.push(n); });
-    if (cov.covered.has(g.id)) r.covered = true; else if (skipped.has(g.id)) r.skipped = true;
+    const st = cov.covered.has(g.id) ? 'ok' : skipped.has(g.id) ? 'skipped' : hostsFor([g]).length ? 'pending' : 'outside';
+    if (r.status !== 'ok') r.status = st === 'ok' || r.status === 'outside' && st !== 'outside' ? st : r.status;
   });
   return rows;
 }
-function openAssign() { ui.assign = true; ui.assignSeen = coverage().uncovered.map(g => g.id).join(); state.step = 3; store(); render(); }
+// «1.º a 3.º Primaria», «Pre-Kínder, Kínder y Preparatoria»: los grados de un bloque sin repetir el nombre del nivel.
+function gradesText(grades) {
+  const suf = (grades[0].match(/ (Primaria|Básico|Bachillerato)$/) || [])[1];
+  if (!suf || !grades.every(g => g.endsWith(' ' + suf))) return joinY(grades);
+  const short = grades.map(g => g.slice(0, -suf.length - 1));
+  return (short.length >= 3 ? short[0] + ' a ' + short[short.length - 1] : joinY(short)) + ' ' + suf;
+}
+// Bloques por nivel: los grados que comparten programa y estado se muestran juntos, sin repetir una fila por grado.
+function coverageBlocks() {
+  const blocks = [];
+  coverageRows().forEach(r => {
+    const key = r.levelId + '|' + r.status + '|' + r.progs.join(',');
+    let b = blocks.find(x => x.key === key);
+    if (!b) blocks.push(b = { key, levelId: r.levelId, status: r.status, progs: r.progs, grades: [], students: 0 });
+    b.grades.push(r.grade); b.students += r.students;
+  });
+  blocks.forEach(b => { b.text = gradesText(b.grades); });
+  return blocks;
+}
+function openAssign() { const p = coverage().pending; ui.assign = p.length > 0; ui.assignSeen = p.map(g => g.id).join(); state.step = 3; store(); render(); }
 function toggleAssign(key, on) { ui.assignSel[key] = on; }
-function skipAssign() { state.skipped = [...new Set([...(state.skipped || []), ...coverage().uncovered.map(g => g.id)])]; ui.assign = false; store(); notify('Esos grados quedan sin programa por ahora. Se indican en el resumen y en el PDF.'); step(5); }
+function skipAssign() { state.skipped = [...new Set([...(state.skipped || []), ...coverage().pending.map(g => g.id)])]; ui.assign = false; store(); notify('Esos grados quedan sin programa por ahora. Se indican en el resumen y en el PDF.'); step(5); }
 function catalogFromAssign() { ui.assign = false; render(); }
 // Suma los grados nuevos a los programas elegidos y deja cada programa por configurar: la cantidad de equipos se vuelve a calcular.
 function applyAssign() {
@@ -733,7 +754,7 @@ function applyAssign() {
   notify('Agregamos los grados nuevos. Revisa los equipos de cada programa para actualizar la cotización.');
 }
 function renderAssign() {
-  const pend = coverage().uncovered, levels = activeLevels().filter(l => pend.some(g => g.levelId === l.id));
+  const pend = coverage().pending, levels = activeLevels().filter(l => pend.some(g => g.levelId === l.id));
   const cards = levels.map(l => {
     const gs = pend.filter(g => g.levelId === l.id), n = gs.reduce((a, g) => a + g.students, 0), grades = [...new Set(gs.map(groupGrade))], hosts = hostsFor(gs);
     const rows = hosts.map(s => {
@@ -785,7 +806,7 @@ function removeProgram(i) {
 }
 function nextFromPrograms() { if (!state.selected.length) { notify('Agrega al menos un programa a tu propuesta.'); return; } step(4); }
 function renderPrograms() {
-  if (ui.assign && coverage().uncovered.length) { renderAssign(); return; }
+  if (ui.assign && coverage().pending.length) { renderAssign(); return; }
   ui.assign = false;
   const active = activeLevels().filter(l => groups().some(g => g.levelId === l.id && g.students > 0));
   frame('¿Qué les gustaría aprender?', 'Descubre programas adecuados para los niveles con estudiantes. Agrega todos los que te interesan: luego podrás ajustar grados, equipos y modalidad de cada uno.',
@@ -1268,7 +1289,7 @@ function pdfModel(includeSim = false) {
       parts: priced.length ? { main: Q(money(all)), mainLabel: ivaOn() ? 'Total con IVA' : 'Total sin IVA', perStudent: ps.monthly != null ? Q(ps.monthly) + ' al mes' : '', perLabel: ps.monthly != null ? 'Por estudiante, cada mes' : 'Compra: pago único', perTotal: ps.monthly != null ? Q(Math.round(ps.total)) + ' en ' + ps.months + ' meses' + (ps.buyAmt ? ', sin la compra' : '') : '', students: ps.students || n, net: Q(all.net), iva: Q(all.tax), total: Q(all.total), ivaPct: Math.round(FISCAL.iva * 100) + ' %' } : null,
       warning: t.unpricedCount ? `${t.pricedCount ? 'Estos precios no incluyen todos los programas. ' : ''}${t.unpricedCount} ${plural(t.unpricedCount, 'programa está', 'programas están')} pendiente${t.unpricedCount === 1 ? '' : 's'} de modalidad, configuración o cotización personalizada.` : ''
     },
-    coverage: (() => { const c = coverage(), rs = coverageRows(); return { summary: `${c.students} de ${c.total} estudiantes registrados están incluidos en esta cotización.`, missing: c.total - c.students, rows: rs.map(r => ({ grade: r.grade, level: findL(r.levelId).name, students: r.students, programs: r.covered ? joinY(r.progs) : r.skipped ? 'Sin programa por ahora' : 'Sin programa', ok: r.covered })) }; })(),
+    coverage: (() => { const c = coverage(), bl = coverageBlocks(), lab = { ok: null, pending: 'Sin programa todavía', outside: 'No disponible con los programas elegidos', skipped: 'Sin programa por ahora' }; return { summary: `${c.students} de ${c.total} estudiantes registrados están incluidos en esta cotización.`, missing: c.total - c.students, rows: bl.map(b => ({ grade: b.text, level: findL(b.levelId).name, students: b.students, programs: b.status === 'ok' ? joinY(b.progs) : lab[b.status], ok: b.status === 'ok' })) }; })(),
     pay, overview, programs, sim, notes
   };
 }
@@ -1292,7 +1313,7 @@ const pdfLogo = () => pdfImg('../assets/brand/guategeeks-logo.png', 360);
 const pdfEyes = () => pdfImg('../assets/brand/guategeeks-ojos.png', 420);
 // Antes de descargar se pregunta si se quiere incluir la proyección por estudiante (solo aplica a renta y cuotas).
 function downloadPdf() {
-  const cov = coverage(), pend = state.selected.filter(s => !s.confirmed).length, miss = cov.uncovered.reduce((n, g) => n + g.students, 0);
+  const cov = coverage(), pend = state.selected.filter(s => !s.confirmed).length, miss = cov.pending.reduce((n, g) => n + g.students, 0);
   if (miss || pend) {
     const why = [miss ? `${miss} ${plural(miss, 'estudiante no está', 'estudiantes no están')} en ningún programa` : '', pend ? `${pend} ${plural(pend, 'programa falta', 'programas faltan')} por configurar` : ''].filter(Boolean).join(' y ');
     askChoice('Termina de configurar antes de descargar', why + '. Si descargas ahora, la cotización no tomaría en cuenta a todos tus estudiantes.', [{ label: 'Ahora no' }, { label: 'Configurar ahora', primary: true, fn: () => miss ? openAssign() : step(4) }]); return;
@@ -1322,15 +1343,18 @@ async function makePdf(includeSim) {
 
 function coveragePanel() {
   const cov = coverage(); if (!cov.total) return '';
-  const rows = coverageRows(), missN = cov.uncovered.reduce((n, g) => n + g.students, 0), skipN = cov.skipped.reduce((n, g) => n + g.students, 0), ok = !missN && !skipN;
-  const list = activeLevels().map(l => {
-    const rs = rows.filter(r => r.levelId === l.id); if (!rs.length) return '';
-    return `<li class="cov-level"><b>${esc(l.name)}</b><ul>${rs.map(r => `<li class="cov-row ${r.covered ? 'ok' : 'miss'}"><span class="cov-g">${esc(r.grade)}</span><span class="cov-n">${r.students} ${plural(r.students, 'estudiante', 'estudiantes')}</span><span class="cov-p">${r.covered ? esc(joinY(r.progs)) : r.skipped ? 'Sin programa por ahora' : 'Sin programa'}</span></li>`).join('')}</ul></li>`;
-  }).join('');
-  return `<section class="coverage"><div class="section-heading" style="margin:0 0 8px"><h2>Estudiantes y grados de tu propuesta</h2><span class="status ${ok ? 'green' : 'amber'}">${ok ? 'Todos incluidos' : 'Faltan grados'}</span></div>
-  <p class="inv-lead"><b>${cov.students} de ${cov.total} estudiantes</b> registrados están incluidos en los programas de esta cotización.</p>
-  ${missN ? `<div class="warning">${missN} ${plural(missN, 'estudiante todavía no está', 'estudiantes todavía no están')} en ningún programa. <button type="button" class="text-btn" onclick="openAssign()">Configurar ahora</button></div>` : ''}${skipN ? `<div class="warning">${skipN} ${plural(skipN, 'estudiante queda', 'estudiantes quedan')} sin programa por decisión tuya y no entran en la cotización. <button type="button" class="text-btn" onclick="state.skipped=[];openAssign()">Incluirlos</button></div>` : ''}
-  <details class="cov-details" ${ok ? '' : 'open'}><summary>Ver grado por grado</summary><ul class="cov-list">${list}</ul></details></section>`;
+  const bl = coverageBlocks(), sum = st => bl.filter(b => st.includes(b.status)).reduce((n, b) => n + b.students, 0);
+  const okN = sum(['ok']), pendN = sum(['pending']), outN = sum(['outside', 'skipped']), allOk = okN === cov.total;
+  const lvl = b => esc(b.text), n = x => `${x} ${plural(x, 'estudiante', 'estudiantes')}`;
+  const included = bl.filter(b => b.status === 'ok').map(b => `<li class="cov-item ok"><span class="cov-g">${lvl(b)}</span><span class="cov-p">${esc(joinY(b.progs))}</span><span class="cov-n">${n(b.students)}</span></li>`).join('');
+  const pending = bl.filter(b => b.status === 'pending').map(b => `<li class="cov-item miss"><span class="cov-g">${lvl(b)}</span><span class="cov-n">${n(b.students)}</span></li>`).join('');
+  const outside = bl.filter(b => b.status === 'outside' || b.status === 'skipped').map(b => `<li class="cov-item out"><span class="cov-g">${lvl(b)}</span><span class="cov-n">${n(b.students)}</span></li>`).join('');
+  const names = joinY([...new Set(state.selected.map(s => findP(s.programId).name))]);
+  return `<section class="coverage"><div class="section-heading" style="margin:0 0 8px"><h2>Estudiantes de tu cotización</h2><span class="status ${allOk ? 'green' : 'amber'}">${allOk ? 'Todos incluidos' : pendN ? 'Faltan grados' : 'Cobertura parcial'}</span></div>
+  <p class="inv-lead"><b>${okN} de ${cov.total} estudiantes</b> registrados están incluidos. ${allOk ? '' : 'Los demás no suman al precio hasta que tengan un programa.'}</p>
+  ${included ? `<div class="cov-group"><h3>Incluidos en tu cotización</h3><ul class="cov-list">${included}</ul></div>` : ''}
+  ${pending ? `<div class="cov-group warn"><h3>Pueden sumarse a un programa que ya elegiste</h3><ul class="cov-list">${pending}</ul><p class="cov-help">${n(pendN)} podrían usar ${esc(names)}. <button type="button" class="text-btn" onclick="openAssign()">Configurar ahora</button></p></div>` : ''}
+  ${outside ? `<div class="cov-group out"><h3>No disponibles con los programas elegidos</h3><ul class="cov-list">${outside}</ul><p class="cov-help">${esc(names)} no está disponible para estos grados. Puedes continuar y descargar tu cotización con los grados incluidos. Si quieres atenderlos, <button type="button" class="text-btn" onclick="state.skipped=[];step(3)">elige otro programa para ellos</button>.</p></div>` : ''}</section>`;
 }
 function renderSummary() {
   const list = state.selected;
