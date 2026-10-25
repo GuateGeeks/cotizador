@@ -102,7 +102,7 @@ def main():
         ('05-mobiliario', 'Mobiliario y recursos de aula', '05-mobiliario.png', 'lámina 05',
          piece_grid(['table', 'chair-orange', 'chair-turquoise', 'laptop', 'screen', 'resources', 'shelf', 'whiteboard'], 4), 'grupo furniture (vista 34)'),
         ('06-tecnologias', 'Tecnologías educativas', '06-tecnologias.png', 'lámina 06',
-         piece_grid(['robot-tale', 'robot-dino', 'kit-spike', 'electronics', 'drone', 'vr-headset'], 3, 'close'), 'grupo tech (acercamientos)'),
+         piece_grid(['robot-tale', 'robot-dino', 'kit-spike', 'electronics', 'drone', 'vr-headset'], 3), 'grupo tech (objeto completo, vista 34)'),
         ('07-personajes', 'Personajes', '07-personajes.png', 'lámina 07',
          piece_grid(['person-pre', 'person-prim', 'person-bas', 'person-bach', 'person-teacher'], 5, '34', 520), 'grupo people (vista 34)'),
         ('08-actividades', 'Actividades y poses', '08-actividades.png', 'lámina 08',
@@ -123,7 +123,7 @@ def main():
     made.append('10-ensamblaje')
 
     close = grid([(shot('room-initial', 'close'), 'Esquina de aula'), (shot('person-bas', 'close'), 'Persona'),
-                  (shot('tree-large', 'close'), 'Árbol'), (shot('planter', 'close'), 'Jardinera'), (shot('robot-tale', 'close'), 'Robot sobre mesa'),
+                  (shot('tree-large', 'close'), 'Árbol'), (shot('planter', 'close'), 'Jardinera'), (shot('robot-tale'), 'Robot (objeto completo)'),
                   (shot('chair-orange', 'close'), 'Silla')], 3, 600, 420)
     sheet('Acercamientos de control de calidad', ref('13-acercamientos.png'), 'lámina 13', close, 'acercamientos del inspector').save(out / '13-acercamientos.png')
     made.append('13-acercamientos')

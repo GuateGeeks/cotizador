@@ -590,9 +590,19 @@ async function verifyMaximumCampus(page, result) {
           await page.waitForTimeout(400);
         }
       }
+      // A focused classroom opens up: roof, upper floors and what stands in front become translucent or step aside.
+      const focusedRoom = program === 'immersive' || program === 'tale';
+      const x = await page.evaluate(() => { const d = mascot.getDiagnostics(); return { xray: d.xray, materials: d.materials }; });
+      if (focusedRoom) assert.ok(x.xray && x.xray.meshes > 0, `${program} classroom opens in x-ray`);
+      else assert.equal(x.xray, null, 'the drone patio is open air: no x-ray');
+      assert.ok(x.materials <= 10, 'x-ray adds no material');
     }
+    await page.evaluate(() => { inspectCampus('overview'); mascot.resetView(); });
+    await settled(page);
+    assert.equal(await page.evaluate(() => mascot.getDiagnostics().xray), null, 'overview restores the whole campus');
   }
   result.checks.push('All four levels and six programs, valid maximal enrollment, motor totals, bounded population and rendering budgets');
+  result.checks.push('A focused classroom opens in x-ray (translucent roof and blockers) and the overview restores it');
 }
 
 async function runScenario(browser, config) {

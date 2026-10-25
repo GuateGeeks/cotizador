@@ -76,6 +76,12 @@ async function view(page, name) {
     await settle(page);
     report.views.push(await shot(`vista-${name}.png`, { view: name }));
   }
+  // The legend unfolds from the note pill over the consolidated campus.
+  await page.evaluate(() => { inspectCampus('overview'); mascot.resetView(); });
+  await settle(page);
+  await page.locator('.campus-key > summary').click();
+  report.views.push(await shot('leyenda.png', { view: 'legend' }));
+  await page.locator('.campus-key > summary').click();
   // Reduction must converge to a direct build of the smaller state.
   await page.evaluate(() => { inspectCampus('overview'); mascot.resetView(); applyCampusState(2); });
   await settle(page);

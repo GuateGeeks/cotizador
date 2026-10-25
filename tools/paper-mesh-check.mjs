@@ -144,7 +144,10 @@ for (let n = 1; n <= 6; n++) {
     budget: status(first.triangles <= CAMPUS_TRIANGLES),
     people: status(plan.people.length <= CAMPUS_LIMITS.people),
     coplanar: status(zf.length === 0),
-    deterministic: status(hash(first) === hash(second))
+    deterministic: status(hash(first) === hash(second)),
+    // Unique bone names (stages bind by name) and every person assembles last (stage 5).
+    uniqueBones: status(new Set(first.bones).size === first.bones.length),
+    peopleLast: status(first.bones.filter(name => name.endsWith('.hips')).every(hips => (first.meta.staged || []).some(s => s.order === 5 && hips === s.name + '.hips')))
   };
   const near = pt => plan.modules.map(m => ({ key: m.key, d: Math.hypot(m.x - pt[0], m.z - pt[2]) })).sort((x, y) => x.d - y.d).slice(0, 2).map(m => m.key);
   zf.forEach(z => { z.near = near(z.a[0]); });
