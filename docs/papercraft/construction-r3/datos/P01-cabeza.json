@@ -1,0 +1,414 @@
+{
+  "schema_version": "2.0",
+  "id": "P01",
+  "slug": "P01-cabeza",
+  "name": "Cabeza",
+  "purpose": "Volumen facial facetado y redondeado, con frente plano para ojos y sonrisa.",
+  "units": "normalized_H",
+  "scene_height": 0.78,
+  "coordinate_system": {
+    "up": "+Y",
+    "front": "+Z",
+    "anatomical_left": "+X"
+  },
+  "mesh": {
+    "vertices": [
+      [
+        0.0,
+        0.195,
+        0.0822955
+      ],
+      [
+        0.085,
+        0.168,
+        0.0742745
+      ],
+      [
+        0.113,
+        0.178,
+        -0.005
+      ],
+      [
+        0.078,
+        0.172,
+        -0.108
+      ],
+      [
+        0.0,
+        0.186,
+        -0.125
+      ],
+      [
+        -0.078,
+        0.172,
+        -0.108
+      ],
+      [
+        -0.113,
+        0.178,
+        -0.005
+      ],
+      [
+        -0.085,
+        0.168,
+        0.0742745
+      ],
+      [
+        0.0,
+        0.028,
+        0.0642291
+      ],
+      [
+        0.08,
+        0.042,
+        0.0609436
+      ],
+      [
+        0.1,
+        0.062,
+        -0.008
+      ],
+      [
+        0.072,
+        0.056,
+        -0.098
+      ],
+      [
+        0.0,
+        0.048,
+        -0.112
+      ],
+      [
+        -0.072,
+        0.056,
+        -0.098
+      ],
+      [
+        -0.1,
+        0.062,
+        -0.008
+      ],
+      [
+        -0.08,
+        0.042,
+        0.0609436
+      ],
+      [
+        0.0,
+        0.218,
+        -0.02
+      ],
+      [
+        0.0,
+        0.0,
+        -0.01
+      ]
+    ],
+    "faces": [
+      [
+        8,
+        9,
+        1
+      ],
+      [
+        8,
+        1,
+        0
+      ],
+      [
+        9,
+        10,
+        2
+      ],
+      [
+        9,
+        2,
+        1
+      ],
+      [
+        10,
+        11,
+        3
+      ],
+      [
+        10,
+        3,
+        2
+      ],
+      [
+        11,
+        12,
+        4
+      ],
+      [
+        11,
+        4,
+        3
+      ],
+      [
+        12,
+        13,
+        5
+      ],
+      [
+        12,
+        5,
+        4
+      ],
+      [
+        13,
+        14,
+        6
+      ],
+      [
+        13,
+        6,
+        5
+      ],
+      [
+        14,
+        15,
+        7
+      ],
+      [
+        14,
+        7,
+        6
+      ],
+      [
+        15,
+        8,
+        0
+      ],
+      [
+        15,
+        0,
+        7
+      ],
+      [
+        0,
+        1,
+        16
+      ],
+      [
+        1,
+        2,
+        16
+      ],
+      [
+        2,
+        3,
+        16
+      ],
+      [
+        3,
+        4,
+        16
+      ],
+      [
+        4,
+        5,
+        16
+      ],
+      [
+        5,
+        6,
+        16
+      ],
+      [
+        6,
+        7,
+        16
+      ],
+      [
+        7,
+        0,
+        16
+      ],
+      [
+        9,
+        8,
+        17
+      ],
+      [
+        10,
+        9,
+        17
+      ],
+      [
+        11,
+        10,
+        17
+      ],
+      [
+        12,
+        11,
+        17
+      ],
+      [
+        13,
+        12,
+        17
+      ],
+      [
+        14,
+        13,
+        17
+      ],
+      [
+        15,
+        14,
+        17
+      ],
+      [
+        8,
+        15,
+        17
+      ]
+    ],
+    "face_colors": [
+      "#E5AD80",
+      "#E5AD80",
+      "#E0AA7D",
+      "#E0AA7D",
+      "#EAB083",
+      "#EAB083",
+      "#E0AA7D",
+      "#E0AA7D",
+      "#EAB083",
+      "#EAB083",
+      "#E0AA7D",
+      "#E0AA7D",
+      "#EAB083",
+      "#EAB083",
+      "#E5AD80",
+      "#E5AD80",
+      "#E0AA7D",
+      "#E5AD80",
+      "#E0AA7D",
+      "#E5AD80",
+      "#E0AA7D",
+      "#E5AD80",
+      "#E0AA7D",
+      "#E5AD80",
+      "#E5AD80",
+      "#E0AA7D",
+      "#E5AD80",
+      "#E0AA7D",
+      "#E5AD80",
+      "#E0AA7D",
+      "#E5AD80",
+      "#E0AA7D"
+    ]
+  },
+  "material": {
+    "base_color_srgb": "#E5AD80",
+    "flat_shading": true,
+    "roughness": 0.92,
+    "metalness": 0,
+    "uv_required": false
+  },
+  "construction": "Prisma octogonal achaflanado: anillos de 8 vértices arriba y abajo (16 triángulos de pared), abanico superior de 8 hacia la coronilla y abanico inferior de 8 hacia el mentón. Pliegue vertical central en el frente; cada mitad conserva el plano facial R2 en el eje.",
+  "sockets": {
+    "origin": {
+      "position_local_H": [
+        0,
+        0,
+        0
+      ],
+      "description": "Origen numérico de esta pieza; montaje mediante assembly.json."
+    },
+    "mount_P03_L": {
+      "position_local_H": [
+        0.094,
+        0.10399999999999998,
+        0.0
+      ],
+      "description": "Anclaje derivado en reposo para P03-L. Ver instancia padre P01.",
+      "instance_scope": "P01"
+    },
+    "mount_P03_R": {
+      "position_local_H": [
+        -0.094,
+        0.10399999999999998,
+        0.0
+      ],
+      "description": "Anclaje derivado en reposo para P03-R. Ver instancia padre P01.",
+      "instance_scope": "P01"
+    },
+    "mount_P04_L": {
+      "position_local_H": [
+        0.035,
+        0.10944843959688533,
+        0.07819845750778266
+      ],
+      "description": "Anclaje derivado en reposo para P04-L. Ver instancia padre P01.",
+      "instance_scope": "P01"
+    },
+    "mount_P04_R": {
+      "position_local_H": [
+        -0.035,
+        0.10944843959688533,
+        0.07819845750778266
+      ],
+      "description": "Anclaje derivado en reposo para P04-R. Ver instancia padre P01.",
+      "instance_scope": "P01"
+    },
+    "mount_P05": {
+      "position_local_H": [
+        0.0,
+        0.0624484395968854,
+        0.07311391205323722
+      ],
+      "description": "Anclaje derivado en reposo para P05. Ver instancia padre P01.",
+      "instance_scope": "P01"
+    },
+    "mount_P06": {
+      "position_local_H": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "description": "Anclaje derivado en reposo para P06. Ver instancia padre P01.",
+      "instance_scope": "P01"
+    }
+  },
+  "metadata": {
+    "surface_kind": "closed",
+    "limitations": [
+      "Forma de apoyo facetada; el cabello oculta el cierre superior. No incluye nariz saliente.",
+      "Cada mitad frontal se inclina 3.4° respecto al plano R2: ojos y sonrisa conservan ≥ 0.004 de separación normal; los ojos quedan algo más separados en su borde exterior."
+    ],
+    "triangles": 32,
+    "bounds_local_H": {
+      "min": [
+        -0.113,
+        0.0,
+        -0.125
+      ],
+      "max": [
+        0.113,
+        0.218,
+        0.0822955
+      ],
+      "size": [
+        0.226,
+        0.218,
+        0.2072955
+      ]
+    },
+    "dimensions_scene": [
+      0.17628,
+      0.17004,
+      0.1616905
+    ],
+    "authoritative_for": "support_geometry_only",
+    "reference_render_policy": "Las vistas técnicas muestran ambos lados de superficies abiertas; eso no añade caras a los JSON ni obliga a DoubleSide en runtime.",
+    "provenance": {
+      "revision": "R3",
+      "replaces": "construction-r2/datos/P01-cabeza.json",
+      "source": "Pliegues de imagenes/P01-cabeza.png; ver construction-r3/README.md",
+      "generator": "construction-r3/herramientas/r3_cabeza.py"
+    }
+  }
+}

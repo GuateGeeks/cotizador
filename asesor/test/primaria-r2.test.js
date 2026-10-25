@@ -12,12 +12,27 @@ test('el módulo de datos R2 coincide con los JSON del paquete (node tools/r2-im
   assert.equal(fs.readFileSync(file, 'utf8'), r2DataModule(path.join(__dirname, '../../docs/papercraft/construction-r2')));
 });
 
-test('R2: 20 recetas, 33 instancias, 280 triángulos; montaje coherente con sus sockets', async () => {
-  const { R2_RECIPES, R2_INSTANCES, R2_FACTS, instancePoint } = await load('../lab/paper/r2/person-r2.js');
+// Active recipe of each id: the R3 recreation (construction-r3/datos) if present, else the R2 JSON.
+const docs = path.join(__dirname, '../../docs/papercraft');
+function activeRecipes() {
+  const pick = dir => fs.existsSync(dir) ? fs.readdirSync(dir).filter(f => /^P\d\d-.*\.json$/.test(f)) : [];
+  const r3 = new Map(pick(path.join(docs, 'construction-r3/datos')).map(f => [f.slice(0, 3), path.join(docs, 'construction-r3/datos', f)]));
+  return Object.fromEntries(pick(path.join(docs, 'construction-r2/datos')).map(f => {
+    const d = JSON.parse(fs.readFileSync(r3.get(f.slice(0, 3)) || path.join(docs, 'construction-r2/datos', f), 'utf8'));
+    return [d.id, d];
+  }));
+}
+
+test('R2: 20 recetas, 33 instancias; triángulos según la receta activa (R3 si existe); montaje coherente con sus sockets', async () => {
+  const { R2_RECIPES, R2_INSTANCES, R2_FACTS, R2_REDISTRIBUTION, instancePoint } = await load('../lab/paper/r2/person-r2.js');
   assert.equal(Object.keys(R2_RECIPES).length, 20);
   assert.equal(R2_INSTANCES.length, 33);
-  assert.equal(R2_FACTS.packageTriangles, 280);
-  assert.equal(R2_FACTS.emittedTriangles, 272);
+  const active = activeRecipes(), assembly = JSON.parse(fs.readFileSync(path.join(docs, 'construction-r2/datos/assembly.json'), 'utf8'));
+  for (const d of Object.values(active)) assert.equal(d.mesh.faces.length, d.metadata.triangles, `${d.id}: metadata.triangles`);
+  const pkg = assembly.instances.reduce((s, i) => s + active[i.part_id].mesh.faces.length, 0);
+  const removed = assembly.instances.reduce((s, i) => s + (R2_REDISTRIBUTION[i.part_id]?.faces.length || 0), 0);
+  assert.equal(R2_FACTS.packageTriangles, pkg); // 280 with the R2 recipes only
+  assert.equal(R2_FACTS.emittedTriangles, pkg - removed); // 272 with the R2 recipes only
   const byId = Object.fromEntries(R2_INSTANCES.map(i => [i.id, i]));
   for (const i of R2_INSTANCES) {
     if (!i.parent || !i.target) continue;

@@ -73,7 +73,7 @@ export function alumnoContract() {
   const removed = Object.entries(R2_REDISTRIBUTION).reduce((s, [r, x]) => s + x.faces.length * R2_INSTANCES.filter(i => i.recipe === r).length, 0);
   out.push('', '## Presupuesto', '',
     `- Paquete: ${R2_FACTS.packageTriangles} triángulos, sin reserva. El proyecto cuenta la sombra de contacto (${SHADOW_TRIANGLES}, capa \`blob\`, auxiliar) en el límite de 280, así que se **redistribuye** antes de añadirla: se retiran ${removed} tapas ocultas.`,
-    `- Emitido: **${m.geometry}** de geometría + ${SHADOW_TRIANGLES} de sombra = **${m.total}** ≤ 280. Reserva: 0 (no es geometría).`, '',
+    `- Emitido: **${m.geometry}** de geometría + ${SHADOW_TRIANGLES} de sombra = **${m.total}** ${m.total <= 280 ? '≤ 280' : '> 280: **excede** el límite del proyecto, que no cambia (recetas R3 de `construction-r3/datos` en experimento)'}. Reserva: 0 (no es geometría).`, '',
     '| Receta | Caras retiradas (índice en el JSON) | Motivo |', '|---|---|---|');
   for (const [r, x] of Object.entries(R2_REDISTRIBUTION)) out.push(`| ${r} | ${x.faces.join(', ')} | ${x.reason} |`);
   out.push('', '### Adaptaciones de integración (solo posiciones de vértices)', '', '| Receta | Vértices (local / H) | Motivo |', '|---|---|---|');

@@ -12,17 +12,17 @@ Las demás combinaciones conservan la receta v1 (geometría idéntica a `ec4d112
 ## Procedencia
 
 Paquete `GuateGeeks_Primaria_Piezas_R2` (GuateGeeks · Primaria por piezas R2), montaje `GG-PRIMARIA-R2`, esquema 2.0.
-20 recetas, 33 instancias, 280 triángulos en el paquete. Los datos se **cargan** de los JSON (importados a un módulo generado), no se transcriben a mano.
+20 recetas, 33 instancias, 306 triángulos en el paquete. Los datos se **cargan** de los JSON (importados a un módulo generado), no se transcriben a mano.
 
 | Archivo | SHA256 |
 |---|---|
 | `datos/assembly.json` | `dad773894f2fe1986fbad3e1320c52d313e936d672f2a0187882fbfb206cc50b` |
-| `datos/P01-cabeza.json` | `08daa9f3bbbd05084ac414fcd005e4c40c96650deff3d0c6d98c21ef08328981` |
+| `r3/datos/P01-cabeza.json` | `fe2c0fe49f2bfcf23ae3ef84eca4c28b3e8ec05f7a76cc99c356f3ca26fbe7f4` |
 | `datos/P02-cuello.json` | `7a162ed08ce0695cc7e39f04ec512630f9cc82850f48b640c3af23a8e1c8b983` |
 | `datos/P03-oreja.json` | `92f3bc1ca213b2e78bb33d0e2fc898e34ae6eef9bf295f06c2f0f50952275d1c` |
 | `datos/P04-ojo.json` | `239459d7738c96f5e7944f60d30466d4c745f5dd4d355778fa111043c88f7b7f` |
 | `datos/P05-sonrisa.json` | `e78951ee34d3a6e2e8cbfcedbcfbf9b6d90dec0e0453f2950f32f28bb52bc1ff` |
-| `datos/P06-cabello-nucleo.json` | `ec24805c9345b856a4d7dfb5b123467f45ee00cb1745648226ae5d0bd6a459ef` |
+| `r3/datos/P06-cabello-nucleo.json` | `0fa6f5854b313b8290525df65420f3300fd48d2cf47a58a3c49c48b298c43a4d` |
 | `datos/P07-mechon-flequillo.json` | `539e80f45e868d9dc3b9c7effa608391251a3f2a1587b4806c070d5f25afe5e7` |
 | `datos/P08-torso-chaleco.json` | `2dd2da96573897118b582b6c9dc7969d7297001e6051c1aa1147d7f3ce625330` |
 | `datos/P09-pechera-camisa.json` | `4b516d87e5b8fce7f9395aa109cfee6b36d16c207df0c752d4afe92ad2fa099e` |
@@ -107,8 +107,8 @@ La piel, el cabello, el chaleco, la mochila y los zapatos del paquete se recolor
 
 ## Presupuesto
 
-- Paquete: 280 triángulos, sin reserva. El proyecto cuenta la sombra de contacto (7, capa `blob`, auxiliar) en el límite de 280, así que se **redistribuye** antes de añadirla: se retiran 8 tapas ocultas.
-- Emitido: **272** de geometría + 7 de sombra = **279** ≤ 280. Reserva: 0 (no es geometría).
+- Paquete: 306 triángulos, sin reserva. El proyecto cuenta la sombra de contacto (7, capa `blob`, auxiliar) en el límite de 280, así que se **redistribuye** antes de añadirla: se retiran 8 tapas ocultas.
+- Emitido: **298** de geometría + 7 de sombra = **305** > 280: **excede** el límite del proyecto, que no cambia (recetas R3 de `construction-r3/datos` en experimento). Reserva: 0 (no es geometría).
 
 | Receta | Caras retiradas (índice en el JSON) | Motivo |
 |---|---|---|
@@ -129,46 +129,46 @@ La piel, el cabello, el chaleco, la mochila y los zapatos del paquete se recolor
 | 1 | `P15` | P15 · Pelvis del pantalón | hips | no | (0, 0.45, 0) | (0, 0, 0) | 8 | 8 | 0–8 |
 | 2 | `P08` | P08 · Torso y chaleco | torso | no | (0, 0.45, 0) | (0, 0, 0) | 22 | 22 | 8–30 |
 | 3 | `P02` | P02 · Cuello | head | no | (0, 0.7, 0) | (0, 0, 0) | 8 | 8 | 30–38 |
-| 4 | `P01` | P01 · Cabeza | head | no | (0, 0.72, 0) | (0, 0, 0) | 20 | 20 | 38–58 |
-| 5 | `P03-L` | P03 · Oreja | head | no | (0.094, 0.824, 0) | (0, 0, 0) | 4 | 4 | 58–62 |
-| 5 | `P03-R` | P03 · Oreja | head | sí | (-0.094, 0.824, 0) | (0, 0, 0) | 4 | 4 | 62–66 |
-| 6 | `P04-L` | P04 · Ojo | head | no | (0.035, 0.8294, 0.0782) | (0, 0, 0) | 2 | 2 | 66–68 |
-| 6 | `P04-R` | P04 · Ojo | head | no | (-0.035, 0.8294, 0.0782) | (0, 0, 0) | 2 | 2 | 68–70 |
-| 7 | `P05` | P05 · Sonrisa | head | no | (0, 0.7824, 0.0731) | (0, 0, 0) | 3 | 3 | 70–73 |
-| 8 | `P06` | P06 · Núcleo del cabello | head | no | (0, 0.72, 0) | (0, 0, 0) | 32 | 32 | 73–105 |
-| 9 | `P07-L` | P07 · Mechón de flequillo | head | no | (0.038, 0.91, 0.094) | (0, 0, -7) | 4 | 4 | 105–109 |
-| 9 | `P07-C` | P07 · Mechón de flequillo | head | no | (0, 0.91, 0.094) | (0, 0, 6) | 4 | 4 | 109–113 |
-| 9 | `P07-R` | P07 · Mechón de flequillo | head | no | (-0.038, 0.91, 0.094) | (0, 0, 10) | 4 | 4 | 113–117 |
-| 10 | `P09` | P09 · Pechera de camisa | torso | no | (0, 0.6902, 0.0675) | (0, 0, 0) | 1 | 1 | 117–118 |
-| 11 | `P10-L` | P10 · Solapa del cuello | torso | no | (0.004, 0.7054, 0.0726) | (0, 0, 0) | 1 | 1 | 118–119 |
-| 11 | `P10-R` | P10 · Solapa del cuello | torso | sí | (-0.004, 0.7054, 0.0726) | (0, 0, 0) | 1 | 1 | 119–120 |
-| 12 | `P11-L` | P11 · Manga corta | armL | no | (0.148, 0.68, 0) | (0, 0, 0) | 8 | 8 | 120–128 |
-| 13 | `P12-L` | P12 · Brazo | armL | no | (0.148, 0.68, 0) | (0, 0, 0) | 8 | 8 | 128–136 |
-| 14 | `P13-L` | P13 · Antebrazo | foreL | no | (0.148, 0.555, 0) | (0, 0, 0) | 8 | 7 | 136–143 |
-| 15 | `P14-L` | P14 · Mano | foreL | no | (0.148, 0.437, 0.012) | (0, 0, 0) | 8 | 7 | 143–150 |
-| 16 | `P16-L` | P16 · Muslo del pantalón | legL | no | (0.058, 0.45, 0) | (0, 0, 0) | 12 | 12 | 150–162 |
-| 17 | `P17-L` | P17 · Pantorrilla del pantalón | shinL | no | (0.058, 0.255, 0) | (0, 0, 0) | 12 | 10 | 162–172 |
-| 18 | `P18-L` | P18 · Zapato | shinL | no | (0.058, 0, 0) | (0, 0, 0) | 12 | 12 | 172–184 |
-| 12 | `P11-R` | P11 · Manga corta | armR | sí | (-0.148, 0.68, 0) | (0, 0, 0) | 8 | 8 | 184–192 |
-| 13 | `P12-R` | P12 · Brazo | armR | sí | (-0.148, 0.68, 0) | (0, 0, 0) | 8 | 8 | 192–200 |
-| 14 | `P13-R` | P13 · Antebrazo | foreR | sí | (-0.148, 0.555, 0) | (0, 0, 0) | 8 | 7 | 200–207 |
-| 15 | `P14-R` | P14 · Mano | foreR | sí | (-0.148, 0.437, 0.012) | (0, 0, 0) | 8 | 7 | 207–214 |
-| 16 | `P16-R` | P16 · Muslo del pantalón | legR | sí | (-0.058, 0.45, 0) | (0, 0, 0) | 12 | 12 | 214–226 |
-| 17 | `P17-R` | P17 · Pantorrilla del pantalón | shinR | sí | (-0.058, 0.255, 0) | (0, 0, 0) | 12 | 10 | 226–236 |
-| 18 | `P18-R` | P18 · Zapato | shinR | sí | (-0.058, 0, 0) | (0, 0, 0) | 12 | 12 | 236–248 |
-| 19 | `P19` | P19 · Mochila | torso | no | (0, 0.5, -0.109) | (0, 0, 0) | 12 | 12 | 248–260 |
-| 20 | `P20-L` | P20 · Tirante | torso | no | (0.064, 0.7, 0.071) | (0, 0, 0) | 6 | 6 | 260–266 |
-| 20 | `P20-R` | P20 · Tirante | torso | sí | (-0.064, 0.7, 0.071) | (0, 0, 0) | 6 | 6 | 266–272 |
+| 4 | `P01` | P01 · Cabeza | head | no | (0, 0.72, 0) | (0, 0, 0) | 32 | 32 | 38–70 |
+| 5 | `P03-L` | P03 · Oreja | head | no | (0.094, 0.824, 0) | (0, 0, 0) | 4 | 4 | 70–74 |
+| 5 | `P03-R` | P03 · Oreja | head | sí | (-0.094, 0.824, 0) | (0, 0, 0) | 4 | 4 | 74–78 |
+| 6 | `P04-L` | P04 · Ojo | head | no | (0.035, 0.8294, 0.0782) | (0, 0, 0) | 2 | 2 | 78–80 |
+| 6 | `P04-R` | P04 · Ojo | head | no | (-0.035, 0.8294, 0.0782) | (0, 0, 0) | 2 | 2 | 80–82 |
+| 7 | `P05` | P05 · Sonrisa | head | no | (0, 0.7824, 0.0731) | (0, 0, 0) | 3 | 3 | 82–85 |
+| 8 | `P06` | P06 · Núcleo del cabello | head | no | (0, 0.72, 0) | (0, 0, 0) | 46 | 46 | 85–131 |
+| 9 | `P07-L` | P07 · Mechón de flequillo | head | no | (0.038, 0.91, 0.094) | (0, 0, -7) | 4 | 4 | 131–135 |
+| 9 | `P07-C` | P07 · Mechón de flequillo | head | no | (0, 0.91, 0.094) | (0, 0, 6) | 4 | 4 | 135–139 |
+| 9 | `P07-R` | P07 · Mechón de flequillo | head | no | (-0.038, 0.91, 0.094) | (0, 0, 10) | 4 | 4 | 139–143 |
+| 10 | `P09` | P09 · Pechera de camisa | torso | no | (0, 0.6902, 0.0675) | (0, 0, 0) | 1 | 1 | 143–144 |
+| 11 | `P10-L` | P10 · Solapa del cuello | torso | no | (0.004, 0.7054, 0.0726) | (0, 0, 0) | 1 | 1 | 144–145 |
+| 11 | `P10-R` | P10 · Solapa del cuello | torso | sí | (-0.004, 0.7054, 0.0726) | (0, 0, 0) | 1 | 1 | 145–146 |
+| 12 | `P11-L` | P11 · Manga corta | armL | no | (0.148, 0.68, 0) | (0, 0, 0) | 8 | 8 | 146–154 |
+| 13 | `P12-L` | P12 · Brazo | armL | no | (0.148, 0.68, 0) | (0, 0, 0) | 8 | 8 | 154–162 |
+| 14 | `P13-L` | P13 · Antebrazo | foreL | no | (0.148, 0.555, 0) | (0, 0, 0) | 8 | 7 | 162–169 |
+| 15 | `P14-L` | P14 · Mano | foreL | no | (0.148, 0.437, 0.012) | (0, 0, 0) | 8 | 7 | 169–176 |
+| 16 | `P16-L` | P16 · Muslo del pantalón | legL | no | (0.058, 0.45, 0) | (0, 0, 0) | 12 | 12 | 176–188 |
+| 17 | `P17-L` | P17 · Pantorrilla del pantalón | shinL | no | (0.058, 0.255, 0) | (0, 0, 0) | 12 | 10 | 188–198 |
+| 18 | `P18-L` | P18 · Zapato | shinL | no | (0.058, 0, 0) | (0, 0, 0) | 12 | 12 | 198–210 |
+| 12 | `P11-R` | P11 · Manga corta | armR | sí | (-0.148, 0.68, 0) | (0, 0, 0) | 8 | 8 | 210–218 |
+| 13 | `P12-R` | P12 · Brazo | armR | sí | (-0.148, 0.68, 0) | (0, 0, 0) | 8 | 8 | 218–226 |
+| 14 | `P13-R` | P13 · Antebrazo | foreR | sí | (-0.148, 0.555, 0) | (0, 0, 0) | 8 | 7 | 226–233 |
+| 15 | `P14-R` | P14 · Mano | foreR | sí | (-0.148, 0.437, 0.012) | (0, 0, 0) | 8 | 7 | 233–240 |
+| 16 | `P16-R` | P16 · Muslo del pantalón | legR | sí | (-0.058, 0.45, 0) | (0, 0, 0) | 12 | 12 | 240–252 |
+| 17 | `P17-R` | P17 · Pantorrilla del pantalón | shinR | sí | (-0.058, 0.255, 0) | (0, 0, 0) | 12 | 10 | 252–262 |
+| 18 | `P18-R` | P18 · Zapato | shinR | sí | (-0.058, 0, 0) | (0, 0, 0) | 12 | 12 | 262–274 |
+| 19 | `P19` | P19 · Mochila | torso | no | (0, 0.5, -0.109) | (0, 0, 0) | 12 | 12 | 274–286 |
+| 20 | `P20-L` | P20 · Tirante | torso | no | (0.064, 0.7, 0.071) | (0, 0, 0) | 6 | 6 | 286–292 |
+| 20 | `P20-R` | P20 · Tirante | torso | sí | (-0.064, 0.7, 0.071) | (0, 0, 0) | 6 | 6 | 292–298 |
 
 ## Recetas
 
 ### P01 · Cabeza
 
-- **Papel:** Volumen facial facetado, mandíbula más estrecha que sienes.
-- **Construcción:** Dos secciones hexagonales, doce triángulos laterales y cuatro en cada tapa. Superficie: `closed`; 20 triángulos, 12 vértices; color base #E5AD80.
+- **Papel:** Volumen facial facetado y redondeado, con frente plano para ojos y sonrisa.
+- **Construcción:** Prisma octogonal achaflanado: anillos de 8 vértices arriba y abajo (16 triángulos de pared), abanico superior de 8 hacia la coronilla y abanico inferior de 8 hacia el mentón. Pliegue vertical central en el frente; cada mitad conserva el plano facial R2 en el eje. Superficie: `closed`; 32 triángulos, 18 vértices; color base #E5AD80.
 - **Instancias:** `P01` (head).
 - **Sockets:** origin, mount_P03_L, mount_P03_R, mount_P04_L, mount_P04_R, mount_P05, mount_P06.
-- **Límites:** Forma de apoyo simplificada; el cabello oculta el cierre superior. No incluye nariz saliente.
+- **Límites:** Forma de apoyo facetada; el cabello oculta el cierre superior. No incluye nariz saliente. Cada mitad frontal se inclina 3.4° respecto al plano R2: ojos y sonrisa conservan ≥ 0.004 de separación normal; los ojos quedan algo más separados en su borde exterior.
 
 ### P02 · Cuello
 
@@ -204,11 +204,11 @@ La piel, el cabello, el chaleco, la mochila y los zapatos del paquete se recolor
 
 ### P06 · Núcleo del cabello
 
-- **Papel:** Masa principal con coronilla elevada y silueta ancha, sin cierre plano grande.
-- **Construcción:** Banda de 8 a 8 vértices: 16 triángulos; transición de 8 a 4: 12; ápice desplazado: 4. Superficie: `open`; 32 triángulos, 21 vértices; color base #3A2E5C.
+- **Papel:** Casquete facetado con coronilla, flequillo frontal, patillas y nuca; deja la cara visible.
+- **Construcción:** Ápice de coronilla con abanico de 8, banda de 8 a 8 hasta el ecuador (16, con el rombo frontal del flequillo), y paredes laterales y traseras de 11 triángulos por lado: punta de sien, patilla delante de la oreja, muesca sobre la oreja, mechón detrás, punta de nuca y muesca central. Superficie: `open`; 46 triángulos, 32 vértices; color base #3A2E5C.
 - **Instancias:** `P06` (head).
 - **Sockets:** origin, mount_P07_L, mount_P07_C, mount_P07_R.
-- **Límites:** Abertura inferior intencional sobre la cabeza. No es un sólido imprimible.
+- **Límites:** Superficie abierta: abertura inferior intencional sobre la cabeza y la cara. No es un sólido imprimible. El flequillo del núcleo termina sobre las raíces de los tres P07; las puntas del flequillo las aportan los P07.
 
 ### P07 · Mechón de flequillo
 
