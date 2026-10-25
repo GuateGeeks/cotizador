@@ -67,9 +67,13 @@ import { normalizeCampusData, CAMPUS_LIMITS, LEVEL_IDS, PROGRAM_IDS, FLOOR_HEIGH
 
 export const CELL_W = 2.6;
 export const CELL_D = 2.3;
-export const ROW_Z = Object.freeze({ A: -4.8, B: -3.0, F: -0.7, G: 1.6, H: 3.9 });
+export const ROW_Z = Object.freeze({ A: -4.8, B: -3.0, F: -0.7, G: 1.6, H: 3.1 });
 /** Row A is a planted back garden (decor only, never buildings); its depth is shallower. */
 export const GARDEN_D = 1.3;
+/** Row H is only the front lip of the base (stairs foot, margin): no plaza in front of the wings. */
+export const FRONT_D = .7;
+/** West porch of the base: hosts the entrance beside the first classroom, along rows B, F and G (plus A and H when built). */
+export const PORCH = Object.freeze({ x: -6.0, w: 1.6, z: -.7, d: CELL_D * 3 });
 export const SERVICE_PLANS = Object.freeze(['FLEX', 'EV8', 'EV16']);
 export const PLAN_LIMITS = Object.freeze({ groundRooms: 5, upperRooms: 5 });
 
@@ -117,7 +121,12 @@ const STACKS = Object.freeze([
 //  - ONE outside flight of stairs climbs from the pedestal floor along the right wing (left wing when there is
 //    no right one) up to the south end of that side run (`landing.open: 'back'`); the patio stays free.
 const GALLERY_W = .7, STAIRS_RUN = 1.5, STAIRS_TOP = .93; // top end of a flight lies 0.93 from its centre
-const ENTRANCE = Object.freeze({ x: -1.9, z: -.3 }); // on the east flank of the first classroom, not in front of it
+// The orange entrance stands against the west flank of the first classroom, flush with its front and facing the
+// camera: never under a gallery, never in front of an interior, and in the same place in every state.
+const ENTRANCE = Object.freeze({ x: -5.9, z: -.15 });
+// Flank trees frame the campus on the porch, outside every classroom's front; the east flank (in front of the last
+// classroom) only takes low planting.
+const FLANK_TREES = Object.freeze([{ key: 'tree:flank:west', type: 'tree-large', x: -6.2, z: 2.15, c: -2 }, { key: 'tree:flank:porch', type: 'tree-small', x: -6.3, z: -1.35, c: -2 }, { key: 'bush:flank:east', type: 'bush', x: 7.35, z: 2.3, c: 2 }]);
 const DRONES = Object.freeze({ x: 0, z: 1.66 });
 const BAND_Z = .754; // front path tiles (2.6 x 0.6) just in front of the wings
 const galleryZ = stack => ROW_Z[stack.row] + CELL_D / 2 + GALLERY_W / 2 + .004;
@@ -132,7 +141,8 @@ const RESERVED = [
   rectOf(0, galleryZ(STACKS[1]), CELL_W * 2, GALLERY_W + .2),
   ...[-1, 1].flatMap(sign => [rectOf(sign * STRIP.x, (STRIP.z0 + STRIP.z1) / 2, GALLERY_W + .1, STRIP.z1 - STRIP.z0), rectOf(sign * STRIP.x, STRIP.z1 + STAIRS_TOP, .7, 1.9)]),
   { x0: -60, x1: 60, z0: .45, z1: 1.06 },
-  rectOf(ENTRANCE.x, ENTRANCE.z, 1.4, 1.2), rectOf(DRONES.x, DRONES.z, 2.4, 1.2)
+  rectOf(ENTRANCE.x, ENTRANCE.z + .3, 1.4, 1.8), rectOf(DRONES.x, DRONES.z, 2.4, 1.2),
+  ...FLANK_TREES.map(t => rectOf(t.x, t.z, 1.1, 1.1))
 ];
 
 const sortModules = list => list.sort((a, b) => a.order - b.order || (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
@@ -241,18 +251,18 @@ export function planCampus(input = {}) {
       landing: { open: 'back', x, z: round(STRIP.z1 - .1), y: FLOOR_HEIGHT } }, 3);
   }
 
-  // ---- entrance (on the east flank of the first classroom), drone patio -----------------------------
+  // ---- entrance (on the west flank of the first classroom, on the porch), drone patio ------------------
   add('entrance', 'entrance', ENTRANCE.x, ENTRANCE.z, 0, { w: 1.4, d: 1.2, attachedTo: 'room:pre:0' }, 0);
   if (has.program('drones')) add('patio:drones', 'patio', DRONES.x, DRONES.z, 0, { w: 2.4, d: 1.2, programId: 'drones', units: normalized.equipment.drones.units }, 3, { tags: { programId: 'drones' } });
 
   // base: the real footprint of what is built (+ one garden cell behind, front rows from 2 rooms)
   const groundRooms = rooms.filter(list => list.length).length;
   const front = groundRooms >= 3 || has.program('drones');
-  const ROWS = [['A', -5.45, -4.15], ['B', -4.15, -1.85], ['F', -1.85, .45], ['G', .45, 2.75], ['H', 2.75, 5.05]];
-  const cells = new Set(), cols = [];
+  const ROWS = [['A', -5.45, -4.15], ['B', -4.15, -1.85], ['F', -1.85, .45], ['G', .45, 2.75], ['H', 2.75, 2.75 + FRONT_D]];
+  const cells = new Set([cellKey(-2, 'G')]), cols = []; // the porch always has the front row beside it
   for (const m of modules) {
     const fp = footprintOf(m);
-    if (!fp || m.type === 'roof' || m.type === 'bridge') continue;
+    if (!fp || m.type === 'roof' || m.type === 'bridge' || m.type === 'entrance') continue; // the entrance stands on the porch
     for (let c = Math.floor((fp.x0 + .01) / CELL_W); c <= Math.ceil((fp.x1 - .01) / CELL_W) - 1; c++) {
       cols.push(c);
       for (const [r, z0, z1] of ROWS) if (fp.z0 + .01 < z1 && fp.z1 - .01 > z0) cells.add(cellKey(c, r));
@@ -261,14 +271,22 @@ export function planCampus(input = {}) {
   }
   const minC = Math.min(...cols), maxC = Math.max(...cols);
   if (groundRooms >= 2) for (let c = minC; c <= maxC; c++) for (const r of front ? ROW_ORDER : ROW_ORDER.slice(0, 4)) cells.add(cellKey(c, r));
+  // A front lip (stairs foot) runs along the whole front, never as a bump under one column.
+  if ([...cells].some(id => id.endsWith(':H'))) for (let c = minC; c <= maxC; c++) for (const r of ['G', 'H']) cells.add(cellKey(c, r));
   // paths: front tiles (2.6 x 0.6) in front of the wings wherever the front row exists
   for (let c = minC; c <= maxC; c++) if (cells.has(cellKey(c, 'G'))) add(`path:spine:${c}`, 'path', colX(c), BAND_Z, 0, {}, 3);
   for (const id of cells) {
     const [c, r] = id.split(':'), cc = Number(c);
     const free = (dc, dr) => !cells.has(cellKey(cc + dc, ROW_ORDER[ROW_ORDER.indexOf(r) + dr]));
-    const north = free(0, -1), south = free(0, 1), west = free(-1, 0), east = free(1, 0);
-    add(`base:${c}:${r}`, 'pedestal', colX(cc), ROW_Z[r], 0, { w: CELL_W, d: r === 'A' ? GARDEN_D : CELL_D, round: [north && west, north && east, south && east, south && west] }, 0);
+    const north = free(0, -1), south = free(0, 1), west = free(-1, 0) && cc !== -2, east = free(1, 0);
+    add(`base:${c}:${r}`, 'pedestal', colX(cc), ROW_Z[r], 0, { w: CELL_W, d: r === 'A' ? GARDEN_D : r === 'H' ? FRONT_D : CELL_D, round: [north && west, north && east, south && east, south && west] }, 0);
   }
+  // The porch follows the whole west edge (garden and front lip included) so the base reads as one sheet.
+  const porchA = cells.has(cellKey(-2, 'A')), porchH = cells.has(cellKey(-2, 'H'));
+  add('base:porch', 'pedestal', PORCH.x, PORCH.z, 0, { w: PORCH.w, d: PORCH.d, round: [!porchA, false, false, !porchH] }, 0);
+  if (porchA) add('base:porch:A', 'pedestal', PORCH.x, ROW_Z.A, 0, { w: PORCH.w, d: GARDEN_D, round: [true, false, false, false] }, 0);
+  if (porchH) add('base:porch:H', 'pedestal', PORCH.x, ROW_Z.H, 0, { w: PORCH.w, d: FRONT_D, round: [false, false, false, true] }, 0);
+  for (const t of FLANK_TREES) if (cells.has(cellKey(t.c, t.z < .45 ? 'F' : 'G'))) add(t.key, t.type, t.x, t.z, 0, { scale: 1 }, 4);
   // Back garden: trees frame the campus from behind and grow with the columns.
   for (let c = minC; c <= maxC; c++) for (const dx of [-.6, .6]) if (cells.has(cellKey(c, 'A'))) {
     const i = Math.round((colX(c) + dx) / .65), seed = noise(i, 7, 91.7, 47.3, 9123.77);
@@ -281,7 +299,7 @@ export function planCampus(input = {}) {
     // lattice 1.3 x 1.15 aligned with the cells (rows start at z = -4.15)
     const x = round((i + .5) * 1.3), z = round(-4.15 + 1.15 * (k + 4 + .5));
     const col = Math.floor(x / CELL_W), row = z < -1.85 ? 'B' : z < .45 ? 'F' : z < 2.75 ? 'G' : 'H';
-    if (!cells.has(cellKey(col, row))) continue;
+    if (row === 'H' || !cells.has(cellKey(col, row))) continue; // the front lip stays clear
     if (RESERVED.some(rect => inside(x, z, rect, .55))) continue;
     const seed = noise(i, k, 91.7, 47.3, 9123.77), seed2 = noise(i, k, 12.9898, 78.233, 43758.5453);
     const tall = row === 'B';
@@ -322,7 +340,7 @@ export function planCampus(input = {}) {
   // ---- stats and bounds ---------------------------------------------------------------------------------------------
   const pedestals = modules.filter(m => m.type === 'pedestal');
   const roofs = modules.filter(m => m.type === 'roof');
-  const x0 = Math.min(...pedestals.map(m => m.x - CELL_W / 2)), x1 = Math.max(...pedestals.map(m => m.x + CELL_W / 2));
+  const x0 = Math.min(...pedestals.map(m => m.x - m.opts.w / 2)), x1 = Math.max(...pedestals.map(m => m.x + m.opts.w / 2));
   const z0 = Math.min(...pedestals.map(m => m.z - m.opts.d / 2)), z1 = Math.max(...pedestals.map(m => m.z + m.opts.d / 2));
   return {
     normalized, modules, services, people,

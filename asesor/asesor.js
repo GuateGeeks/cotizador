@@ -303,7 +303,7 @@ function loadLab(cb) {
   if (window.GGLab) { cb(); return; }
   if (loadLab.queue) { loadLab.queue.push(cb); return; }
   loadLab.queue = [cb];
-  const sc = document.createElement('script'); sc.src = 'vendor/lab-scene.min.js?v=151'; sc.async = true;
+  const sc = document.createElement('script'); sc.src = 'vendor/lab-scene.min.js?v=152'; sc.async = true;
   sc.onload = () => { const q = loadLab.queue || []; loadLab.queue = null; q.forEach(f => { try { f(); } catch (e) { console.error('No se pudo iniciar la vista 3D.', e); } }); };
   sc.onerror = () => { loadLab.queue = null; sc.remove(); campusUnavailable('No se pudo cargar la vista 3D. Tu configuración sigue disponible.'); };
   document.head.appendChild(sc);
@@ -568,6 +568,9 @@ document.addEventListener('keydown', e => {
 });
 window.addEventListener('resize', () => syncConfigWidth());
 
+/** Legend of the campus: the paper palette of the scene (asesor/lab/paper/kit.js) and what each piece stands for. */
+const KEY_SWATCHES = [['#FFF8EC', 'Aula de un nivel (marfil)'], ['#8159C4', 'Taller de programa (banderín de color)'], ['#6C45AE', 'Cubierta; un piso superior es un nivel grande'],
+  ['#25C2C6', 'Balcón, escalera y caminos'], ['#FF9D38', 'Entrada'], ['#7CCB6B', 'Jardines']];
 function createCampusHost() {
   const host = document.createElement('section'); host.className = 'campus-preview';
   const tool = (attr, label, glyph) => `<button type="button" ${attr} aria-label="${label}" data-tip="${label}">${icon(glyph)}</button>`;
@@ -579,7 +582,9 @@ function createCampusHost() {
     + `<div class="campus-hud-top" data-hud-top><div class="campus-heading"><h2>Tu colegio</h2><span class="campus-status" role="status">Cargando vista</span></div><p class="campus-message">Toca un taller o un aula para editarlo</p></div>`
     + `<button type="button" class="campus-expand" aria-pressed="false" aria-label="Ampliar el campus">${icon('zoom')}<span>Ampliar</span></button>`
     + `<div class="campus-tools" role="toolbar" aria-label="Controles de la vista 3D">${tool('data-view="overview"', 'Vista general', 'home')}${tool('data-view="program"', 'Programa activo', 'cube')}${tool('data-camera="reset"', 'Restablecer vista', 'refresh')}<button type="button" class="campus-pause"></button><button type="button" class="campus-close" aria-label="Cerrar campus 3D" data-tip="Cerrar campus 3D">${icon('close')}</button></div>`
-    + `<div class="campus-hud-bottom"><p class="campus-note">Representación de tu configuración</p>`
+    + `<div class="campus-hud-bottom"><details class="campus-note campus-key"><summary>Representación de tu configuración</summary><div class="campus-key-body">`
+    + `<ul class="campus-key-swatches" aria-label="Qué representa cada color">${KEY_SWATCHES.map(([tone, label]) => `<li><span style="background:${tone}" aria-hidden="true"></span>${label}</li>`).join('')}</ul>`
+    + `<div data-static-summary></div></div></details>`
     + `<dl class="campus-counts" aria-label="Totales de la propuesta, calculados por el motor">`
     + count('attended', 'Estudiantes atendidos', 'Atendidos', 'Estudiantes únicos de los grupos de tus programas; cada grupo cuenta una vez. Sin programas, la matrícula registrada.')
     + count('participations', 'Participaciones por programa', 'Participaciones', 'Suma de estudiantes por programa. Un grupo en dos programas participa dos veces.')

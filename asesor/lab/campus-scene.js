@@ -8,7 +8,7 @@
  */
 import {
   WebGLRenderer, Scene, OrthographicCamera, Mesh, MeshBasicMaterial, HemisphereLight, DirectionalLight, BoxGeometry,
-  RingGeometry, PlaneGeometry, ShadowMaterial, Color, SRGBColorSpace, NeutralToneMapping, PCFShadowMap, Vector3, Vector2, Raycaster, DoubleSide
+  RingGeometry, PlaneGeometry, ShadowMaterial, Color, SRGBColorSpace, NeutralToneMapping, PCFShadowMap, Vector3, Vector2, Raycaster, DoubleSide, BufferGeometry, SkinnedMesh
 } from 'three';
 import { PROGRAM_NAMES, LEVEL_NAMES } from './campus-layout.js';
 import { releaseEntityGroup, clamp, lerp, backOut } from './campus-kit.js';
@@ -321,19 +321,122 @@ export function createMascot(container, opts = {}) {
     tag.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px) translate(-50%, -100%)`;
     tag.hidden = false;
   }
+  /** Top of the roof over the stack at (x, z), or of the ground when nothing is built there. */
+  const ROOF_H = .42;
+  const roofTop = (x, z) => Math.max(0, ...plan.modules.filter(m => m.type === 'roof' && Math.abs(m.x - x) < 1.3 && Math.abs(m.z - z) < 1.15).map(m => m.y + ROOF_H));
   function geekyGoal() {
-    const gate = plan.modules.find(m => m.type === 'entrance'), c = centerOf(plan);
-    const target = focusTarget(), right = { x: Math.cos(yaw), z: -Math.sin(yaw) };
+    const c = centerOf(plan), target = focusTarget();
+    const away = { x: -Math.sin(yaw), z: -Math.cos(yaw) };
     if (target && explicit()) {
-      const look = [target.x, target.y, target.z];
-      // Hover behind and above the activity (as seen from the camera) so Geeky watches it without covering it.
-      const away = { x: -Math.sin(yaw), z: -Math.cos(yaw) }, side = .9, back = .6;
-      return { goal: { x: target.x + right.x * side + away.x * back, y: Math.max(1.8, target.y + 1.3), z: target.z + right.z * side + away.z * back }, look, perched: false, celebrate: false, ground: 0 };
+      // Above the roof of the focused activity, nudged away from the camera: never in front of a balcony or the stairs.
+      const top = roofTop(target.x, target.z) || target.y + 1.3, right = { x: Math.cos(yaw), z: -Math.sin(yaw) };
+      return { goal: { x: target.x + right.x * 1.1 + away.x * .5, y: top + .35, z: target.z + right.z * 1.1 + away.z * .5 }, look: [target.x, target.y, target.z], perched: false, celebrate: false, ground: top };
     }
-    const top = gate ? [gate.x, 1.5 + (gate.y || 0), gate.z] : [c.x, 1.5, c.z + 3];
-    const look = target ? [target.x, target.y, target.z] : [c.x, .5, c.z - 1];
-    // Perched in front of and above the entrance, clear of the floor-1 gallery that may pass over it.
-    return { goal: { x: top[0], y: Math.max(top[1] + .26, 2.35), z: top[2] + .85 }, look, perched: true, celebrate: false, ground: top[1] };
+    // At rest Geeky perches on the roof of the outermost wing (left of the camera), clear of the stairs and galleries.
+    const roofs = plan.modules.filter(m => m.type === 'roof').sort((a, b) => a.x - b.x || b.z - a.z);
+    const perch = roofs[0] ? [roofs[0].x, roofs[0].y + ROOF_H, roofs[0].z] : [c.x - 2, 0, c.z];
+    const look = target ? [target.x, target.y, target.z] : [c.x, .5, c.z + 1];
+    return { goal: { x: perch[0], y: perch[1] + .55, z: perch[2] }, look, perched: true, celebrate: false, ground: perch[1] };
+  }
+
+  // ---------------------------------------------------------------- x-ray of a focused classroom
+  // A focused (or closely zoomed) classroom shows its interior: its roof, the floors above it, its own
+  // wall facing the camera and every tall module between it and the camera are drawn as translucent card.
+  // Furniture and people of a classroom above are hidden, so only its card shell remains as a veil; whole
+  // buildings between the camera and the classroom are hidden.
+  // The index is reordered as [opaque | translucent | hidden]: the opaque mesh draws the first range and a
+  // twin mesh (same attributes and skeleton, the glass material) the second, so no material or buffer is added.
+  const XRAY_TYPES = /^(room-|roof|columns|corridor|stairs|bridge|entrance|tree-)/;
+  const SHELL = /^\.(back|left|right|slab|rail|body|lid|posts)(\.|$)/;
+  let xray = { key: '', parts: [] };
+  function xrayRoom() {
+    const target = focusTarget();
+    if (target && explicit() && target.module.type.startsWith('room-')) return target.module;
+    if (viewMode !== 'people' && view.half / zoomValue >= 2) return null;
+    const at = { x: view.x + pan.x, y: view.y + pan.y, z: view.z + pan.z };
+    const score = m => Math.hypot(m.x - at.x, m.z + .3 - at.z) + Math.abs(m.y + .85 - at.y) * .8;
+    const room = plan.modules.filter(m => m.type.startsWith('room-')).sort((a, b) => score(a) - score(b))[0];
+    return room && score(room) < 2.5 ? room : null;
+  }
+  function xrayBlockers(room) {
+    const h = { x: Math.sin(yaw), z: Math.cos(yaw) }, modules = new Map(), own = [];
+    for (const m of plan.modules) {
+      if (m === room || !XRAY_TYPES.test(m.type)) continue;
+      const dx = m.x - room.x, dz = m.z - room.z;
+      const above = Math.abs(dx) < 1.3 && Math.abs(dz) < 1.15 && m.y > room.y + .1;
+      const along = dx * h.x + dz * h.z, lateral = Math.abs(dx * h.z - dz * h.x);
+      const between = along > .6 && along < 4.5 && lateral < 2.2 && (m.y >= room.y - .1 || m.type.startsWith('tree-'));
+      // Whole buildings in front would stack veils: they step aside; thin links stay as a veil.
+      if (above) modules.set(m.key, 'veil');
+      else if (between) modules.set(m.key, /^(room-|roof|columns)/.test(m.type) ? 'hide' : 'veil');
+    }
+    own.push('.slab', '.rail');
+    if (h.x < -.25) own.push('.left');
+    if (h.x > .25) own.push('.right');
+    if (h.z < -.25) own.push('.back');
+    return { modules, own: own.map(suffix => room.key + suffix) };
+  }
+  function clearXray() {
+    for (const part of xray.parts) {
+      // A released entity already disposed its meshes (and this twin with them).
+      if (![...records.values()].some(record => record.group === part.group)) continue;
+      part.mesh.geometry.setDrawRange(0, Infinity);
+      if (!part.ghost) continue;
+      part.ghost.removeFromParent();
+      // The twin shares the opaque mesh's buffers: drop them before disposing so only the twin goes.
+      for (const name of Object.keys(part.ghost.geometry.attributes)) part.ghost.geometry.deleteAttribute(name);
+      part.ghost.geometry.setIndex(null);
+      part.ghost.geometry.dispose();
+    }
+    xray = { key: '', parts: [] };
+  }
+  function updateXray() {
+    const room = xrayRoom();
+    const key = room ? [room.key, Math.round(yaw * 4), ...records_().map(record => record.group.id)].join(':') : '';
+    if (key === xray.key) return;
+    clearXray();
+    xray.key = key;
+    if (!room) return;
+    const { modules, own } = xrayBlockers(room);
+    const rooms = new Set(plan.modules.filter(m => m.type.startsWith('room-')).map(m => m.key));
+    // 0 opaque, 1 translucent, 2 hidden
+    const modeOf = name => {
+      if (own.some(n => name === n || name.startsWith(n + '.'))) return 1;
+      for (const [k, how] of modules) {
+        if (name !== k && !name.startsWith(k + '.') && !name.startsWith(k + ':')) continue;
+        if (how === 'hide') return 2;
+        return name === k || !rooms.has(k) || SHELL.test(name.slice(k.length)) ? 1 : 2;
+      }
+      return 0;
+    };
+    for (const record of records_()) {
+      const bones = record.group.userData.rig?.bones || [];
+      const mode = bones.map(bone => modeOf(bone.name));
+      if (!mode.some(Boolean)) continue;
+      for (const mesh of record.group.children.filter(o => o.isSkinnedMesh && o.name !== 'xray')) {
+        const geometry = mesh.geometry, index = geometry.index, skin = geometry.getAttribute('skinIndex');
+        // Glass, screens and contact shadows have no veil: they stay unless their part is hidden (blobs go with any veil).
+        const card = mesh.name === 'solid' || mesh.name === 'soft';
+        const lists = [[], [], []];
+        for (let i = 0; i < index.count; i += 3) {
+          const m = mode[skin.getX(index.getX(i))];
+          lists[card ? m : m === 2 || (m && mesh.name === 'blob') ? 2 : 0].push(index.getX(i), index.getX(i + 1), index.getX(i + 2));
+        }
+        const [keep, ghost, hidden] = lists;
+        if (!ghost.length && !hidden.length) continue;
+        index.array.set(keep.concat(ghost, hidden)); index.needsUpdate = true;
+        geometry.setDrawRange(0, keep.length);
+        if (!ghost.length) { xray.parts.push({ mesh, ghost: null, group: record.group }); continue; }
+        const twin = new BufferGeometry();
+        for (const [name, attribute] of Object.entries(geometry.attributes)) twin.setAttribute(name, attribute);
+        twin.setIndex(index); twin.setDrawRange(keep.length, ghost.length);
+        const ghostMesh = new SkinnedMesh(twin, materials.glass);
+        ghostMesh.name = 'xray'; ghostMesh.frustumCulled = false; ghostMesh.renderOrder = 3;
+        ghostMesh.bind(record.group.userData.skeleton, mesh.bindMatrix);
+        record.group.add(ghostMesh);
+        xray.parts.push({ mesh, ghost: ghostMesh, group: record.group });
+      }
+    }
   }
 
   // ---------------------------------------------------------------- loop
@@ -418,6 +521,7 @@ export function createMascot(container, opts = {}) {
     transitions = active; transitionParts = parts;
     updateMarker(animationTime);
     positionCamera();
+    updateXray();
     try {
       renderer.render(scene, camera);
       if (!ready) { ready = true; opts.onReady?.(); }
@@ -522,6 +626,7 @@ export function createMascot(container, opts = {}) {
     }
     const was = { marker: marker.visible, tag: tag.hidden, geeky: geeky.group.visible };
     marker.visible = false; geeky.group.visible = false;
+    clearXray(); // the proposal figure shows the whole campus; the next frame restores the x-ray
     size = { w: width, h: height }; insets = { top: 0, right: 0, bottom: 0, left: 0 };
     yaw = DEFAULT_YAW; pitch = PITCH; zoomValue = 1; pan.set(0, 0, 0);
     plan = confirmed;
@@ -693,7 +798,7 @@ export function createMascot(container, opts = {}) {
       const building = list.filter(record => record.staged.some(item => item.fresh && !item.done)).length;
       const uniqueMaterials = new Set([...Object.values(materials), markerMaterial, hitMaterial, groundMaterial, ...(geeky.ownMaterials?.() || [])]).size;
       const stats = confirmed.stats, services = confirmed.services;
-      const sum = (kind, record) => record.group.children.reduce((n, mesh) => n + (mesh.isMesh && mesh.geometry.attributes.position ? mesh.geometry.attributes.position.count / 3 * (mesh.castShadow ? 2 : 1) : 0), 0);
+      const sum = (kind, record) => record.group.children.reduce((n, mesh) => n + (mesh.isMesh && mesh.name !== 'xray' && mesh.geometry.attributes.position ? mesh.geometry.attributes.position.count / 3 * (mesh.castShadow ? 2 : 1) : 0), 0);
       return { levels: confirmed.normalized.levels.length, programs: confirmed.normalized.programs.length, students: confirmed.normalized.students,
         rooms: stats.rooms, workshops: stats.projectRooms + (confirmed.modules.some(m => m.type === 'patio') ? 1 : 0), people: stats.people,
         equipmentUnits: Object.values(confirmed.normalized.equipment).reduce((n, e) => n + e.units, 0), modules: confirmed.modules.length, plan: { ...stats, services: { ...services } }, preview: previewState ? { programId: previewState.programId, active: previewState.active, modules: previewState.keys.length } : null,
@@ -710,6 +815,7 @@ export function createMascot(container, opts = {}) {
         errors: list.filter(record => record.error).map(record => record.entity.key),
         transitionParts: { ...transitionParts },
         selectTargets: selectTargets(), geeky: { ...geeky.state.p, settled: geeky.settled },
+        xray: xray.key ? { room: xray.key.split(':').slice(0, -1 - records_().length).join(':'), meshes: xray.parts.length } : null,
         quality, frameInterval: Math.round(frameEma), yaw, pitch, zoom: zoomValue, framing: { half: view.half, target: { ...targetView }, size: { ...size }, insets: { ...insets } }, camera: 'orthographic', maxFps: maxFps(), limits: CAMPUS_BUDGET };
     },
     dispose() {

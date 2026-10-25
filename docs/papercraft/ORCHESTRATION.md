@@ -110,3 +110,15 @@ Codex. Este trabajo se hace en Claude Code sobre el cotizador.
   - Técnico: Node 114/114; `check:people` PASS (`alumno-r2-manifest-r2`: 33 instancias = paquete − redistribución, un hueso por instancia, rangos contiguos, montaje por sockets con error < 1e-6 H, H 0.78, cabeza 0.28, hombros 0.26, juntas ocultas rodilla/muñeca informadas aparte); `check:paper` PASS (`alumno-r2-mesh-r2`, estado 6: 33 266); navegador 4/4 PASS (`artifacts/campus/alumno-r2-browser`); después: 4 llamadas, 553 triángulos por cuadro.
   - Visual (imágenes abiertas): `alumno-r2-comparacion-r2` (antes/después) y `alumno-r2-referencias-r2` (arte 00, plano 00, despiece 21, 20 recetas aisladas junto a lámina y plano, montaje por pasos). El resultado coincide con el plano técnico del paquete; frente al arte es más esquemático: cabello en caja, rostro con ojos romboides pequeños, orejas casi ocultas, mangas que se separan del hombro al girar el brazo.
   - NOT_RUN: FPS en GPU/teléfono; revisión independiente.
+- 2026-10-25 · Correcciones r2 (coordinador, rama `fix/campus-r2`):
+  - **Ensamblaje.** El docente y el primer estudiante compartían el id de hueso (`<aula>.p0`), así que el estudiante nunca recibía su etapa 5. Ahora el personal usa `<aula>.<rol>`. `paper-mesh-check` comprueba huesos únicos y que toda persona tenga etapa 5.
+  - **Composición.**
+    - Entrada en un porche del flanco oeste: visible, nunca bajo el balcón y estable entre estados.
+    - Fila H reducida a un borde de 0.7 (ya no hay explanada vacía) y continua a lo ancho.
+    - Árboles en el porche; el flanco este lleva solo vegetación baja.
+  - **Geeky.** En reposo se posa en la azotea del ala izquierda; al enfocar, flota sobre el techo de la actividad.
+  - **Visor de RV.** Lentes, muesca de nariz y correa violeta, 108 de 110 triángulos. Las comparativas de tecnologías usan el objeto completo.
+  - **Leyenda.** Desplegable desde la píldora, con paleta y resumen.
+  - **Rayos X al enfocar un aula** (pedido de la persona responsable): techo, pisos de arriba, pared hacia la cámara y elementos delgados delante quedan translúcidos (material de vidrio, sin materiales nuevos); los edificios intermedios se ocultan.
+  - **Resultados.** Node 109/109; malla PASS (`mesh-r2fix-3`); navegador en las cuatro condiciones PASS (`browser-r2fix-1`), con la nueva prueba de rayos X. Capturas en `artifacts/campus/r2fix-3`, `r2fix-3-movil` y `artifacts/paper/states-r7`.
+  - **Sin cambios.** Lectura papercraft general (pliegues, filetes), pared de fondo naranja y patio poco poblado.

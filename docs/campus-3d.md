@@ -56,10 +56,17 @@ Resumen; las reglas completas están en la cabecera de `plan.js` y las pruebas e
   fondo como pasarela entre las alas y una escalera exterior junto al ala derecha.
 - Una prueba de grafo transitable lo comprueba.
 
+**Entrada**
+
+- Volumen naranja junto al flanco oeste de la primera aula, al ras de su frente y mirando a la cámara.
+- Nunca queda bajo un balcón ni delante de un interior, y no se mueve entre estados.
+
 **Terreno y vegetación**
 
-- El pedestal se ajusta a lo construido.
-- Hay jardín trasero y árboles en los flancos; nada alto delante de los interiores.
+- El pedestal se ajusta a lo construido. Al frente de las alas solo hay una franja de patio y un borde de 0.7.
+  No queda una explanada vacía.
+- Un porche a lo largo del flanco oeste lleva la entrada y dos árboles de flanco.
+- Hay jardín trasero. Nada alto delante de los interiores: el flanco este solo lleva vegetación baja.
 
 **Garantías**
 
@@ -111,6 +118,25 @@ Resumen; las reglas completas están en la cabecera de `plan.js` y las pruebas e
   simultáneos y equipos necesarios.
 - «Equipos existentes» y «por incorporar» no se muestran, porque el motor no tiene inventario
   (brecha documentada).
+
+**Leyenda**
+
+La píldora «Representación de tu configuración» se despliega. Muestra la paleta de la maqueta (aula, taller,
+cubierta, balcón, entrada y jardines) y el mismo resumen textual de la vista sin 3D.
+
+**Interior de un aula (rayos X)**
+
+- Se activa al enfocar un aula o taller, o al acercar mucho la cámara a una.
+- Quedan translúcidos el techo, los pisos de arriba, la pared del aula hacia la cámara y los elementos delgados
+  delante (balcón, escalera, árboles). Los muebles y personas de los pisos de arriba se ocultan.
+- Los edificios completos que quedan entre la cámara y el aula se apartan (se ocultan).
+- Reordena el índice compartido y dibuja la parte translúcida con el material de vidrio: no suma materiales
+  ni búferes. La figura del PDF siempre muestra el campus completo.
+
+**Geeky**
+
+En reposo se posa sobre la azotea del ala izquierda. Al enfocar una actividad flota sobre su techo, a un lado.
+Nunca queda delante de la escalera ni del balcón.
 
 **Selección**
 
