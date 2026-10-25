@@ -1077,3 +1077,9 @@ body:has(.campus-layout) .brand img{width:72px;height:auto}
 @media(max-width:650px){.sim-eq{grid-template-columns:1fr}.sim-eq i{display:none}}
 
 .iva-toggle{margin:10px 0 4px}
+
+/* Close the campus from the model itself; it stays available when the 3D view fails. */
+.campus-hud .campus-tools .campus-close{margin:0 0 3px;border-bottom:1px solid var(--glass-line);border-radius:10px 10px 0 0}
+.campus-hud .campus-tools .campus-close:hover{background:#7a2f55}
+.campus-preview:not(.campus-ready) .campus-hud .campus-tools{pointer-events:auto}
+@media(max-width:980px){.campus-hud .campus-tools .campus-close{margin:0 0 2px;border-radius:9px 9px 0 0}}

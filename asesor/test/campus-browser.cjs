@@ -27,8 +27,9 @@ async function snapshot(page) {
       kind: document.querySelector('[data-campus-feedback]')?.dataset.kind,
       diagram: document.querySelector('[data-campus-feedback]')?.dataset.diagram,
       program: document.querySelector('[data-campus-feedback]')?.dataset.program,
-      title: document.querySelector('[data-feedback-title]')?.textContent,
-      text: document.querySelector('[data-feedback-copy]')?.textContent
+      title: document.querySelector('[data-campus-feedback]')?.dataset.title,
+      text: document.querySelector('[data-campus-feedback]')?.dataset.text,
+      items: Number(document.querySelector('[data-campus-feedback]')?.dataset.items || 0)
     },
     paused: animPaused,
     step: state.step
@@ -201,8 +202,10 @@ async function verifyPersistentView(page, result, originalViewport) {
   await page.mouse.up();
   await settled(page);
   if (before.scene) assert.ok(Math.abs((await snapshot(page)).scene.yaw - before.scene.yaw) > .1, 'Dragging the actual canvas rotates the model');
-  await page.getByRole('button', { name: 'Girar a la derecha', exact: true }).click();
-  await page.getByRole('button', { name: 'Acercar', exact: true }).click();
+  // Rotation and zoom live on the canvas: drag, wheel, pinch and keyboard.
+  await page.locator('.campus-stage').focus();
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('+');
   await settled(page);
   const adjusted = await snapshot(page);
   if (adjusted.scene) {
@@ -300,21 +303,24 @@ async function verifyCanvasSelection(page, result) {
     && item.y >= bounds.y && item.y <= bounds.y + bounds.height);
   assert.ok(target, 'At least one visible workshop can be selected directly');
   await page.mouse.click(target.x, target.y);
-  await verifyFeedback(page, 'program', 'program', target.id);
-  assert.equal(await sourceQuote(page), quote, 'Selecting a 3D workshop only explores it');
-  result.checks.push('Clicking an actual 3D workshop selects its activity and explanation without changing quotation');
+  // Clicking a workshop opens its configuration (step 4) without changing the quote.
+  await page.waitForFunction(id => state.step === 4 && state.selected[state.selectedIndex]?.programId === id, target.id);
+  await page.waitForFunction(id => mascot.getDiagnostics().focusedProgram === id, target.id);
+  assert.equal(await sourceQuote(page), quote, 'Opening a workshop from the model does not alter the quote');
+  result.checks.push('Clicking an actual 3D workshop opens its configuration and frames it without changing the quotation');
 }
 
 async function verifyConfigurationReactions(page, result) {
   const saved = await page.evaluate(() => ({ state: structuredClone(state), ui: structuredClone(ui) }));
   const quote = await sourceQuote(page);
   const reactions = [];
-  await page.locator('[data-campus-program="tale"]').focus();
-  await page.keyboard.press('Enter');
+  // Keyboard tour on the canvas: arrows explore, Enter opens the edition.
+  await page.locator('.campus-stage').focus();
+  for (let i = 0; i < 8 && !(await page.evaluate(() => campusFeedback?.focus?.programId === 'tale' && campusFeedback.focus.kind === 'program')); i++) await page.keyboard.press('ArrowDown');
   reactions.push((await verifyFeedback(page, 'program', 'program')).feedback);
   assert.equal(await sourceQuote(page), quote, 'Exploring a workshop does not alter the quote');
-  await page.locator('[data-campus-edit]').focus();
   await page.keyboard.press('Enter');
+  await page.waitForFunction(() => state.step === 4 && state.selected[state.selectedIndex]?.programId === 'tale');
   await page.evaluate(() => jumpTo('groups'));
   await page.locator('.main-panel .chips.big .chip').first().click();
   const groups = await verifyFeedback(page, 'groups', 'groups');
@@ -356,13 +362,13 @@ async function verifyConfigurationReactions(page, result) {
   await page.locator('#flexb').selectOption('4');
   plan = await verifyFeedback(page, 'plan', 'plan');
   assert.equal(plan.feedback.title, '4 bimestres de exploración');
-  assert.equal(await page.locator('[data-feedback-diagram] .activity-item').count(), 4);
+  assert.equal(plan.feedback.items, 4, 'Four rental bimesters are described');
   reactions.push(plan.feedback);
   await page.locator('.plan-card').filter({ hasText: 'Pagar en cuotas para adquirir' }).click();
   await page.getByRole('radio', { name: /Evoluciona 16/ }).click();
   plan = await verifyFeedback(page, 'plan', 'plan');
   assert.match(plan.feedback.title, /16 meses/);
-  assert.equal(await page.locator('[data-feedback-diagram] .activity-item').count(), 16);
+  assert.equal(plan.feedback.items, 16, 'Sixteen instalments are described');
   reactions.push(plan.feedback);
   await stageScreenshot(page, result, 'stage-plan');
   result.reactions = reactions;
@@ -413,7 +419,7 @@ async function verifyContextRecovery(page, result) {
   if (!supported) { result.contextRecovery = 'Not exercised: WEBGL_lose_context unavailable'; return; }
   await page.waitForFunction(() => mascot.getDiagnostics().contextLost);
   assert.equal(await page.locator('.campus-status').textContent(), 'Vista sin 3D');
-  assert.equal(await page.getByRole('button', { name: 'Girar a la derecha', exact: true }).isDisabled(), true);
+  assert.equal(await page.getByRole('button', { name: 'Restablecer vista', exact: true }).isDisabled(), true);
   await verifyCounts(page, before.data.students);
   await page.evaluate(() => window.__campusSmokeContext.restoreContext());
   await page.locator('.campus-preview.campus-ready').waitFor({ state: 'visible' });
@@ -496,7 +502,7 @@ async function verifyMaximumCampus(page, result) {
     result.maximumScreenshots.push(screenshot);
     await stageScreenshot(page, result, `stage-maximum-${label}`);
     for (const program of ['tale', 'drones', 'immersive']) {
-      await page.locator(`[data-campus-program="${program}"]`).click();
+      await page.evaluate(id => inspectCampus('program', id), program);
       await settled(page);
       const focused = path.join(output, `focused-${program}-${label}.png`);
       await page.screenshot({ path: focused, fullPage: false });
@@ -549,7 +555,7 @@ async function runScenario(browser, config) {
       await page.waitForFunction(() => document.querySelector('.campus-fallback')?.textContent.includes('no está disponible'));
       assert.equal(await page.locator('.campus-status').textContent(), 'Vista sin 3D');
       assert.equal(await page.locator('.campus-stage canvas').count(), 0, 'No canvas is created without WebGL');
-      assert.equal(await page.getByRole('button', { name: 'Girar a la derecha', exact: true }).isDisabled(), true);
+      assert.equal(await page.getByRole('button', { name: 'Restablecer vista', exact: true }).isDisabled(), true);
       result.checks.push('Unavailable WebGL keeps an informative fallback and disables camera controls');
     } else {
       await page.locator('.campus-preview.campus-ready').waitFor({ state: 'visible' });
@@ -611,7 +617,7 @@ async function recordMotionDemo(browser) {
     await page.locator('.prog').filter({ has: page.getByRole('heading', { name: 'Robótica para pequeños', exact: true }) })
       .getByRole('button', { name: /Agregar a mi propuesta/ }).click();
     await page.waitForTimeout(2600);
-    await page.locator('[data-campus-program="tale"]').click();
+    await page.evaluate(() => inspectCampus('program', 'tale'));
     await page.waitForTimeout(4200);
     await page.screenshot({ path: path.join(output, 'live-tale.png'), fullPage: false });
     // The example school grows the campus with a second level and wing.
@@ -620,11 +626,11 @@ async function recordMotionDemo(browser) {
     await page.locator('.prog').filter({ has: page.getByRole('heading', { name: 'Drones educativos', exact: true }) })
       .getByRole('button', { name: /Agregar a mi propuesta/ }).click();
     await page.waitForTimeout(2200);
-    await page.locator('[data-campus-program="drones"]').click();
+    await page.evaluate(() => inspectCampus('program', 'drones'));
     await settled(page);
     await page.waitForTimeout(5000);
     await page.screenshot({ path: path.join(output, 'live-drones.png'), fullPage: false });
-    await page.locator('[data-campus-edit]').click();
+    await page.evaluate(() => editFromCampus('program', 'drones'));
     await page.evaluate(() => jumpTo('sharing'));
     await page.locator('.radio').filter({ hasText: 'Sí, en horarios distintos' }).click();
     await page.waitForTimeout(3200);
@@ -636,7 +642,7 @@ async function recordMotionDemo(browser) {
     await page.locator('#flexb').selectOption('4');
     await page.waitForTimeout(3600);
     await page.screenshot({ path: path.join(output, 'live-plan.png'), fullPage: false });
-    await page.locator('[data-campus-program="master"]').click();
+    await page.evaluate(() => inspectCampus('program', 'master'));
     await page.waitForTimeout(4500);
     await page.getByRole('button', { name: 'Restablecer vista', exact: true }).click();
     await page.waitForTimeout(2500);

@@ -1,0 +1,29 @@
+name: Checks
+
+on:
+  pull_request:
+  push:
+    branches-ignore: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the project
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Unit tests (engine, prices, PDF, campus rules)
+        run: npm test
+      - name: Build the 3D campus bundle
+        run: npm run build
+      - name: Committed bundle matches the sources
+        run: git diff --exit-code -- asesor/vendor/lab-scene.min.js || (echo 'Run npm run build and commit asesor/vendor/lab-scene.min.js' && exit 1)

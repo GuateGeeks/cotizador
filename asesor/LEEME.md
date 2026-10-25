@@ -106,7 +106,7 @@ Para recompilar tras editar cualquiera de los módulos de escena, desde la raíz
 npm ci && npm run build
 ```
 
-Al publicar una versión nueva, actualiza el identificador de caché `?v=` de `lab-scene.min.js` en `loadLab()` cuando corresponda.
+Al publicar una versión nueva, actualiza el identificador de caché `?v=` en `index.html` y el de `lab-scene.min.js` en `loadLab()` (actualmente `107`). El despliegue de Pages instala dependencias, corre `npm test` y compila el bundle antes de publicar; `checks.yml` hace lo mismo en cada pull request.
 
 ## Mini colegio 3D del recorrido
 
@@ -118,7 +118,7 @@ Los niveles agregan sectores de aulas; la matrícula determina una densidad visu
 
 La escuela tiene actividad continua mientras está visible. Tale-Bot ejecuta una secuencia de tarjetas sobre su tapete; se arma y programa un dinosaurio Robot Master; un robot SPIKE Prime sigue la línea y activa una misión; en electrónica se cierra un circuito y se mide; un dron despega, cruza un aro y aterriza mientras los pilotos se turnan; con visores se explora un planeta, el Templo I de Tikal y una molécula. Los estudiantes caminan desde la entrada hacia aulas y talleres. Son representaciones ilustrativas, no réplicas físicas de los equipos.
 
-Tocar una tecnología en el canvas o en su tira de botones centra la cámara en su taller, levanta su pérgola y muestra su nombre; Geeky vuela a observarla. Los botones de niveles hacen lo mismo con sus aulas. Una ficha explica la decisión activa, muestra grupos, turnos, capacidad o plazos según corresponda y permite abrir la configuración del programa. Modalidades y bimestres cambian sus diagramas y condiciones, sin añadir edificios ni prestaciones. `campus-experience.js` deriva estas respuestas de los datos del configurador.
+Tocar un taller en el campus abre la configuración de ese programa, y tocar un aula abre la matrícula de su nivel; la cámara encuadra lo que se edita y Geeky vuela a observarlo. La rueda o el pellizco acercan hacia el punto señalado; arrastrar gira la maqueta. El botón × del visor o «Solo configuración» en el encabezado cierran el campus, y «Mostrar campus 3D» lo recupera. Una ficha explica la decisión activa, muestra grupos, turnos, capacidad o plazos según corresponda y permite abrir la configuración del programa. Modalidades y bimestres cambian sus diagramas y condiciones, sin añadir edificios ni prestaciones. `campus-experience.js` deriva estas respuestas de los datos del configurador.
 
 Arrastrar horizontalmente gira la cámara; los botones y el teclado permiten girar, acercar, alejar y restablecer. El desplazamiento vertical táctil sigue disponible. `placeMascot()` conserva la instancia y la cámara entre pantallas; `mascotData()` proporciona datos del estado y del motor. `createMascot()` incorpora `setFocus()` y el callback `onSelect`; la implementación está en `lab/campus-layout.js` (reglas), `lab/campus-kit.js` (primitivas y huesos), `lab/campus-people.js` (personas), `lab/campus-architecture.js` (aulas, isla y entorno), `lab/campus-actors.js` (actividades y comunidad), `lab/campus-geeky.js` (Geeky) y `lab/campus-scene.js` (render, cámara y selección).
 

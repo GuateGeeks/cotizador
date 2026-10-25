@@ -59,7 +59,7 @@ El canvas ocupa todo el panel del campus y sobre el modelo solo flotan unas poca
 
 - arriba a la izquierda, el título con el aviso «Toca un taller o un aula para editarlo»;
 - arriba a la derecha, la píldora «Mi propuesta»;
-- a la derecha, «Restablecer vista» y «Pausar»;
+- a la derecha, «Cerrar campus 3D» (×), «Restablecer vista» y «Pausar»;
 - abajo a la derecha, los totales de estudiantes y equipos.
 
 En móvil desaparece la capa superior y el modelo usa todo el visor. `asesor.js` mide las capas (`syncCampusInsets()`) y la escena encuadra el modelo en el área libre mediante `mascot.setInsets({ top, right, bottom, left })`.
@@ -68,7 +68,7 @@ En móvil desaparece la capa superior y el modelo usa todo el visor. `asesor.js`
 
 En escritorio, el borde entre la configuración y el campus se arrastra para ajustar el ancho, de 320 px hasta dejar al menos 420 px al campus. Con el foco en el asa, las flechas lo ajustan, Inicio y Fin van al mínimo y al máximo, y Enter o doble clic restablecen el ancho. El valor se guarda en este navegador (`gg_asesor_config_w`). El contenido de la configuración se reacomoda por su propio ancho con *container queries*: dos columnas desde 560 px, ficha de propuesta en dos columnas desde 720 px y niveles en cuatro columnas desde 900 px.
 
-El botón «Solo configuración» del encabezado oculta el campus y deja el formulario con un ancho de lectura cómodo. En ese modo la escena no se carga; si ya existía, deja de renderizar. «Mostrar campus 3D» la recupera con su cámara. La preferencia se guarda en `gg_asesor_campus`.
+El botón × del visor o «Solo configuración» en el encabezado ocultan el campus. El × sigue activo aunque la vista 3D falle, y al usarlo se avisa cómo volver a abrirlo. El modo solo configuración y deja el formulario con un ancho de lectura cómodo. En ese modo la escena no se carga; si ya existía, deja de renderizar. «Mostrar campus 3D» la recupera con su cámara. La preferencia se guarda en `gg_asesor_campus`.
 
 ## Exploración y cámara
 
@@ -194,7 +194,9 @@ npm test
 python3 -m http.server 8000
 ```
 
-`npm run build` genera `asesor/vendor/lab-scene.min.js`. Al publicar, actualiza el identificador `?v=` (actualmente `campus-live-3`) en `asesor.js` e `index.html`.
+`npm run build` genera `asesor/vendor/lab-scene.min.js`. Al publicar, actualiza el identificador `?v=` (actualmente `107`) en `index.html` y en `loadLab()` de `asesor.js`.
+
+En GitHub, `checks.yml` corre pruebas y compilación en cada pull request y en cada rama, y comprueba que el bundle versionado coincida con las fuentes. El despliegue `pages.yml` (push a `main`) ejecuta `npm ci`, `npm test` y `npm run build` antes de preparar el sitio, así que una prueba fallida bloquea la publicación.
 
 La integración de navegador se ejecuta aparte, con Playwright accesible y un servidor activo. `BROWSER_ARGS` (opcional) añade flags de Chromium, por ejemplo WebGL por software en WSL o CI:
 

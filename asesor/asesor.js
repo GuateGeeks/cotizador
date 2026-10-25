@@ -67,6 +67,7 @@ const ICONS = {
   chart: '<path d="M4 20V11M10 20V4M16 20v-6M22 20H2"/>',
   play: '<path d="M7 4.5v15l12-7.5z"/>',
   cube: '<path d="m12 2 9 5v10l-9 5-9-5V7z"/><path d="m3 7 9 5 9-5M12 12v10"/>',
+  close: '<path d="M6 6l12 12M18 6 6 18"/>',
   panel: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M10 4v16M5.5 8h2M5.5 11h2"/>'
 };
 const icon = name => `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name] || ICONS.grid}</svg>`;
@@ -359,6 +360,7 @@ function inspectCampus(kind, id) {
 function paintCampusFeedback(feedback) {
   const box = mascotHost.querySelector('[data-campus-feedback]');
   box.dataset.kind = feedback.focus.kind; box.dataset.diagram = feedback.diagram; box.dataset.program = feedback.focus.programId || '';
+  box.dataset.title = feedback.title; box.dataset.text = feedback.text; box.dataset.items = String((feedback.items || []).length);
   box.textContent = `${feedback.title}. ${feedback.text}`;
 }
 function campusUnavailable(message) {
@@ -481,7 +483,7 @@ function createCampusHost() {
   host.innerHTML = `<div class="campus-stage" tabindex="0" role="group" aria-label="Campus interactivo. Toca un taller o un aula para editarlo. Arrastra para girar y usa la rueda o el pellizco para acercarte. Flechas arriba y abajo recorren talleres y aulas y Enter abre su edición; izquierda y derecha giran; más y menos acercan; Inicio o Escape vuelven a la vista general." aria-describedby="campus-description"><p class="campus-fallback">Preparando tu colegio…</p></div>`
     + `<div class="campus-hud">`
     + `<div class="campus-hud-top" data-hud-top><div class="campus-heading"><h2>Tu colegio</h2><span class="campus-status" role="status">Cargando vista</span></div><p class="campus-message">Toca un taller o un aula para editarlo</p></div>`
-    + `<div class="campus-tools" aria-label="Controles de la vista 3D">${cameraButton('reset','Restablecer vista','home')}<button type="button" class="campus-pause"></button></div>`
+    + `<div class="campus-tools" aria-label="Controles de la vista 3D"><button type="button" class="campus-close" aria-label="Cerrar campus 3D" title="Cerrar campus 3D · se vuelve a abrir desde el encabezado">${icon('close')}</button>${cameraButton('reset','Restablecer vista','home')}<button type="button" class="campus-pause"></button></div>`
     + `<div class="campus-counts" aria-label="Totales de la propuesta"><span><b data-campus-students>0</b> estudiantes</span><span><b data-campus-equipment>0</b> equipos</span></div>`
     + `</div><p class="sr-only" data-campus-feedback role="status" aria-live="polite" aria-atomic="true"></p><p class="sr-only campus-description" id="campus-description"></p>`;
   function camera(action) {
@@ -492,6 +494,7 @@ function createCampusHost() {
   }
   host.querySelectorAll('[data-camera]').forEach(b => { b.disabled = true; b.addEventListener('click', () => camera(b.dataset.camera)); });
   host.querySelector('.campus-pause').addEventListener('click', () => setAnimPaused(!animPaused));
+  host.querySelector('.campus-close').addEventListener('click', () => { toggleCampus(); notify('Cerraste el campus 3D. Puedes volver a abrirlo con «Mostrar campus 3D» en el encabezado.'); });
   host.querySelector('.campus-stage').addEventListener('keydown', e => {
     const action = { ArrowLeft: 'left', ArrowRight: 'right', '+': 'in', '=': 'in', '-': 'out', Home: 'reset', Escape: 'reset' }[e.key];
     if (action) { e.preventDefault(); camera(action); return; }
