@@ -113,9 +113,9 @@
     tilesRow(model.stats, { h: 64, vsize: 22 });
     if (model.levelsLine) para(model.levelsLine, { size: T.small, color: C.muted, gap: 10 });
 
-    // Detalle de la cotización: una fila por programa, como una cotización de líneas
-    heading('Detalle de la cotización', 'Cada fila es un programa. Los importes son sin IVA (instituciones educativas exentas); el monto con IVA se indica como referencia.', 90);
-    const cols = [{ w: 224, a: 'left', t: 'Programa' }, { w: 96, a: 'left', t: 'Equipos' }, { w: 96, a: 'left', t: 'Modalidad' }, { w: 99, a: 'right', t: 'Importe sin IVA' }];
+    // Lo que incluye la propuesta: una fila por programa, solo alcance y equipos (sin importes por programa)
+    heading('Lo que incluye tu propuesta', 'Los importes de la propuesta no se separan por nivel ni por programa: más abajo están unificados.', 90);
+    const cols = [{ w: 270, a: 'left', t: 'Programa' }, { w: 135, a: 'left', t: 'Equipos' }, { w: 110, a: 'right', t: 'Estudiantes' }];
     const tableHead = () => {
       ensure(26 + 60);
       pdf.rect(M, y, CW, 26, { fill: C.plumDark, r: 6 });
@@ -128,53 +128,73 @@
       const photo = photoId(r.photo), tx = M + 10 + (photo ? 62 : 0), tw = cols[0].w - 20 - (photo ? 62 : 0);
       const t1 = GGPdf.wrap(r.title, T.small + 0.5, true, tw), t2 = GGPdf.wrap(r.sub, T.tiny, false, tw)[0] || '';
       const eq = GGPdf.wrap(r.equip, T.small + 0.5, false, cols[1].w - 16).slice(0, 2);
-      const rowH = Math.max(16 + t1.length * 13 + 14, photo ? 52 : 0, 16 + eq.length * 13 + 14, r.withIva ? 44 : 36);
+      const rowH = Math.max(16 + t1.length * 13 + 14, photo ? 52 : 0, 16 + eq.length * 13 + 14, 36);
       if (y + rowH > BOTTOM) { newPage(); tableHead(); }
       if (ri % 2 === 0) pdf.rect(M, y, CW, rowH, { fill: C.soft });
       if (photo) pdf.image(photo, M + 10, y + (rowH - 38) / 2, 52, 38);
       t1.forEach((ln, k) => pdf.text(tx, y + 19 + k * 13, ln, { size: T.small + 0.5, bold: true, color: C.ink }));
       pdf.text(tx, y + 19 + t1.length * 13 + 1, t2, { size: T.tiny, color: C.muted });
       eq.forEach((ln, k) => pdf.text(M + cols[0].w + 10, y + 19 + k * 13, ln, { size: T.small + 0.5, color: C.ink }));
-      pdf.text(M + cols[0].w + cols[1].w + 10, y + 19, r.plan, { size: T.small + 0.5, bold: true, color: C.plum });
-      pdf.text(M + CW - 10, y + 19, r.net, { size: 11.5, bold: true, color: r.pendiente ? C.amberDark : C.plumDark, align: 'right' });
-      if (r.withIva) pdf.text(M + CW - 10, y + 33, r.withIva, { size: T.tiny, color: C.muted, align: 'right' });
+      pdf.text(M + CW - 10, y + 19, r.students, { size: T.small + 0.5, bold: true, color: C.plumDark, align: 'right' });
       y += rowH;
     });
     pdf.line(M, y, M + CW, y, C.line);
     y += 16;
     if (model.invest.warning) { const h = calloutH(CW, '', model.invest.warning); ensure(h + 8); callout(M, CW, y, '', model.invest.warning, 'amber'); y += h + 14; }
 
-    // Totales (a la derecha) y cómo se paga (a la izquierda)
-    const inv = model.invest, P = inv.parts, totW = 236, leftW = CW - totW - 16;
-    const payTitle = 'Así se paga', payText = model.pay ? model.pay.lead : 'Los importes se confirman con GuateGeeks.';
-    const payH = 40 + pdf.measure(payText, { size: T.body, w: leftW - 32, lh: 15 });
-    const totH = P ? 136 : 96;
-    ensure(Math.max(payH, totH) + 10);
-    pdf.rect(M, y, leftW, Math.max(payH, totH), { fill: C.plumWash, r: 10 });
-    pdf.text(M + 16, y + 26, payTitle, { size: 12, bold: true, color: C.plumDark });
-    pdf.paragraph(M + 16, y + 46, payText, { size: T.body, color: C.ink, w: leftW - 32, lh: 15 });
-    const chips = model.pay && model.pay.tiles ? model.pay.tiles.filter(t => !t.dark).slice(0, 3) : [];
-    if (chips.length) {
-      const bh = Math.max(payH, totH), cw = (leftW - 32 - 8 * (chips.length - 1)) / chips.length;
-      chips.forEach((t, i) => {
-        const cx = M + 16 + i * (cw + 8), cy = y + bh - 58;
-        pdf.rect(cx, cy, cw, 44, { fill: C.white, r: 8 });
-        pdf.text(cx + 10, cy + 18, t.v, { size: 11, bold: true, color: C.plumDark });
-        pdf.text(cx + 10, cy + 34, t.l, { size: T.tiny, color: C.muted });
+    // Inversión agrupada por modalidad: cada monto reúne los programas que comparten modalidad
+    if (model.options && model.options.length) {
+      heading('Inversión según la modalidad', 'Cada monto reúne los programas de la misma modalidad; no se separa por nivel ni por programa.', 150);
+      const oc = [{ w: 190, a: 'left', t: 'Modalidad' }, { w: 220, a: 'left', t: 'Programas' }, { w: 110, a: 'right', t: 'Total' }];
+      pdf.rect(M, y, CW, 26, { fill: C.plumDark, r: 6 });
+      let ox = M; oc.forEach(c => { pdf.text(c.a === 'right' ? ox + c.w - 10 : ox + 10, y + 17, c.t, { size: T.small, bold: true, color: C.white, align: c.a }); ox += c.w; });
+      y += 28;
+      model.options.forEach((r, ri) => {
+        const pl = GGPdf.wrap(r.programs, T.small, false, oc[1].w - 20).slice(0, 3), h = Math.max(40, 16 + pl.length * 12 + 10);
+        ensure(h);
+        pdf.rect(M, y, CW, h, { fill: ri % 2 ? C.white : C.soft, r: 6 });
+        pdf.text(M + 10, y + 17, r.label, { size: T.small + 0.5, bold: true, color: C.ink });
+        pdf.text(M + 10, y + 31, r.tag, { size: T.tiny, color: C.muted });
+        pl.forEach((ln, k) => pdf.text(M + oc[0].w + 10, y + 17 + k * 12, ln, { size: T.small, color: C.ink }));
+        pdf.text(M + CW - 10, y + 24, r.total, { size: 11.5, bold: true, color: C.plumDark, align: 'right' });
+        y += h + 4;
       });
+      y += 10;
     }
-    const tx0 = M + leftW + 16;
-    pdf.rect(tx0, y, totW, totH, { fill: C.plumDark, r: 10 });
+
+    // Totales (a la derecha) y cómo se paga (a la izquierda), solo con una modalidad elegida
+    const inv = model.invest, P = inv.parts;
     if (P) {
+      const pay0 = model.pay || { lead: '', tiles: [] }, totW = 236, leftW = CW - totW - 16, payText = pay0.lead;
+      const payH = 40 + pdf.measure(payText, { size: T.body, w: leftW - 32, lh: 15 }) + ((pay0.tiles || []).length ? 62 : 0), totH = 156;
+      const bh = Math.max(payH, totH);
+      ensure(bh + 10);
+      pdf.rect(M, y, leftW, bh, { fill: C.plumWash, r: 10 });
+      pdf.text(M + 16, y + 26, 'Así se paga', { size: 12, bold: true, color: C.plumDark });
+      pdf.paragraph(M + 16, y + 46, payText, { size: T.body, color: C.ink, w: leftW - 32, lh: 15 });
+      const chips = (pay0.tiles || []).filter(t => !t.dark).slice(0, 3);
+      if (chips.length) {
+        const cw = (leftW - 32 - 8 * (chips.length - 1)) / chips.length;
+        chips.forEach((t, i) => {
+          const cx = M + 16 + i * (cw + 8), cy = y + bh - 58;
+          pdf.rect(cx, cy, cw, 44, { fill: C.white, r: 8 });
+          pdf.text(cx + 10, cy + 18, t.v, { size: 11, bold: true, color: C.plumDark });
+          pdf.text(cx + 10, cy + 34, t.l, { size: T.tiny, color: C.muted });
+        });
+      }
+      const tx0 = M + leftW + 16;
+      pdf.rect(tx0, y, totW, bh, { fill: C.plumDark, r: 10 });
       pdf.text(tx0 + 18, y + 26, inv.label, { size: T.small, color: C.light });
-      pdf.text(tx0 + 18, y + 62, P.net, { size: 30, bold: true, color: C.white });
-      pdf.line(tx0 + 18, y + 80, tx0 + totW - 18, y + 80, '#6b5a8e');
-      pdf.text(tx0 + 18, y + 100, 'Con IVA, solo referencia', { size: T.small, color: C.light });
-      pdf.text(tx0 + totW - 18, y + 100, P.total, { size: T.body, bold: true, color: C.white, align: 'right' });
-      pdf.text(tx0 + 18, y + 120, 'IVA de ' + P.ivaPct, { size: T.tiny, color: C.light });
-      pdf.text(tx0 + totW - 18, y + 120, P.iva, { size: T.small, color: C.light, align: 'right' });
-    } else pdf.text(tx0 + 18, y + 54, inv.net, { size: 16, bold: true, color: C.white });
-    y += Math.max(payH, totH) + 20;
+      pdf.text(tx0 + 18, y + 58, P.main, { size: 28, bold: true, color: C.white });
+      pdf.text(tx0 + 18, y + 74, P.mainLabel, { size: T.tiny, color: C.light });
+      pdf.line(tx0 + 18, y + 86, tx0 + totW - 18, y + 86, '#6b5a8e');
+      pdf.text(tx0 + 18, y + 104, P.perLabel, { size: T.small, color: C.light });
+      pdf.text(tx0 + totW - 18, y + 104, P.perStudent, { size: T.body, bold: true, color: C.white, align: 'right' });
+      if (P.perTotal) pdf.text(tx0 + 18, y + 118, P.perTotal + ' · ' + P.students + ' estudiantes', { size: T.tiny, color: C.light });
+      pdf.text(tx0 + 18, y + 138, 'Sin IVA / IVA ' + P.ivaPct, { size: T.tiny, color: C.light });
+      pdf.text(tx0 + totW - 18, y + 138, P.net + ' / ' + P.iva, { size: T.tiny, color: C.light, align: 'right' });
+      y += bh + 20;
+    }
 
     // Cómo leer esta cotización: las modalidades usadas, en lenguaje sencillo
     if (model.legend && model.legend.length) {
@@ -234,15 +254,15 @@
       const pr = p.price, panelPad = 16;
       let priceH = 0, payLines = [], ownH = 0, incl = [];
       if (pr) {
-        payLines = GGPdf.wrap(pr.pay, T.body, false, innerW - panelPad * 2 - 200);
+        payLines = GGPdf.wrap(pr.pay, T.body, false, innerW - panelPad * 2 - (pr.net ? 200 : 0));
         ownH = pr.own ? calloutH(innerW - panelPad * 2, pr.own.title, pr.own.text) + 10 : 0;
         // «Qué incluye» en dos columnas para que cada programa ocupe menos espacio
         const colW = (innerW - panelPad * 2 - 16) / 2 - 12;
-        const wrapped = pr.includes.map(([t, d]) => GGPdf.wrap(t + '. ' + d, T.small, false, colW));
+        const wrapped = pr.includes.map(([t, d]) => GGPdf.wrap(d ? t + '. ' + d : t, T.small, false, colW));
         incl = [wrapped.filter((_, k) => k % 2 === 0), wrapped.filter((_, k) => k % 2 === 1)];
         pr.inclH = Math.max(...incl.map(col => col.reduce((s, l) => s + l.length * 13 + 5, 0)));
         pr.colW = colW;
-        priceH = panelPad * 2 + 20 + Math.max(66, payLines.length * 14 + 8) + ownH + (pr.minNote ? 18 : 0) + 24 + pr.inclH + 2;
+        priceH = panelPad * 2 + 20 + (pr.net ? Math.max(66, payLines.length * 14 + 8) : payLines.length * 14 + 10) + ownH + (pr.minNote ? 18 : 0) + 24 + pr.inclH + 2;
       } else if (p.pending) priceH = calloutH(innerW, '', p.pending);
       const total = pad + headH + 14 + explH + 8 + noteH + priceH + pad;
       ensure(Math.min(total, 380));
@@ -282,11 +302,13 @@
         let py = yy + panelPad;
         pdf.text(M + pad + panelPad, py + 11, 'Modalidad: ' + pr.planName, { size: 11, bold: true, color: C.plumDark });
         py += 20;
-        pdf.text(M + pad + panelPad, py + 11, 'Inversión sin IVA', { size: T.small, color: C.muted });
-        pdf.text(M + pad + panelPad, py + 38, pr.net, { size: 24, bold: true, color: C.plumDark });
-        pdf.text(M + pad + panelPad, py + 55, 'Con IVA: ' + pr.withIva, { size: T.small, color: C.muted });
-        payLines.forEach((ln, i) => pdf.text(M + pad + panelPad + 200, py + 15 + i * 14, ln, { size: T.body, color: C.ink }));
-        py += Math.max(66, payLines.length * 14 + 8);
+        if (pr.net) {
+          pdf.text(M + pad + panelPad, py + 11, 'Inversión sin IVA', { size: T.small, color: C.muted });
+          pdf.text(M + pad + panelPad, py + 38, pr.net, { size: 24, bold: true, color: C.plumDark });
+          pdf.text(M + pad + panelPad, py + 55, 'Con IVA: ' + pr.withIva, { size: T.small, color: C.muted });
+        }
+        payLines.forEach((ln, i) => pdf.text(M + pad + panelPad + (pr.net ? 200 : 0), py + (pr.net ? 15 : 11) + i * 14, ln, { size: T.body, color: C.ink }));
+        py += pr.net ? Math.max(66, payLines.length * 14 + 8) : payLines.length * 14 + 10;
         if (pr.own) { const h = callout(M + pad + panelPad, innerW - panelPad * 2, py + 2, pr.own.title, pr.own.text, 'mint'); py += h + 10; }
         if (pr.minNote) { pdf.text(M + pad + panelPad, py + 11, pr.minNote, { size: T.small, color: C.amberDark }); py += 18; }
         pdf.text(M + pad + panelPad, py + 13, 'Qué incluye', { size: T.body, bold: true, color: C.plumDark });
@@ -308,7 +330,7 @@
     if (model.pay && model.pay.table) {
       const t = model.pay.table;
       heading('Pagos mes a mes', (model.pay && model.pay.note) || 'Importes en quetzales enteros.', 100);
-      const n = t.head.length, firstW = 74, lastW = 80, midW = (CW - firstW - lastW) / Math.max(1, n - 2);
+      const n = t.head.length, firstW = n === 2 ? CW - 140 : 74, lastW = n === 2 ? 140 : 80, midW = (CW - firstW - lastW) / Math.max(1, n - 2);
       const widths = t.head.map((_, i) => i === 0 ? firstW : i === n - 1 ? lastW : midW);
       const headLines = t.head.map((h, i) => GGPdf.wrap(h, T.small, true, widths[i] - 12));
       const headH = Math.max(...headLines.map(l => l.length)) * 12 + 12;

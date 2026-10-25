@@ -190,6 +190,29 @@
     return 'priced';
   }
 
+  // Inversión unificada de toda la propuesta bajo cada modalidad: se suman los equipos de todos los programas
+  // y niveles, sin desglose por programa. bimestres solo aplica a Flex. students = estudiantes únicos atendidos.
+  function proposalOptions(entries, programs, groups, tariffs, fiscal, bimestres) {
+    const rows = entries.filter(e => e.confirmed).map(e => {
+      const p = programs.find(x => x.id === e.programId), units = effectiveUnits(e, p, groups);
+      return { entry: e, program: p, units, tariff: tariffs[p.id], ok: !!(p.ratio && tariffs[p.id] && units) };
+    });
+    const priced = rows.filter(r => r.ok), unpriced = entries.length - priced.length;
+    const students = uniqueStudents(groups, [...new Set(priced.flatMap(r => r.entry.groupIds))]);
+    const equipment = priced.reduce((s, r) => s + r.units, 0);
+    const options = {};
+    ['INTEGRA', 'FLEX', 'EV8', 'EV16'].forEach(plan => {
+      if (!priced.length) { options[plan] = null; return; }
+      const qs = priced.map(r => quoteFor(plan, bimestres, r.units, r.tariff, fiscal));
+      const len = Math.max(...qs.map(q => q.schedule.length));
+      const col = (k, i) => qs.reduce((s, q) => s + (q[k][i] || 0), 0);
+      const sum = k => qs.reduce((s, q) => s + q[k], 0);
+      options[plan] = { plan, net: sum('net'), tax: sum('tax'), total: sum('total'), months: Math.max(...qs.map(q => q.months)), initial: sum('initial'), initialIva: sum('initialIva'),
+        schedule: Array.from({ length: len }, (_, i) => col('schedule', i)), scheduleIva: Array.from({ length: len }, (_, i) => col('scheduleIva', i)), quotes: qs, kind: qs[0].kind };
+    });
+    return { options, students, equipment, pricedCount: priced.length, unpricedCount: unpriced, complete: entries.length > 0 && unpriced === 0, rows: priced };
+  }
+
   // Suma solo las partidas con precio vigente. Nunca presenta el parcial como total completo.
   function proposalTotals(entries, programs, groups, tariffs, fiscal) {
     const rows = entries.map(e => {
@@ -205,5 +228,5 @@
     return { rows, pricedCount: priced.length, unpricedCount: unpriced, net: sum('net'), tax: sum('tax'), total: sum('total'), complete: rows.length > 0 && unpriced === 0 };
   }
 
-  return { teamsFor, recommend, analyze, uniqueStudents, gradeData, groupsOf, splitEven, quoteFor, suggestedFee, simulate, simulateAll, entrySignature, effectiveUnits, entryStatus, proposalTotals };
+  return { teamsFor, recommend, analyze, uniqueStudents, gradeData, groupsOf, splitEven, quoteFor, suggestedFee, simulate, simulateAll, proposalOptions, entrySignature, effectiveUnits, entryStatus, proposalTotals };
 });

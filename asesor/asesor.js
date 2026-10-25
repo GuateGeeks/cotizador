@@ -221,7 +221,7 @@ function progressMarkup() {
 }
 function summaryAside() {
   const t = M.proposalTotals(state.selected, PROGRAMS, groups(), TARIFFS, FISCAL);
-  return `<aside class="side-panel" aria-label="Resumen de tu propuesta"><h2 class="side-head">Tu propuesta</h2><p class="side-summary">${state.selected.length} ${plural(state.selected.length, 'programa elegido', 'programas elegidos')}</p><div class="side-metrics"><div><b data-participants>${selectedParticipants()}</b><small>estudiantes únicos</small></div></div>${state.selected.map((s, i) => { const p = findP(s.programId); const r = t.rows[i]; return `<div class="side-item">${miniature(s)}<div style="min-width:0"><b>${esc(p.name)}</b><small>${esc(levelsLabel(s))} · ${p.ratio && r.units ? r.units + ' equipos' : 'por definir'}</small><button class="text-btn" onclick="editProgram(${i})" style="font-size:12px;margin-top:3px">${esc(planOf(s.plan).tag)} · Editar</button></div></div>`; }).join('') || '<div class="empty" style="margin-top:18px">Tu propuesta empieza con tus estudiantes. Después podrás agregar los programas.</div>'}<div class="side-actions">${state.selected.length ? `<button class="btn btn-primary" onclick="step(5)">Revisar mi propuesta ${icon('arrow')}</button>` : ''}<button class="btn btn-outline" onclick="resetAll()">Empezar de nuevo</button></div><p class="side-note">${icon('info')} Tu avance se guarda en este navegador. Los importes se confirman con GuateGeeks.</p></aside>`;
+  return `<aside class="side-panel" aria-label="Resumen de tu propuesta"><h2 class="side-head">Tu propuesta</h2><p class="side-summary">${state.selected.length} ${plural(state.selected.length, 'programa elegido', 'programas elegidos')}</p><div class="side-metrics"><div><b data-participants>${selectedParticipants()}</b><small>estudiantes únicos</small></div></div>${state.selected.map((s, i) => { const p = findP(s.programId); const r = t.rows[i]; return `<div class="side-item">${miniature(s)}<div style="min-width:0"><b>${esc(p.name)}</b><small>${esc(levelsLabel(s))} · ${p.ratio && r.units ? r.units + ' equipos' : 'por definir'}</small><button class="text-btn" onclick="editProgram(${i})" style="font-size:12px;margin-top:3px">${s.plan && s.plan !== 'UNDECIDED' ? esc(planOf(s.plan).tag) + ' · ' : ''}Editar</button></div></div>`; }).join('') || '<div class="empty" style="margin-top:18px">Tu propuesta empieza con tus estudiantes. Después podrás agregar los programas.</div>'}<div class="side-actions">${state.selected.length ? `<button class="btn btn-primary" onclick="step(5)">Revisar mi propuesta ${icon('arrow')}</button>` : ''}<button class="btn btn-outline" onclick="resetAll()">Empezar de nuevo</button></div><p class="side-note">${icon('info')} Tu avance se guarda en este navegador. Los importes se confirman con GuateGeeks.</p></aside>`;
 }
 function frame(title, description, content) {
   const mobile = state.step > 0 ? `<div class="mobile-summary"><div><b>Mi propuesta · ${state.selected.length} ${plural(state.selected.length, 'programa', 'programas')}</b><small>${selectedParticipants()} participantes únicos</small></div><button class="btn btn-primary" onclick="step(5)" ${state.selected.length ? '' : 'disabled'}>Ver propuesta ${icon('arrow')}</button></div>` : '';
@@ -474,8 +474,8 @@ const cur = () => state.selected[state.selectedIndex];
 // Decisiones que aplican a este programa: sin ratio no hay equipos que calcular y con un solo grupo no hay nada que compartir.
 function stepKeys(s) {
   const p = findP(s.programId);
-  if (!p.ratio) return ['groups', 'plan'];
-  return ['groups', ...(s.groupIds.length > 1 ? ['sharing'] : []), 'quantity', 'plan'];
+  if (!p.ratio) return ['groups'];
+  return ['groups', ...(s.groupIds.length > 1 ? ['sharing'] : []), 'quantity'];
 }
 function changeConfig(prop, val) {
   const s = cur(); if (!s) return; s[prop] = val;
@@ -509,7 +509,6 @@ function canProceed(s, key) {
     if (unitsOf(s) == null) return 'Indica cuántos equipos usarás.';
     return analysis(s).state === 'limited' && !s.stations ? 'Elige cómo resolver la capacidad limitada.' : '';
   }
-  if (key === 'plan') return s.plan === 'UNDECIDED' ? 'Elige una modalidad para continuar.' : '';
   return '';
 }
 // ---- Navegación entre programas: siempre al siguiente pendiente; lo ya guardado se revisa sin repetir ----
@@ -557,7 +556,6 @@ function cfgReview(s, p) {
   const rows = [['groups', 'Grupos', `${gs.length} ${plural(gs.length, 'grupo', 'grupos')} · ${participation(s)} estudiantes`]];
   if (stepKeys(s).includes('sharing')) rows.push(['sharing', 'Horarios', sharingTxt]);
   if (p.ratio) rows.push(['quantity', 'Equipos', `${u ?? '—'} ${p.hardware}${an.state === 'limited' ? ' · trabajo por estaciones' : an.state === 'full' ? ' · cobertura completa' : ''}`]);
-  rows.push(['plan', 'Modalidad', planOf(s.plan).tag + (s.plan === 'FLEX' ? ` · ${s.flexBimestres} ${plural(s.flexBimestres, 'bimestre', 'bimestres')}` : '')]);
   const pend = nextPending(state.selectedIndex);
   return `<div class="review-list">${rows.map(([k, t, v]) => `<div class="review-row"><div><span>${t}</span><b>${esc(v)}</b></div><button class="btn btn-small btn-outline" onclick="jumpTo('${k}')" aria-label="Cambiar ${t.toLowerCase()}">Cambiar</button></div>`).join('')}</div><div class="foot"><button class="btn btn-outline" onclick="step(5)">Volver a mi propuesta</button>${pend >= 0 ? `<button class="btn btn-primary" onclick="goNextPending()">Configurar el siguiente pendiente ${icon('arrow')}</button>` : `<button class="btn btn-primary" onclick="step(5)">Listo, ver mi propuesta ${icon('arrow')}</button>`}</div>`;
 }
@@ -609,14 +607,6 @@ const PLAN_CARDS = [
   { pick: 'EV8', ids: ['EV8', 'EV16'], title: 'Pagar en cuotas para adquirir', tag: 'Evoluciona', sum: 'Pago inicial del 20 % y cuotas mensuales; al completar el plazo, el equipo pasa a ser del colegio.',
     inc: ['Equipamiento que pasa a ser del colegio al terminar de pagar', 'Capacitación docente e integración tecnológica', 'Recursos para el aula', 'Seguimiento y soporte', 'Sócrates Aprende'], foot: 'Construimos e integramos contigo un programa que se sostiene, evoluciona y crece en el tiempo.' }
 ];
-function cfgPlan(s, p) {
-  const cards = PLAN_CARDS.map(c => {
-    const on = c.ids.includes(s.plan);
-    return `<label class="plan-card ${on ? 'selected' : ''}"><input type="radio" name="plan" ${on ? 'checked' : ''} onchange="changeConfig('plan','${c.pick}')"><span class="pc-head"><strong>${esc(c.title)}</strong><span class="pill-light">${esc(c.tag)}</span></span><span class="pc-sum">${esc(c.sum)}</span><span class="pc-inc-title">Qué incluye</span><ul class="pc-inc">${c.inc.map(x => `<li>${icon('check')}<span>${esc(x)}</span></li>`).join('')}</ul><span class="pc-foot">${icon('info')}<span>${esc(c.foot)}</span></span></label>`;
-  }).join('');
-  const terms = ['EV8', 'EV16'].includes(s.plan) ? `<div class="sub-pick"><div class="label" id="term-l">Elige el plazo de Evoluciona</div><div class="term-grid" role="radiogroup" aria-labelledby="term-l">${[['EV8', 8, 'Terminas de pagar antes. Acompañamiento durante 8 meses.'], ['EV16', 16, 'Cuotas mensuales más bajas. Acompañamiento durante 16 meses.']].map(([id, m, t]) => `<button type="button" role="radio" aria-checked="${s.plan === id}" class="term-card ${s.plan === id ? 'on' : ''}" onclick="changeConfig('plan','${id}')"><b>${planOf(id).tag}</b><span class="tc-m">${m} meses</span><small>Pago inicial del 20 % y ${m} cuotas mensuales.</small><small>${t}</small></button>`).join('')}</div></div>` : '';
-  return `<div class="plan-list">${cards}</div>${terms}${s.plan === 'FLEX' ? `<div class="sub-pick"><label class="label" for="flexb">Bimestres de renta</label><select class="field" id="flexb" onchange="changeConfig('flexBimestres',Number(this.value))">${[1, 2, 3, 4].map(n => `<option value="${n}" ${s.flexBimestres === n ? 'selected' : ''}>${n} ${plural(n, 'bimestre', 'bimestres')}${FISCAL.rentDiscount[n] ? ' · ' + Math.round(FISCAL.rentDiscount[n] * 100) + ' % de descuento' : ''}</option>`).join('')}</select></div>` : ''}${!p.ratio ? '<div class="warning">Equipamiento por definir con GuateGeeks: no calculamos equipos ni importes para este programa. Quedará como «Requiere cotización personalizada».</div>' : ''}`;
-}
 function renderConfig() {
   if (!state.selected.length) { step(3); return; }
   state.selectedIndex = Math.min(state.selectedIndex, state.selected.length - 1);
@@ -625,9 +615,9 @@ function renderConfig() {
   if (ui.review && s.confirmed) { frame('Ya configuraste este programa', 'Está guardado. Cambia solo lo que necesites; el resto se conserva.', equipHead(s, p) + cfgReview(s, p)); return; }
   const key = keys[ui.sub], why = canProceed(s, key), last = ui.sub === keys.length - 1;
   const an = analysis(s);
-  const titles = { groups: '¿Qué grupos participarán?', sharing: '¿Los grupos usan los mismos equipos en horarios distintos?', quantity: an.rec && an.rec.basis !== 'unknown' ? 'Te recomendamos ' + an.rec.teams + ' ' + p.hardware : 'Cantidad de equipos', plan: '¿Cómo quieres adquirirlo?' };
-  const descs = { groups: 'No todos los grados tienen que cursar este programa.', sharing: 'Esto define cuántos equipos necesitas. No hace falta un calendario completo.', quantity: 'Calculada con los grupos y horarios que indicaste. Puedes ajustarla.', plan: 'Cada modalidad incluye servicios distintos. Los importes los confirma GuateGeeks.' };
-  const body = { groups: cfgGroups, sharing: cfgSharing, quantity: cfgQuantity, plan: cfgPlan }[key](s, p);
+  const titles = { groups: '¿Qué grupos participarán?', sharing: '¿Los grupos usan los mismos equipos en horarios distintos?', quantity: an.rec && an.rec.basis !== 'unknown' ? 'Te recomendamos ' + an.rec.teams + ' ' + p.hardware : 'Cantidad de equipos', };
+  const descs = { groups: 'No todos los grados tienen que cursar este programa.', sharing: 'Esto define cuántos equipos necesitas. No hace falta un calendario completo.', quantity: 'Calculada con los grupos y horarios que indicaste. Puedes ajustarla.', };
+  const body = { groups: cfgGroups, sharing: cfgSharing, quantity: cfgQuantity }[key](s, p);
   const label = ui.single ? 'Guardar cambio' : last ? (nextPending(state.selectedIndex) >= 0 ? 'Guardar y configurar el siguiente' : 'Guardar y ver mi propuesta') : 'Siguiente';
   frame(titles[key], descs[key],
     `${equipHead(s, p)}<div class="decision-dots" ${ui.single ? 'hidden' : ''} role="group" aria-label="Decisión ${ui.sub + 1} de ${keys.length}">${keys.map((k, i) => `<span class="${i <= ui.sub ? 'on' : ''}"></span>`).join('')}<small>Decisión ${ui.sub + 1} de ${keys.length}</small></div>${body}<div class="foot"><button class="btn btn-outline" onclick="cfgNav(-1)">← Atrás</button><span class="fineprint" role="status">${why}</span><button class="btn btn-primary" onclick="cfgNav(1)" ${why ? 'disabled' : ''}>${label} ${icon('arrow')}</button></div>`);
@@ -639,15 +629,6 @@ const STATUS = {
   stale: ['amber', 'Importe pendiente de actualizar'], priced: ['green', 'Importe calculado']
 };
 const statusChip = st => `<span class="status ${STATUS[st][0]}">${STATUS[st][1]}</span>`;
-function recalc(i) { commit(state.selected[i]); render(); notify('Importe recalculado con los datos actuales.'); }
-function socratesLines(s) {
-  const kinds = new Set(entryGroups(s).map(g => SOCRATES[g.gradeId]));
-  const out = [];
-  if (kinds.has('ahora')) out.push('Sócrates Aprende: contenido para estudiantes de 4.º a 6.º primaria en la fase actual.');
-  if (kinds.has('fase2')) out.push('Sócrates Aprende: el acceso estudiantil de básico y bachillerato llegará en una fase posterior; hoy es solo para docentes.');
-  if (kinds.has('docente')) out.push('Sócrates Aprende: acceso para docentes en preprimaria y de 1.º a 3.º primaria.');
-  return out.length ? `<p>${out.join('<br>')} <i>(pendiente de confirmar con GuateGeeks)</i></p>` : '';
-}
 function noteFor(s, p, an) {
   const sized = entryGroups(s).filter(g => g.students > 0), prov = sized.some(g => !g.confirmed);
   if (!p.ratio) return { pending: true, text: 'Equipamiento por definir con GuateGeeks. Las estaciones y la propuesta económica se definen en la cotización.' };
@@ -656,11 +637,6 @@ function noteFor(s, p, an) {
   if (an.state === 'none') return { pending: true, text: 'Falta definir la cantidad de equipos.' };
   const n = sized.length;
   return { pending: prov, text: `${s.sharing === 'simultaneous' ? 'Los grupos que coinciden usan equipos distintos entre sí; los demás comparten el conjunto.' : (n > 1 ? `Los ${n} grupos pueden utilizar los mismos equipos en horarios distintos.` : 'Equipamiento para el grupo seleccionado.')} Cobertura completa con ${unitsOf(s)} equipos.${prov ? ' Provisional: hay grupos con total sin secciones.' : ''}` };
-}
-function scheduleItems(s, q) {
-  const pv = payView(q);
-  if (pv.schedule.length === 1) return [s.plan === 'FLEX' ? `Pago único por la renta (${s.flexBimestres} ${plural(s.flexBimestres, 'bimestre', 'bimestres')}): ${Q(pv.total)}` : `Pago único: ${Q(pv.total)}`];
-  return pv.schedule.map((v, i) => i === 0 ? `Pago inicial: ${Q(v)}` : `Cuota ${i}: ${Q(v)}`);
 }
 // Cuántos participan, cuántos equipos y cuántos estudiantes trabajan a la vez (explicado en lenguaje claro).
 function capacityText(s, p, u, an) {
@@ -685,33 +661,6 @@ function capacityTiles(s, p, u, an) {
   return `<div class="proposal-data"><div><b>${n}</b><small>estudiantes participan en este programa</small></div><div><b>${u}</b><small>${esc(p.hardware)} en total</small></div><div><b>${cap}</b><small>estudiantes trabajan a la vez</small></div></div><p class="cap-explain">Cada equipo lo usan hasta ${p.ratio} estudiantes a la vez: con ${u} ${esc(p.hardware)} trabajan ${cap} estudiantes al mismo tiempo. ${how}</p>`;
 }
 // Servicios incluidos según la modalidad (textos del cotizador vigente).
-function includedItems(plan, p, months) {
-  const eq = p.hardware;
-  if (plan === 'INTEGRA') return [
-    ['Equipamiento educativo', `${eq} para el aula; propiedad del colegio desde la compra.`],
-    ['Implementación inicial', 'Orientación para poner en marcha el equipamiento en el aula.'],
-    ['Capacitación de uso', 'Incluye 1 hora de capacitación para el uso del equipo. El tiempo adicional se cotiza por separado.']
-  ];
-  if (plan === 'FLEX') return [
-    ['Equipamiento educativo', `${eq} disponible en renta durante ${months} meses. Se puede cambiar de tecnología al comenzar cada bimestre; el equipo, propiedad de GuateGeeks, debe devolverse al finalizar la renta.`],
-    ['Sócrates Aprende', 'Acceso para docentes y, según el grado, contenido para estudiantes disponible por fases.'],
-    ['Capacitación docente e integración tecnológica', 'Capacitación para docentes e integración de la tecnología al trabajo del aula.'],
-    ['Seguimiento y soporte', `Seguimiento a la implementación y soporte durante los ${months} meses de renta.`]
-  ];
-  return [
-    ['Equipamiento educativo', `${eq} para el aula; pasa a ser propiedad del colegio al completar ${months} meses.`],
-    ['Sócrates Aprende', 'Acceso para docentes y, según el grado, contenido para estudiantes disponible por fases.'],
-    ['Capacitación docente e integración tecnológica', 'Capacitación para docentes e integración de la tecnología al trabajo del aula.'],
-    ['Recursos para el aula', 'Actividades prácticas y materiales de apoyo para integrar la tecnología al aprendizaje.'],
-    ['Seguimiento y soporte', `Seguimiento a la implementación y soporte durante los ${months} meses del programa.`]
-  ];
-}
-const OWNERSHIP = {
-  INTEGRA: 'El equipamiento queda en propiedad del colegio desde la compra.',
-  FLEX: 'El equipamiento se utiliza durante la renta; las condiciones finales se confirman con GuateGeeks.',
-  EV8: 'El equipamiento queda en propiedad del colegio al completar el contrato.',
-  EV16: 'El equipamiento queda en propiedad del colegio al completar el contrato.'
-};
 
 // Cotización de un programa: misma información y orden que el cotizador vigente.
 // ---- Así quedan tus pagos: línea de tiempo de toda la propuesta ----
@@ -731,7 +680,6 @@ function paymentPlan(t) {
 }
 function paymentsHTML(t) {
   const pp = paymentPlan(t); if (!pp) return '';
-  const names = pp.rows.map(r => progTitle(r.entry));
   const max = Math.max(...pp.totals);
   const phaseTxt = pp.phases.map(f => `<b>${Q(f.amount)}</b> al mes (${f.from === f.to ? 'mes ' + f.from : 'meses ' + f.from + ' a ' + f.to})`);
   const lead = pp.phases.length
@@ -741,19 +689,10 @@ function paymentsHTML(t) {
   const label = m => m === 0 ? 'Inicio' : String(m);
   return `<div class="pay-block"><h3>Así quedan tus pagos</h3><p class="pay-lead">${lead}${pp.rows.length > 1 && pp.phases.length > 1 ? ' La cuota cambia cuando termina el plazo de un programa.' : ''}</p>
   <div class="pay-facts">${pp.phases.length ? `<div><span>Al iniciar</span><strong>${Q(pp.initial)}</strong></div>${pp.phases.map(f => `<div><span>${f.from === f.to ? 'Mes ' + f.from : 'Meses ' + f.from + ' a ' + f.to}</span><strong>${Q(f.amount)}<small> al mes</small></strong></div>`).join('')}<div class="sum"><span>Total ${ivaTxt()}</span><strong>${Q(pp.grand)}</strong></div>` : `<div class="sum"><span>Pago único · total ${ivaTxt()}</span><strong>${Q(pp.grand)}</strong></div>`}</div>
-  ${pp.len > 1 ? `<details><summary>Ver tabla de pagos mes a mes</summary><div class="pay-table-wrap"><table class="pay-table"><thead><tr><th scope="col">Mes</th>${names.map(n => `<th scope="col">${esc(n)}</th>`).join('')}<th scope="col">Total</th></tr></thead><tbody>${pp.cols.map((c, m) => `<tr><th scope="row">${m === 0 ? 'Al iniciar' : 'Mes ' + m}</th>${c.map(v => `<td>${v ? Q(v) : '—'}</td>`).join('')}<td><b>${Q(pp.totals[m])}</b></td></tr>`).join('')}</tbody></table></div><p class="fineprint">Importes ${ivaTxt()}, en quetzales enteros. Todas las cuotas de un programa son iguales.</p></details>` : ''}</div>`;
+  ${pp.len > 1 ? `<details><summary>Ver tabla de pagos mes a mes</summary><div class="pay-table-wrap"><table class="pay-table"><thead><tr><th scope="col">Mes</th><th scope="col">Pago ${ivaTxt()}</th></tr></thead><tbody>${pp.totals.map((v, m) => `<tr><th scope="row">${m === 0 ? 'Al iniciar' : 'Mes ' + m}</th><td><b>${Q(v)}</b></td></tr>`).join('')}</tbody></table></div><p class="fineprint">Importes ${ivaTxt()}, en quetzales enteros. Todas las cuotas son iguales.</p></details>` : ''}</div>`;
 }
 
 // ---- Modalidad: se elige y se compara dentro de la misma tarjeta del programa ----
-function setPlan(i, plan) {
-  const s = state.selected[i]; if (!s) return;
-  s.plan = plan; commit(s); render();
-  notify(progTitle(s) + ': ahora con ' + planOf(plan).tag + '.');
-}
-function setBim(i, n) {
-  const s = state.selected[i]; if (!s) return;
-  s.flexBimestres = Number(n); if (s.plan === 'FLEX') commit(s); render();
-}
 // Aviso destacado: solo Evoluciona deja el equipo en la institución al completar el plazo.
 const isEvo = plan => plan === 'EV8' || plan === 'EV16';
 // Las instituciones educativas están exentas de IVA: los importes se muestran sin IVA y, si lo desean, con IVA.
@@ -761,50 +700,103 @@ const ivaOn = () => state.iva === true;
 const ivaTxt = () => ivaOn() ? 'con IVA' : 'sin IVA';
 const payView = q => ivaOn() ? { schedule: q.scheduleIva, initial: q.initialIva, total: q.total } : { schedule: q.schedule, initial: q.initial, total: q.net };
 function setIva(on) { state.iva = !!on; store(); render(); }
-function ownCallout(s, p, u, months) {
-  return `<div class="own-callout">${icon('check')}<div><b>El equipo se queda en tu institución</b><span>Al completar los ${months} meses, ${u ? `los ${u} ${esc(p.hardware)}` : 'el equipo'} pasan a ser propiedad del colegio.</span></div></div>`;
-}
-const PLAN_SHORT = { INTEGRA: 'Comprar', FLEX: 'Rentar', EV8: 'Cuotas, 8 meses', EV16: 'Cuotas, 16 meses' };
 
 // Selector de modalidad + el detalle de la modalidad elegida, todo en un solo bloque.
-function programPrice(s, i, row) {
-  const p = findP(s.programId), u = row.units;
-  if (!s.confirmed) return `<div class="price-panel pending"><p>Falta configurar este programa para ver su inversión.</p><button class="btn btn-small btn-primary" onclick="editProgram(${i})">Configurar ahora</button></div>`;
-  if (!p.ratio || !TARIFFS[p.id] || !u) return '<div class="price-panel pending"><p><b>Requiere cotización personalizada.</b> El equipamiento de este programa está por definir con GuateGeeks.</p></div>';
-  if (row.status === 'stale') return `<div class="price-panel pending"><p>Cambió algo que afecta el importe de este programa.</p><button class="btn btn-small btn-primary" onclick="recalc(${i})">Recalcular importe</button></div>`;
-  const quotes = {};
-  ['INTEGRA', 'FLEX', 'EV8', 'EV16'].forEach(pl => { quotes[pl] = M.quoteFor(pl, s.flexBimestres, u, TARIFFS[p.id], FISCAL); });
-  const seg = ['INTEGRA', 'FLEX', 'EV8', 'EV16'].map(pl => {
-    const q = quotes[pl], on = s.plan === pl;
-    return `<button type="button" role="radio" aria-checked="${on}" class="seg-btn ${on ? 'on' : ''}" onclick="setPlan(${i},'${pl}')"><b>${PLAN_SHORT[pl]}</b><span>${ivaOn() ? Q(q.total) : Q(q.net)}</span><small>${ivaTxt()}${pl === 'FLEX' ? ' · ' + s.flexBimestres + ' ' + plural(s.flexBimestres, 'bimestre', 'bimestres') : ''}</small></button>`;
-  }).join('');
-  let detail;
-  if (s.plan === 'UNDECIDED') {
-    detail = '<p class="pp-hint">Elige una modalidad para ver el detalle de pagos y lo que incluye.</p>';
-  } else {
-    const q = quotes[s.plan], plan = planOf(s.plan), pq = payView(q), isOne = pq.schedule.length === 1, cuotas = pq.schedule.length - 1;
-    const base = isOne ? 0 : pq.schedule[1], g = GUIDANCE[s.plan];
-    const pay = isOne ? (s.plan === 'FLEX' ? `Pago único por la renta de ${s.flexBimestres} ${plural(s.flexBimestres, 'bimestre', 'bimestres')} (${q.months} meses).` : 'Pago único por la compra del equipo.')
-      : `Pago inicial de <b>${Q(pq.initial)}</b> y ${cuotas} cuotas mensuales de <b>${Q(base)}</b>.`;
-    const bim = s.plan === 'FLEX' ? `<label class="pp-bim" for="cb-${i}">Bimestres de renta<select id="cb-${i}" onchange="setBim(${i},this.value)">${[1, 2, 3, 4].map(n => `<option value="${n}" ${s.flexBimestres === n ? 'selected' : ''}>${n} ${plural(n, 'bimestre', 'bimestres')}${FISCAL.rentDiscount[n] ? ' (' + Math.round(FISCAL.rentDiscount[n] * 100) + ' % de descuento)' : ''}</option>`).join('')}</select></label>` : '';
-    detail = `<div class="pp-main"><div><span>Inversión ${ivaTxt()}</span><strong>${Q(pq.total)}</strong><small>${ivaOn() ? 'Sin IVA: ' + Q(q.net) : 'Con IVA: ' + Q(q.total)}</small></div><p>${pay}</p></div>${isEvo(s.plan) ? ownCallout(s, p, u, q.months) : ''}${bim}<p class="pp-note">${isEvo(s.plan) ? '' : OWNERSHIP[s.plan]}${u < FISCAL.minUnits ? ` Escenario informativo · mínimo comercial: ${FISCAL.minUnits} equipos.` : ''}</p>
-    <details><summary>Qué incluye, ventajas y calendario de pagos</summary>
-      <p><b>Qué incluye ${esc(plan.tag)}</b></p><ul>${includedItems(s.plan, p, q.months || FISCAL.sim.buyMonths).map(([t, d]) => `<li><b>${esc(t)}.</b> ${esc(d)}</li>`).join('')}</ul>${s.plan !== 'INTEGRA' ? socratesLines(s) : ''}
-      ${g.pros.length ? `<p><b>Ventajas</b></p><ul>${g.pros.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}<p><b>Para tomar en cuenta</b></p><ul>${g.cons.map(x => `<li>${esc(x)}</li>`).join('')}</ul>
-      <p><b>Calendario de pagos</b></p><ol>${scheduleItems(s, q).map(x => `<li>${x}</li>`).join('')}</ol><p class="fineprint">Importes ${ivaTxt()}, en quetzales enteros.</p>
-    </details>`;
-  }
-  return `<div class="price-panel"><div class="seg-title" id="seg-${i}">Modalidad</div><div class="seg" role="radiogroup" aria-labelledby="seg-${i}">${seg}</div>${detail}</div>`;
-}
 
 function proposalCard(s, i, row) {
   const p = findP(s.programId), an = analysis(s), note = noteFor(s, p, an), u = row.units;
-  return `<article class="proposal-card"><div class="proposal-main">${media(p, levelKey(s), 'summary-media')}<div class="proposal-content"><div class="proposal-heading"><div><div class="eyebrow">${esc(p.area)}</div><h3>${esc(progTitle(s))}</h3></div><div class="proposal-tools"><button class="icon-btn" onclick="editProgram(${i})" aria-label="Editar ${esc(p.name)}">${icon('edit')}</button><button class="icon-btn" onclick="removeProgram(${i})" aria-label="Quitar ${esc(p.name)}">${icon('trash')}</button></div></div><p>${esc(p.hardware)} · ${statusChip(row.status)}</p><div class="groups-line">${entryGroups(s).map(g => `<span>${esc(g.label.replace(', Sección ', ' · ').replace(' · Sección ', ' · '))}</span>`).join('')}</div>${capacityTiles(s, p, u, an)}</div></div>${note.pending && row.status !== 'draft' ? `<div class="proposal-note pending">${icon('info')}<span>${note.text}</span></div>` : ''}${programPrice(s, i, row)}</article>`;
+  return `<article class="proposal-card"><div class="proposal-main">${media(p, levelKey(s), 'summary-media')}<div class="proposal-content"><div class="proposal-heading"><div><div class="eyebrow">${esc(p.area)}</div><h3>${esc(progTitle(s))}</h3></div><div class="proposal-tools"><button class="icon-btn" onclick="editProgram(${i})" aria-label="Editar ${esc(p.name)}">${icon('edit')}</button><button class="icon-btn" onclick="removeProgram(${i})" aria-label="Quitar ${esc(p.name)}">${icon('trash')}</button></div></div><p>${esc(p.hardware)}${row.status === 'draft' || row.status === 'quote' || row.status === 'plan' ? ' · ' + statusChip(row.status) : ''}</p><div class="groups-line">${entryGroups(s).map(g => `<span>${esc(g.label.replace(', Sección ', ' · ').replace(' · Sección ', ' · '))}</span>`).join('')}</div>${capacityTiles(s, p, u, an)}</div></div>${note.pending && row.status !== 'draft' ? `<div class="proposal-note pending">${icon('info')}<span>${note.text}</span></div>` : ''}${modalityPicker(s, i, u)}</article>`;
 }
 
+// ---- Modalidad por programa (sin importes) e inversión unificada agrupada por modalidad ----
+// Cada programa puede tener su modalidad (comprar, rentar o Evoluciona); los importes solo se muestran
+// agrupados por modalidad y en total, nunca por nivel ni por programa.
+const MODS = [
+  { k: 'INTEGRA', label: 'Comprar', tag: 'Integra', note: 'Un solo pago; el equipo es del colegio desde la compra. No incluye Sócrates Aprende.' },
+  { k: 'FLEX', label: 'Rentar', tag: 'Flex', note: 'Renta por bimestres con servicios incluidos; el equipo se devuelve al terminar.' },
+  { k: 'EVO', label: 'Pagar en cuotas', tag: 'Evoluciona', note: 'Pago inicial y cuotas mensuales; al terminar, el equipo es del colegio.' }
+];
+const modKey = plan => isEvo(plan) ? 'EVO' : plan;
+function syncCalc() { state.selected.forEach(s => { if (s.confirmed) s.calc = M.entrySignature(s, groups()); }); }
+// Qué recibe el colegio según la modalidad elegida, redactado por programa (se usa en pantalla y en el PDF).
+const SOC = ['Sócrates Aprende', 'Plataforma de GuateGeeks para docentes y estudiantes'];
+function includesFor(s, p, u) {
+  const eq = `${u || 'Los'} ${p.hardware}`, months = s.plan === 'EV16' ? 16 : 8;
+  if (s.plan === 'INTEGRA') return [[`${eq} para tu colegio`, 'Quedan en propiedad de la institución desde la compra'], ['Orientación inicial', 'Para ponerlos en marcha'], ['1 hora de capacitación de uso', 'El tiempo adicional se cotiza aparte'], ['No incluye Sócrates Aprende', 'Se puede sumar con otra modalidad']];
+  if (s.plan === 'FLEX') return [[`${eq} en renta`, 'Son de GuateGeeks y se devuelven al terminar'], ['Cambio de tecnología', 'Puedes elegir otra al iniciar cada bimestre'], ['Capacitación docente e integración tecnológica', 'Para llevar el programa al aula'], ['Seguimiento y soporte', 'Durante toda la renta'], SOC];
+  if (isEvo(s.plan)) return [[`${eq} que pasan a ser del colegio`, 'Al completar los pagos'], ['Capacitación docente e integración tecnológica', 'Para llevar el programa al aula'], ['Recursos para el aula', ''], ['Seguimiento y soporte', `Durante los ${months} meses`], SOC, ['Un programa que evoluciona', 'Se sostiene y crece contigo en el tiempo']];
+  return [];
+}
+const OWN_TAG = { INTEGRA: ['Tuyo desde la compra', 'own'], FLEX: ['Se devuelve al terminar', 'back'], EV8: ['Tuyo al terminar de pagar', 'own'], EV16: ['Tuyo al terminar de pagar', 'own'] };
+function includesHTML(s, p, u) {
+  const list = includesFor(s, p, u); if (!list.length) return '';
+  const [first, ...rest] = list, [tag, kind] = OWN_TAG[s.plan] || ['', ''];
+  const tile = ([t, d]) => `<li class="${t.startsWith('No incluye') ? 'no' : ''}">${icon(t.startsWith('No incluye') ? 'info' : 'check')}<span><b>${esc(t)}</b>${d ? `<small>${esc(d)}</small>` : ''}</span></li>`;
+  return `<div class="mod-inc"><div class="mod-inc-head"><b>Con ${esc(modLabel(s))} recibes</b></div><div class="inc-main"><span class="inc-ico">${icon('grid')}</span><span><b>${esc(first[0])}</b><small>${esc(first[1])}</small></span><em class="inc-tag ${kind}">${tag}</em></div><ul>${rest.map(tile).join('')}</ul></div>`;
+}
+function termBtns(i, cur, opts, fn) {
+  return `<div class="term-grid" role="radiogroup" aria-label="Plazo">${opts.map(o => `<button type="button" role="radio" aria-checked="${cur === o.v}" class="term-opt ${cur === o.v ? 'on' : ''}" onclick="${fn}(${i},'${o.v}')"><b>${o.t}</b><small>${o.d}</small></button>`).join('')}</div>`;
+}
+function modalityPicker(s, i, units) {
+  const cur = modKey(s.plan), bim = s.flexBimestres || 2;
+  const seg = MODS.map(m => `<button type="button" role="radio" aria-checked="${cur === m.k}" class="seg-btn ${cur === m.k ? 'on' : ''}" onclick="setModality(${i},'${m.k}')"><b>${m.label}</b><small>${m.tag}</small></button>`).join('');
+  const cm = MODS.find(m => m.k === cur);
+  let sub = '';
+  if (cur === 'FLEX') sub = termBtns(i, bim, [1, 2, 3, 4].map(n => ({ v: n, t: `${n} ${plural(n, 'bimestre', 'bimestres')}`, d: `${n * 2} meses${FISCAL.rentDiscount[n] ? ' · ' + Math.round(FISCAL.rentDiscount[n] * 100) + ' % de descuento' : ''}` })), 'setBim');
+  if (cur === 'EVO') sub = termBtns(i, s.plan, [{ v: 'EV8', t: '8 meses', d: 'Cuotas más altas; el equipo es tuyo más pronto' }, { v: 'EV16', t: '16 meses', d: 'Cuotas más bajas; acompañamiento por más tiempo' }], 'setModality');
+  return `<div class="price-panel mod-pick"><div class="seg-title" id="seg-${i}">¿Cómo quieres este programa?</div><div class="seg" role="radiogroup" aria-labelledby="seg-${i}">${seg}</div>${sub}${cm ? includesHTML(s, findP(s.programId), units) : '<p class="pp-note">Elige una modalidad para este programa. Puedes combinar modalidades entre programas.</p>'}</div>`;
+}
+function setModality(i, k) {
+  const s = state.selected[i]; if (!s) return;
+  s.plan = k === 'EVO' ? (isEvo(s.plan) ? s.plan : 'EV8') : k; if (!s.flexBimestres) s.flexBimestres = 2; commit(s); render();
+}
+function setBim(i, n) { const s = state.selected[i]; if (!s) return; s.flexBimestres = Number(n); if (s.plan === 'FLEX') commit(s); render(); }
+function setAllModality(k) { state.selected.forEach(s => { if (!s.confirmed) return; s.plan = k === 'EVO' ? (isEvo(s.plan) ? s.plan : 'EV8') : k; if (!s.flexBimestres) s.flexBimestres = 2; commit(s); }); render(); }
+// Totales por modalidad: suman los programas que comparten modalidad, sin separar por nivel ni programa.
+function modGroups(t) {
+  return MODS.map(m => {
+    const rows = t.rows.filter(r => r.quote && modKey(r.entry.plan) === m.k);
+    if (!rows.length) return null;
+    const sum = k => rows.reduce((s, r) => s + r.quote[k], 0);
+    return { m, rows, net: sum('net'), tax: sum('tax'), total: sum('total'), names: rows.map(r => progTitle(r.entry)), terms: [...new Set(rows.map(r => r.entry.plan === 'FLEX' ? r.entry.flexBimestres : r.quote.months))].sort((x, y) => x - y) };
+  }).filter(Boolean);
+}
+const modLabel = s => s.plan === 'INTEGRA' ? 'Compra (Integra)' : s.plan === 'FLEX' ? `Renta ${s.flexBimestres} ${plural(s.flexBimestres, 'bimestre', 'bimestres')} (Flex)` : s.plan === 'EV8' ? 'Evoluciona 8 meses' : s.plan === 'EV16' ? 'Evoluciona 16 meses' : '';
+const termLabel = g => g.m.k === 'FLEX' ? joinY(g.terms.map(x => x + ' ' + plural(x, 'bimestre', 'bimestres'))) : g.m.k === 'EVO' ? joinY(g.terms.map(x => x + ' meses')) : 'un solo pago';
+const modPlain = s => s.plan === 'INTEGRA' ? 'Compra de los equipos en un solo pago.' : s.plan === 'FLEX' ? `Renta por ${s.flexBimestres} ${plural(s.flexBimestres, 'bimestre', 'bimestres')} (${s.flexBimestres * 2} meses), en un solo pago.` : `Pago inicial del 20 % y cuotas mensuales durante ${s.plan === 'EV16' ? 16 : 8} meses.`;
+// Costo por estudiante al mes: solo renta y Evoluciona (la compra se paga una vez y no se reparte en meses),
+// entre los estudiantes de esos programas y los meses del plazo más largo.
+function perStudent(t) {
+  const rows = t.rows.filter(r => r.quote && r.entry.plan !== 'INTEGRA'), buy = t.rows.filter(r => r.quote && r.entry.plan === 'INTEGRA');
+  const sum = k => rows.reduce((s, r) => s + r.quote[k], 0), buyAmt = buy.reduce((s, r) => s + r.quote[ivaOn() ? 'total' : 'net'], 0);
+  if (!rows.length) return { monthly: null, buyAmt };
+  const students = M.uniqueStudents(groups(), [...new Set(rows.flatMap(r => r.entry.groupIds))]), months = Math.max(...rows.map(r => r.quote.months)), amount = sum(ivaOn() ? 'total' : 'net'), total = students ? amount / students : 0;
+  return { monthly: months && students ? Math.round(total / months) : null, months, students, total, buyAmt };
+}
+const equipSummary = t => t.rows.filter(r => r.quote).map(r => `${r.units} ${esc(findP(r.entry.programId).hardware)}`).join(' · ');
 function investmentHTML(t) {
-  const label = t.complete ? 'Total sin IVA' : 'Subtotal sin IVA de programas con precio disponible';
-  return `<section class="investment"><div class="section-heading" style="margin:0 0 8px"><h2>Inversión y formas de pago</h2><span class="status ${t.complete ? 'green' : 'amber'}">${t.complete ? 'Calculada' : 'Parcial'}</span></div><div class="invest-main"><small>${label}</small><b>${t.pricedCount ? Q(t.net) : '—'}</b>${t.pricedCount ? `<span class="inv-sub">Con IVA (referencia): ${Q(t.total)} · IVA de ${Q(t.tax)}</span>` : ''}</div><label class="suggested-toggle iva-toggle" for="iva-on"><input id="iva-on" type="checkbox" ${ivaOn() ? 'checked' : ''} onchange="setIva(this.checked)"> Mostrar los pagos con IVA</label>${!t.complete ? `<div class="warning">${t.pricedCount ? 'Este importe no es el total institucional completo. ' : 'Todavía no hay importes disponibles. '}${t.unpricedCount} ${plural(t.unpricedCount, 'programa está', 'programas están')} pendiente${t.unpricedCount === 1 ? '' : 's'} de modalidad, configuración, recálculo o cotización personalizada.</div>` : ''}${paymentsHTML(t)}<p class="fineprint" style="margin-top:12px">Los importes se muestran sin IVA, porque las instituciones educativas están exentas. El monto con IVA se indica como referencia o al activar «Mostrar los pagos con IVA». Son estimaciones comerciales y la cotización final se confirma con GuateGeeks. Programas con plazos distintos se pagan según su propio calendario; no hay una cuota mensual única.</p></section>`;
+  const money = x => ivaOn() ? x.total : x.net, gs = modGroups(t);
+  const rowsPriced = t.rows.filter(r => r.quote), n = M.uniqueStudents(groups(), [...new Set(rowsPriced.flatMap(r => r.entry.groupIds))]);
+  const equipment = rowsPriced.reduce((s, r) => s + r.units, 0), pending = t.rows.filter(r => !r.quote);
+  const unchosen = t.rows.filter(r => r.confirmed && r.entry.plan === 'UNDECIDED').length;
+  const cards = gs.map(g => {
+    const termTxt = g.m.k === 'FLEX' ? `Renta por ${joinY(g.terms.map(x => x + ' ' + plural(x, 'bimestre', 'bimestres')))}` : g.m.k === 'EVO' ? `Plazo de ${joinY(g.terms.map(x => x + ' meses'))}` : 'Un solo pago, sin cuotas';
+    return `<article class="grp-card"><div class="opt-head"><b>${g.m.k === 'INTEGRA' ? 'Compra de equipos' : g.m.k === 'FLEX' ? 'Renta por bimestres' : 'Pago en cuotas'}</b><span class="pill-light">${g.m.tag}</span></div><div class="opt-total"><span>Total ${ivaTxt()}</span><strong>${Q(money(g))}</strong><small>${ivaOn() ? 'Sin IVA: ' + Q(g.net) : 'Con IVA (referencia): ' + Q(g.total)}</small></div><p class="grp-prog">${esc(joinY(g.names))}</p><p class="grp-term">${termTxt}</p></article>`;
+  }).join('');
+  const all = { net: t.net, total: t.total, tax: t.tax };
+  const ps = perStudent(t);
+  const totalBlock = rowsPriced.length ? `<div class="grand"><div><span>Inversión total de tu propuesta</span><strong>${Q(money(all))}</strong><small>${ivaOn() ? 'Sin IVA: ' + Q(all.net) : 'Con IVA (referencia): ' + Q(all.total) + ' · IVA de ' + Q(all.tax)}</small></div>${ps.monthly != null ? `<div><span>Por estudiante, cada mes</span><strong>${Q(ps.monthly)}<em> al mes</em></strong><small>Renta y cuotas: ${Q(Math.round(ps.total))} por estudiante en ${ps.months} meses${ps.buyAmt ? ' · sin contar la compra de equipos' : ''}</small></div>` : `<div><span>La compra se paga una sola vez</span><strong>${Q(ps.buyAmt)}</strong><small>No se divide en meses</small></div>`}</div>` : '';
+  const evoRows = t.rows.filter(r => r.quote && isEvo(r.entry.plan));
+  const own = evoRows.length ? `<div class="own-callout">${icon('check')}<div><b>El equipo se queda en tu institución</b><span>Con Evoluciona, al completar los pagos ${evoRows.map(r => `${r.units} ${esc(findP(r.entry.programId).hardware)}`).join(' y ')} pasan a ser propiedad del colegio.</span></div></div>` : '';
+  const onlyBuy = rowsPriced.length && rowsPriced.every(r => r.entry.plan === 'INTEGRA');
+  return `<section class="investment"><div class="section-heading" style="margin:0 0 8px"><h2>Inversión de tu propuesta</h2><span class="status ${t.complete ? 'green' : 'amber'}">${t.complete ? 'Calculada' : 'Parcial'}</span></div>
+  <p class="inv-lead">Los montos se agrupan por modalidad y en total: <b>no se separan por nivel ni por programa</b>.</p>
+  <div class="inv-facts"><div><b>${n}</b><small>estudiantes atendidos</small></div><div><b>${equipment}</b><small>${plural(equipment, 'equipo', 'equipos')} en total</small><em>${equipSummary(t)}</em></div><div><b>${rowsPriced.length}</b><small>${plural(rowsPriced.length, 'programa', 'programas')} con modalidad</small></div></div>
+  ${unchosen ? `<div class="warning">${unchosen} ${plural(unchosen, 'programa todavía no tiene', 'programas todavía no tienen')} modalidad. Elígela en la tarjeta de cada programa para incluirlo en el total.${state.selected.length > 1 ? ' <span class="quick">Atajo: la misma modalidad para todos: ' + MODS.map(m => `<button type="button" class="text-btn" onclick="setAllModality('${m.k}')">${m.label}</button>`).join(' · ') + '</span>' : ''}</div>` : ''}
+  ${pending.length - unchosen > 0 ? `<div class="warning">${pending.length - unchosen} ${plural(pending.length - unchosen, 'programa está pendiente', 'programas están pendientes')} de configuración o de cotización personalizada y no suma${pending.length - unchosen === 1 ? '' : 'n'} al total.</div>` : ''}
+  <label class="suggested-toggle iva-toggle" for="iva-on"><input id="iva-on" type="checkbox" ${ivaOn() ? 'checked' : ''} onchange="setIva(this.checked)"> Mostrar los importes con IVA</label>
+  ${cards ? `<div class="grp-grid">${cards}</div>` : ''}${totalBlock}${rowsPriced.length && !onlyBuy ? paymentsHTML(t) : ''}${rowsPriced.length && onlyBuy ? '<p class="fineprint">La compra se paga una sola vez: no hay formas de pago ni cuotas.</p>' : ''}${own}
+  <p class="fineprint" style="margin-top:12px">Los importes se muestran sin IVA, porque las instituciones educativas están exentas; el monto con IVA se indica como referencia. Son estimaciones comerciales y la cotización final se confirma con GuateGeeks.</p></section>`;
 }
 
 // Simulador: una sola cuota por estudiante para toda la propuesta, sobre el total de estudiantes únicos
@@ -821,12 +813,13 @@ function simModel(t) {
 function simResults(m, fee) {
   if (!fee) return '<p class="fineprint">Escribe una cuota mensual para ver la proyección.</p>';
   const sim = M.simulateAll(m.rows.map(r => r.quote), m.n, fee, FISCAL, ivaOn()), pay = sim.cost, covers = sim.gain >= 0, payPct = covers ? Math.round(pay / sim.income * 100) : 100;
-  return `<div class="sim-eq" aria-label="Por estudiante: aporta ${Q(sim.contribution)}, la inversión es ${Q(sim.costPerStudent)} y ${covers ? 'la ganancia es' : 'falta'} ${Q(Math.abs(sim.perStudent))}">
-    <div><span>Cada estudiante aporta</span><strong>${Q(sim.contribution)}</strong><small>${Q(fee)} × ${sim.months} meses</small></div><i aria-hidden="true">−</i>
-    <div><span>Inversión por estudiante</span><strong>${Q(sim.costPerStudent)}</strong><small>lo que paga el colegio</small></div><i aria-hidden="true">=</i>
-    <div class="hl ${covers ? '' : 'neg'}"><span>${covers ? 'Ganancia por estudiante' : 'Falta por estudiante'}</span><strong>${Q(Math.abs(sim.perStudent))}</strong><small>${Q(Math.abs(sim.perStudentMonth))} al mes</small></div></div>
-  <p class="sim-sub">En todo el colegio, de los <b>${Q(sim.income)}</b> que se recaudan en ${sim.months} meses:</p>
-  <div class="sim-bar" role="img" aria-label="De ${Q(sim.income)} recaudados, ${Q(pay)} se pagan a GuateGeeks${covers ? ' y ' + Q(sim.gain) + ' son ganancia del colegio' : ' y no alcanzan a cubrirlo'}"><span class="pay" style="width:${payPct}%"><b>Paga a GuateGeeks</b>${Q(pay)}</span>${covers ? `<span class="left" style="width:${100 - payPct}%"><b>Ganancia del colegio</b>${Q(sim.gain)}</span>` : ''}</div>${covers ? '' : '<p class="sim-warn">Con esta cuota el colegio no alcanza a cubrir el pago a GuateGeeks.</p>'}`;
+  return `<p class="sim-say">Si cobras <b>${Q(fee)} al mes</b> a cada estudiante durante <b>${sim.months} meses</b>${m.rows.length > 1 && new Set(m.rows.map(r => r.quote.months)).size > 1 ? ' (el plazo más largo de tus programas)' : ''}:</p>
+  <dl class="sim-lines" aria-label="Por estudiante: cobras ${Q(sim.contribution)}, pagas ${Q(sim.costPerStudent)} a GuateGeeks y ${covers ? 'te quedan' : 'faltan'} ${Q(Math.abs(sim.perStudent))}">
+    <div><dt>Cobras a cada estudiante</dt><dd>${Q(sim.contribution)}</dd><small>${Q(fee)} × ${sim.months} meses</small></div>
+    <div><dt>Pagas a GuateGeeks por cada estudiante</dt><dd>${Q(sim.costPerStudent)}</dd><small>tu inversión dividida entre ${sim.students} estudiantes</small></div>
+    <div class="hl ${covers ? '' : 'neg'}"><dt>${covers ? 'Te queda por estudiante' : 'Te falta por estudiante'}</dt><dd>${Q(Math.abs(sim.perStudent))}</dd><small>unos ${Q(Math.abs(sim.perStudentMonth))} al mes</small></div></dl>
+  <p class="sim-sub">En todo el colegio (${sim.students} estudiantes) cobras <b>${Q(sim.income)}</b> y de eso:</p>
+  <div class="sim-bar" role="img" aria-label="De ${Q(sim.income)} recaudados, ${Q(pay)} se pagan a GuateGeeks${covers ? ' y ' + Q(sim.gain) + ' son ganancia del colegio' : ' y no alcanzan a cubrirlo'}"><span class="pay" style="width:${payPct}%"><b>Paga a GuateGeeks</b>${Q(pay)}</span>${covers ? `<span class="left" style="width:${100 - payPct}%"><b>Te queda</b>${Q(sim.gain)}</span>` : ''}</div>${covers ? '' : '<p class="sim-warn">Con esta cuota el colegio no alcanza a cubrir el pago a GuateGeeks.</p>'}`;
 }
 function simOut(t) {
   const m = simModel(t);
@@ -856,43 +849,39 @@ function toggleSuggested(on) {
 function downloadBlob(blob, name) { const u = URL.createObjectURL(blob), a = document.createElement('a'); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 1500); }
 
 // Texto plano de cómo se paga (el mismo criterio que la tarjeta del programa).
-function payPlain(s, q) {
-  const pq = payView(q);
-  if (pq.schedule.length === 1) return s.plan === 'FLEX' ? `Pago único por la renta de ${s.flexBimestres} ${plural(s.flexBimestres, 'bimestre', 'bimestres')} (${q.months} meses).` : 'Pago único por la compra del equipo.';
-  const base = pq.schedule[1];
-  return `Pago inicial de ${Q(pq.initial)} y ${pq.schedule.length - 1} cuotas mensuales de ${Q(base)}.`;
-}
 // Todo el contenido del PDF, ya formateado. El diseño vive en propuesta-pdf.js.
 function pdfModel(includeSim = false) {
-  const t = M.proposalTotals(state.selected, PROGRAMS, groups(), TARIFFS, FISCAL), pp = paymentPlan(t);
+  syncCalc();
+  const t = M.proposalTotals(state.selected, PROGRAMS, groups(), TARIFFS, FISCAL), pp = paymentPlan(t), gs = modGroups(t);
+  const priced = t.rows.filter(r => r.quote), n = M.uniqueStudents(groups(), [...new Set(priced.flatMap(r => r.entry.groupIds))]), equipment = priced.reduce((s, r) => s + r.units, 0);
+  const money = x => ivaOn() ? x.total : x.net, all = { net: t.net, total: t.total, tax: t.tax };
+  const ps = perStudent(t);
   const levels = LEVELS.filter(l => state.selected.some(s => entryLevels(s).some(x => x.id === l.id))).map(l => l.name);
+  // Programas: solo alcance, equipos y modalidad; los importes van agrupados por modalidad y en total
   const programs = t.rows.map(r => {
-    const s = r.entry, p = findP(s.programId), q = r.quote, an = analysis(s), note = noteFor(s, p, an), u = r.units, n = participation(s);
-    const tiles = [{ v: String(n), l: 'estudiantes participan' }];
+    const s = r.entry, p = findP(s.programId), an = analysis(s), note = noteFor(s, p, an), u = r.units, k = participation(s);
+    const tiles = [{ v: String(k), l: 'estudiantes participan' }];
     if (p.ratio && u) tiles.push({ v: String(u), l: p.hardware + ' en total' }, { v: String(u * p.ratio), l: 'estudiantes trabajan a la vez' });
-    const price = q ? {
-      planName: planOf(s.plan).tag + ' · ' + planOf(s.plan).title, net: Q(q.net), withIva: Q(q.total), pay: payPlain(s, q),
-      own: isEvo(s.plan) ? { title: 'El equipo se queda en tu institución', text: `Al completar los ${q.months} meses, los ${u} ${p.hardware} pasan a ser propiedad del colegio.` } : null,
-      minNote: u < FISCAL.minUnits ? `Escenario informativo · mínimo comercial: ${FISCAL.minUnits} equipos.` : '',
-      includes: includedItems(s.plan, p, q.months || FISCAL.sim.buyMonths)
-    } : null;
     return {
-      eyebrow: p.area, title: progTitle(s), sub: `${p.hardware} · ${price ? planOf(s.plan).tag : STATUS[r.status][1]}`, groups: entryGroups(s).map(g => g.label.replace(', Sección ', ' · ').replace(' · Sección ', ' · ')),
-      photo: s.id, planTag: price ? planOf(s.plan).tag : '', tiles, explain: capacityText(s, p, u, an), note: note.pending && r.status !== 'draft' ? note.text : '', price,
-      pending: price ? '' : (r.status === 'draft' ? 'Falta configurar este programa para calcular su inversión.' : r.status === 'quote' ? 'Requiere cotización personalizada.' : r.status === 'plan' ? 'Modalidad por elegir: el importe se calcula al elegirla.' : 'Importe pendiente de actualizar.')
+      eyebrow: p.area, title: progTitle(s), sub: p.hardware + (r.quote ? ' · ' + modLabel(s) : ''), groups: entryGroups(s).map(g => g.label.replace(', Sección ', ' · ').replace(' · Sección ', ' · ')),
+      photo: s.id, tiles, explain: capacityText(s, p, u, an), note: note.pending && r.status !== 'draft' ? note.text : '',
+      price: r.quote ? { planName: modLabel(s), net: null, pay: modPlain(s), own: isEvo(s.plan) ? { title: 'El equipo se queda en tu institución', text: `Al completar los ${r.quote.months} meses, los ${u} ${p.hardware} pasan a ser propiedad del colegio.` } : null, minNote: '', includes: includesFor(s, p, u) } : null,
+      pending: r.status === 'draft' ? 'Falta configurar este programa para calcular su inversión.' : r.status === 'quote' ? 'Requiere cotización personalizada.' : r.status === 'plan' ? 'Falta elegir la modalidad de este programa.' : ''
     };
   });
-  // Pagos
+  // Inversión agrupada por modalidad (nunca por nivel ni por programa)
+  const options = gs.map(g => ({ label: g.m.k === 'INTEGRA' ? 'Compra de equipos' : g.m.k === 'FLEX' ? 'Renta por bimestres' : 'Pago en cuotas', tag: g.m.tag + ' · ' + termLabel(g), programs: joinY(g.names), total: Q(money(g)) }));
+  const onlyBuy = priced.length && priced.every(r => r.entry.plan === 'INTEGRA');
+  // Pagos (la compra no tiene formas de pago)
   let pay = null;
-  if (pp) {
+  if (onlyBuy) pay = { lead: 'Se paga una sola vez, sin cuotas. Importes ' + ivaTxt() + '.', note: `Importes ${ivaTxt()}, en quetzales enteros.`, tiles: [], table: null };
+  else if (pp) {
     const phaseTxt = pp.phases.map(f => `${Q(f.amount)} al mes (${f.from === f.to ? 'mes ' + f.from : 'meses ' + f.from + ' a ' + f.to})`);
     pay = {
-      lead: (pp.phases.length ? `Pagarías ${Q(pp.initial)} al iniciar y después ${phaseTxt.join(', luego ')}.` : 'Es un pago único.') + ` Importes ${ivaTxt()}.`,
+      lead: (pp.phases.length ? `Pagarías ${Q(pp.initial)} al iniciar y después ${phaseTxt.join(', luego ')}.` : 'Es un pago único por todo lo seleccionado.') + ` Importes ${ivaTxt()}.`,
       note: `Importes ${ivaTxt()}, en quetzales enteros.`,
-      tiles: pp.phases.length
-        ? [{ l: 'Al iniciar', v: Q(pp.initial) }, ...pp.phases.map(f => ({ l: f.from === f.to ? 'Mes ' + f.from : 'Meses ' + f.from + ' a ' + f.to, v: Q(f.amount) + ' al mes' })), { l: 'Total ' + ivaTxt(), v: Q(pp.grand), dark: true }].slice(0, 4)
-        : [{ l: 'Pago único · total ' + ivaTxt(), v: Q(pp.grand), dark: true }],
-      table: pp.len > 1 ? { head: ['Mes', ...pp.rows.map(r => progTitle(r.entry)), 'Total'], rows: pp.cols.map((c, m) => [m === 0 ? 'Al iniciar' : 'Mes ' + m, ...c.map(v => v ? Q(v) : '-'), Q(pp.totals[m])]) } : null
+      tiles: pp.phases.length ? [{ l: 'Al iniciar', v: Q(pp.initial) }, ...pp.phases.map(f => ({ l: f.from === f.to ? 'Mes ' + f.from : 'Meses ' + f.from + ' a ' + f.to, v: Q(f.amount) + ' al mes' }))].slice(0, 3) : [{ l: 'Pago único', v: Q(pp.grand) }],
+      table: pp.len > 1 ? { head: ['Mes', 'Pago'], rows: pp.totals.map((v, m) => [m === 0 ? 'Al iniciar' : 'Mes ' + m, Q(v)]) } : null
     };
   }
   // Proyección por estudiante: una sola, sobre el total de estudiantes únicos; solo si la institución pidió incluirla
@@ -900,41 +889,43 @@ function pdfModel(includeSim = false) {
   const sim = sm ? (() => {
     const x = sm.sim, useSug = state.useSuggested !== false, evo = sm.rows.filter(r => isEvo(r.entry.plan));
     return {
-      lead: `Una sola cuota por estudiante para todo el colegio: ${x.students} estudiantes únicos, ${sm.rows.length} ${plural(sm.rows.length, 'programa', 'programas')} y ${x.months} meses.`,
+      lead: `Una sola cuota por estudiante para los programas en renta y en cuotas: ${x.students} estudiantes únicos y ${x.months} meses.`,
       note: 'Estimación antes de los gastos, cobros e impuestos propios del colegio, incluida la morosidad.',
       items: [{
         title: useSug ? `Cuota sugerida por GuateGeeks: ${Q(x.fee)} al mes por estudiante` : `Cuota que definiste: ${Q(x.fee)} al mes por estudiante`,
         own: evo.length ? { title: 'El equipo se queda en tu institución', text: 'Con Evoluciona, al completar los pagos ' + evo.map(r => `${r.units} ${findP(r.entry.programId).hardware}`).join(' y ') + ' pasan a ser del colegio.' } : null,
-        head: x.gain >= 0 ? 'Con esta cuota el colegio cubre lo que paga a GuateGeeks y le queda ganancia.' : 'Con esta cuota el colegio no alcanza a cubrir lo que paga a GuateGeeks.',
+        head: x.gain >= 0 ? `Si cobras ${Q(x.fee)} al mes a cada estudiante durante ${x.months} meses, cubres lo que pagas a GuateGeeks y te queda ganancia.` : `Con ${Q(x.fee)} al mes por estudiante, no alcanzas a cubrir lo que pagas a GuateGeeks.`,
         rows: [
           ['Por cada estudiante', null],
-          [`Aporta (${Q(x.fee)} × ${x.months} meses)`, Q(x.contribution)], ['Inversión por estudiante', Q(x.costPerStudent)], [x.gain >= 0 ? 'Ganancia por estudiante' : 'Falta por estudiante', Q(Math.abs(x.perStudent)) + ' (' + Q(Math.abs(x.perStudentMonth)) + ' al mes)', true],
+          [`Cobras (${Q(x.fee)} × ${x.months} meses)`, Q(x.contribution)], ['Pagas a GuateGeeks', Q(x.costPerStudent)], [x.gain >= 0 ? 'Te queda' : 'Te falta', Q(Math.abs(x.perStudent)) + ' (unos ' + Q(Math.abs(x.perStudentMonth)) + ' al mes)', true],
           ['En todo el colegio', null],
-          [`Recaudo (${x.students} estudiantes × ${x.months} meses)`, Q(x.income)], [`Pago total a GuateGeeks (${ivaTxt()})`, Q(x.cost)], [x.gain >= 0 ? 'Ganancia del colegio' : 'Falta para cubrir el pago', Q(Math.abs(x.gain)), true]
+          [`Cobras (${x.students} estudiantes × ${x.months} meses)`, Q(x.income)], [`Pagas a GuateGeeks (${ivaTxt()})`, Q(x.cost)], [x.gain >= 0 ? 'Te queda' : 'Te falta para cubrir el pago', Q(Math.abs(x.gain)), true]
         ]
       }]
     };
   })() : null;
   const notes = [
     ivaOn() ? `Importes en quetzales enteros. Los pagos se muestran con IVA (${Math.round(FISCAL.iva * 100)} %) a solicitud de la institución; el importe sin IVA se indica como principal.` : `Importes en quetzales enteros y sin IVA: las instituciones educativas están exentas. El monto con IVA (${Math.round(FISCAL.iva * 100)} %) se indica solo como referencia.`,
+    'Los importes se agrupan por modalidad y en total; no se desglosan por nivel ni por programa.',
     'Los importes son estimaciones comerciales. La cotización final y las condiciones las confirma GuateGeeks.',
     'No todas las modalidades incluyen los mismos servicios (equipamiento, capacitación, recursos para el aula, Sócrates Aprende y soporte).',
     'Cuando los horarios de los grupos no están confirmados, la cantidad de equipos es una estimación y no una cobertura garantizada.'
   ];
-  if (state.selected.some(s => s.plan !== 'INTEGRA' && s.plan !== 'UNDECIDED')) notes.push('Sócrates Aprende: contenido para estudiantes de 4.º a 6.º primaria en la fase actual; en los demás grados, acceso para docentes por ahora. Dato por confirmar con GuateGeeks.');
-  const overview = t.rows.map((r, k) => { const s = r.entry, p = findP(s.programId), q = r.quote, g = entryGroups(s); return { photo: s.id, title: progTitle(s), sub: g.length + ' ' + plural(g.length, 'grupo', 'grupos') + ' · ' + participation(s) + ' estudiantes', equip: p.ratio && r.units ? r.units + ' ' + p.hardware : 'Por definir', plan: q ? planOf(s.plan).tag : 'Por definir', net: q ? Q(q.net) : 'Pendiente', withIva: q ? 'Con IVA ' + Q(q.total) : '', pendiente: !q }; });
+  if (!onlyBuy) notes.push('Sócrates Aprende: contenido para estudiantes de 4.º a 6.º primaria en la fase actual; en los demás grados, acceso para docentes por ahora. Dato por confirmar con GuateGeeks.');
+  const overview = t.rows.map(r => { const s = r.entry, p = findP(s.programId), g = entryGroups(s); return { photo: s.id, title: progTitle(s), sub: g.length + ' ' + plural(g.length, 'grupo', 'grupos'), equip: p.ratio && r.units ? r.units + ' ' + p.hardware : 'Por definir', students: participation(s) + ' ' + plural(participation(s), 'estudiante', 'estudiantes') }; });
+  const LEG = { INTEGRA: ['Integra', 'Compras el equipo y queda en propiedad del colegio desde el inicio. Se paga una sola vez.'], FLEX: ['Flex', 'Rentas el equipo por bimestres (de 2 en 2 meses). Se paga una sola vez y el equipo se devuelve al terminar.'], EVO: ['Evoluciona', 'Pagas un inicial del 20 % y cuotas mensuales iguales (8 o 16 meses). Al terminar, el equipo pasa a ser del colegio.'] };
   return {
     title: 'Propuesta para tu colegio', subtitle: 'Programas de tecnología educativa elegidos con el asesor de GuateGeeks. Los importes son estimaciones que GuateGeeks confirma.',
-    legend: [...new Set(state.selected.filter(s => s.plan !== 'UNDECIDED').map(s => isEvo(s.plan) ? 'EVO' : s.plan))].map(k => ({ INTEGRA: ['Integra', 'Compras el equipo y queda en propiedad del colegio desde el inicio. Se paga una sola vez.'], FLEX: ['Flex', 'Rentas el equipo por bimestres (de 2 en 2 meses). Se paga una sola vez y el equipo se devuelve al terminar.'], EVO: ['Evoluciona', 'Pagas un inicial del 20 % y cuotas mensuales iguales (8 o 16 meses). Al terminar, el equipo pasa a ser del colegio.'] }[k])),
+    legend: gs.map(g => LEG[g.m.k]),
     steps: [['Revisa', 'Comparte esta propuesta con tu equipo directivo y define qué programas empiezan primero.'], ['Confirma', 'GuateGeeks valida con tu colegio los grupos, los importes y las condiciones finales.'], ['Empieza', 'Se coordina la entrega de equipos y el acompañamiento a tus docentes.']],
     date: new Date().toLocaleDateString('es-GT', { day: 'numeric', month: 'long', year: 'numeric' }),
-    stats: [{ v: String(selectedParticipants()), l: 'estudiantes únicos en la propuesta' }, { v: String(levels.length), l: plural(levels.length, 'nivel educativo', 'niveles educativos') }, { v: String(state.selected.length), l: plural(state.selected.length, 'programa seleccionado', 'programas seleccionados') }],
+    stats: [{ v: String(n), l: 'estudiantes únicos atendidos' }, { v: String(equipment), l: plural(equipment, 'equipo en total', 'equipos en total') }, { v: String(priced.length), l: plural(priced.length, 'programa seleccionado', 'programas seleccionados') }],
     levelsLine: 'Niveles: ' + joinY(levels) + '. Matrícula registrada en la institución: ' + registered() + ' estudiantes.',
+    options, optionsNote: onlyBuy ? '' : '',
     invest: {
-      label: t.complete ? 'Total sin IVA' : 'Subtotal sin IVA (parcial)', net: t.pricedCount ? Q(t.net) : 'Sin importe disponible',
-      withIva: t.pricedCount ? `Con IVA: ${Q(t.total)} (IVA de ${Q(t.tax)})` : '',
-      parts: t.pricedCount ? { net: Q(t.net), iva: Q(t.tax), total: Q(t.total), ivaPct: Math.round(FISCAL.iva * 100) + ' %' } : null,
-      warning: t.complete ? '' : `${t.pricedCount ? 'Este importe no es el total institucional completo. ' : ''}${t.unpricedCount} ${plural(t.unpricedCount, 'programa está', 'programas están')} pendiente${t.unpricedCount === 1 ? '' : 's'} de modalidad, configuración, recálculo o cotización personalizada.`
+      label: 'Total de la propuesta', net: priced.length ? Q(money(all)) : 'Sin importe disponible',
+      parts: priced.length ? { main: Q(money(all)), mainLabel: ivaOn() ? 'Total con IVA' : 'Total sin IVA', perStudent: ps.monthly != null ? Q(ps.monthly) + ' al mes' : '', perLabel: ps.monthly != null ? 'Por estudiante, cada mes' : 'Compra: pago único', perTotal: ps.monthly != null ? Q(Math.round(ps.total)) + ' en ' + ps.months + ' meses' + (ps.buyAmt ? ', sin la compra' : '') : '', students: ps.students || n, net: Q(all.net), iva: Q(all.tax), total: Q(all.total), ivaPct: Math.round(FISCAL.iva * 100) + ' %' } : null,
+      warning: t.unpricedCount ? `${t.pricedCount ? 'Estos importes no incluyen todos los programas. ' : ''}${t.unpricedCount} ${plural(t.unpricedCount, 'programa está', 'programas están')} pendiente${t.unpricedCount === 1 ? '' : 's'} de modalidad, configuración o cotización personalizada.` : ''
     },
     pay, overview, programs, sim, notes
   };
@@ -985,6 +976,7 @@ async function makePdf(includeSim) {
 function renderSummary() {
   const list = state.selected;
   if (!list.length) { frame('Tu propuesta educativa', 'Aquí se reunirán los programas y equipos que elijas para tu institución.', `<div class="empty">Todavía no has agregado programas. Tus niveles y estudiantes registrados se conservan.</div><div class="foot"><button class="btn btn-primary" onclick="step(${hasStudents() ? 3 : state.levels.length ? 2 : 1})">${hasStudents() ? 'Elegir programas' : 'Continuar mi propuesta'} ${icon('arrow')}</button></div>`); return; }
+  syncCalc();
   const t = M.proposalTotals(list, PROGRAMS, groups(), TARIFFS, FISCAL), nlevels = new Set(list.flatMap(s => entryLevels(s).map(l => l.id))).size;
   const provisional = groups().some(g => list.some(s => s.groupIds.includes(g.id)) && !g.confirmed);
   frame('Tu propuesta educativa', 'Estos son los programas y equipos que seleccionaste para tu institución. Revisa el alcance, compara tus decisiones y ajusta lo que necesites.',
