@@ -1,13 +1,15 @@
 /**
- * Generates docs/papercraft/personajes/ALUMNO-PRIMARIA.md from the code: the component
- * registry, the recipe parameters, the plan and the faces really emitted by the
- * primaria base student. Dev only (tools/people-contract.mjs and the sync test).
+ * Generates docs/papercraft/personajes/ALUMNO-PRIMARIA.md from the code: the R2 data module
+ * (recipes, instances, rig, landmarks, provenance), the documented redistribution and the
+ * faces the builder really emits for the primaria base student. Dev only
+ * (tools/people-contract.mjs and the sync test).
  */
 import { createBuilder } from '../campus-kit.js';
-import { addPaperPerson, PRIMARIA_BASE, COMPONENTS, componentParams, GEOMETRY_CAP, RESERVE, SHADOW_TRIANGLES } from './pieces-people.js';
+import { addPaperPerson, PRIMARIA_BASE, SHADOW_TRIANGLES } from './pieces-people.js';
+import { R2_RECIPES, R2_INSTANCES, R2_RIG_H, R2_LANDMARKS_H, R2_PROVENANCE, R2_REDISTRIBUTION, R2_ADAPTATIONS, R2_FACTS, r2Rig } from './r2/person-r2.js';
 
 const f = (x, d = 4) => (Math.round(x * 10 ** d) / 10 ** d).toString();
-const fmtParam = v => Array.isArray(v) ? '[' + v.map(fmtParam).join(', ') + ']' : typeof v === 'number' ? f(v) : String(v);
+const vec = (v, d = 4) => `(${v.map(x => f(x, d)).join(', ')})`;
 
 /** Build the base student and measure it on its emitted geometry (rest pose = bind pose). */
 export function measureBase(spec = PRIMARIA_BASE) {
@@ -27,63 +29,76 @@ export function measureBase(spec = PRIMARIA_BASE) {
   const torsoX = tris.filter(t => t.bone === 'b.torso').flatMap(t => t.v.map(p => p[0]));
   const shoeZ = tris.filter(t => t.bone === 'b.shinL').flatMap(t => t.v.map(p => p[1] < person.landmarks.ankle + .02 ? p[2] : null)).filter(z => z != null);
   const H = Math.max(...ys) - Math.min(...ys);
+  const world = {};
+  g.userData.rig.root.updateMatrixWorld(true);
+  for (const bone of bones) if (bone.name.startsWith('b.')) world[bone.name.slice(2)] = bone.matrixWorld.elements.slice(12, 15);
   const total = g.userData.triangles;
   g.userData.skeleton?.dispose();
   return { person, H, minY: Math.min(...ys), head: Math.max(...ys) - person.landmarks.chin, shoulders: Math.max(...torsoX) - Math.min(...torsoX),
-    shoeLength: Math.max(...shoeZ) - Math.min(...shoeZ), total, geometry: Object.values(person.parts).reduce((s, n) => s + n, 0) };
+    shoeLength: Math.max(...shoeZ) - Math.min(...shoeZ), total, geometry: Object.values(person.parts).reduce((s, n) => s + n, 0), world };
 }
 
 export function alumnoContract() {
-  const m = measureBase(), p = m.person, L = p.landmarks, K = componentParams(p.profile), H = p.profile.H;
+  const m = measureBase(), p = m.person, H = p.scale, rel = r2Rig(H);
   const out = [];
-  out.push('# Alumno de primaria: contrato y componentes', '',
-    '> Documento **generado** por `node tools/people-contract.mjs` a partir de `asesor/lab/paper/pieces-people.js`',
-    '> (`PRIMARIA_BASE`, `COMPONENTS`, `componentParams`, `planPerson`, `personLandmarks`) y de las caras que el generador',
-    '> emite de verdad. No se edita a mano: `asesor/test/people-contract.test.js` falla si el código y este archivo divergen.', '',
-    'Alcance: solo el alumno base de primaria (cabello corto, camisa blanca de manga corta, chaleco violeta, pantalón',
-    'azul marino, zapatos oscuros, mochila turquesa). Falda, otros peinados y otros niveles siguen con la receta v1',
-    '(geometría idéntica a `ec4d112`); la cabeza v2 se aplica a todo alumno de primaria con cabello corto, para que la ropa',
-    'no cambie la cabeza.', '');
-  out.push('## Configuración reproducible', '', '```json', JSON.stringify(PRIMARIA_BASE, null, 2), '```', '',
-    'Pose de referencia `rest` (de pie, `POSES.stand`). Las demás poses del inspector: `walk-0…3`, `sit`, `work`, `point`, `hand`, `vr`.', '');
+  out.push('# Alumno de primaria R2: contrato y componentes', '',
+    '> Documento **generado** por `node tools/people-contract.mjs` a partir del módulo de datos R2',
+    '> (`asesor/lab/paper/r2/primaria-r2-data.js`, generado a su vez desde los JSON del paquete por `node tools/r2-import.mjs`),',
+    '> de `asesor/lab/paper/r2/person-r2.js` y de las caras que el builder emite de verdad. No se edita a mano:',
+    '> `asesor/test/people-contract.test.js` falla si código, datos y documento divergen.', '',
+    'Alcance: el alumno base de primaria con cabello corto, pantalón y mochila se construye completo con el paquete R2.',
+    'Todo alumno de primaria con cabello corto usa la cabeza R2 (P01–P07), también con falda, para que la ropa no cambie la cabeza.',
+    'Las demás combinaciones conservan la receta v1 (geometría idéntica a `ec4d112`).', '');
+  out.push('## Procedencia', '', `Paquete \`${R2_PROVENANCE.package}\` (${R2_PROVENANCE.manifest}), montaje \`${R2_PROVENANCE.assembly}\`, esquema ${R2_PROVENANCE.schema}.`,
+    `${R2_FACTS.recipes} recetas, ${R2_FACTS.instances} instancias, ${R2_FACTS.packageTriangles} triángulos en el paquete. Los datos se **cargan** de los JSON (importados a un módulo generado), no se transcriben a mano.`, '',
+    '| Archivo | SHA256 |', '|---|---|');
+  for (const [file, hash] of Object.entries(R2_PROVENANCE.sha256)) out.push(`| \`${file}\` | \`${hash}\` |`);
+  out.push('', '## Configuración reproducible', '', '```json', JSON.stringify(PRIMARIA_BASE, null, 2), '```', '',
+    'La piel, el cabello, el chaleco, la mochila y los zapatos del paquete se recolorean a los de la configuración conservando el matiz relativo de cada cara; camisa y pantalón usan los colores del paquete. Los hex son sRGB y el builder los convierte una sola vez a lineal (`THREE.Color`).', '');
   out.push('## Contrato global', '',
-    '- Ejes: Y arriba, +Z frente, X lateral (la izquierda del personaje es +X). Unidades de escena; el suelo es y = 0.',
-    '- Capas superpuestas: separación normal ≥ 0.004 (se emite 0.0045). Paneles que comparten arista no la necesitan.',
-    '- Un hueso por vértice y por panel rígido; 12 huesos (`hips`, `torso`, `head`, `armL/R`, `foreL/R`, `legL/R`, `shinL/R`) bajo la raíz.',
-    `- Presupuesto: geometría ≤ ${GEOMETRY_CAP.student} (${GEOMETRY_CAP.student + RESERVE} con la reserva de planificación de ${RESERVE}, que no se emite); sombra de contacto auxiliar de ${SHADOW_TRIANGLES} triángulos en la capa \`blob\`; total ≤ 280.`, '');
+    '- Ejes: +Y arriba, +Z frente, +X izquierda anatómica. Suelo y = 0. Datos normalizados por H; H = 0.78 se aplica una sola vez.',
+    '- Transformación de instancia (MONTAJE §2): `M = T(position) · Rz · Ry · Rx · diag(sx·(mirror ? −1 : 1), sy, sz)`, grados. El builder recibe vértices locales al hueso activo: `H · (M·v − pivote_raíz(hueso))`. Las instancias reflejadas invierten el orden de cada triángulo una vez.',
+    '- Un hueso por instancia y por vértice (peso 1); 12 huesos con los nombres y padres del proyecto.',
+    '- Capas designadas (ojos, sonrisa, pechera, solapas, tirantes): separación normal ≥ 0.004. Solapes ocultos de articulación (rodilla P16/P17, muñeca P13/P14) se informan aparte en el manifiesto.', '');
   out.push('| Medida | Objetivo | Medido en la geometría |', '|---|---:|---:|',
-    `| Altura H (suela a cima del cabello) | 0.78 | ${f(m.H)} |`,
-    `| Cabeza (mentón a cima) / H | 0.28 | ${f(m.head / m.H, 3)} |`,
-    `| Ancho de hombros del torso / H | 0.26 | ${f(m.shoulders / m.H, 3)} |`,
-    `| Largo del zapato / H | ≈ 0.145 | ${f(m.shoeLength / m.H, 3)} |`,
+    `| H (suela a cima del cabello) | 0.78 | ${f(m.H)} |`,
+    `| Cabeza (mentón a cima) / H | ${R2_LANDMARKS_H.head_with_hair_height} | ${f(m.head / m.H, 3)} |`,
+    `| Ancho de hombros del torso / H | ${R2_LANDMARKS_H.torso_shoulder_width} | ${f(m.shoulders / m.H, 3)} |`,
+    `| Largo del zapato / H | — | ${f(m.shoeLength / m.H, 3)} |`,
     `| Punto más bajo | 0 | ${f(m.minY)} |`, '');
-  out.push('### Puntos de referencia (de pie)', '', '| Punto | y | y / H | Uso |', '|---|---:|---:|---|');
-  const uses = { sole: 'suela', ankle: 'tobillo: entrada del zapato en el pantalón', knee: 'rodilla: hueso shin', hip: 'cadera: huesos hips y leg', shoulder: 'hombro: hueso arm', elbow: 'codo: hueso fore', wrist: 'muñeca', neckBase: 'base del cuello: hueso head', chin: 'mentón', top: 'cima del cabello' };
-  for (const k of ['sole', 'ankle', 'knee', 'hip', 'wrist', 'elbow', 'shoulder', 'neckBase', 'chin', 'top']) out.push(`| ${k} | ${f(L[k])} | ${f(L[k] / H, 3)} | ${uses[k]} |`);
-  out.push('', `Hombro en x = ±${f(L.shoulderX)}; piernas en x = ±${f(L.legX)}; medio ancho de hombros del torso ${f(L.halfShoulders)}.`, '');
-  out.push('## Componentes', '', `Total emitido: **${m.geometry}** de geometría + ${SHADOW_TRIANGLES} de sombra = **${m.total}** (plan con reserva: ${m.geometry + RESERVE}). Mejoras tomadas por el plan: ${Object.keys(p.plan.rich).join(', ')}.`, '',
-    '| Componente | Papel | Huesos | Receta | Plan | Emitidos |', '|---|---|---|---|---:|---:|');
-  for (const c of p.components) {
-    const reg = COMPONENTS.find(x => x.id === c.id);
-    out.push(`| \`${c.id}\` | ${reg.label} | ${Object.entries(c.perBone).map(([bn, n]) => `${bn} ${n}`).join(', ')} | ${c.recipe} | ${c.planned} | ${c.triangles} |`);
+  out.push('### Puntos de referencia (`landmarks_H`)', '', '| Punto | H | Escena |', '|---|---:|---:|');
+  for (const [k, v] of Object.entries(R2_LANDMARKS_H)) out.push(`| ${k} | ${v} | ${f(v * H)} |`);
+  out.push('', '### Rig', '', '| Hueso | Padre | Pivote raíz de reposo / H | Relativo al padre (escena) | Medido en el builder |', '|---|---|---|---|---|');
+  for (const [k, b] of Object.entries(R2_RIG_H)) if (k !== 'root') out.push(`| ${k} | ${b.parent} | ${vec(b.at, 3)} | ${vec(rel[k])} | ${vec(m.world[k])} |`);
+  const removed = Object.entries(R2_REDISTRIBUTION).reduce((s, [r, x]) => s + x.faces.length * R2_INSTANCES.filter(i => i.recipe === r).length, 0);
+  out.push('', '## Presupuesto', '',
+    `- Paquete: ${R2_FACTS.packageTriangles} triángulos, sin reserva. El proyecto cuenta la sombra de contacto (${SHADOW_TRIANGLES}, capa \`blob\`, auxiliar) en el límite de 280, así que se **redistribuye** antes de añadirla: se retiran ${removed} tapas ocultas.`,
+    `- Emitido: **${m.geometry}** de geometría + ${SHADOW_TRIANGLES} de sombra = **${m.total}** ≤ 280. Reserva: 0 (no es geometría).`, '',
+    '| Receta | Caras retiradas (índice en el JSON) | Motivo |', '|---|---|---|');
+  for (const [r, x] of Object.entries(R2_REDISTRIBUTION)) out.push(`| ${r} | ${x.faces.join(', ')} | ${x.reason} |`);
+  out.push('', '### Adaptaciones de integración (solo posiciones de vértices)', '', '| Receta | Vértices (local / H) | Motivo |', '|---|---|---|');
+  for (const [r, x] of Object.entries(R2_ADAPTATIONS)) out.push(`| ${r} | ${Object.entries(x.vertices).map(([k, v]) => `${k} → ${vec(v)}`).join('; ')} | ${x.reason} |`);
+  out.push('', '## Instancias', '', '| # | Instancia | Receta | Hueso | Reflejo | Posición / H | Rotación (°) | Paquete | Emitidos | Rango (triángulos) |', '|---:|---|---|---|---|---|---|---:|---:|---|');
+  for (const i of R2_INSTANCES) {
+    const c = p.components.find(x => x.id === i.id);
+    out.push(`| ${i.order} | \`${i.id}\` | ${i.recipe} · ${R2_RECIPES[i.recipe].name} | ${i.bone} | ${i.mirror ? 'sí' : 'no'} | ${vec(i.position)} | ${vec(i.rotation, 1)} | ${R2_RECIPES[i.recipe].faces.length} | ${c ? c.triangles : 0} | ${c ? c.ranges.map(r => r.join('–')).join(', ') : '—'} |`);
   }
-  out.push('');
-  for (const c of p.components) {
-    const reg = COMPONENTS.find(x => x.id === c.id), params = K[c.id];
-    out.push(`### \`${c.id}\` · ${reg.label}`, '',
-      `- **Papel:** ${reg.role}.`, `- **Origen y ejes:** ${reg.frame}.`, `- **Montaje:** ${reg.attach}.`, `- **Hueso(s):** ${reg.bones.join(', ')}.`,
-      `- **Topología:** ${reg.topology}. Triángulos emitidos: **${c.triangles}** (receta ${c.recipe}).`,
-      `- **Solapes y encuentros:** ${reg.overlaps}.`, `- **Revisión:** ${reg.review}.`);
-    if (params) out.push(`- **Parámetros:** ${Object.entries(params).map(([k, v]) => `\`${k}\` ${fmtParam(v)}`).join('; ')}.`);
+  out.push('', '## Recetas', '');
+  for (const r of Object.values(R2_RECIPES)) {
+    out.push(`### ${r.id} · ${r.name}`, '', `- **Papel:** ${r.purpose}`, `- **Construcción:** ${r.construction} Superficie: \`${r.kind}\`; ${r.faces.length} triángulos, ${r.vertices.length} vértices; color base ${r.base}.`,
+      `- **Instancias:** ${R2_INSTANCES.filter(i => i.recipe === r.id).map(i => `\`${i.id}\` (${i.bone})`).join(', ')}.`,
+      `- **Sockets:** ${Object.keys(r.sockets).join(', ')}.`);
+    if (r.limitations.length) out.push(`- **Límites:** ${r.limitations.join(' ')}`);
+    if (R2_REDISTRIBUTION[r.id]) out.push(`- **Redistribución:** sin las caras ${R2_REDISTRIBUTION[r.id].faces.join(', ')}.`);
+    if (R2_ADAPTATIONS[r.id]) out.push(`- **Adaptación:** ${R2_ADAPTATIONS[r.id].reason}.`);
     out.push('');
   }
-  out.push('## Revisar y reproducir', '',
-    '```bash',
+  out.push('## Revisar y reproducir', '', '```bash',
     'npm run build:inspector      # y abrir asesor/lab/inspector.html con `npm run serve` (panel «Alumno de primaria»)',
     'npm run check:people -- artifacts/paper/<run-nuevo>',
     'PLAYWRIGHT_MODULE=… node tools/alumno-shot.cjs artifacts/paper/<run-nuevo> --views char-front,char-side,char-back,char-34,campus --heights 600',
-    'node tools/people-contract.mjs   # regenera este documento',
-    '```', '',
-    'En el inspector, `inspector.showPerson({ pose, view, only: [ids] })` aísla componentes y `inspector.setWire(true)` muestra las aristas.', '');
+    'node tools/r2-import.mjs        # regenera el módulo de datos desde el paquete',
+    'node tools/people-contract.mjs   # regenera este documento', '```', '',
+    'En el inspector, `inspector.showPerson({ pose, view, only: [\'P03\' | \'P03-L\' | …] })` aísla recetas o instancias, `setWire(true)` muestra las aristas y `setSockets(true)` los ejes y puntos de unión.', '');
   return out.join('\n');
 }

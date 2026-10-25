@@ -1,0 +1,1104 @@
+{
+  "schema_version": "2.0",
+  "id": "GG-PRIMARIA-R2",
+  "units": "normalized_H",
+  "scale_to_scene": 0.78,
+  "coordinate_system": {
+    "up": "+Y",
+    "front": "+Z",
+    "anatomical_left": "+X",
+    "note": "L/R son lados del personaje, no del espectador."
+  },
+  "transform_convention": {
+    "vectors": "column",
+    "formula": "T(position_H) * Rz * Ry * Rx * S(scale_xyz * mirror_x)",
+    "rotation_unit": "degrees",
+    "bake_rule": "Transformar posiciones y normales correctamente; invertir winding si el determinante de S es negativo.",
+    "scene_conversion": "Aplicar scale_to_scene una sola vez a vertices y pivotes root-rest."
+  },
+  "landmarks_H": {
+    "sole": 0,
+    "ankle_reference": 0.055,
+    "knee": 0.255,
+    "hip": 0.45,
+    "arm_shoulder": 0.68,
+    "torso_center_top": 0.7,
+    "head_pivot": 0.7,
+    "chin": 0.72,
+    "hair_top": 1.0,
+    "head_with_hair_height": 0.28,
+    "torso_shoulder_width": 0.26
+  },
+  "rig": [
+    {
+      "id": "root",
+      "parent": null,
+      "rest_position_root_H": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "hips",
+      "parent": "root",
+      "rest_position_root_H": [
+        0,
+        0.45,
+        0
+      ]
+    },
+    {
+      "id": "torso",
+      "parent": "hips",
+      "rest_position_root_H": [
+        0,
+        0.45,
+        0
+      ]
+    },
+    {
+      "id": "head",
+      "parent": "torso",
+      "rest_position_root_H": [
+        0,
+        0.7,
+        0
+      ]
+    },
+    {
+      "id": "armL",
+      "parent": "torso",
+      "rest_position_root_H": [
+        0.148,
+        0.68,
+        0
+      ]
+    },
+    {
+      "id": "armR",
+      "parent": "torso",
+      "rest_position_root_H": [
+        -0.148,
+        0.68,
+        0
+      ]
+    },
+    {
+      "id": "foreL",
+      "parent": "armL",
+      "rest_position_root_H": [
+        0.148,
+        0.555,
+        0
+      ]
+    },
+    {
+      "id": "foreR",
+      "parent": "armR",
+      "rest_position_root_H": [
+        -0.148,
+        0.555,
+        0
+      ]
+    },
+    {
+      "id": "legL",
+      "parent": "hips",
+      "rest_position_root_H": [
+        0.058,
+        0.45,
+        0
+      ]
+    },
+    {
+      "id": "legR",
+      "parent": "hips",
+      "rest_position_root_H": [
+        -0.058,
+        0.45,
+        0
+      ]
+    },
+    {
+      "id": "shinL",
+      "parent": "legL",
+      "rest_position_root_H": [
+        0.058,
+        0.255,
+        0
+      ]
+    },
+    {
+      "id": "shinR",
+      "parent": "legR",
+      "rest_position_root_H": [
+        -0.058,
+        0.255,
+        0
+      ]
+    }
+  ],
+  "instances": [
+    {
+      "id": "P15",
+      "part_id": "P15",
+      "bone": "hips",
+      "position_H": [
+        0,
+        0.45,
+        0
+      ],
+      "rotation_deg_xyz": [
+        0,
+        0,
+        0
+      ],
+      "scale_xyz": [
+        1,
+        1,
+        1
+      ],
+      "mirror_x": false,
+      "assembly_order": 1,
+      "mount": {
+        "parent_instance_id": null,
+        "source_socket": "origin",
+        "description": ""
+      }
+    },
+    {
+      "id": "P08",
+      "part_id": "P08",
+      "bone": "torso",
+      "position_H": [
+        0,
+        0.45,
+        0
+      ],
+      "rotation_deg_xyz": [
+        0,
+        0,
+        0
+      ],
+      "scale_xyz": [
+        1,
+        1,
+        1
+      ],
+      "mirror_x": false,
+      "assembly_order": 2,
+      "mount": {
+        "parent_instance_id": "P15",
+        "source_socket": "origin",
+        "description": "",
+        "target_socket": "mount_P08"
+      }
+    },
+    {
+      "id": "P02",
+      "part_id": "P02",
+      "bone": "head",
+      "position_H": [
+        0,
+        0.7,
+        0
+      ],
+      "rotation_deg_xyz": [
+        0,
+        0,
+        0
+      ],
+      "scale_xyz": [
+        1,
+        1,
+        1
+      ],
+      "mirror_x": false,
+      "assembly_order": 3,
+      "mount": {
+        "parent_instance_id": "P08",
+        "source_socket": "origin",
+        "description": "",
+        "target_socket": "mount_P02"
+      }
+    },
+    {
+      "id": "P01",
+      "part_id": "P01",
+      "bone": "head",
+      "position_H": [
+        0,
+        0.72,
+        0
+      ],
+      "rotation_deg_xyz": [
+        0,
+        0,
+        0
+      ],
+      "scale_xyz": [
+        1,
+        1,
+        1
+      ],
+      "mirror_x": false,
+      "assembly_order": 4,
+      "mount": {
+        "parent_instance_id": "P02",
+        "source_socket": "origin",
+        "description": "",
+        "target_socket": "mount_P01"
+      }
+    },
+    {
+      "id": "P03-L",
+      "part_id": "P03",
+      "bone": "head",
+      "position_H": [
+        0.094,
+        0.824,
+        0
+      ],
+      "rotation_deg_xyz": [
+        0,
+        0,
+        0
+      ],
+      "scale_xyz": [
+        1,
+        1,
+        1
+      ],
+      "mirror_x": false,
+      "assembly_order": 5,
+      "mount": {
+        "parent_instance_id": "P01",
+        "source_socket": "origin",
+        "description": "",
+        "target_socket": "mount_P03_L"
+      }
+    },
+    {
+      "id": "P03-R",
+      "part_id": "P03",
+      "bone": "head",
+      "position_H": [
+        -0.094,
+        0.824,
+        0
+      ],
+      "rotation_deg_xyz": [
+        0,
+        0,
+        0
+      ],
+      "scale_xyz": [
+        1,
+        1,
+        1
+      ],
+      "mirror_x": true,
+      "assembly_order": 5,
+      "mount": {
+        "parent_instance_id": "P01",
+        "source_socket": "origin",
+        "description": "",
+        "target_socket": "mount_P03_R"
+      }
+    },
+    {
+      "id": "P04-L",
+      "part_id": "P04",
+      "bone": "head",
+      "position_H": [
+        0.035,
+        0.8294484395968853,
+        0.07819845750778266
+      ],
+      "rotation_deg_xyz": [
+        0,
+        0,
+        0
+      ],
+      "scale_xyz": [
+        1,
+        1,
+        1
+      ],
+      "mirror_x": false,
+      "assembly_order": 6,
+      "mount": {
+        "parent_instance_id": "P01",
+        "source_socket": "origin",
+        "description": "",
+        "target_socket": "mount_P04_L"
+      }
+    },
+    {
+      "id": "P04-R",
+      "part_id": "P04",
+      "bone": "head",
+      "position_H": [
+        -0.035,
+        0.8294484395968853,
+        0.07819845750778266
+      ],
+      "rotation_deg_xyz": [
+        0,
+        0,
+        0
+      ],
+      "scale_xyz": [
+        1,
+        1,
+        1
+      ],
+      "mirror_x": false,
+      "assembly_order": 6,
+      "mount": {
+        "parent_instance_id": "P01",
+        "source_socket": "origin",
+        "description": "",
+        "target_socket": "mount_P04_R"
+      }
+    },
+    {
+      "id": "P05",
+      "part_id": "P05",
+      "bone": "head",
+      "position_H": [
+        0.0,
+        0.7824484395968854,
+        0.07311391205323722
+      ],
+      "rotation_deg_xyz": [
+        0,
+        0,
+        0
+      ],
+      "scale_xyz": [
+        1,
+        1,
+        1
+      ],
+      "mirror_x": false,
+      "assembly_order": 7,
+      "mount": {
+        "parent_instance_id": "P01",
+        "source_socket": "origin",
+        "description": "",
+        "target_socket": "mount_P05"
+      }
+    },
+    {
+      "id": "P06",
+      "part_id": "P06",
+      "bone": "head",
+      "position_H": [
+        0,
+        0.72,
+        0
+      ],
+      "rotation_deg_xyz": [
+        0,
+        0,
+        0
+      ],
+      "scale_xyz": [
+        1,
+        1,
+        1
+      ],
+      "mirror_x": false,
+      "assembly_order": 8,
+      "mount": {
+        "parent_instance_id": "P01",
+        "source_socket": "origin",
+        "description": "",
+        "target_socket": "mount_P06"
+      }
+    },
+    {
+      "id": "P07-L",
+      "part_id": "P07",
+      "bone": "head",
+      "position_H": [
+        0.038,
+        0.91,
+        0.094
+      ],
+      "rotation_deg_xyz": [
+        0,
+        0,
+        -7
+      ],
+      "scale_xyz": [
+        1,
+        1,
+        1
+      ],
+      "mirror_x": false,
+      "assembly_order": 9,
+      "mount": {
+        "parent_instance_id": "P06",
+        "source_socket": "origin",
+        "description": "",
+        "target_socket": "mount_P07_L"
+      }
+    },
+    {
+      "id": "P07-C",
+      "part_id": "P07",
+      "bone": "head",
+      "position_H": [
+        0,
+        0.91,
+        0.094
+      ],
+      "rotation_deg_xyz": [
+        0,
+        0,
+        6
+      ],
+      "scale_xyz": [
+        1,
+        1,
+        1
+      ],
+      "mirror_x": false,
+      "assembly_order": 9,
+      "mount": {
+        "parent_instance_id": "P06",
+        "source_socket": "origin",
+        "description": "",
+        "target_socket": "mount_P07_C"
+      }
+    },
+    {
+      "id": "P07-R",
+      "part_id": "P07",
+      "bone": "head",
+      "position_H": [
+        -0.038,
+        0.91,
+        0.094
+      ],
+      "rotation_deg_xyz": [
+        0,
+        0,
+        10
+      ],
+      "scale_xyz": [
+        1,
+        1,
+        1
+      ],
+      "mirror_x": false,
+      "assembly_order": 9,
+      "mount": {
+        "parent_instance_id": "P06",
+        "source_socket": "origin",
+        "description": "",
+        "target_socket": "mount_P07_R"
+      }
+    },
+    {
+      "id": "P09",
+      "part_id": "P09",
+      "bone": "torso",
+      "position_H": [
+        0.0,
+        0.6901774085370603,
+        0.06747128936123317
+      ],
+      "rotation_deg_xyz": [
+        0,
+        0,
+        0
+      ],
+      "scale_xyz": [
+        1,
+        1,
+        1
+      ],
+      "mirror_x": false,
+      "assembly_order": 10,
+      "mount": {
+        "parent_instance_id": "P08",
+        "source_socket": "origin",
+        "description": "",
+        "target_socket": "mount_P09"
+      }
+    },
+    {
+      "id": "P10-L",
+      "part_id": "P10",
+      "bone": "torso",
+      "position_H": [
+        0.004,
+        0.7053725579278268,
+        0.07258970765858967
+      ],
+      "rotation_deg_xyz": [
+        0,
+        0,
+        0
+      ],
+      "scale_xyz": [
+        1,
+        1,
+        1
+      ],
+      "mirror_x": false,
+      "assembly_order": 11,
+      "mount": {
+        "parent_instance_id": "P08",
+        "source_socket": "origin",
+        "description": "",
+        "target_socket": "mount_P10_L"
+      }
+    },
+    {
+      "id": "P10-R",
+      "part_id": "P10",
+      "bone": "torso",
+      "position_H": [
+        -0.004,
+        0.7053725579278268,
+        0.07258970765858967
+      ],
+      "rotation_deg_xyz": [
+        0,
+        0,
+        0
+      ],
+      "scale_xyz": [
+        1,
+        1,
+        1
+      ],
+      "mirror_x": true,
+      "assembly_order": 11,
+      "mount": {
+        "parent_instance_id": "P08",
+        "source_socket": "origin",
+        "description": "",
+        "target_socket": "mount_P10_R"
+      }
+    },
+    {
+      "id": "P11-L",
+      "part_id": "P11",
+      "bone": "armL",
+      "position_H": [
+        0.148,
+        0.68,
+        0
+      ],
+      "rotation_deg_xyz": [
+        0,
+        0,
+        0
+      ],
+      "scale_xyz": [
+        1,
+        1,
+        1
+      ],
+      "mirror_x": false,
+      "assembly_order": 12,
+      "mount": {
+        "parent_instance_id": "P08",
+        "source_socket": "origin",
+        "description": "",
+        "target_socket": "mount_P11_L"
+      }
+    },
+    {
+      "id": "P12-L",
+      "part_id": "P12",
+      "bone": "armL",
+      "position_H": [
+        0.148,
+        0.68,
+        0
+      ],
+      "rotation_deg_xyz": [
+        0,
+        0,
+        0
+      ],
+      "scale_xyz": [
+        1,
+        1,
+        1
+      ],
+      "mirror_x": false,
+      "assembly_order": 13,
+      "mount": {
+        "parent_instance_id": "P11-L",
+        "source_socket": "origin",
+        "description": "",
+        "target_socket": "mount_P12_L"
+      }
+    },
+    {
+      "id": "P13-L",
+      "part_id": "P13",
+      "bone": "foreL",
+      "position_H": [
+        0.148,
+        0.555,
+        0
+      ],
+      "rotation_deg_xyz": [
+        0,
+        0,
+        0
+      ],
+      "scale_xyz": [
+        1,
+        1,
+        1
+      ],
+      "mirror_x": false,
+      "assembly_order": 14,
+      "mount": {
+        "parent_instance_id": "P12-L",
+        "source_socket": "origin",
+        "description": "",
+        "target_socket": "mount_P13_L"
+      }
+    },
+    {
+      "id": "P14-L",
+      "part_id": "P14",
+      "bone": "foreL",
+      "position_H": [
+        0.148,
+        0.437,
+        0.012
+      ],
+      "rotation_deg_xyz": [
+        0,
+        0,
+        0
+      ],
+      "scale_xyz": [
+        1,
+        1,
+        1
+      ],
+      "mirror_x": false,
+      "assembly_order": 15,
+      "mount": {
+        "parent_instance_id": "P13-L",
+        "source_socket": "origin",
+        "description": "",
+        "target_socket": "mount_P14_L"
+      }
+    },
+    {
+      "id": "P16-L",
+      "part_id": "P16",
+      "bone": "legL",
+      "position_H": [
+        0.058,
+        0.45,
+        0
+      ],
+      "rotation_deg_xyz": [
+        0,
+        0,
+        0
+      ],
+      "scale_xyz": [
+        1,
+        1,
+        1
+      ],
+      "mirror_x": false,
+      "assembly_order": 16,
+      "mount": {
+        "parent_instance_id": "P15",
+        "source_socket": "origin",
+        "description": "",
+        "target_socket": "mount_P16_L"
+      }
+    },
+    {
+      "id": "P17-L",
+      "part_id": "P17",
+      "bone": "shinL",
+      "position_H": [
+        0.058,
+        0.255,
+        0
+      ],
+      "rotation_deg_xyz": [
+        0,
+        0,
+        0
+      ],
+      "scale_xyz": [
+        1,
+        1,
+        1
+      ],
+      "mirror_x": false,
+      "assembly_order": 17,
+      "mount": {
+        "parent_instance_id": "P16-L",
+        "source_socket": "origin",
+        "description": "",
+        "target_socket": "mount_P17_L"
+      }
+    },
+    {
+      "id": "P18-L",
+      "part_id": "P18",
+      "bone": "shinL",
+      "position_H": [
+        0.058,
+        0,
+        0
+      ],
+      "rotation_deg_xyz": [
+        0,
+        0,
+        0
+      ],
+      "scale_xyz": [
+        1,
+        1,
+        1
+      ],
+      "mirror_x": false,
+      "assembly_order": 18,
+      "mount": {
+        "parent_instance_id": "P17-L",
+        "source_socket": "origin",
+        "description": "",
+        "target_socket": "mount_P18_L"
+      }
+    },
+    {
+      "id": "P11-R",
+      "part_id": "P11",
+      "bone": "armR",
+      "position_H": [
+        -0.148,
+        0.68,
+        0
+      ],
+      "rotation_deg_xyz": [
+        0,
+        0,
+        0
+      ],
+      "scale_xyz": [
+        1,
+        1,
+        1
+      ],
+      "mirror_x": true,
+      "assembly_order": 12,
+      "mount": {
+        "parent_instance_id": "P08",
+        "source_socket": "origin",
+        "description": "",
+        "target_socket": "mount_P11_R"
+      }
+    },
+    {
+      "id": "P12-R",
+      "part_id": "P12",
+      "bone": "armR",
+      "position_H": [
+        -0.148,
+        0.68,
+        0
+      ],
+      "rotation_deg_xyz": [
+        0,
+        0,
+        0
+      ],
+      "scale_xyz": [
+        1,
+        1,
+        1
+      ],
+      "mirror_x": true,
+      "assembly_order": 13,
+      "mount": {
+        "parent_instance_id": "P11-R",
+        "source_socket": "origin",
+        "description": "",
+        "target_socket": "mount_P12_R"
+      }
+    },
+    {
+      "id": "P13-R",
+      "part_id": "P13",
+      "bone": "foreR",
+      "position_H": [
+        -0.148,
+        0.555,
+        0
+      ],
+      "rotation_deg_xyz": [
+        0,
+        0,
+        0
+      ],
+      "scale_xyz": [
+        1,
+        1,
+        1
+      ],
+      "mirror_x": true,
+      "assembly_order": 14,
+      "mount": {
+        "parent_instance_id": "P12-R",
+        "source_socket": "origin",
+        "description": "",
+        "target_socket": "mount_P13_R"
+      }
+    },
+    {
+      "id": "P14-R",
+      "part_id": "P14",
+      "bone": "foreR",
+      "position_H": [
+        -0.148,
+        0.437,
+        0.012
+      ],
+      "rotation_deg_xyz": [
+        0,
+        0,
+        0
+      ],
+      "scale_xyz": [
+        1,
+        1,
+        1
+      ],
+      "mirror_x": true,
+      "assembly_order": 15,
+      "mount": {
+        "parent_instance_id": "P13-R",
+        "source_socket": "origin",
+        "description": "",
+        "target_socket": "mount_P14_R"
+      }
+    },
+    {
+      "id": "P16-R",
+      "part_id": "P16",
+      "bone": "legR",
+      "position_H": [
+        -0.058,
+        0.45,
+        0
+      ],
+      "rotation_deg_xyz": [
+        0,
+        0,
+        0
+      ],
+      "scale_xyz": [
+        1,
+        1,
+        1
+      ],
+      "mirror_x": true,
+      "assembly_order": 16,
+      "mount": {
+        "parent_instance_id": "P15",
+        "source_socket": "origin",
+        "description": "",
+        "target_socket": "mount_P16_R"
+      }
+    },
+    {
+      "id": "P17-R",
+      "part_id": "P17",
+      "bone": "shinR",
+      "position_H": [
+        -0.058,
+        0.255,
+        0
+      ],
+      "rotation_deg_xyz": [
+        0,
+        0,
+        0
+      ],
+      "scale_xyz": [
+        1,
+        1,
+        1
+      ],
+      "mirror_x": true,
+      "assembly_order": 17,
+      "mount": {
+        "parent_instance_id": "P16-R",
+        "source_socket": "origin",
+        "description": "",
+        "target_socket": "mount_P17_R"
+      }
+    },
+    {
+      "id": "P18-R",
+      "part_id": "P18",
+      "bone": "shinR",
+      "position_H": [
+        -0.058,
+        0,
+        0
+      ],
+      "rotation_deg_xyz": [
+        0,
+        0,
+        0
+      ],
+      "scale_xyz": [
+        1,
+        1,
+        1
+      ],
+      "mirror_x": true,
+      "assembly_order": 18,
+      "mount": {
+        "parent_instance_id": "P17-R",
+        "source_socket": "origin",
+        "description": "",
+        "target_socket": "mount_P18_R"
+      }
+    },
+    {
+      "id": "P19",
+      "part_id": "P19",
+      "bone": "torso",
+      "position_H": [
+        0,
+        0.5,
+        -0.109
+      ],
+      "rotation_deg_xyz": [
+        0,
+        0,
+        0
+      ],
+      "scale_xyz": [
+        1,
+        1,
+        1
+      ],
+      "mirror_x": false,
+      "assembly_order": 19,
+      "mount": {
+        "parent_instance_id": "P08",
+        "source_socket": "origin",
+        "description": "",
+        "target_socket": "mount_P19"
+      }
+    },
+    {
+      "id": "P20-L",
+      "part_id": "P20",
+      "bone": "torso",
+      "position_H": [
+        0.064,
+        0.7,
+        0.071
+      ],
+      "rotation_deg_xyz": [
+        0,
+        0,
+        0
+      ],
+      "scale_xyz": [
+        1,
+        1,
+        1
+      ],
+      "mirror_x": false,
+      "assembly_order": 20,
+      "mount": {
+        "parent_instance_id": "P19",
+        "source_socket": "origin",
+        "description": "",
+        "target_socket": "mount_P20_L"
+      }
+    },
+    {
+      "id": "P20-R",
+      "part_id": "P20",
+      "bone": "torso",
+      "position_H": [
+        -0.064,
+        0.7,
+        0.071
+      ],
+      "rotation_deg_xyz": [
+        0,
+        0,
+        0
+      ],
+      "scale_xyz": [
+        1,
+        1,
+        1
+      ],
+      "mirror_x": true,
+      "assembly_order": 20,
+      "mount": {
+        "parent_instance_id": "P19",
+        "source_socket": "origin",
+        "description": "",
+        "target_socket": "mount_P20_R"
+      }
+    }
+  ],
+  "budget": {
+    "max_triangles": 280,
+    "actual_triangles": 280,
+    "reserve_triangles": 0,
+    "includes": "Todas las 33 instancias de este archivo; no incluye sombra, auxiliares de renderizado ni accesorios nuevos."
+  },
+  "assembly_policy": {
+    "authoritative": "Las matrices root-rest de las instancias son autoritativas; sockets derivados para montaje/inspección.",
+    "geometry_type": "Malla de apoyo reproducible; las ilustraciones son referencia artística.",
+    "rigid_skinning": "Una influencia no nula por vértice; cada panel pertenece al mismo hueso.",
+    "part_identity": "Conservar rangos de índices/IDs como metadatos, sin crear obligatoriamente una Mesh por pieza.",
+    "pose_rule": "Aplicar transformaciones delta respecto a rest; no acumular rotaciones por frame."
+  },
+  "constraints": {
+    "min_layer_normal_gap_scene": 0.004,
+    "requires_pose_validation": true,
+    "production_integrated": false,
+    "validated_scope": "Geometría estática, relaciones numéricas y uniones básicas en reposo; no certifica colisiones de poses ni FPS."
+  },
+  "poses_proposed": [
+    {
+      "name": "reposo",
+      "angles_deg": {}
+    },
+    {
+      "name": "caminar",
+      "description": "Usar POSES actual; revisar cuatro fases y transiciones."
+    },
+    {
+      "name": "sentado",
+      "description": "Adaptar POSES y altura de asiento vigentes; revisar pelvis, rodillas y mangas."
+    },
+    {
+      "name": "trabajo-en-mesa",
+      "description": "Usar alcance actual; revisar manos, correas y frontal de torso."
+    }
+  ]
+}

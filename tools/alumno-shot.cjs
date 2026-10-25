@@ -4,7 +4,7 @@
 // so a "before" run and an "after" run compare geometry only.
 //   node tools/alumno-shot.cjs <new-folder> [--views char-front,char-side,char-back,char-34,campus]
 //        [--poses rest,walk-1,sit,work,hand] [--heights 80,120,600] [--dpr 1,2] [--wire]
-//        [--components each|id,id] [--component-views char-34,char-front] [--gpu]
+//        [--components each|recipes|id,id] [--component-views char-34,back] [--steps char-34,char-front] [--sockets] [--gpu]
 // Scale: a vertical segment of H at the person's origin measures exactly N CSS px
 // (projected with the camera, via the view zoom), independent of the geometry. The ortho frame is a
 // fixed box around the person, so framing does not follow the silhouette either.
@@ -29,7 +29,9 @@ const heights = option('heights', '600').split(',').map(Number);
 const dprs = option('dpr', '1').split(',').map(Number);
 const components = option('components', '');
 const componentViews = option('component-views', 'char-34,back').split(',');
+const steps = option('steps', '');
 const wire = args.includes('--wire');
+const socketsFlag = args.includes('--sockets');
 const gpu = args.includes('--gpu');
 const H = .78; // primaria reference height (FICHAS-TECNICAS §3)
 const FRAME = [-.34, 0, -.34, .34, .84, .34]; // fixed ortho frame around the person
@@ -74,6 +76,7 @@ process.on('exit', release);
     await page.setContent(html);
     await page.waitForFunction(() => window.inspector);
     const spec = await page.evaluate(() => GGPaper.PRIMARIA_BASE || null);
+    if (socketsFlag) await page.evaluate(() => inspector.setSockets(true));
     report.spec = spec;
     const shoot = async (name, opts, target) => {
       // Fixed viewport per target height; the zoom makes a vertical segment of H at the
@@ -95,7 +98,8 @@ process.on('exit', release);
       await shoot(`${pose}-${view}-${h}px-dpr${dpr}.png`, { pose, view, frame: FRAME }, h);
     if (components && dpr === dprs[0]) {
       const all = await page.evaluate(() => (inspector.showPerson({}).components || []).filter(c => c.triangles > 0).map(c => c.id));
-      const ids = components === 'each' ? all : components.split(',');
+      const recipes = [...new Set(all.filter(c => /^P\d\d/.test(c)).map(c => c.slice(0, 3)))];
+      const ids = components === 'each' ? all : components === 'recipes' ? recipes : components.split(',');
       for (const id of ids) for (const view of componentViews) {
         // Isolated: auto frame on the component itself (its geometry alone), 600 px viewport.
         await page.setViewportSize({ width: 600, height: 600 });
@@ -104,6 +108,22 @@ process.on('exit', release);
         const name = `pieza-${id}-${view}.png`, file = path.join(out, name);
         await page.screenshot({ path: file });
         report.images.push({ file: name, isolated: id, view, triangles: info.triangles, sha256: sha(file) });
+      }
+    }
+    if (steps && dpr === dprs[0]) {
+      // Assembly steps of MONTAJE §5 (A–F), cumulative, mounted on the rig in rest pose.
+      const STEPS = [['A', ['P15', 'P16', 'P17', 'P18']], ['B', ['P08', 'P09', 'P10']], ['C', ['P11', 'P12', 'P13', 'P14']], ['D', ['P02', 'P01', 'P03', 'P04', 'P05']], ['E', ['P06', 'P07']], ['F', ['P19', 'P20']]];
+      let acc = [];
+      for (const [name, ids] of STEPS) {
+        acc = acc.concat(ids);
+        for (const view of steps.split(',')) {
+          await page.setViewportSize({ width: 600, height: 600 });
+          const info = await page.evaluate(o => inspector.showPerson(o), { pose: 'rest', view, only: acc, frame: FRAME });
+          if (wire) await page.evaluate(() => inspector.setWire(true));
+          const file = `paso-${name}-${view}.png`;
+          await page.screenshot({ path: path.join(out, file) });
+          report.images.push({ file, step: name, only: [...acc], view, triangles: info.triangles, sha256: sha(path.join(out, file)) });
+        }
       }
     }
     await page.close();

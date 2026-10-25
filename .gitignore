@@ -10,3 +10,8 @@ docs/papercraft/reference/*.zip
 # Paquete de construcción R1: los PNG se conservan localmente; md, json y svg se versionan
 docs/papercraft/construction/reference/*.png
 docs/papercraft/construction/esquemas/*.png
+# Paquete R2 del alumno de primaria: imágenes locales; md, json, svg y py se versionan
+docs/papercraft/construction-r2/imagenes/
+docs/papercraft/construction-r2/planos/*.png
+docs/papercraft/construction-r2/vistas/
+docs/papercraft/construction-r2/referencias/

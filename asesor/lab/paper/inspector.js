@@ -4,8 +4,8 @@
  * asesor/lab/inspector.html and tools/paper-shot.cjs. Not loaded by the asesor.
  */
 import {
-  WebGLRenderer, Scene, OrthographicCamera, MeshBasicMaterial, SkinnedMesh, HemisphereLight, DirectionalLight, Color, Mesh, PlaneGeometry,
-  ShadowMaterial, Vector3, Quaternion, SRGBColorSpace, NeutralToneMapping, PCFShadowMap, Box3
+  WebGLRenderer, Scene, OrthographicCamera, MeshBasicMaterial, SkinnedMesh, AxesHelper, OctahedronGeometry, HemisphereLight, DirectionalLight, Color, Mesh, PlaneGeometry,
+  ShadowMaterial, Group, Vector3, Quaternion, SRGBColorSpace, NeutralToneMapping, PCFShadowMap, Box3
 } from 'three';
 import { createBuilder, releaseEntityGroup, clamp, smooth, backOut, rigidSkinning } from '../campus-kit.js';
 import { paperKit, newMeta, PAPER } from './kit.js';
@@ -80,7 +80,9 @@ export function createInspector(container, { pieces = CATALOG, ui = false, label
 
   const camera = new OrthographicCamera(-1, 1, 1, -1, -200, 400);
   const materials = paperMaterials();
-  let shown = [], view = VIEWS['34'], viewName = '34', assembly = 1, focusPoint = null, fixed = null, wire = false;
+  let shown = [], view = VIEWS['34'], viewName = '34', assembly = 1, focusPoint = null, fixed = null, wire = false, socketsOn = false;
+  // Axes and attach points (rest pose, root space of the person): one shared material.
+  const socketMaterial = new MeshBasicMaterial({ color: 0xff8b22, depthTest: false, transparent: true });
   // Fold edges / wireframe overlay: one shared material, a skinned twin per mesh (follows poses).
   const wireMaterial = rigidSkinning(new MeshBasicMaterial({ color: PAPER.ink, wireframe: true, transparent: true, opacity: .5, depthTest: true }));
   function applyWire() {
@@ -93,7 +95,7 @@ export function createInspector(container, { pieces = CATALOG, ui = false, label
     });
   }
 
-  function clear() { shown.forEach(s => releaseEntityGroup(s.group)); shown = []; overlay.textContent = ''; }
+  function clear() { shown.forEach(s => { s.group.getObjectByName('sockets')?.traverse(o => o.geometry?.dispose()); releaseEntityGroup(s.group); }); shown = []; overlay.textContent = ''; }
 
   function place(list, columns) {
     // Spacing follows the pieces' own scale, so tabletop props are not lost in empty space.
@@ -245,6 +247,8 @@ export function createInspector(container, { pieces = CATALOG, ui = false, label
     setAssembly(value) { assembly = clamp(value); render(); },
     /** Toggle the fold-edge (wireframe) overlay. */
     setWire(value) { wire = !!value; render(); },
+    /** Axes at the person's root and the attach points (sockets) of every R2 instance; applies to the next showPerson. */
+    setSockets(value) { socketsOn = !!value; },
     /**
      * Character mode: one person from an explicit spec (default: the primaria base
      * student), a named pose and an optional list of components to isolate.
@@ -256,8 +260,15 @@ export function createInspector(container, { pieces = CATALOG, ui = false, label
       const s = buildPiece(personPiece({ spec, pose, only }), materials);
       scene.add(s.group); shown = [s];
       render();
-      const person = s.meta.person, call = renderer.info.render;
-      return { ...api.info()[0], pose, only, render: { calls: call.calls, triangles: call.triangles }, components: person?.components || null, plan: person?.plan || null, landmarks: person?.landmarks || null };
+      const person = s.meta.person;
+      if (socketsOn && person?.sockets?.length) {
+        const g = new Group(); g.name = 'sockets';
+        g.add(new AxesHelper(.12));
+        for (const k of person.sockets) { const m_ = new Mesh(new OctahedronGeometry(.005), socketMaterial); m_.position.set(...k.root); m_.renderOrder = 5; g.add(m_); }
+        s.group.add(g); render();
+      }
+      const call = renderer.info.render;
+      return { ...api.info()[0], pose, only, render: { calls: call.calls, triangles: call.triangles }, sockets: person?.sockets || null, components: person?.components || null, plan: person?.plan || null, landmarks: person?.landmarks || null };
     },
     poses: () => Object.keys(PERSON_POSES),
     /** CSS-pixel distance between two world points with the current camera (scale probes). */
@@ -316,6 +327,8 @@ function mountPersonUI(container, api) {
   select('Vista', Object.keys(VIEWS), 'view');
   const wire = document.createElement('label'); const wc = document.createElement('input'); wc.type = 'checkbox';
   wc.onchange = () => { state.wire = wc.checked; api.setWire(state.wire); }; wire.append(wc, ' Aristas'); box.appendChild(wire);
+  const sk = document.createElement('label'); const skc = document.createElement('input'); skc.type = 'checkbox';
+  skc.onchange = () => { api.setSockets(skc.checked); show(); }; sk.append(skc, ' Ejes y puntos de unión'); box.appendChild(sk);
   const list = document.createElement('div'); box.appendChild(list);
   const total = document.createElement('div'); box.appendChild(total);
   function show() {
@@ -327,7 +340,7 @@ function mountPersonUI(container, api) {
       const row = document.createElement('label'); row.style.cssText = 'display:flex;gap:6px;align-items:baseline';
       const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = state.only.has(c.id);
       cb.onchange = () => { if (cb.checked) state.only.add(c.id); else state.only.delete(c.id); show(); };
-      const txt = document.createElement('span'); txt.textContent = `${c.id} · ${c.bones.join('/')} · ${c.triangles}`;
+      const txt = document.createElement('span'); txt.textContent = `${c.id} · ${c.label} · ${c.bones.join('/')} · ${c.triangles} · [${(c.ranges || []).map(r => r.join('–')).join(', ')}]`;
       row.append(cb, txt); list.appendChild(row);
     });
     total.textContent = `Triángulos: ${info.triangles} (marca piezas para aislarlas)`;

@@ -1,0 +1,114 @@
+{
+  "schema_version": "2.0",
+  "id": "P05",
+  "slug": "P05-sonrisa",
+  "name": "Sonrisa",
+  "purpose": "Sonrisa breve, angular y legible como un aplique de papel.",
+  "units": "normalized_H",
+  "scene_height": 0.78,
+  "coordinate_system": {
+    "up": "+Y",
+    "front": "+Z",
+    "anatomical_left": "+X"
+  },
+  "mesh": {
+    "vertices": [
+      [
+        -0.018,
+        0,
+        0.0
+      ],
+      [
+        0,
+        -0.003,
+        -0.0003245454545454546
+      ],
+      [
+        0.018,
+        0,
+        0.0
+      ],
+      [
+        0.009,
+        -0.008,
+        -0.0008654545454545454
+      ],
+      [
+        -0.009,
+        -0.008,
+        -0.0008654545454545454
+      ]
+    ],
+    "faces": [
+      [
+        0,
+        4,
+        1
+      ],
+      [
+        1,
+        4,
+        3
+      ],
+      [
+        1,
+        3,
+        2
+      ]
+    ],
+    "face_colors": [
+      "#321853",
+      "#311851",
+      "#331855"
+    ]
+  },
+  "material": {
+    "base_color_srgb": "#321853",
+    "flat_shading": true,
+    "roughness": 0.92,
+    "metalness": 0,
+    "uv_required": false
+  },
+  "construction": "Polígono cóncavo plano de cinco vértices, triangulación explícita.",
+  "sockets": {
+    "origin": {
+      "position_local_H": [
+        0,
+        0,
+        0
+      ],
+      "description": "Origen numérico de esta pieza; montaje mediante assembly.json."
+    }
+  },
+  "metadata": {
+    "surface_kind": "planar",
+    "limitations": [
+      "Cinco vértices y tres triángulos; no representa labios ni boca volumétrica."
+    ],
+    "triangles": 3,
+    "bounds_local_H": {
+      "min": [
+        -0.018,
+        -0.008,
+        -0.0008654545454545454
+      ],
+      "max": [
+        0.018,
+        0,
+        0.0
+      ],
+      "size": [
+        0.036,
+        0.008,
+        0.0008654545454545454
+      ]
+    },
+    "dimensions_scene": [
+      0.028079999999999997,
+      0.006240000000000001,
+      0.0006750545454545455
+    ],
+    "authoritative_for": "support_geometry_only",
+    "reference_render_policy": "Las vistas técnicas muestran ambos lados de superficies abiertas; eso no añade caras a los JSON ni obliga a DoubleSide en runtime."
+  }
+}

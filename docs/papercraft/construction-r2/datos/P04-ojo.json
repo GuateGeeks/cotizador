@@ -1,0 +1,103 @@
+{
+  "schema_version": "2.0",
+  "id": "P04",
+  "slug": "P04-ojo",
+  "name": "Ojo",
+  "purpose": "Aplique oscuro de ojo; repetir dos veces sin volumen adicional.",
+  "units": "normalized_H",
+  "scene_height": 0.78,
+  "coordinate_system": {
+    "up": "+Y",
+    "front": "+Z",
+    "anatomical_left": "+X"
+  },
+  "mesh": {
+    "vertices": [
+      [
+        -0.006,
+        0,
+        0
+      ],
+      [
+        0,
+        0.009,
+        0.0009736363636363636
+      ],
+      [
+        0.006,
+        0,
+        0
+      ],
+      [
+        0,
+        -0.009,
+        -0.0009736363636363636
+      ]
+    ],
+    "faces": [
+      [
+        0,
+        3,
+        2
+      ],
+      [
+        0,
+        2,
+        1
+      ]
+    ],
+    "face_colors": [
+      "#321853",
+      "#311851"
+    ]
+  },
+  "material": {
+    "base_color_srgb": "#321853",
+    "flat_shading": true,
+    "roughness": 0.92,
+    "metalness": 0,
+    "uv_required": false
+  },
+  "construction": "Rombo plano triangulado, dos triángulos.",
+  "sockets": {
+    "origin": {
+      "position_local_H": [
+        0,
+        0,
+        0
+      ],
+      "description": "Origen numérico de esta pieza; montaje mediante assembly.json."
+    }
+  },
+  "metadata": {
+    "surface_kind": "planar",
+    "limitations": [
+      "Superficie sin espesor; vistas de canto casi lineales. La orientación coincide con la cara frontal de la cabeza."
+    ],
+    "triangles": 2,
+    "bounds_local_H": {
+      "min": [
+        -0.006,
+        -0.009,
+        -0.0009736363636363636
+      ],
+      "max": [
+        0.006,
+        0.009,
+        0.0009736363636363636
+      ],
+      "size": [
+        0.012,
+        0.018,
+        0.0019472727272727272
+      ]
+    },
+    "dimensions_scene": [
+      0.00936,
+      0.014039999999999999,
+      0.0015188727272727272
+    ],
+    "authoritative_for": "support_geometry_only",
+    "reference_render_policy": "Las vistas técnicas muestran ambos lados de superficies abiertas; eso no añade caras a los JSON ni obliga a DoubleSide en runtime."
+  }
+}

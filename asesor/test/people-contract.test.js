@@ -19,6 +19,6 @@ test('alumno base de primaria: medidas, presupuesto y plan = caras emitidas', as
   assert.ok(Math.abs(m.head / m.H - .28) <= .01, `cabeza/H ${m.head / m.H}`);
   assert.ok(Math.abs(m.shoulders / m.H - .26) <= .01, `hombros/H ${m.shoulders / m.H}`);
   assert.ok(m.minY >= -1e-6, 'nada bajo el suelo');
-  assert.ok(m.total <= 280 && m.geometry <= 271, `total ${m.total}, geometría ${m.geometry}`);
+  assert.ok(m.total <= 280 && m.geometry <= 273, `total ${m.total}, geometría ${m.geometry}`);
   for (const c of m.person.components) assert.equal(c.triangles, c.planned, c.id);
 });

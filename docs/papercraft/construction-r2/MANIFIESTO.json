@@ -1,0 +1,1347 @@
+{
+  "name": "GuateGeeks · Primaria por piezas R2",
+  "date": "2026-10-25",
+  "scope": "20 tipos de pieza / 33 instancias del alumno de primaria; referencias visuales y geometría de apoyo",
+  "art_sheets": 22,
+  "individual_technical_views": 140,
+  "part_recipes": 20,
+  "instances": 33,
+  "support_triangles": 280,
+  "files": [
+    {
+      "path": "GUIA-PARA-CLAUDE.md",
+      "bytes": 8075,
+      "sha256": "b4da630c096be3c0d4774195f50397384f2201555cb96b922caf223d2ad41c01"
+    },
+    {
+      "path": "INDICE.html",
+      "bytes": 38462,
+      "sha256": "bd0de738f50e2ad5a8aee9103afcac560005f151d4fc573fca3ffa3d3942c82c"
+    },
+    {
+      "path": "PROMPTS.md",
+      "bytes": 68373,
+      "sha256": "7581f83abb8a371f117c73dec62c43acc13d9b07d036f7635aa4b9cb0dd5b0b1"
+    },
+    {
+      "path": "README.md",
+      "bytes": 8584,
+      "sha256": "2a67d53e938e6dab6fe3b7bface51e65bc15a35e201f0184309023bb41a62649"
+    },
+    {
+      "path": "VALIDACION-GEOMETRICA.json",
+      "bytes": 7562,
+      "sha256": "a48b6fbbc8e0aa09fb220d7c410c91de4d7078dc461ae21aad10cd22f73007a2"
+    },
+    {
+      "path": "VALIDACION-VISUAL.json",
+      "bytes": 25101,
+      "sha256": "f64bf6453882c285144e12193e9b0037103f4d33896db66b21b8105ba3094b3a"
+    },
+    {
+      "path": "datos/CONTRATO.md",
+      "bytes": 6078,
+      "sha256": "7bf216b804f5df7babfbe25224902b99ec5d9d6b275002f4b063b7f576c566a9"
+    },
+    {
+      "path": "datos/P01-cabeza.json",
+      "bytes": 5256,
+      "sha256": "08daa9f3bbbd05084ac414fcd005e4c40c96650deff3d0c6d98c21ef08328981"
+    },
+    {
+      "path": "datos/P02-cuello.json",
+      "bytes": 2741,
+      "sha256": "7a162ed08ce0695cc7e39f04ec512630f9cc82850f48b640c3af23a8e1c8b983"
+    },
+    {
+      "path": "datos/P03-oreja.json",
+      "bytes": 2109,
+      "sha256": "92f3bc1ca213b2e78bb33d0e2fc898e34ae6eef9bf295f06c2f0f50952275d1c"
+    },
+    {
+      "path": "datos/P04-ojo.json",
+      "bytes": 2019,
+      "sha256": "239459d7738c96f5e7944f60d30466d4c745f5dd4d355778fa111043c88f7b7f"
+    },
+    {
+      "path": "datos/P05-sonrisa.json",
+      "bytes": 2164,
+      "sha256": "e78951ee34d3a6e2e8cbfcedbcfbf9b6d90dec0e0453f2950f32f28bb52bc1ff"
+    },
+    {
+      "path": "datos/P06-cabello-nucleo.json",
+      "bytes": 5960,
+      "sha256": "ec24805c9345b856a4d7dfb5b123467f45ee00cb1745648226ae5d0bd6a459ef"
+    },
+    {
+      "path": "datos/P07-mechon-flequillo.json",
+      "bytes": 2385,
+      "sha256": "539e80f45e868d9dc3b9c7effa608391251a3f2a1587b4806c070d5f25afe5e7"
+    },
+    {
+      "path": "datos/P08-torso-chaleco.json",
+      "bytes": 5808,
+      "sha256": "2dd2da96573897118b582b6c9dc7969d7297001e6051c1aa1147d7f3ce625330"
+    },
+    {
+      "path": "datos/P09-pechera-camisa.json",
+      "bytes": 1837,
+      "sha256": "4b516d87e5b8fce7f9395aa109cfee6b36d16c207df0c752d4afe92ad2fa099e"
+    },
+    {
+      "path": "datos/P10-solapa-cuello.json",
+      "bytes": 1861,
+      "sha256": "fb2f2a32cebc912d9d831151fcfc6cdce38d1ed9fc567b1b75ef6587b67eb0a4"
+    },
+    {
+      "path": "datos/P11-manga.json",
+      "bytes": 3125,
+      "sha256": "13daf2ac6b000a3860a812e0e701e6b63e7cbea2265133062f331485343c6c92"
+    },
+    {
+      "path": "datos/P12-brazo.json",
+      "bytes": 2967,
+      "sha256": "9e699c69cd77ac961b5bf845672c43ba19fd97f3443054248a8f891cfdebe83e"
+    },
+    {
+      "path": "datos/P13-antebrazo.json",
+      "bytes": 3025,
+      "sha256": "941308426168d76035becaa55a57bb08b1f5c447da1b533a436cedd745e3759e"
+    },
+    {
+      "path": "datos/P14-mano.json",
+      "bytes": 2464,
+      "sha256": "e8469c41144debd9fced1051c8559f313684d8332288b32e6d1161dba536f2c2"
+    },
+    {
+      "path": "datos/P15-pelvis-pantalon.json",
+      "bytes": 3304,
+      "sha256": "3cb653e6931858bf6cba60073b3fed9b3a10cb2cecc162c91dcd2cfef3657c3a"
+    },
+    {
+      "path": "datos/P16-muslo-pantalon.json",
+      "bytes": 3302,
+      "sha256": "9fff60e1d198f73e5073686cf4cfbd83ce5f77d8aa9bb1d95301127bb568d928"
+    },
+    {
+      "path": "datos/P17-pantorrilla-pantalon.json",
+      "bytes": 3301,
+      "sha256": "3650e22780dceeeefe5f49fb4ce8ff316bdc2a88920f7b605e7599dfa1e5d8d4"
+    },
+    {
+      "path": "datos/P18-zapato.json",
+      "bytes": 2890,
+      "sha256": "2e1e0b846c133e400574fd09fd3ab7cf88d77401cc3b141170594eb5640bc8fc"
+    },
+    {
+      "path": "datos/P19-mochila.json",
+      "bytes": 3400,
+      "sha256": "aa02e8474509b7f6ccfb23d6539ba2f2a8b6743de14e78ad3c50c0d9b0def7b3"
+    },
+    {
+      "path": "datos/P20-tirante.json",
+      "bytes": 2464,
+      "sha256": "d3c8d088adfe8161218b391028e0e809d705aaf36b3380404b1cd346b8213b70"
+    },
+    {
+      "path": "datos/assembly.json",
+      "bytes": 20701,
+      "sha256": "dad773894f2fe1986fbad3e1320c52d313e936d672f2a0187882fbfb206cc50b"
+    },
+    {
+      "path": "datos/catalogo.json",
+      "bytes": 9016,
+      "sha256": "5eb384edb5eb2c54505d6cecaec0d1bd245e30e3d6c480957f175730586e1732"
+    },
+    {
+      "path": "docs/CONTRATO-VISUAL.md",
+      "bytes": 6925,
+      "sha256": "5e44c522992711d00732f87e27f354e79fa704a1fa1d9cee4e1858d52fe204af"
+    },
+    {
+      "path": "docs/DIFERENCIAS-ARTE-GEOMETRIA.md",
+      "bytes": 7851,
+      "sha256": "420da67f311518ec06a02f99140489beaaac91d451edd93ab122ec055493cb4d"
+    },
+    {
+      "path": "docs/ENCARGO-POR-PIEZA.md",
+      "bytes": 2675,
+      "sha256": "8f70f9c235e3736890586c6c54bf4e90811df9cbe27dc5513160a2f1c39fb990"
+    },
+    {
+      "path": "docs/FUENTES.md",
+      "bytes": 2822,
+      "sha256": "94d2cd212e73984b4ddc79242dc3bd88f0abce48c4750a75694bcc3ed46136a1"
+    },
+    {
+      "path": "docs/INTEGRACION.md",
+      "bytes": 5904,
+      "sha256": "96e1f511daf02023ff45bb9df32d3abd8970fba2bea23317e54a55b4d30e19cb"
+    },
+    {
+      "path": "docs/MONTAJE.md",
+      "bytes": 11664,
+      "sha256": "6fb4dd0e2f764dbe82c23ee53adee347a70cc4e29ee700a5c77bd0fe33c427c0"
+    },
+    {
+      "path": "docs/QA.md",
+      "bytes": 5178,
+      "sha256": "ef5bae0180047f0bbf7218d91b6f5710dc7ecc27d0fa6c61fb890e9321760ed6"
+    },
+    {
+      "path": "docs/fichas/P01-cabeza.md",
+      "bytes": 7798,
+      "sha256": "060c9f8007974ab37e36bebc92024287020eee0a646c6114ec433b855af532df"
+    },
+    {
+      "path": "docs/fichas/P02-cuello.md",
+      "bytes": 6101,
+      "sha256": "cb3e6bebc0c7d079040f59019a45952fb3eaf2233e7536f6340f5b70cabd71c4"
+    },
+    {
+      "path": "docs/fichas/P03-oreja.md",
+      "bytes": 5998,
+      "sha256": "1cfae442a46f1268a23968d05f0c9b99f4aacad1a5e1f93badf4f982c4cf8018"
+    },
+    {
+      "path": "docs/fichas/P04-ojo.md",
+      "bytes": 6021,
+      "sha256": "14f5502bab435e530d32206ec557513aaf49ce2e5b5195dc5748f67cf5ea9133"
+    },
+    {
+      "path": "docs/fichas/P05-sonrisa.md",
+      "bytes": 5661,
+      "sha256": "168fc8611ba7c58cdb1f94082650bb608ebdc3a53076665feeb035a275e06f77"
+    },
+    {
+      "path": "docs/fichas/P06-cabello-nucleo.md",
+      "bytes": 6925,
+      "sha256": "91e03c20bd7377707a28f5e0258c520ece586a3aa586f92c28fac5feaabcb1d1"
+    },
+    {
+      "path": "docs/fichas/P07-mechon-flequillo.md",
+      "bytes": 6352,
+      "sha256": "d428ad34a9b26eb2b543ee77607265a7a1fbcacf392abf2db357f1a9fa0939f3"
+    },
+    {
+      "path": "docs/fichas/P08-torso-chaleco.md",
+      "bytes": 7911,
+      "sha256": "94ffb3d3e04a7119e9c2946fbda1fbe721a92f1751008dd0eedb8141935ca62d"
+    },
+    {
+      "path": "docs/fichas/P09-pechera-camisa.md",
+      "bytes": 5901,
+      "sha256": "12355a9e5e5103f55b9fbfe0acb989e3e793c22fbc1dac5138f9a5ca28783cd7"
+    },
+    {
+      "path": "docs/fichas/P10-solapa-cuello.md",
+      "bytes": 6149,
+      "sha256": "abdda18cea850bdc56f95b56234f426b22a694f20132acfb3382cbe91d70b56f"
+    },
+    {
+      "path": "docs/fichas/P11-manga.md",
+      "bytes": 6565,
+      "sha256": "1409206f72e9426c4915c3793d9510d1fa2377ef6b55f512fa88269dfde9e099"
+    },
+    {
+      "path": "docs/fichas/P12-brazo.md",
+      "bytes": 6232,
+      "sha256": "1b3a200e5a80c25192bba33d1ffb308e059abd8ebab3346c4307fed8b684a6e2"
+    },
+    {
+      "path": "docs/fichas/P13-antebrazo.md",
+      "bytes": 6296,
+      "sha256": "e4da6c51051d085552169bf0588e2b9583e12b30f2b9e266cb998e1a3608eda7"
+    },
+    {
+      "path": "docs/fichas/P14-mano.md",
+      "bytes": 5911,
+      "sha256": "4fee02a4f1502792188dca00a0c117e7c2b5c40e6c07d7f755f0e04d7d4020b7"
+    },
+    {
+      "path": "docs/fichas/P15-pelvis-pantalon.md",
+      "bytes": 6503,
+      "sha256": "3449325ecca6b8f45e4628b21be2e78a6ba3d31e0d7d011b7a6ec83c19f356ff"
+    },
+    {
+      "path": "docs/fichas/P16-muslo-pantalon.md",
+      "bytes": 6320,
+      "sha256": "670945963f649c5e4466000d6d45ec662c49f3ca33290bd7b8ae6cab2fbb1baa"
+    },
+    {
+      "path": "docs/fichas/P17-pantorrilla-pantalon.md",
+      "bytes": 6401,
+      "sha256": "275aa988d071b1d3e5602ad898819f8e2da1bffee6af798bf5270df5fceccca8"
+    },
+    {
+      "path": "docs/fichas/P18-zapato.md",
+      "bytes": 5866,
+      "sha256": "b1e00300aa0daeb119b90efcdbdf0285ca92a7896cc4fe7d0a3ced15a8f76a7e"
+    },
+    {
+      "path": "docs/fichas/P19-mochila.md",
+      "bytes": 6392,
+      "sha256": "ada4de6de7c5b84e0b4b84beb52c7443c0998b4fbd25f22f9a026eaf3825f59a"
+    },
+    {
+      "path": "docs/fichas/P20-tirante.md",
+      "bytes": 6170,
+      "sha256": "b6c3882b45286fe448791b2c0bc663fdce5652f826157d4a2408df1ba41ce8c0"
+    },
+    {
+      "path": "herramientas/README.md",
+      "bytes": 2273,
+      "sha256": "2ecf15d2ca7d7e31bd5ffc74d4d6f3f9d909b35c6ba35600dd89de461f5acf66"
+    },
+    {
+      "path": "herramientas/generar_planos.py",
+      "bytes": 39519,
+      "sha256": "431dada9a8219ff87115e587829f6324c6a8d217025cc8267fae30137a4eb4bf"
+    },
+    {
+      "path": "herramientas/probar_validador.py",
+      "bytes": 1510,
+      "sha256": "8c34bda1e2650bb96a555f086104eee6245627c15a63f10fe1d74608ea8793e5"
+    },
+    {
+      "path": "imagenes/00-personaje-completo.png",
+      "bytes": 1778686,
+      "sha256": "d19cdd56cd9aca99d99e1501975ae75fa8e214854ccd75ae238113a83930df2a"
+    },
+    {
+      "path": "imagenes/21-montaje-explotado.png",
+      "bytes": 1714579,
+      "sha256": "3bbea3e952478c5ccf15177227b837b75fbc6b9ee051e23463f7b5e9dba40b25"
+    },
+    {
+      "path": "imagenes/P01-cabeza.png",
+      "bytes": 1697419,
+      "sha256": "e3e26a81d799fa583ff26677d736a5f2174c311a2ddfe165488afe89cc15b161"
+    },
+    {
+      "path": "imagenes/P02-cuello.png",
+      "bytes": 1630166,
+      "sha256": "cb9638f5857ef110b4390c15b94917af709027fa488a879e9e722a5df9970447"
+    },
+    {
+      "path": "imagenes/P03-oreja.png",
+      "bytes": 1558531,
+      "sha256": "17f0a9c499487f5af69084f1ae150d3fccf1367072521214602d5e96373d0623"
+    },
+    {
+      "path": "imagenes/P04-ojo.png",
+      "bytes": 1542001,
+      "sha256": "884fa67c9e324394df8147dd16dddcbbc53cda728044b3db66f0d70c098f4f34"
+    },
+    {
+      "path": "imagenes/P05-sonrisa.png",
+      "bytes": 1542921,
+      "sha256": "3d2e3acd7650c9f1a6b9ab7ebf984e218d2c02a27bb24a39f5fd8becfc3dc007"
+    },
+    {
+      "path": "imagenes/P06-cabello-nucleo.png",
+      "bytes": 2002035,
+      "sha256": "a4fdadb7c0e3b8596d19e257d10e734f0c5512d5148877ca950760014b2d2515"
+    },
+    {
+      "path": "imagenes/P07-mechon-flequillo.png",
+      "bytes": 1750199,
+      "sha256": "2a96be16a9875c66164ad3f10a62b8d8e65bc1028e4a841102fbd560445badbe"
+    },
+    {
+      "path": "imagenes/P08-torso-chaleco.png",
+      "bytes": 1922719,
+      "sha256": "f96e5b22f1ae3ddfe151dcda8b88a02f0f1623bd393993d79f6ee8c780c760b2"
+    },
+    {
+      "path": "imagenes/P09-pechera-camisa.png",
+      "bytes": 1565737,
+      "sha256": "a25442ca2ac5d907112a965ff1177f9e63e6db1dba52e7bec574c5c527c6981a"
+    },
+    {
+      "path": "imagenes/P10-solapa-cuello.png",
+      "bytes": 1649185,
+      "sha256": "f00ce5c40cfe19131db5576d2298800c76249c47123e7e6a4cbc509a5b74a157"
+    },
+    {
+      "path": "imagenes/P11-manga.png",
+      "bytes": 1840459,
+      "sha256": "4c63c96c52f8076ee399b4a7d53b00d1273e919af634b327f4020b047b92ba1b"
+    },
+    {
+      "path": "imagenes/P12-brazo.png",
+      "bytes": 1664443,
+      "sha256": "bec59687820972170cdcd6c1ed63e80f4401914c8244808a69c04613bb5e9329"
+    },
+    {
+      "path": "imagenes/P13-antebrazo.png",
+      "bytes": 1643507,
+      "sha256": "44dfecd67f595d86d2ead176a75e418a7eee9425d6ff37b1d9a320f277d5d753"
+    },
+    {
+      "path": "imagenes/P14-mano.png",
+      "bytes": 1724405,
+      "sha256": "d1861f2d5779f69806e6a78f88c1d24e9fa73f6aff5d46e293d7560e0fb400ae"
+    },
+    {
+      "path": "imagenes/P15-pelvis-pantalon.png",
+      "bytes": 1855191,
+      "sha256": "a55d8467ae818bda00dc146357df6c6af7f635cf163d4a3d601774032d8959c5"
+    },
+    {
+      "path": "imagenes/P16-muslo-pantalon.png",
+      "bytes": 1643098,
+      "sha256": "b701440c0cd023f958ac39feb18a17c7a183064ae8f4cf380092d0ee602d17d6"
+    },
+    {
+      "path": "imagenes/P17-pantorrilla-pantalon.png",
+      "bytes": 1601555,
+      "sha256": "911b72d6a2675af7fbf931a1ece4e1d7a31a7a22533397facb3a1e5e364133cc"
+    },
+    {
+      "path": "imagenes/P18-zapato.png",
+      "bytes": 1770645,
+      "sha256": "df00f016a1be1088b044ace811f62fe9a6d1d090b5eb6b74769f1210ac0ef50a"
+    },
+    {
+      "path": "imagenes/P19-mochila.png",
+      "bytes": 1619358,
+      "sha256": "b96d6d2d5218ba326d454dc2b303a1fb5358054edbe203d19e6f10c1bfad7ce0"
+    },
+    {
+      "path": "imagenes/P20-tirante.png",
+      "bytes": 1633119,
+      "sha256": "98c551ab791dca1efa722c67b55e3c7805b1cab4c8569ea357001809f655f609"
+    },
+    {
+      "path": "planos/00-personaje-montado.png",
+      "bytes": 337405,
+      "sha256": "cba5b9c3c0bfa169e50635534767fa11d3f2fc9bfca1c65b971ad5ac2660abb5"
+    },
+    {
+      "path": "planos/00-personaje-montado.svg",
+      "bytes": 145048,
+      "sha256": "27e0e74abbb390da0f5054b9667d4535b9526ce96c2097e931d57dfab2d59f8f"
+    },
+    {
+      "path": "planos/21-despiece-montaje.png",
+      "bytes": 325888,
+      "sha256": "e935ca51ea6dc8c1eef7b09f0c31b527cfc67eb060277c2a78cd290c64663647"
+    },
+    {
+      "path": "planos/21-despiece-montaje.svg",
+      "bytes": 144923,
+      "sha256": "2c3479e19ae10ad2c657e3dd6c84e470b8f5be364f6d58e132c10d39d083a86e"
+    },
+    {
+      "path": "planos/P01-cabeza.png",
+      "bytes": 241679,
+      "sha256": "1abd92d8a61722987c14cf4017c641a179fba04bacf3988ada8a799d79c08d8b"
+    },
+    {
+      "path": "planos/P01-cabeza.svg",
+      "bytes": 29668,
+      "sha256": "e90ee5b491d3c3f41104cc299204a5c0b247500f797b129f085784adb509ccc4"
+    },
+    {
+      "path": "planos/P02-cuello.png",
+      "bytes": 199840,
+      "sha256": "8ab3e0e35a2d35d08736a3ef894d8c02139d034b7e57b4bbdcf52babebfd9f5b"
+    },
+    {
+      "path": "planos/P02-cuello.svg",
+      "bytes": 15267,
+      "sha256": "08dc9e37185685b13be3ec3ce940b54fdbb77f26c7ce26cacf842800fa063b6c"
+    },
+    {
+      "path": "planos/P03-oreja.png",
+      "bytes": 176560,
+      "sha256": "e2064f0626366d0479f2a3a9d4bc2ad43934e568661b8746733519c64fb35a7a"
+    },
+    {
+      "path": "planos/P03-oreja.svg",
+      "bytes": 10443,
+      "sha256": "36e978bc9215359a7d62fcf120f86134702d91924cf86d8786b35258c837be7b"
+    },
+    {
+      "path": "planos/P04-ojo.png",
+      "bytes": 161793,
+      "sha256": "651d647d37101df676b9647c404bf9640df471d9a66ba86304570a0aa09e4d40"
+    },
+    {
+      "path": "planos/P04-ojo.svg",
+      "bytes": 8272,
+      "sha256": "798fe2ec13645fdf16d426cf4907ed10445580dd53dbf95ace70d030aed4aa4a"
+    },
+    {
+      "path": "planos/P05-sonrisa.png",
+      "bytes": 163729,
+      "sha256": "42f1af857f5b45d4fe020bbc6a4d76e0e449bd32039e5e88a668f6d165e0fcb5"
+    },
+    {
+      "path": "planos/P05-sonrisa.svg",
+      "bytes": 9573,
+      "sha256": "31bb454ba00318884997cfcccab8da1d3617a033825c845c675fa0849f3fe721"
+    },
+    {
+      "path": "planos/P06-cabello-nucleo.png",
+      "bytes": 288286,
+      "sha256": "b86c2881f1f505fc4cbf97a20b91c6776cc12311142514664da246e3dbdae913"
+    },
+    {
+      "path": "planos/P06-cabello-nucleo.svg",
+      "bytes": 40404,
+      "sha256": "e641a1918496bdbf36bc77c177a90d32846eadf69fc0c7d7bee5feb28b4e200a"
+    },
+    {
+      "path": "planos/P07-mechon-flequillo.png",
+      "bytes": 204054,
+      "sha256": "11280643ef49299cb0b9ed68a6ebc2491c1c4a31a5f3749ae582f7a6e2740b0b"
+    },
+    {
+      "path": "planos/P07-mechon-flequillo.svg",
+      "bytes": 10892,
+      "sha256": "bb4629371293b5aa37d5dac8423bad84d56819c6090ded115462d9f099cbd5d9"
+    },
+    {
+      "path": "planos/P08-torso-chaleco.png",
+      "bytes": 235399,
+      "sha256": "cb73067faa6f2a50d3042737b058bb6f665635cfd91ffc6a497fcad22e46a6bf"
+    },
+    {
+      "path": "planos/P08-torso-chaleco.svg",
+      "bytes": 29418,
+      "sha256": "66068a7457a9afffbf96bf8f0aabcb9a1dec3272e06aa4364510ad6429a75a7e"
+    },
+    {
+      "path": "planos/P09-pechera-camisa.png",
+      "bytes": 166463,
+      "sha256": "4940595052f20d37dcd392c6ec9577cc5f703503007bceeeedc9fa5d5b9541d5"
+    },
+    {
+      "path": "planos/P09-pechera-camisa.svg",
+      "bytes": 6981,
+      "sha256": "d74b821cb40c6245c223e02f7bb3a1777674639cbf397b9eccf15fbcf6ed0e10"
+    },
+    {
+      "path": "planos/P10-solapa-cuello.png",
+      "bytes": 178238,
+      "sha256": "c3d46646228ed60ddfd66ce1a281e77220d123980628b7c618da1c3fddd05dbf"
+    },
+    {
+      "path": "planos/P10-solapa-cuello.svg",
+      "bytes": 6979,
+      "sha256": "3df63a30862b0eaca87c9584a3afdb2359fbd5d37069be89cb193168821fffad"
+    },
+    {
+      "path": "planos/P11-manga.png",
+      "bytes": 206172,
+      "sha256": "1661bb2d962314e70841f03ec2a1b2e052edfefda0d95da180659432c103ea02"
+    },
+    {
+      "path": "planos/P11-manga.svg",
+      "bytes": 15676,
+      "sha256": "5cd7f7e96aa2713c3463f1f0d5793f11db9a618a0938cba793ba083090f170ff"
+    },
+    {
+      "path": "planos/P12-brazo.png",
+      "bytes": 191755,
+      "sha256": "471dfcf5a917bf533512e584fbaba8f148e50f1ace69976d1305dd9406d0d584"
+    },
+    {
+      "path": "planos/P12-brazo.svg",
+      "bytes": 15268,
+      "sha256": "214e678273c667b3c11e34f8e0ef69378f5fdf2bbaa46e4a485c140a316fbb9f"
+    },
+    {
+      "path": "planos/P13-antebrazo.png",
+      "bytes": 193178,
+      "sha256": "1c69abc09f649d65dcbf69d956d5a46509ad8689f68794a1a60d222bf2ead838"
+    },
+    {
+      "path": "planos/P13-antebrazo.svg",
+      "bytes": 15274,
+      "sha256": "eac50e080497de6092a6a12276f3c296ea7fc2cf034b4e8ebdcf78e183924aaa"
+    },
+    {
+      "path": "planos/P14-mano.png",
+      "bytes": 210255,
+      "sha256": "7e303f8f146cbb037065729171e4fbe611cae5fb693d421319c68045c181f939"
+    },
+    {
+      "path": "planos/P14-mano.svg",
+      "bytes": 15265,
+      "sha256": "820b0a65a986a0ee5d7d8a4009f815f8785b8f0c823d69c39cb26f442d3b3bb5"
+    },
+    {
+      "path": "planos/P15-pelvis-pantalon.png",
+      "bytes": 182770,
+      "sha256": "c5f9224d13e6a725318cc4e47862c7dc47cec7671f6906f5d5f9de9b43a9edb2"
+    },
+    {
+      "path": "planos/P15-pelvis-pantalon.svg",
+      "bytes": 15682,
+      "sha256": "0d8025a8b010a537e23bf05e37226b002c37dd11e3b0fe86e5e2d732a5506b65"
+    },
+    {
+      "path": "planos/P16-muslo-pantalon.png",
+      "bytes": 190379,
+      "sha256": "771e0a1dcb3a13ea381ad1531d8ec3c24434fc8bf4eda3c7846f90ada13365d9"
+    },
+    {
+      "path": "planos/P16-muslo-pantalon.svg",
+      "bytes": 20083,
+      "sha256": "6e61ec0b692fd13e10fddec65ea7985e4185a8bd776c94bddb1f843f572d7a54"
+    },
+    {
+      "path": "planos/P17-pantorrilla-pantalon.png",
+      "bytes": 185217,
+      "sha256": "8e02b21d8e7e59b0f78b7cddd5741aad77deb4eab04fe64a2b7f9203326694a2"
+    },
+    {
+      "path": "planos/P17-pantorrilla-pantalon.svg",
+      "bytes": 20089,
+      "sha256": "6720cac233d9cf7620f8b45cd20017a5d81795d602dc3263b7435a3fdfba7c02"
+    },
+    {
+      "path": "planos/P18-zapato.png",
+      "bytes": 198538,
+      "sha256": "79a301f8f83f479a6a7eab8d41d639f926acf7185089195a8c0ac4e84a4aec8f"
+    },
+    {
+      "path": "planos/P18-zapato.svg",
+      "bytes": 20069,
+      "sha256": "220113434cac08721d24c673c1de4a6c865c1d7a424a35f244f7c297c2e79f15"
+    },
+    {
+      "path": "planos/P19-mochila.png",
+      "bytes": 194218,
+      "sha256": "8fcbe188c06253c08f5ef9398781e7e3ae2a82c7a9b2367a366137ac69ffe732"
+    },
+    {
+      "path": "planos/P19-mochila.svg",
+      "bytes": 20052,
+      "sha256": "b66688828726d763415e8cd317930aec049eb7977384365ce5d6a0f16bb7d16d"
+    },
+    {
+      "path": "planos/P20-tirante.png",
+      "bytes": 163820,
+      "sha256": "ab21c346c9f1851514f5532e305803542a26a1aeb333e70984eb6f9682c71b06"
+    },
+    {
+      "path": "planos/P20-tirante.svg",
+      "bytes": 13485,
+      "sha256": "83d0d1d74cd70566d1d4cc80eec0822892fb25396a0f3f747f35c4736a3cd509"
+    },
+    {
+      "path": "referencias/00-personaje-base-R1.png",
+      "bytes": 1841400,
+      "sha256": "3a23c072d47d526aac01878e5a030a4b3023dc800bd61a25117d12ebdc9d41cd"
+    },
+    {
+      "path": "referencias/01-despiece-R1.png",
+      "bytes": 1799923,
+      "sha256": "52a80eb7269d37138a754f30c222ceba79dbf61f04c5383d5ccf840abfd4bb76"
+    },
+    {
+      "path": "vistas/P01-cabeza/derecha.png",
+      "bytes": 48093,
+      "sha256": "0cec41fe57b4260b34835d4d62681045f31825c823b5738515a2e36bf0d7d0fe"
+    },
+    {
+      "path": "vistas/P01-cabeza/espalda.png",
+      "bytes": 53293,
+      "sha256": "d6ad1c93dd143865f9a262c28e8cfd5d8f8a4d822f95eef9c161f58ee022b44c"
+    },
+    {
+      "path": "vistas/P01-cabeza/frente.png",
+      "bytes": 51826,
+      "sha256": "b16c6123d868dae22319dfd92313b5a51c0c368f84a1091ce4f259e60dcc22cc"
+    },
+    {
+      "path": "vistas/P01-cabeza/inferior.png",
+      "bytes": 58892,
+      "sha256": "160501b6aed7bec8db0079bf4ee4db4f9004a4a3d3346795e6f0b8f2075c11bf"
+    },
+    {
+      "path": "vistas/P01-cabeza/izquierda.png",
+      "bytes": 48436,
+      "sha256": "c97b324805487f92aa97c564b0a875d943b812c8ed8fbac46c0c5435da663df5"
+    },
+    {
+      "path": "vistas/P01-cabeza/superior.png",
+      "bytes": 44489,
+      "sha256": "ec2a0e062a17c52f983ab84a0b00faf06113fd599be67b9c591dc6387cee7c81"
+    },
+    {
+      "path": "vistas/P01-cabeza/tres-cuartos.png",
+      "bytes": 63019,
+      "sha256": "ea254c6a4966c5a439c98ebe3d7255c99e85bf3dfa5a6e2d82539dd249562d21"
+    },
+    {
+      "path": "vistas/P02-cuello/derecha.png",
+      "bytes": 41368,
+      "sha256": "93c1fb660d355fd24fe563444bf17a600db0d9b5f7d964533949ab378cb00cf8"
+    },
+    {
+      "path": "vistas/P02-cuello/espalda.png",
+      "bytes": 42884,
+      "sha256": "a0de46e6c590fc07b87b7e54e0a25609ce0644daf360188722b6aeca83cda0bb"
+    },
+    {
+      "path": "vistas/P02-cuello/frente.png",
+      "bytes": 39295,
+      "sha256": "d5ce8bfccc950d7297b29f5eb99e12d5e53d173893eef1999edd0f8514de2d19"
+    },
+    {
+      "path": "vistas/P02-cuello/inferior.png",
+      "bytes": 35443,
+      "sha256": "adab69a8bfd549ddd638a97a3045ac3fc7f470befb44ef29b7af7728b2b945a3"
+    },
+    {
+      "path": "vistas/P02-cuello/izquierda.png",
+      "bytes": 42030,
+      "sha256": "53a251fe3955ae00e216b0775b29fe7802d61dd10ef854d2fb1a9f1b8042b72f"
+    },
+    {
+      "path": "vistas/P02-cuello/superior.png",
+      "bytes": 43818,
+      "sha256": "54a4b5ebcb8600a68ab3b69ae9ef470383f7d607e8766d0d78ebdf1537334af4"
+    },
+    {
+      "path": "vistas/P02-cuello/tres-cuartos.png",
+      "bytes": 52819,
+      "sha256": "5bde431a3a5890a0cd45b6a7e589a6eafc4a15b1e4b8d96a5889914783f8344d"
+    },
+    {
+      "path": "vistas/P03-oreja/derecha.png",
+      "bytes": 33080,
+      "sha256": "5e1cded3f6384746f2f8888ec3e87474d7b24ddc4af7a62771c496e8d429f065"
+    },
+    {
+      "path": "vistas/P03-oreja/espalda.png",
+      "bytes": 30177,
+      "sha256": "3606abaa9d39ac621854398db5403c7259e6d9756fa86c48d79de24eeccc4d60"
+    },
+    {
+      "path": "vistas/P03-oreja/frente.png",
+      "bytes": 29352,
+      "sha256": "6d8ed43cb39b51682c54b0221a2570550ae4eb5fdc0c60923c76694d74e79516"
+    },
+    {
+      "path": "vistas/P03-oreja/inferior.png",
+      "bytes": 29041,
+      "sha256": "601c4f183f32a5f7cf47d257c899c348b4b4189c8dc6db10ae885534dea17c5b"
+    },
+    {
+      "path": "vistas/P03-oreja/izquierda.png",
+      "bytes": 33710,
+      "sha256": "165f89deeeb13e253fbc33bf5c28488fd11549d135d81c02140edf316ca59cae"
+    },
+    {
+      "path": "vistas/P03-oreja/superior.png",
+      "bytes": 29306,
+      "sha256": "4ea0a1f62d357a05a86bfefcc8efa719ff290699248d7849fd10c0dd6634c7f2"
+    },
+    {
+      "path": "vistas/P03-oreja/tres-cuartos.png",
+      "bytes": 38814,
+      "sha256": "b487f96cec941eb062899ba95606043bc64d78004ed36335af10e0decbcac85e"
+    },
+    {
+      "path": "vistas/P04-ojo/derecha.png",
+      "bytes": 32807,
+      "sha256": "61ae110efeb38fef01c549f9c0daef0db6615e9fb02f2c4bc56908a551768c2e"
+    },
+    {
+      "path": "vistas/P04-ojo/espalda.png",
+      "bytes": 30492,
+      "sha256": "205e5345f40d94216d194789c4a106b982fc9960dffaeb0ed195263d0e80b6ad"
+    },
+    {
+      "path": "vistas/P04-ojo/frente.png",
+      "bytes": 29696,
+      "sha256": "3b10077e8852a15de52407c610e8b859d05ed7f6f83ac0f79d82c46957518c1a"
+    },
+    {
+      "path": "vistas/P04-ojo/inferior.png",
+      "bytes": 29780,
+      "sha256": "9591ab330dca93c266d7a2c188d23a139d1051a75c4f49ed55eb8818d6e09859"
+    },
+    {
+      "path": "vistas/P04-ojo/izquierda.png",
+      "bytes": 33350,
+      "sha256": "e480a7bba4a0a4009920d6a027c304c761bd28217f6c7aa2b3be87cbba45b130"
+    },
+    {
+      "path": "vistas/P04-ojo/superior.png",
+      "bytes": 29916,
+      "sha256": "a6568c9ab1912601d425259aebff64e4f310d1ad6e931af86ea29d609326d960"
+    },
+    {
+      "path": "vistas/P04-ojo/tres-cuartos.png",
+      "bytes": 40203,
+      "sha256": "b53cf72cf9290a9f1cb6b06187ac93df13fc2c9211c64fc4907abea063b4af88"
+    },
+    {
+      "path": "vistas/P05-sonrisa/derecha.png",
+      "bytes": 32612,
+      "sha256": "075e0ec6ab8d5e9d82bfad805afa5828c204d959b39d0a52663bb9a8469559f5"
+    },
+    {
+      "path": "vistas/P05-sonrisa/espalda.png",
+      "bytes": 31661,
+      "sha256": "b3da2fc18bdeac8ef54f31048e8765c579e45910c9c68cfbdec0c5321ca4fdbc"
+    },
+    {
+      "path": "vistas/P05-sonrisa/frente.png",
+      "bytes": 30675,
+      "sha256": "2a4f485706da457f6e85e5ccdcbf707b238bc9fcc05cc849ef810db0a17bd033"
+    },
+    {
+      "path": "vistas/P05-sonrisa/inferior.png",
+      "bytes": 31942,
+      "sha256": "b86ba5eae7c353aa49443fad159d160f952d524702893b570e36360b44dcaf76"
+    },
+    {
+      "path": "vistas/P05-sonrisa/izquierda.png",
+      "bytes": 33117,
+      "sha256": "93503de50de5949f828791ddb61c54068e20c086ae2665707d0f9baa7eced06b"
+    },
+    {
+      "path": "vistas/P05-sonrisa/superior.png",
+      "bytes": 31880,
+      "sha256": "1178f6f829989512b4d0c92db40486682112d58a5bba43db6fa004161e428acd"
+    },
+    {
+      "path": "vistas/P05-sonrisa/tres-cuartos.png",
+      "bytes": 38299,
+      "sha256": "c99ecf19438c94f4f30f47b700d492ba4a6c796acd0a5de3b2fb09996ab6d7a2"
+    },
+    {
+      "path": "vistas/P06-cabello-nucleo/derecha.png",
+      "bytes": 58863,
+      "sha256": "33ca7ef4148e9201ae46a28edd954c8d5fca98eac99ba56a088b281d622e463b"
+    },
+    {
+      "path": "vistas/P06-cabello-nucleo/espalda.png",
+      "bytes": 60645,
+      "sha256": "d8f29ea23f8c1a13a38527876e083ef596ea1a2805b512394390b5dbcd01c1bf"
+    },
+    {
+      "path": "vistas/P06-cabello-nucleo/frente.png",
+      "bytes": 66278,
+      "sha256": "0ffb97325bb3dbca0232f7c2dd0756cd61d92cb709a6e7d6b939773196140987"
+    },
+    {
+      "path": "vistas/P06-cabello-nucleo/inferior.png",
+      "bytes": 72663,
+      "sha256": "7bea9da04e8f1fb2136964c321450b372ba0b3d6da62944cb718b524dd4a4d53"
+    },
+    {
+      "path": "vistas/P06-cabello-nucleo/izquierda.png",
+      "bytes": 59480,
+      "sha256": "34c6b8dfabc2b819fa480f6df4788f71d6e63c265536f2fdde998eef98ccbd63"
+    },
+    {
+      "path": "vistas/P06-cabello-nucleo/superior.png",
+      "bytes": 64699,
+      "sha256": "280bc6e5a58b635555077637d6b5e76da0d68a21e9051860f76c4b24eecabc0d"
+    },
+    {
+      "path": "vistas/P06-cabello-nucleo/tres-cuartos.png",
+      "bytes": 70467,
+      "sha256": "7c7212eef79f9aba23359976959d10bb4f1ae5aa75bc36bae8aa12d71740adb8"
+    },
+    {
+      "path": "vistas/P07-mechon-flequillo/derecha.png",
+      "bytes": 42270,
+      "sha256": "08459f4b49f1d2ff3d3cf3c7d819518181b88a3c5b0c3b2e303247fd63d4cf51"
+    },
+    {
+      "path": "vistas/P07-mechon-flequillo/espalda.png",
+      "bytes": 46073,
+      "sha256": "da19a7d68393f2ddd3dffa46289d3f12dcf2f1f6b209618f033041579945df21"
+    },
+    {
+      "path": "vistas/P07-mechon-flequillo/frente.png",
+      "bytes": 45149,
+      "sha256": "cb1ffb81c799f91623849b27402e519d8cb5c5ab6a8102664bbb1431a46111a9"
+    },
+    {
+      "path": "vistas/P07-mechon-flequillo/inferior.png",
+      "bytes": 40023,
+      "sha256": "a6f6cd5fa0fd98a278f0af8c5ee0373244223c59b597a8680f654d39e71c832e"
+    },
+    {
+      "path": "vistas/P07-mechon-flequillo/izquierda.png",
+      "bytes": 43515,
+      "sha256": "2071bbf4c6f489bbde1df98978d9e278b3d4a94cb88027f5afc163d2310f90d9"
+    },
+    {
+      "path": "vistas/P07-mechon-flequillo/superior.png",
+      "bytes": 39857,
+      "sha256": "fef66e586c86ceeb2f545f18140ec1cdcf097cb577a28199a37fd361394bf11f"
+    },
+    {
+      "path": "vistas/P07-mechon-flequillo/tres-cuartos.png",
+      "bytes": 49537,
+      "sha256": "7bf383be634ba1db4474b76c8f77df8a70a8517dd4b4ee0f959c1455d3e14031"
+    },
+    {
+      "path": "vistas/P08-torso-chaleco/derecha.png",
+      "bytes": 53538,
+      "sha256": "4fae9550562dd47557fb81f61c0c79390e476b345bd965a2979dd8e8a331c72c"
+    },
+    {
+      "path": "vistas/P08-torso-chaleco/espalda.png",
+      "bytes": 51301,
+      "sha256": "6d02578a473313f3605b0c6cfc966a520cce079ad3145ce958786f9b76aa2f2d"
+    },
+    {
+      "path": "vistas/P08-torso-chaleco/frente.png",
+      "bytes": 50786,
+      "sha256": "31c9ec4e1f226137b6c971dd2ced9093427338a79172f40d23eecf74441d5514"
+    },
+    {
+      "path": "vistas/P08-torso-chaleco/inferior.png",
+      "bytes": 50199,
+      "sha256": "54d5691977b57a8039f69a08c061112e9ee12c53039f97e8bcdb59d26f841d78"
+    },
+    {
+      "path": "vistas/P08-torso-chaleco/izquierda.png",
+      "bytes": 54085,
+      "sha256": "ba60d39216bb33c398d60705983d0c94e2f4d233794b034265651c20bb54f35c"
+    },
+    {
+      "path": "vistas/P08-torso-chaleco/superior.png",
+      "bytes": 47304,
+      "sha256": "36eb16b59caf0b66903ac5981a0fb18eb3235928b98b3979022789782920c0c4"
+    },
+    {
+      "path": "vistas/P08-torso-chaleco/tres-cuartos.png",
+      "bytes": 69095,
+      "sha256": "5d1d28cf7a8c5f45f0595029cc8a84a6e6e69648418d900f7a6b5b29fe38a180"
+    },
+    {
+      "path": "vistas/P09-pechera-camisa/derecha.png",
+      "bytes": 37232,
+      "sha256": "03a9678dfcab26a0dd9cb385d2bf7466a57b623581a3b61b335397a7bb5b0296"
+    },
+    {
+      "path": "vistas/P09-pechera-camisa/espalda.png",
+      "bytes": 42148,
+      "sha256": "eaf87539589f42eddb421aeb27ed696f901ffb4a7cbb0438bf21593e1dde8172"
+    },
+    {
+      "path": "vistas/P09-pechera-camisa/frente.png",
+      "bytes": 41282,
+      "sha256": "2eb25eeddcc033849f4d3eaff7256e7fa2444e3d3f4b317fcbc7e7ef9dafc127"
+    },
+    {
+      "path": "vistas/P09-pechera-camisa/inferior.png",
+      "bytes": 32433,
+      "sha256": "e7041fde5f5fb2bea0577b5f093de018dff2fcec7575f37132284ff647f0a004"
+    },
+    {
+      "path": "vistas/P09-pechera-camisa/izquierda.png",
+      "bytes": 37647,
+      "sha256": "ca15e456fea4647456f0482c30b2041d25833e702726bae1b1c26c85ab930433"
+    },
+    {
+      "path": "vistas/P09-pechera-camisa/superior.png",
+      "bytes": 32607,
+      "sha256": "0a645281b43af9daef66852166091e6b017675b3e8a1c95f29f3f497c09f4963"
+    },
+    {
+      "path": "vistas/P09-pechera-camisa/tres-cuartos.png",
+      "bytes": 44004,
+      "sha256": "83a386ad614a2d85ef4b1bb3c42916fe9c3bfd31fe57322f98405a3e9413accf"
+    },
+    {
+      "path": "vistas/P10-solapa-cuello/derecha.png",
+      "bytes": 38304,
+      "sha256": "5f50eda88afa49def67ff43d635572dc924ad2873c6f47aba1a3d12bdcdfbc08"
+    },
+    {
+      "path": "vistas/P10-solapa-cuello/espalda.png",
+      "bytes": 39059,
+      "sha256": "49809692e3fb1c150ab1a9475d1ce9e96dc935f87cc24e8d245f467dc9b60436"
+    },
+    {
+      "path": "vistas/P10-solapa-cuello/frente.png",
+      "bytes": 38939,
+      "sha256": "5f39c0d197ce80a0d78f4164344c81dccb3a97d14e6a6bd1004e780c13568c77"
+    },
+    {
+      "path": "vistas/P10-solapa-cuello/inferior.png",
+      "bytes": 33329,
+      "sha256": "b973558484c9a271ae35da47246b9ebe2e6a19c20ef88d8c06ef0f0fb98cd532"
+    },
+    {
+      "path": "vistas/P10-solapa-cuello/izquierda.png",
+      "bytes": 38899,
+      "sha256": "8eb7e8b5235b26e9d1637f602773b025bbbc165d3d42ae0880ca03f7a04a87f3"
+    },
+    {
+      "path": "vistas/P10-solapa-cuello/superior.png",
+      "bytes": 33520,
+      "sha256": "d0615d738e393779ae08959afa49adc894494970c1e9d94deb63af1484e44a99"
+    },
+    {
+      "path": "vistas/P10-solapa-cuello/tres-cuartos.png",
+      "bytes": 43440,
+      "sha256": "e738ff922e8ce7259907f22281a54b76667f820e376c216623ae6a57a6cbe25e"
+    },
+    {
+      "path": "vistas/P11-manga/derecha.png",
+      "bytes": 44098,
+      "sha256": "e0a429ff7f6db5ddccc27379391738a0e92f4d61f3c484f0dbb95be4629704b6"
+    },
+    {
+      "path": "vistas/P11-manga/espalda.png",
+      "bytes": 42690,
+      "sha256": "6de82f462a2fbbef93f4377fe5596a7534a53a6cc2667040bc32e57479293f5c"
+    },
+    {
+      "path": "vistas/P11-manga/frente.png",
+      "bytes": 41839,
+      "sha256": "b731bbfa0db4ebc18c74e8b5f48413d8b2e2614b3532c4dcbc74555a68f7cf73"
+    },
+    {
+      "path": "vistas/P11-manga/inferior.png",
+      "bytes": 38293,
+      "sha256": "8a04f9585afe6d8abddf2dd1b405e998856c0a269888ee1db4cdc8447cc7c4a7"
+    },
+    {
+      "path": "vistas/P11-manga/izquierda.png",
+      "bytes": 44557,
+      "sha256": "7f2b563a92c6760eb15341e8c2926d1192ce45c7ec01dbc80e57a6748ab00d08"
+    },
+    {
+      "path": "vistas/P11-manga/superior.png",
+      "bytes": 38355,
+      "sha256": "4dffd840dd1bc844c7013a3c0cfdffa6a5cab6383a4934f94ebaa83a76d30588"
+    },
+    {
+      "path": "vistas/P11-manga/tres-cuartos.png",
+      "bytes": 64241,
+      "sha256": "0ac9997128dc93c3ebc030b066e31e11637c877666fc7134e3c26363b27b9dde"
+    },
+    {
+      "path": "vistas/P12-brazo/derecha.png",
+      "bytes": 40940,
+      "sha256": "d17d35bad085dd7f51524b510e816d3a70823cc7dc17d13fb5d810bece6d5505"
+    },
+    {
+      "path": "vistas/P12-brazo/espalda.png",
+      "bytes": 40988,
+      "sha256": "34dd120053cb58359fdaeeab78433486ca3b5c3a16cf88c29292cebe0783fa77"
+    },
+    {
+      "path": "vistas/P12-brazo/frente.png",
+      "bytes": 37904,
+      "sha256": "5a92518a4f01a8513892ee322e0c4144bbb4e3c77f9709d8df6f88c6005c2af1"
+    },
+    {
+      "path": "vistas/P12-brazo/inferior.png",
+      "bytes": 37078,
+      "sha256": "afe76e37c7111415c77a797feb435bf5cd0c683b2ea59e393beaf97d74efe3a2"
+    },
+    {
+      "path": "vistas/P12-brazo/izquierda.png",
+      "bytes": 41355,
+      "sha256": "a0c822403523d1a0146bd5356791f3f17f7f7ec9bb4aff5e155dcef6448cc7e8"
+    },
+    {
+      "path": "vistas/P12-brazo/superior.png",
+      "bytes": 32588,
+      "sha256": "fb81782519a89ea3878139273f4bf36ef9ae31e8f85586aca1e4b5c5279dcc5b"
+    },
+    {
+      "path": "vistas/P12-brazo/tres-cuartos.png",
+      "bytes": 48931,
+      "sha256": "b98ee11e17bf6ad0538e9faaf57bdbeb31b7fac2dfdf767882d569192d7e490d"
+    },
+    {
+      "path": "vistas/P13-antebrazo/derecha.png",
+      "bytes": 43319,
+      "sha256": "d49d4d0b1d8f804df609bf9210f36b29d3ec40c056d777860d35ccb37d9a6208"
+    },
+    {
+      "path": "vistas/P13-antebrazo/espalda.png",
+      "bytes": 42176,
+      "sha256": "f9512f98839085cfafa9e524c6b1b727b8ebb8e0a954a9f955c5a8f5e14768be"
+    },
+    {
+      "path": "vistas/P13-antebrazo/frente.png",
+      "bytes": 39223,
+      "sha256": "44b976d013624eaa81a98c79a311c7ee3d0e3e982bcc9ae0e9624b73c9010ae6"
+    },
+    {
+      "path": "vistas/P13-antebrazo/inferior.png",
+      "bytes": 38546,
+      "sha256": "cf3558f684c2c735cd6a259f8761a9fa137e09319d965446cb7ded750281c1b3"
+    },
+    {
+      "path": "vistas/P13-antebrazo/izquierda.png",
+      "bytes": 42967,
+      "sha256": "c4910b64beb8ca9fa0fd8f8b7ed470a4a53a45cbd2abc7c6fc824a7729506095"
+    },
+    {
+      "path": "vistas/P13-antebrazo/superior.png",
+      "bytes": 35361,
+      "sha256": "4849c9dda71f5f214d3e0116b78b167dedf2ebe754ab8f74db20df755769847a"
+    },
+    {
+      "path": "vistas/P13-antebrazo/tres-cuartos.png",
+      "bytes": 48819,
+      "sha256": "088f1712aa8ea50261a71c06a6e07b351884b5c838458a63a8902ad80803fafc"
+    },
+    {
+      "path": "vistas/P14-mano/derecha.png",
+      "bytes": 43531,
+      "sha256": "1eb343935472aa471844860438ad8a2a68b0a8ee8e5abf214e0f58589f0e7ab9"
+    },
+    {
+      "path": "vistas/P14-mano/espalda.png",
+      "bytes": 42855,
+      "sha256": "9e6737475436571fc8c61a4038ea6ed86a04a441072ce7f61f68e2c564a2d321"
+    },
+    {
+      "path": "vistas/P14-mano/frente.png",
+      "bytes": 39485,
+      "sha256": "326a780a750a3a00acda394a4f57b99fb9e4500fd253777d3464297f1b57f47c"
+    },
+    {
+      "path": "vistas/P14-mano/inferior.png",
+      "bytes": 46469,
+      "sha256": "0bae2b36150c7293cb36c840f89005b0d950ca45b3c16fb04220cd0efc6fbcf8"
+    },
+    {
+      "path": "vistas/P14-mano/izquierda.png",
+      "bytes": 42487,
+      "sha256": "b37403d66e5cd320610c8bb562436e066fceb65298650d95b707cd59dba6497a"
+    },
+    {
+      "path": "vistas/P14-mano/superior.png",
+      "bytes": 40127,
+      "sha256": "a747d1962d313f188c450c763bf3c0df9519d1399d4a364b54eb40403fdbff87"
+    },
+    {
+      "path": "vistas/P14-mano/tres-cuartos.png",
+      "bytes": 55240,
+      "sha256": "482404fd3614b737a984a1dc8f1184dd394cd25362e92b3d328f8af52e474ccb"
+    },
+    {
+      "path": "vistas/P15-pelvis-pantalon/derecha.png",
+      "bytes": 39005,
+      "sha256": "10d74d6b5a0aeb346403f115feeb3899d71f89b4de8103baaea0e524d5dbfaae"
+    },
+    {
+      "path": "vistas/P15-pelvis-pantalon/espalda.png",
+      "bytes": 35905,
+      "sha256": "156f4ce84b525b2ca7f96a64e166e203e0e992135d7fba2820310146d3543cdd"
+    },
+    {
+      "path": "vistas/P15-pelvis-pantalon/frente.png",
+      "bytes": 35116,
+      "sha256": "10886ad79b1fef54083fdaccfa42d13ec20dfeefe9931152f1b6a7f9f09c9795"
+    },
+    {
+      "path": "vistas/P15-pelvis-pantalon/inferior.png",
+      "bytes": 36927,
+      "sha256": "253f40c86855545f8b42740ee5d72eb0ce5f899d6a6fdab0779be828fe297bca"
+    },
+    {
+      "path": "vistas/P15-pelvis-pantalon/izquierda.png",
+      "bytes": 39382,
+      "sha256": "8a211db9c9297c6ea5d43adb8f68f20bc718295d4241326eb7324bf0959951e4"
+    },
+    {
+      "path": "vistas/P15-pelvis-pantalon/superior.png",
+      "bytes": 37059,
+      "sha256": "689c6c50d552670b573a80fd45bfa22b814e7189d6b5ddb999136f1bf48dbd52"
+    },
+    {
+      "path": "vistas/P15-pelvis-pantalon/tres-cuartos.png",
+      "bytes": 56365,
+      "sha256": "51a7377707a382e7fd6403c59f81d44fb4f48a78e9b53cde0c93e74b9d9fe7ef"
+    },
+    {
+      "path": "vistas/P16-muslo-pantalon/derecha.png",
+      "bytes": 44771,
+      "sha256": "5428ed43b8f60d8540b329b8dbe05ae93098d58a034e3029d6e636fbbc102f03"
+    },
+    {
+      "path": "vistas/P16-muslo-pantalon/espalda.png",
+      "bytes": 41197,
+      "sha256": "caf5eabdc3815bb919e11b96fb19579421c81bf604022eb4f7b0f57cab7ebfed"
+    },
+    {
+      "path": "vistas/P16-muslo-pantalon/frente.png",
+      "bytes": 40393,
+      "sha256": "140bd8aa4f2a66c77ee3406011597c7a4d92f77d0dc49db352503cba2c4961e3"
+    },
+    {
+      "path": "vistas/P16-muslo-pantalon/inferior.png",
+      "bytes": 38084,
+      "sha256": "b0a85bab07791473f06693c3ca16877da3695f122a55baf7f2fe6c08e15b2219"
+    },
+    {
+      "path": "vistas/P16-muslo-pantalon/izquierda.png",
+      "bytes": 45133,
+      "sha256": "86d08120792747952166b1db11bb8b11c087a4a25d90d3a12deab2056149fb33"
+    },
+    {
+      "path": "vistas/P16-muslo-pantalon/superior.png",
+      "bytes": 33653,
+      "sha256": "742338fdfb353a11aa7e9b46b5e04867874473e044b1974e536fd53fed739677"
+    },
+    {
+      "path": "vistas/P16-muslo-pantalon/tres-cuartos.png",
+      "bytes": 53705,
+      "sha256": "79d944911c483c0e98750adecd1905f672b88e80cefb88f8e986315daaadb711"
+    },
+    {
+      "path": "vistas/P17-pantorrilla-pantalon/derecha.png",
+      "bytes": 44289,
+      "sha256": "ea0e6139c487d1dec4cabe5372cd9e82bd8122041c671779f6096e67c7dc209f"
+    },
+    {
+      "path": "vistas/P17-pantorrilla-pantalon/espalda.png",
+      "bytes": 40892,
+      "sha256": "6a3a280bbe2c912b11186d03085edccf1fdea393066c3c3cb177e3e145c99ad8"
+    },
+    {
+      "path": "vistas/P17-pantorrilla-pantalon/frente.png",
+      "bytes": 40148,
+      "sha256": "b15191d8f290f7c6b5c065a203b137630262b96311301b73159ee359a46b1cb7"
+    },
+    {
+      "path": "vistas/P17-pantorrilla-pantalon/inferior.png",
+      "bytes": 37533,
+      "sha256": "e671877990316d2faa1ca3aa8e7f925f6a680a7024364b2a7c00c8903a8bef9d"
+    },
+    {
+      "path": "vistas/P17-pantorrilla-pantalon/izquierda.png",
+      "bytes": 44682,
+      "sha256": "37b59ffb0e3cac30d1073cd66191ca23e700471e717b9ee3366c7fb06caf9133"
+    },
+    {
+      "path": "vistas/P17-pantorrilla-pantalon/superior.png",
+      "bytes": 35155,
+      "sha256": "2f545230627bb072251f1c6155c459376abe49502d6cae315f92801e86bfee4c"
+    },
+    {
+      "path": "vistas/P17-pantorrilla-pantalon/tres-cuartos.png",
+      "bytes": 51933,
+      "sha256": "689d7b3e99fe4027fdddf97d0355a7fd92cdbcd0bca12df1fb485b9e9e753ae3"
+    },
+    {
+      "path": "vistas/P18-zapato/derecha.png",
+      "bytes": 41734,
+      "sha256": "e9ed3b0dab0e092b36e56241e69e514c3206f9be3dad1a0c5c477228cb14b7c2"
+    },
+    {
+      "path": "vistas/P18-zapato/espalda.png",
+      "bytes": 36005,
+      "sha256": "8d73d831aec43ca28ad0aa8fc79ac429d807dd4190983ec6d35fbd45598ee2b7"
+    },
+    {
+      "path": "vistas/P18-zapato/frente.png",
+      "bytes": 38083,
+      "sha256": "f508ab3ac4d22c270e7478efe3e9978f9d81e53506fe92a7cea1e07d5b10d70e"
+    },
+    {
+      "path": "vistas/P18-zapato/inferior.png",
+      "bytes": 35239,
+      "sha256": "de7495c25bc764ba7431e4049adedfd42cc2b142611bc653893f61093d551492"
+    },
+    {
+      "path": "vistas/P18-zapato/izquierda.png",
+      "bytes": 39533,
+      "sha256": "70fe57282fc5b6f3ed4264a3d1fb3ae0627d011b1c4eb109b4fb5defeee0b9db"
+    },
+    {
+      "path": "vistas/P18-zapato/superior.png",
+      "bytes": 44105,
+      "sha256": "374bf6098919a008a3b943db572229de0ba280c497938c1e17330c25c44104e2"
+    },
+    {
+      "path": "vistas/P18-zapato/tres-cuartos.png",
+      "bytes": 55523,
+      "sha256": "261419641a1d8a62d4f1381163c4a93a5950b9639dca98ca2b3dcb971af05876"
+    },
+    {
+      "path": "vistas/P19-mochila/derecha.png",
+      "bytes": 40918,
+      "sha256": "21d3c7e8fc3adbcffd1d21e76e3978eb44eac6d7d85cb55c44c6c799c0969f77"
+    },
+    {
+      "path": "vistas/P19-mochila/espalda.png",
+      "bytes": 41030,
+      "sha256": "74230ca8788fe303424c04cbe619b795e5aabc8e0fccbce5e3f6d5ecac4c0ad6"
+    },
+    {
+      "path": "vistas/P19-mochila/frente.png",
+      "bytes": 40181,
+      "sha256": "3a63c5ce5ad41bb5d5cadc74403552e59b42d6ef937eb8f761dc917dfe06b392"
+    },
+    {
+      "path": "vistas/P19-mochila/inferior.png",
+      "bytes": 32637,
+      "sha256": "fd64be6e9b969b009381551a6954f503aa0b5cc365c751f37caf98e80a3edace"
+    },
+    {
+      "path": "vistas/P19-mochila/izquierda.png",
+      "bytes": 38506,
+      "sha256": "6b5de47b6dff1aab1f547cac927c1c952b65e1dca20dda1932a0d173465a4b90"
+    },
+    {
+      "path": "vistas/P19-mochila/superior.png",
+      "bytes": 36100,
+      "sha256": "d3272dfab1644933ec50e9dfd513ec5af9c4124927ef3a5c04bfd5bedc448123"
+    },
+    {
+      "path": "vistas/P19-mochila/tres-cuartos.png",
+      "bytes": 57234,
+      "sha256": "4bcf8e8c1e48794f231819ffa4ed9bc28de17a6fc366b6f0603f762114034c61"
+    },
+    {
+      "path": "vistas/P20-tirante/derecha.png",
+      "bytes": 30591,
+      "sha256": "c0cf4fb1238b6a2031bac157e6e6019dc05d708015d2390b3317c3d75873af54"
+    },
+    {
+      "path": "vistas/P20-tirante/espalda.png",
+      "bytes": 32278,
+      "sha256": "170e33183bcff70ae474a3d0bfc9838ff3d5168d49467eeccc91cb32ebaf220d"
+    },
+    {
+      "path": "vistas/P20-tirante/frente.png",
+      "bytes": 30600,
+      "sha256": "bc1b000344817a6b801da82403d3741adadae12277288d976380578e2a7ca3c7"
+    },
+    {
+      "path": "vistas/P20-tirante/inferior.png",
+      "bytes": 30964,
+      "sha256": "22ff00cd39bd1a46a6d90bb7ac59ec7eeeb72ad7b053e94bf36d8850d5d0d17d"
+    },
+    {
+      "path": "vistas/P20-tirante/izquierda.png",
+      "bytes": 31032,
+      "sha256": "8e4d609a9beddfe38170a2d9e724eb11a34b1c42fe3f71131fbbf7426bbc5c9c"
+    },
+    {
+      "path": "vistas/P20-tirante/superior.png",
+      "bytes": 31142,
+      "sha256": "bbfe678a6677ef4295d88c38d9f1c86e91e06575984f9f95bfda49ad67865aa6"
+    },
+    {
+      "path": "vistas/P20-tirante/tres-cuartos.png",
+      "bytes": 40171,
+      "sha256": "aceaa1f099539106f9f69f236388125f8c36e55e224b3dc24885ee85e2a55145"
+    }
+  ]
+}

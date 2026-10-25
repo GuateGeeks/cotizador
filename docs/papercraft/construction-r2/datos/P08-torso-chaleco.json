@@ -1,0 +1,346 @@
+{
+  "schema_version": "2.0",
+  "id": "P08",
+  "slug": "P08-torso-chaleco",
+  "name": "Torso y chaleco",
+  "purpose": "Chaleco de torso ancho, cintura más estrecha y hombros descendentes.",
+  "units": "normalized_H",
+  "scene_height": 0.78,
+  "coordinate_system": {
+    "up": "+Y",
+    "front": "+Z",
+    "anatomical_left": "+X"
+  },
+  "mesh": {
+    "vertices": [
+      [
+        -0.0705,
+        -0.01,
+        0.071
+      ],
+      [
+        0.0705,
+        -0.01,
+        0.071
+      ],
+      [
+        0.1175,
+        -0.01,
+        0.03195
+      ],
+      [
+        0.1175,
+        -0.01,
+        -0.03195
+      ],
+      [
+        0.0705,
+        -0.01,
+        -0.071
+      ],
+      [
+        -0.0705,
+        -0.01,
+        -0.071
+      ],
+      [
+        -0.1175,
+        -0.01,
+        -0.03195
+      ],
+      [
+        -0.1175,
+        -0.01,
+        0.03195
+      ],
+      [
+        -0.078,
+        0.25,
+        0.062
+      ],
+      [
+        0.078,
+        0.25,
+        0.062
+      ],
+      [
+        0.13,
+        0.236,
+        0.0279
+      ],
+      [
+        0.13,
+        0.236,
+        -0.0279
+      ],
+      [
+        0.078,
+        0.25,
+        -0.062
+      ],
+      [
+        -0.078,
+        0.25,
+        -0.062
+      ],
+      [
+        -0.13,
+        0.236,
+        -0.0279
+      ],
+      [
+        -0.13,
+        0.236,
+        0.0279
+      ]
+    ],
+    "faces": [
+      [
+        0,
+        1,
+        9
+      ],
+      [
+        0,
+        9,
+        8
+      ],
+      [
+        1,
+        2,
+        10
+      ],
+      [
+        1,
+        10,
+        9
+      ],
+      [
+        2,
+        3,
+        11
+      ],
+      [
+        2,
+        11,
+        10
+      ],
+      [
+        3,
+        4,
+        12
+      ],
+      [
+        3,
+        12,
+        11
+      ],
+      [
+        4,
+        5,
+        13
+      ],
+      [
+        4,
+        13,
+        12
+      ],
+      [
+        5,
+        6,
+        14
+      ],
+      [
+        5,
+        14,
+        13
+      ],
+      [
+        6,
+        7,
+        15
+      ],
+      [
+        6,
+        15,
+        14
+      ],
+      [
+        7,
+        0,
+        8
+      ],
+      [
+        7,
+        8,
+        15
+      ],
+      [
+        8,
+        9,
+        10
+      ],
+      [
+        8,
+        10,
+        11
+      ],
+      [
+        8,
+        11,
+        12
+      ],
+      [
+        8,
+        12,
+        13
+      ],
+      [
+        8,
+        13,
+        14
+      ],
+      [
+        8,
+        14,
+        15
+      ]
+    ],
+    "face_colors": [
+      "#6942a1",
+      "#67419e",
+      "#6b43a4",
+      "#6942a1",
+      "#6942a1",
+      "#67419e",
+      "#6b43a4",
+      "#6942a1",
+      "#6942a1",
+      "#67419e",
+      "#6b43a4",
+      "#6942a1",
+      "#6942a1",
+      "#67419e",
+      "#6b43a4",
+      "#6942a1",
+      "#6942a1",
+      "#67419e",
+      "#6b43a4",
+      "#6942a1",
+      "#6942a1",
+      "#67419e"
+    ]
+  },
+  "material": {
+    "base_color_srgb": "#6942A1",
+    "flat_shading": true,
+    "roughness": 0.92,
+    "metalness": 0,
+    "uv_required": false
+  },
+  "construction": "Dos anillos octagonales, dieciséis triángulos laterales y seis en tapa superior.",
+  "sockets": {
+    "origin": {
+      "position_local_H": [
+        0,
+        0,
+        0
+      ],
+      "description": "Origen numérico de esta pieza; montaje mediante assembly.json."
+    },
+    "mount_P02": {
+      "position_local_H": [
+        0.0,
+        0.24999999999999994,
+        0.0
+      ],
+      "description": "Anclaje derivado en reposo para P02. Ver instancia padre P08.",
+      "instance_scope": "P08"
+    },
+    "mount_P09": {
+      "position_local_H": [
+        0.0,
+        0.24017740853706032,
+        0.06747128936123317
+      ],
+      "description": "Anclaje derivado en reposo para P09. Ver instancia padre P08.",
+      "instance_scope": "P08"
+    },
+    "mount_P10_L": {
+      "position_local_H": [
+        0.004,
+        0.2553725579278268,
+        0.07258970765858967
+      ],
+      "description": "Anclaje derivado en reposo para P10-L. Ver instancia padre P08.",
+      "instance_scope": "P08"
+    },
+    "mount_P10_R": {
+      "position_local_H": [
+        -0.004,
+        0.2553725579278268,
+        0.07258970765858967
+      ],
+      "description": "Anclaje derivado en reposo para P10-R. Ver instancia padre P08.",
+      "instance_scope": "P08"
+    },
+    "mount_P11_L": {
+      "position_local_H": [
+        0.148,
+        0.23000000000000004,
+        0.0
+      ],
+      "description": "Anclaje derivado en reposo para P11-L. Ver instancia padre P08.",
+      "instance_scope": "P08"
+    },
+    "mount_P11_R": {
+      "position_local_H": [
+        -0.148,
+        0.23000000000000004,
+        0.0
+      ],
+      "description": "Anclaje derivado en reposo para P11-R. Ver instancia padre P08.",
+      "instance_scope": "P08"
+    },
+    "mount_P19": {
+      "position_local_H": [
+        0.0,
+        0.04999999999999999,
+        -0.109
+      ],
+      "description": "Anclaje derivado en reposo para P19. Ver instancia padre P08.",
+      "instance_scope": "P08"
+    }
+  },
+  "metadata": {
+    "surface_kind": "open",
+    "limitations": [
+      "Bajo abierto y oculto por pelvis en reposo. Comprobar unión al inclinar torso; sin garantía de todas las poses."
+    ],
+    "triangles": 22,
+    "bounds_local_H": {
+      "min": [
+        -0.13,
+        -0.01,
+        -0.071
+      ],
+      "max": [
+        0.13,
+        0.25,
+        0.071
+      ],
+      "size": [
+        0.26,
+        0.26,
+        0.142
+      ]
+    },
+    "dimensions_scene": [
+      0.2028,
+      0.2028,
+      0.11076
+    ],
+    "authoritative_for": "support_geometry_only",
+    "reference_render_policy": "Las vistas técnicas muestran ambos lados de superficies abiertas; eso no añade caras a los JSON ni obliga a DoubleSide en runtime."
+  }
+}

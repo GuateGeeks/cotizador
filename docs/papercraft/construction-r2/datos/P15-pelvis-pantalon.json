@@ -1,0 +1,186 @@
+{
+  "schema_version": "2.0",
+  "id": "P15",
+  "slug": "P15-pelvis-pantalon",
+  "name": "Pelvis del pantalón",
+  "purpose": "Cintura y pelvis del pantalón que enlazan chaleco y muslos.",
+  "units": "normalized_H",
+  "scene_height": 0.78,
+  "coordinate_system": {
+    "up": "+Y",
+    "front": "+Z",
+    "anatomical_left": "+X"
+  },
+  "mesh": {
+    "vertices": [
+      [
+        -0.1075,
+        -0.031,
+        -0.06
+      ],
+      [
+        0.1075,
+        -0.031,
+        -0.06
+      ],
+      [
+        0.1075,
+        -0.031,
+        0.06
+      ],
+      [
+        -0.1075,
+        -0.031,
+        0.06
+      ],
+      [
+        -0.1175,
+        0.022,
+        -0.065
+      ],
+      [
+        0.1175,
+        0.022,
+        -0.065
+      ],
+      [
+        0.1175,
+        0.022,
+        0.065
+      ],
+      [
+        -0.1175,
+        0.022,
+        0.065
+      ]
+    ],
+    "faces": [
+      [
+        5,
+        1,
+        0
+      ],
+      [
+        4,
+        5,
+        0
+      ],
+      [
+        6,
+        2,
+        1
+      ],
+      [
+        5,
+        6,
+        1
+      ],
+      [
+        7,
+        3,
+        2
+      ],
+      [
+        6,
+        7,
+        2
+      ],
+      [
+        4,
+        0,
+        3
+      ],
+      [
+        7,
+        4,
+        3
+      ]
+    ],
+    "face_colors": [
+      "#33438a",
+      "#324287",
+      "#34448d",
+      "#33438a",
+      "#33438a",
+      "#324287",
+      "#34448d",
+      "#33438a"
+    ]
+  },
+  "material": {
+    "base_color_srgb": "#33438A",
+    "flat_shading": true,
+    "roughness": 0.92,
+    "metalness": 0,
+    "uv_required": false
+  },
+  "construction": "Banda rectangular de cuatro paneles, ocho triángulos.",
+  "sockets": {
+    "origin": {
+      "position_local_H": [
+        0,
+        0,
+        0
+      ],
+      "description": "Origen numérico de esta pieza; montaje mediante assembly.json."
+    },
+    "mount_P08": {
+      "position_local_H": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "description": "Anclaje derivado en reposo para P08. Ver instancia padre P15.",
+      "instance_scope": "P15"
+    },
+    "mount_P16_L": {
+      "position_local_H": [
+        0.058,
+        0.0,
+        0.0
+      ],
+      "description": "Anclaje derivado en reposo para P16-L. Ver instancia padre P15.",
+      "instance_scope": "P15"
+    },
+    "mount_P16_R": {
+      "position_local_H": [
+        -0.058,
+        0.0,
+        0.0
+      ],
+      "description": "Anclaje derivado en reposo para P16-R. Ver instancia padre P15.",
+      "instance_scope": "P15"
+    }
+  },
+  "metadata": {
+    "surface_kind": "open",
+    "limitations": [
+      "Bocas superior e inferior abiertas; la inferior se cubre parcialmente con ambos muslos. Revisar vista inferior y poses sentadas."
+    ],
+    "triangles": 8,
+    "bounds_local_H": {
+      "min": [
+        -0.1175,
+        -0.031,
+        -0.065
+      ],
+      "max": [
+        0.1175,
+        0.022,
+        0.065
+      ],
+      "size": [
+        0.235,
+        0.053,
+        0.13
+      ]
+    },
+    "dimensions_scene": [
+      0.1833,
+      0.04134,
+      0.1014
+    ],
+    "authoritative_for": "support_geometry_only",
+    "reference_render_policy": "Las vistas técnicas muestran ambos lados de superficies abiertas; eso no añade caras a los JSON ni obliga a DoubleSide en runtime."
+  }
+}

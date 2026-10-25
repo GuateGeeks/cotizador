@@ -1,0 +1,147 @@
+{
+  "schema_version": "2.0",
+  "id": "P20",
+  "slug": "P20-tirante",
+  "name": "Tirante",
+  "purpose": "Correa plana de tres tramos: pecho, puente de hombro y unión trasera.",
+  "units": "normalized_H",
+  "scene_height": 0.78,
+  "coordinate_system": {
+    "up": "+Y",
+    "front": "+Z",
+    "anatomical_left": "+X"
+  },
+  "mesh": {
+    "vertices": [
+      [
+        -0.009,
+        -0.15,
+        0.008
+      ],
+      [
+        0.009,
+        -0.15,
+        0.008
+      ],
+      [
+        -0.009,
+        0.02,
+        0.008
+      ],
+      [
+        0.009,
+        0.02,
+        0.008
+      ],
+      [
+        -0.009,
+        0.02,
+        -0.155
+      ],
+      [
+        0.009,
+        0.02,
+        -0.155
+      ],
+      [
+        -0.009,
+        -0.045,
+        -0.155
+      ],
+      [
+        0.009,
+        -0.045,
+        -0.155
+      ]
+    ],
+    "faces": [
+      [
+        0,
+        1,
+        3
+      ],
+      [
+        0,
+        3,
+        2
+      ],
+      [
+        2,
+        3,
+        5
+      ],
+      [
+        2,
+        5,
+        4
+      ],
+      [
+        4,
+        5,
+        7
+      ],
+      [
+        4,
+        7,
+        6
+      ]
+    ],
+    "face_colors": [
+      "#19bccd",
+      "#18b8c9",
+      "#1ac0d1",
+      "#19bccd",
+      "#19bccd",
+      "#18b8c9"
+    ]
+  },
+  "material": {
+    "base_color_srgb": "#19BCCD",
+    "flat_shading": true,
+    "roughness": 0.92,
+    "metalness": 0,
+    "uv_required": false
+  },
+  "construction": "Tres paneles rectangulares, seis triángulos por tirante.",
+  "sockets": {
+    "origin": {
+      "position_local_H": [
+        0,
+        0,
+        0
+      ],
+      "description": "Origen numérico de esta pieza; montaje mediante assembly.json."
+    }
+  },
+  "metadata": {
+    "surface_kind": "open",
+    "limitations": [
+      "Superficie sin espesor. El puente mantiene holgura sobre el hombro en reposo."
+    ],
+    "triangles": 6,
+    "bounds_local_H": {
+      "min": [
+        -0.009,
+        -0.15,
+        -0.155
+      ],
+      "max": [
+        0.009,
+        0.02,
+        0.008
+      ],
+      "size": [
+        0.018,
+        0.16999999999999998,
+        0.163
+      ]
+    },
+    "dimensions_scene": [
+      0.014039999999999999,
+      0.1326,
+      0.12714
+    ],
+    "authoritative_for": "support_geometry_only",
+    "reference_render_policy": "Las vistas técnicas muestran ambos lados de superficies abiertas; eso no añade caras a los JSON ni obliga a DoubleSide en runtime."
+  }
+}

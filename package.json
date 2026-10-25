@@ -13,7 +13,8 @@
     "check:people": "node tools/paper-people-manifest.mjs",
     "shot:people": "node tools/people-shot.cjs",
     "docs:people": "node tools/people-contract.mjs",
-    "shot:alumno": "node tools/alumno-shot.cjs"
+    "shot:alumno": "node tools/alumno-shot.cjs",
+    "import:r2": "node tools/r2-import.mjs"
   },
   "devDependencies": {
     "esbuild": "0.25.12",

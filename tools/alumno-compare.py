@@ -98,7 +98,7 @@ def main():
     rep = json.loads((A / 'piezas' / 'report.json').read_text())
     tiles = []
     for img in rep['images']:
-        if img.get('isolated') and img['view'] == ('back' if img['isolated'] in ('backpack', 'straps', 'ears') else 'char-34'):
+        if img.get('isolated') and img['view'] == ('back' if img['isolated'] in ('backpack', 'straps', 'ears', 'P19', 'P20', 'P03') else 'char-34'):
             info = next((c for c in rep['images'][0]['components'] if c['id'] == img['isolated']), None) if rep['images'][0].get('components') else None
             bones = ', '.join(info['perBone'].keys()) if info else ''
             tiles.append((pc.trim(Image.open(A / 'piezas' / img['file'])), f"{img['isolated']} · {info['triangles'] if info else '?'} tri · {bones}"))

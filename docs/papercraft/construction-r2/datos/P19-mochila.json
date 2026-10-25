@@ -1,0 +1,201 @@
+{
+  "schema_version": "2.0",
+  "id": "P19",
+  "slug": "P19-mochila",
+  "name": "Mochila",
+  "purpose": "Cuerpo de mochila compacto y cónico, situado en la espalda.",
+  "units": "normalized_H",
+  "scene_height": 0.78,
+  "coordinate_system": {
+    "up": "+Y",
+    "front": "+Z",
+    "anatomical_left": "+X"
+  },
+  "mesh": {
+    "vertices": [
+      [
+        -0.0775,
+        0,
+        -0.0335
+      ],
+      [
+        0.0775,
+        0,
+        -0.0335
+      ],
+      [
+        0.0775,
+        0,
+        0.0335
+      ],
+      [
+        -0.0775,
+        0,
+        0.0335
+      ],
+      [
+        -0.0725,
+        0.155,
+        -0.0325
+      ],
+      [
+        0.0725,
+        0.155,
+        -0.0325
+      ],
+      [
+        0.0725,
+        0.155,
+        0.028499999999999998
+      ],
+      [
+        -0.0725,
+        0.155,
+        0.028499999999999998
+      ]
+    ],
+    "faces": [
+      [
+        5,
+        1,
+        0
+      ],
+      [
+        4,
+        5,
+        0
+      ],
+      [
+        6,
+        2,
+        1
+      ],
+      [
+        5,
+        6,
+        1
+      ],
+      [
+        7,
+        3,
+        2
+      ],
+      [
+        6,
+        7,
+        2
+      ],
+      [
+        4,
+        0,
+        3
+      ],
+      [
+        7,
+        4,
+        3
+      ],
+      [
+        1,
+        2,
+        0
+      ],
+      [
+        6,
+        5,
+        4
+      ],
+      [
+        2,
+        3,
+        0
+      ],
+      [
+        7,
+        6,
+        4
+      ]
+    ],
+    "face_colors": [
+      "#19bccd",
+      "#18b8c9",
+      "#1ac0d1",
+      "#19bccd",
+      "#19bccd",
+      "#18b8c9",
+      "#1ac0d1",
+      "#19bccd",
+      "#19bccd",
+      "#18b8c9",
+      "#1ac0d1",
+      "#19bccd"
+    ]
+  },
+  "material": {
+    "base_color_srgb": "#19BCCD",
+    "flat_shading": true,
+    "roughness": 0.92,
+    "metalness": 0,
+    "uv_required": false
+  },
+  "construction": "Prisma cerrado de ocho vértices y doce triángulos.",
+  "sockets": {
+    "origin": {
+      "position_local_H": [
+        0,
+        0,
+        0
+      ],
+      "description": "Origen numérico de esta pieza; montaje mediante assembly.json."
+    },
+    "mount_P20_L": {
+      "position_local_H": [
+        0.064,
+        0.19999999999999996,
+        0.18
+      ],
+      "description": "Anclaje derivado en reposo para P20-L. Ver instancia padre P19.",
+      "instance_scope": "P19"
+    },
+    "mount_P20_R": {
+      "position_local_H": [
+        -0.064,
+        0.19999999999999996,
+        0.18
+      ],
+      "description": "Anclaje derivado en reposo para P20-R. Ver instancia padre P19.",
+      "instance_scope": "P19"
+    }
+  },
+  "metadata": {
+    "surface_kind": "closed",
+    "limitations": [
+      "Sin bolsillo, cierre, asa o solapa geométrica independiente. Añadirlos exige redistribuir el presupuesto."
+    ],
+    "triangles": 12,
+    "bounds_local_H": {
+      "min": [
+        -0.0775,
+        0,
+        -0.0335
+      ],
+      "max": [
+        0.0775,
+        0.155,
+        0.0335
+      ],
+      "size": [
+        0.155,
+        0.155,
+        0.067
+      ]
+    },
+    "dimensions_scene": [
+      0.12090000000000001,
+      0.12090000000000001,
+      0.05226000000000001
+    ],
+    "authoritative_for": "support_geometry_only",
+    "reference_render_policy": "Las vistas técnicas muestran ambos lados de superficies abiertas; eso no añade caras a los JSON ni obliga a DoubleSide en runtime."
+  }
+}

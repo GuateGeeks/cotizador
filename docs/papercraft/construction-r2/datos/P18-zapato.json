@@ -1,0 +1,183 @@
+{
+  "schema_version": "2.0",
+  "id": "P18",
+  "slug": "P18-zapato",
+  "name": "Zapato",
+  "purpose": "Zapato compacto con talón, empeine alto y puntera de espesor visible.",
+  "units": "normalized_H",
+  "scene_height": 0.78,
+  "coordinate_system": {
+    "up": "+Y",
+    "front": "+Z",
+    "anatomical_left": "+X"
+  },
+  "mesh": {
+    "vertices": [
+      [
+        -0.0435,
+        0,
+        -0.048
+      ],
+      [
+        0.0435,
+        0,
+        -0.048
+      ],
+      [
+        0.0435,
+        0,
+        0.08800000000000001
+      ],
+      [
+        -0.0435,
+        0,
+        0.08800000000000001
+      ],
+      [
+        -0.041,
+        0.06,
+        -0.045
+      ],
+      [
+        0.041,
+        0.06,
+        -0.045
+      ],
+      [
+        0.039,
+        0.035,
+        0.088
+      ],
+      [
+        -0.039,
+        0.035,
+        0.088
+      ]
+    ],
+    "faces": [
+      [
+        5,
+        1,
+        0
+      ],
+      [
+        4,
+        5,
+        0
+      ],
+      [
+        6,
+        2,
+        1
+      ],
+      [
+        5,
+        6,
+        1
+      ],
+      [
+        7,
+        3,
+        2
+      ],
+      [
+        6,
+        7,
+        2
+      ],
+      [
+        4,
+        0,
+        3
+      ],
+      [
+        7,
+        4,
+        3
+      ],
+      [
+        1,
+        2,
+        0
+      ],
+      [
+        6,
+        5,
+        4
+      ],
+      [
+        2,
+        3,
+        0
+      ],
+      [
+        7,
+        6,
+        4
+      ]
+    ],
+    "face_colors": [
+      "#2b2340",
+      "#2a223f",
+      "#2c2441",
+      "#2b2340",
+      "#2b2340",
+      "#2a223f",
+      "#2c2441",
+      "#2b2340",
+      "#2b2340",
+      "#2a223f",
+      "#2c2441",
+      "#2b2340"
+    ]
+  },
+  "material": {
+    "base_color_srgb": "#2B2340",
+    "flat_shading": true,
+    "roughness": 0.92,
+    "metalness": 0,
+    "uv_required": false
+  },
+  "construction": "Prisma rectangular modificado de ocho vértices y doce triángulos.",
+  "sockets": {
+    "origin": {
+      "position_local_H": [
+        0,
+        0,
+        0
+      ],
+      "description": "Origen numérico de esta pieza; montaje mediante assembly.json."
+    }
+  },
+  "metadata": {
+    "surface_kind": "closed",
+    "limitations": [
+      "Sin suela adicional ni detalles de cordones. La parte frontal tiene altura positiva."
+    ],
+    "triangles": 12,
+    "bounds_local_H": {
+      "min": [
+        -0.0435,
+        0,
+        -0.048
+      ],
+      "max": [
+        0.0435,
+        0.06,
+        0.08800000000000001
+      ],
+      "size": [
+        0.087,
+        0.06,
+        0.136
+      ]
+    },
+    "dimensions_scene": [
+      0.06786,
+      0.0468,
+      0.10608000000000001
+    ],
+    "authoritative_for": "support_geometry_only",
+    "reference_render_policy": "Las vistas técnicas muestran ambos lados de superficies abiertas; eso no añade caras a los JSON ni obliga a DoubleSide en runtime."
+  }
+}

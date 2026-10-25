@@ -1,0 +1,177 @@
+{
+  "schema_version": "2.0",
+  "id": "P11",
+  "slug": "P11-manga",
+  "name": "Manga corta",
+  "purpose": "Manga corta con boca superior positiva y salida amplia para el brazo.",
+  "units": "normalized_H",
+  "scene_height": 0.78,
+  "coordinate_system": {
+    "up": "+Y",
+    "front": "+Z",
+    "anatomical_left": "+X"
+  },
+  "mesh": {
+    "vertices": [
+      [
+        -0.0355,
+        0.01,
+        -0.034
+      ],
+      [
+        0.0355,
+        0.01,
+        -0.034
+      ],
+      [
+        0.0355,
+        0.01,
+        0.034
+      ],
+      [
+        -0.0355,
+        0.01,
+        0.034
+      ],
+      [
+        -0.042,
+        -0.065,
+        -0.037
+      ],
+      [
+        0.042,
+        -0.065,
+        -0.037
+      ],
+      [
+        0.042,
+        -0.065,
+        0.037
+      ],
+      [
+        -0.042,
+        -0.065,
+        0.037
+      ]
+    ],
+    "faces": [
+      [
+        0,
+        1,
+        5
+      ],
+      [
+        0,
+        5,
+        4
+      ],
+      [
+        1,
+        2,
+        6
+      ],
+      [
+        1,
+        6,
+        5
+      ],
+      [
+        2,
+        3,
+        7
+      ],
+      [
+        2,
+        7,
+        6
+      ],
+      [
+        3,
+        0,
+        4
+      ],
+      [
+        3,
+        4,
+        7
+      ]
+    ],
+    "face_colors": [
+      "#fbfaf7",
+      "#f6f5f2",
+      "#fffffc",
+      "#fbfaf7",
+      "#fbfaf7",
+      "#f6f5f2",
+      "#fffffc",
+      "#fbfaf7"
+    ]
+  },
+  "material": {
+    "base_color_srgb": "#FBFAF7",
+    "flat_shading": true,
+    "roughness": 0.92,
+    "metalness": 0,
+    "uv_required": false
+  },
+  "construction": "Dos secciones rectangulares de cuatro vértices, cuatro paneles y ocho triángulos.",
+  "sockets": {
+    "origin": {
+      "position_local_H": [
+        0,
+        0,
+        0
+      ],
+      "description": "Origen numérico de esta pieza; montaje mediante assembly.json."
+    },
+    "mount_P12_L": {
+      "position_local_H": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "description": "Anclaje derivado en reposo para P12-L. Ver instancia padre P11-L.",
+      "instance_scope": "P11-L"
+    },
+    "mount_P12_R": {
+      "position_local_H": [
+        -0.0,
+        0.0,
+        0.0
+      ],
+      "description": "Anclaje derivado en reposo para P12-R. Ver instancia padre P11-R.",
+      "instance_scope": "P11-R"
+    }
+  },
+  "metadata": {
+    "surface_kind": "open",
+    "limitations": [
+      "Ambos extremos abiertos. Su cobertura se valida en reposo; poses amplias pueden exigir tapas y rebalanceo del presupuesto."
+    ],
+    "triangles": 8,
+    "bounds_local_H": {
+      "min": [
+        -0.042,
+        -0.065,
+        -0.037
+      ],
+      "max": [
+        0.042,
+        0.01,
+        0.037
+      ],
+      "size": [
+        0.084,
+        0.075,
+        0.074
+      ]
+    },
+    "dimensions_scene": [
+      0.06552000000000001,
+      0.058499999999999996,
+      0.05772
+    ],
+    "authoritative_for": "support_geometry_only",
+    "reference_render_policy": "Las vistas técnicas muestran ambos lados de superficies abiertas; eso no añade caras a los JSON ni obliga a DoubleSide en runtime."
+  }
+}
