@@ -9,7 +9,12 @@
     "capture": "node tools/campus-capture.cjs",
     "build:inspector": "esbuild asesor/lab/paper/inspector-entry.js --bundle --minify --format=iife --global-name=GGPaper --target=es2019 --legal-comments=none --outfile=asesor/vendor/paper-inspector.min.js",
     "shot:paper": "node tools/paper-shot.cjs",
-    "check:paper": "node tools/paper-mesh-check.mjs"
+    "check:paper": "node tools/paper-mesh-check.mjs",
+    "check:people": "node tools/paper-people-manifest.mjs",
+    "shot:people": "node tools/people-shot.cjs",
+    "docs:people": "node tools/people-contract.mjs",
+    "shot:alumno": "node tools/alumno-shot.cjs",
+    "import:r2": "node tools/r2-import.mjs"
   },
   "devDependencies": {
     "esbuild": "0.25.12",

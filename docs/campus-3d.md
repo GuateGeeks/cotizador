@@ -56,10 +56,17 @@ Resumen; las reglas completas están en la cabecera de `plan.js` y las pruebas e
   fondo como pasarela entre las alas y una escalera exterior junto al ala derecha.
 - Una prueba de grafo transitable lo comprueba.
 
+**Entrada**
+
+- Volumen naranja junto al flanco oeste de la primera aula, al ras de su frente y mirando a la cámara.
+- Nunca queda bajo un balcón ni delante de un interior, y no se mueve entre estados.
+
 **Terreno y vegetación**
 
-- El pedestal se ajusta a lo construido.
-- Hay jardín trasero y árboles en los flancos; nada alto delante de los interiores.
+- El pedestal se ajusta a lo construido. Al frente de las alas solo hay una franja de patio y un borde de 0.7.
+  No queda una explanada vacía.
+- Un porche a lo largo del flanco oeste lleva la entrada y dos árboles de flanco.
+- Hay jardín trasero. Nada alto delante de los interiores: el flanco este solo lleva vegetación baja.
 
 **Garantías**
 
@@ -70,6 +77,36 @@ Resumen; las reglas completas están en la cabecera de `plan.js` y las pruebas e
 
 - Son representativos, con un tope de `CAMPUS_LIMITS.people` (40).
 - Los contadores muestran las cifras reales del motor.
+- Se construyen según el paquete de construcción R1
+  ([`papercraft/construction/`](papercraft/construction/README.md)): perfil → plan → topología →
+  auditoría en `pieces-people.js` (`resolvePersonProfile`, `planPerson`, `addPaperPerson`).
+  - Alturas H por nivel (suela a cima del cabello): preprimaria 0.62, primaria 0.78, básico 0.90,
+    bachillerato 0.94, docente 0.98; cabeza/H 0.32–0.225 y hombros/H 0.275–0.255, medidos.
+  - Cabello con núcleo de 32 triángulos (banda 8→8, transición 8→4, ápice desplazado) y mechones
+    plegados de dos triángulos; variantes de coste fijo: corto 48, cola 56, moño 56, coletas 60,
+    melena 60, gorra 48, gorra con coletas 60. Con visor VR se omiten el flequillo y la visera.
+  - Mangas de dos secciones y cuatro paneles (8 por manga); falda en dos mitades rígidas de seis
+    paneles (alternancia radial 1 / 0.78) sobre `legL`/`legR`; manos y zapatos cerrados (8 cada uno).
+  - Presupuesto: geometría ≤ 271 por estudiante (279 con la reserva de 8) y ≤ 291 por docente,
+    más 7 triángulos de sombra de contacto. Máximo medido: 278 estudiante, 252 docente.
+  - `npm run check:people -- <carpeta-nueva>` genera el manifiesto (plan frente a caras emitidas en
+    236 combinaciones, huesos, rigidez, capas ≥ 0.004 en 12 poses, proporciones y determinismo);
+    `npm run shot:people` produce la escalera de lectura a 40/60/80/120/600 px con DPR 1 y 2.
+  - El alumno base de primaria (`PRIMARIA_BASE`) se construye con el paquete R2
+    ([papercraft/construction-r2](papercraft/construction-r2/README.md)): 20 recetas y 33 instancias
+    cargadas de sus JSON (`npm run import:r2` genera `asesor/lab/paper/r2/primaria-r2-data.js`; una
+    prueba falla si diverge) y su rig. Todo alumno de primaria con cabello corto usa la cabeza R2.
+    Contrato generado: [papercraft/personajes/ALUMNO-PRIMARIA.md](papercraft/personajes/ALUMNO-PRIMARIA.md)
+    (`npm run docs:people`). Para sumar la sombra de contacto al límite de 280 se retiran 8 tapas ocultas
+    (272 + 7 = 279); el resto de combinaciones conserva la receta v1.
+  - Recreaciones R3 ([papercraft/construction-r3](papercraft/construction-r3/README.md)): cabeza P01,
+    núcleo del cabello P06 y chaleco P08, rehechos desde los pliegues de sus láminas, reemplazan la
+    receta R2 del mismo id. El alumno de primaria con cabello corto suma 312 + 7 = 319 triángulos;
+    su límite es 320 (`PERSON_LIMIT.r3Student`), el resto de estudiantes sigue en 280 y los docentes
+    en 300. Comparación por pieza: `tools/alumno-piezas-r2.cjs` y `tools/alumno-piezas-r2.py`.
+  - Inspector: `npm run build:inspector`, `npm run serve` y abrir `asesor/lab/inspector.html`; el panel
+    «Alumno de primaria» elige pose y vista, aísla componentes y muestra aristas, hueso y triángulos.
+    Capturas reproducibles: `npm run shot:alumno -- <carpeta-nueva>` y `tools/alumno-compare.py`.
 
 ## Visor e interacción
 
@@ -86,6 +123,25 @@ Resumen; las reglas completas están en la cabecera de `plan.js` y las pruebas e
   simultáneos y equipos necesarios.
 - «Equipos existentes» y «por incorporar» no se muestran, porque el motor no tiene inventario
   (brecha documentada).
+
+**Leyenda**
+
+La píldora «Representación de tu configuración» se despliega. Muestra la paleta de la maqueta (aula, taller,
+cubierta, balcón, entrada y jardines) y el mismo resumen textual de la vista sin 3D.
+
+**Interior de un aula (rayos X)**
+
+- Se activa al enfocar un aula o taller, o al acercar mucho la cámara a una.
+- Quedan translúcidos el techo, los pisos de arriba, la pared del aula hacia la cámara y los elementos delgados
+  delante (balcón, escalera, árboles). Los muebles y personas de los pisos de arriba se ocultan.
+- Los edificios completos que quedan entre la cámara y el aula se apartan (se ocultan).
+- Reordena el índice compartido y dibuja la parte translúcida con el material de vidrio: no suma materiales
+  ni búferes. La figura del PDF siempre muestra el campus completo.
+
+**Geeky**
+
+En reposo se posa sobre la azotea del ala izquierda. Al enfocar una actividad flota sobre su techo, a un lado.
+Nunca queda delante de la escalera ni del balcón.
 
 **Selección**
 
@@ -130,13 +186,13 @@ vegetación, piezas a ras de suelo y decoraciones de muro usan sombras de contac
 
 **Movimiento reducido.** El resultado se muestra directo, sin animación.
 
-**Mediciones del 2026-10-24** (Chromium headless):
+**Mediciones del 2026-10-25** (Chromium headless; incluyen los personajes R3 y las correcciones r2):
 
 | Condición | Estado | Triángulos | Draw calls | Materiales | fps |
 |---|---|---|---|---|---|
-| GPU RTX 3060 Ti (WSL, ANGLE/D3D12), 1440 × 1000, calidad `full` | 1 | 6 637 | 34 | 10 | 60 |
-| Igual | 6 (construcción, actividad, rotación) | 37 809–38 049 | 75–82 | 10 | 56–60 |
-| SwiftShader (CPU), 1440 × 1000, baja a `eco` | 6 | 35 187 | 63 | 10 | No medido (CPU) |
+| GPU RTX 3060 Ti (WSL, ANGLE/D3D12), 1440 × 1000, calidad `full` | 1 | 6 764–8 096 | 34 | 10 | 60 |
+| Igual | 6 (actividad) | 36 952–38 808 | 75 | 10 | 60 |
+| SwiftShader (CPU), 1440 × 1000, baja a `eco` | 6 | 33 906 | 62 | 10 | No medido (CPU) |
 
 - Geeky aporta unos 2 100 triángulos en reposo y hasta unos 4 200 en `celebrate`, con 2
   materiales propios.
@@ -146,8 +202,11 @@ vegetación, piezas a ras de suelo y decoraciones de muro usan sombras de contac
 ## Verificación
 
 ```bash
-npm test                                   # Node: motor, planificador, PDF, experiencia (108)
+npm test                                   # Node: motor, planificador, PDF, experiencia, personajes (115)
 npm run check:paper -- artifacts/paper/<run>   # mallas: presupuesto, coplanares, suelo, determinismo
+npm run check:people -- artifacts/paper/<run>  # personajes: manifiesto plan/real, rig, capas, poses, proporciones
+node tools/people-shot.cjs artifacts/paper/<run> --piece person-prim --sizes 40,60,80,120,600 --dpr 1,2
+python3 tools/people-compare.py <out> --shots <carpeta con ladder/, levels/, poses/>
 PLAYWRIGHT_MODULE=… BROWSER_CHANNEL=chromium BROWSER_ARGS="--use-angle=swiftshader --enable-unsafe-swiftshader" \
   node asesor/test/campus-browser.cjs      # escritorio, móvil, movimiento reducido y sin WebGL
 npm run capture -- artifacts/campus/<run>  # seis estados y cuatro vistas del cotizador real

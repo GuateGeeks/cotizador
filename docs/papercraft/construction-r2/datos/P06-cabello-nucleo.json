@@ -1,0 +1,395 @@
+{
+  "schema_version": "2.0",
+  "id": "P06",
+  "slug": "P06-cabello-nucleo",
+  "name": "Núcleo del cabello",
+  "purpose": "Masa principal con coronilla elevada y silueta ancha, sin cierre plano grande.",
+  "units": "normalized_H",
+  "scene_height": 0.78,
+  "coordinate_system": {
+    "up": "+Y",
+    "front": "+Z",
+    "anatomical_left": "+X"
+  },
+  "mesh": {
+    "vertices": [
+      [
+        -0.07079999999999999,
+        0.14,
+        0.087
+      ],
+      [
+        0.07079999999999999,
+        0.14,
+        0.087
+      ],
+      [
+        0.118,
+        0.08,
+        0.0348
+      ],
+      [
+        0.118,
+        0.045,
+        -0.03915
+      ],
+      [
+        0.0649,
+        0.02,
+        -0.087
+      ],
+      [
+        -0.0649,
+        0.02,
+        -0.087
+      ],
+      [
+        -0.118,
+        0.045,
+        -0.03915
+      ],
+      [
+        -0.118,
+        0.08,
+        0.0348
+      ],
+      [
+        -0.08220000000000001,
+        0.231,
+        0.09999999999999999
+      ],
+      [
+        0.08220000000000001,
+        0.231,
+        0.09999999999999999
+      ],
+      [
+        0.137,
+        0.225,
+        0.037000000000000005
+      ],
+      [
+        0.137,
+        0.225,
+        -0.05225
+      ],
+      [
+        0.07535000000000001,
+        0.225,
+        -0.11
+      ],
+      [
+        -0.07535000000000001,
+        0.225,
+        -0.11
+      ],
+      [
+        -0.137,
+        0.225,
+        -0.05225
+      ],
+      [
+        -0.137,
+        0.225,
+        0.037000000000000005
+      ],
+      [
+        0,
+        0.26,
+        0.072
+      ],
+      [
+        0.085,
+        0.255,
+        -0.005
+      ],
+      [
+        0,
+        0.258,
+        -0.083
+      ],
+      [
+        -0.085,
+        0.252,
+        -0.005
+      ],
+      [
+        -0.025,
+        0.28,
+        -0.008
+      ]
+    ],
+    "faces": [
+      [
+        0,
+        1,
+        9
+      ],
+      [
+        0,
+        9,
+        8
+      ],
+      [
+        1,
+        2,
+        10
+      ],
+      [
+        1,
+        10,
+        9
+      ],
+      [
+        2,
+        3,
+        11
+      ],
+      [
+        2,
+        11,
+        10
+      ],
+      [
+        3,
+        4,
+        12
+      ],
+      [
+        3,
+        12,
+        11
+      ],
+      [
+        4,
+        5,
+        13
+      ],
+      [
+        4,
+        13,
+        12
+      ],
+      [
+        5,
+        6,
+        14
+      ],
+      [
+        5,
+        14,
+        13
+      ],
+      [
+        6,
+        7,
+        15
+      ],
+      [
+        6,
+        15,
+        14
+      ],
+      [
+        7,
+        0,
+        8
+      ],
+      [
+        7,
+        8,
+        15
+      ],
+      [
+        15,
+        8,
+        16
+      ],
+      [
+        8,
+        9,
+        16
+      ],
+      [
+        9,
+        17,
+        16
+      ],
+      [
+        9,
+        10,
+        17
+      ],
+      [
+        10,
+        11,
+        17
+      ],
+      [
+        11,
+        18,
+        17
+      ],
+      [
+        11,
+        12,
+        18
+      ],
+      [
+        12,
+        13,
+        18
+      ],
+      [
+        13,
+        19,
+        18
+      ],
+      [
+        13,
+        14,
+        19
+      ],
+      [
+        14,
+        15,
+        19
+      ],
+      [
+        15,
+        16,
+        19
+      ],
+      [
+        16,
+        17,
+        20
+      ],
+      [
+        17,
+        18,
+        20
+      ],
+      [
+        18,
+        19,
+        20
+      ],
+      [
+        19,
+        16,
+        20
+      ]
+    ],
+    "face_colors": [
+      "#3a2e5c",
+      "#392d5a",
+      "#3b2f5e",
+      "#3a2e5c",
+      "#3a2e5c",
+      "#392d5a",
+      "#3b2f5e",
+      "#3a2e5c",
+      "#3a2e5c",
+      "#392d5a",
+      "#3b2f5e",
+      "#3a2e5c",
+      "#3a2e5c",
+      "#392d5a",
+      "#3b2f5e",
+      "#3a2e5c",
+      "#3a2e5c",
+      "#392d5a",
+      "#3b2f5e",
+      "#3a2e5c",
+      "#3a2e5c",
+      "#392d5a",
+      "#3b2f5e",
+      "#3a2e5c",
+      "#3a2e5c",
+      "#392d5a",
+      "#3b2f5e",
+      "#3a2e5c",
+      "#3a2e5c",
+      "#392d5a",
+      "#3b2f5e",
+      "#3a2e5c"
+    ]
+  },
+  "material": {
+    "base_color_srgb": "#3A2E5C",
+    "flat_shading": true,
+    "roughness": 0.92,
+    "metalness": 0,
+    "uv_required": false
+  },
+  "construction": "Banda de 8 a 8 vértices: 16 triángulos; transición de 8 a 4: 12; ápice desplazado: 4.",
+  "sockets": {
+    "origin": {
+      "position_local_H": [
+        0,
+        0,
+        0
+      ],
+      "description": "Origen numérico de esta pieza; montaje mediante assembly.json."
+    },
+    "mount_P07_L": {
+      "position_local_H": [
+        0.038,
+        0.19000000000000006,
+        0.094
+      ],
+      "description": "Anclaje derivado en reposo para P07-L. Ver instancia padre P06.",
+      "instance_scope": "P06"
+    },
+    "mount_P07_C": {
+      "position_local_H": [
+        0.0,
+        0.19000000000000006,
+        0.094
+      ],
+      "description": "Anclaje derivado en reposo para P07-C. Ver instancia padre P06.",
+      "instance_scope": "P06"
+    },
+    "mount_P07_R": {
+      "position_local_H": [
+        -0.038,
+        0.19000000000000006,
+        0.094
+      ],
+      "description": "Anclaje derivado en reposo para P07-R. Ver instancia padre P06.",
+      "instance_scope": "P06"
+    }
+  },
+  "metadata": {
+    "surface_kind": "open",
+    "limitations": [
+      "Abertura inferior intencional sobre la cabeza. No es un sólido imprimible."
+    ],
+    "triangles": 32,
+    "bounds_local_H": {
+      "min": [
+        -0.137,
+        0.02,
+        -0.11
+      ],
+      "max": [
+        0.137,
+        0.28,
+        0.09999999999999999
+      ],
+      "size": [
+        0.274,
+        0.26,
+        0.21
+      ]
+    },
+    "dimensions_scene": [
+      0.21372000000000002,
+      0.2028,
+      0.1638
+    ],
+    "authoritative_for": "support_geometry_only",
+    "reference_render_policy": "Las vistas técnicas muestran ambos lados de superficies abiertas; eso no añade caras a los JSON ni obliga a DoubleSide en runtime."
+  }
+}

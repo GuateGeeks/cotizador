@@ -236,8 +236,13 @@ export const PIECES = [
       p.card(0, .04, .049, .09, .082, .018, C.white, { thin: 'z', edge: .1, omit: ['-z', '-y'] });
       for (const sx of [-1, 1]) p.card(sx * .0615, .04, .043, .035, .082, .018, C.white, { thin: 'z', edge: .1, omit: ['-z', '-y'], ry: sx * .35 });
       p.card(0, .04, -.05, .13, .06, .02, C.dark, { thin: 'z', omit: ['+z'], edge: .25 });
-      for (const sx of [-1, 1]) p.card(sx * .0775, .04, -.09, .01, .035, .09, C.dark, { thin: 'x', edge: .25 });
-      p.card(0, .04, -.135, .18, .035, .01, C.dark, { thin: 'z', edge: .25 });
+      // Goggle cues on the front plate: two dark lenses and a nose notch, so it never reads as a white box.
+      const front = .058 + GAP;
+      for (const sx of [-1, 1]) p.card(sx * .026, .05, front + .002, .036, .026, .004, C.violetDeep, { thin: 'z', omit: only('+z') });
+      b.face([-.017, .0, front], [.017, .0, front], [0, .02, front], C.dark, [0, 0, 1]);
+      // Slim violet head strap, thinner than the shell so it reads as a band, not a frame.
+      for (const sx of [-1, 1]) p.card(sx * .0775, .042, -.088, .008, .016, .086, C.violet, { thin: 'x', omit: ['-y'] }); // ends where the back band starts
+      p.card(0, .042, -.135, .163, .016, .008, C.violet, { thin: 'z', omit: ['-y'] });
       for (const sx of [-1, 1]) p.card(sx * .0825 + sx * GAP, .04, -.02, .008, .05, .05, C.turquoise, { thin: 'x', omit: [sx > 0 ? '-x' : '+x'] });
       p.shadow(0, 0, -.04, .11, .13);
       return meta;

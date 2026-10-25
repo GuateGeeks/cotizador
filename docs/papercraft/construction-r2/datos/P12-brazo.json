@@ -1,0 +1,167 @@
+{
+  "schema_version": "2.0",
+  "id": "P12",
+  "slug": "P12-brazo",
+  "name": "Brazo",
+  "purpose": "Segmento superior del brazo, parcialmente cubierto por la manga.",
+  "units": "normalized_H",
+  "scene_height": 0.78,
+  "coordinate_system": {
+    "up": "+Y",
+    "front": "+Z",
+    "anatomical_left": "+X"
+  },
+  "mesh": {
+    "vertices": [
+      [
+        -0.023,
+        -0.03,
+        0.01575
+      ],
+      [
+        0.023,
+        -0.03,
+        0.01575
+      ],
+      [
+        0,
+        -0.03,
+        -0.029249999999999998
+      ],
+      [
+        -0.02,
+        -0.133,
+        0.013999999999999999
+      ],
+      [
+        0.02,
+        -0.133,
+        0.013999999999999999
+      ],
+      [
+        0,
+        -0.133,
+        -0.026000000000000002
+      ]
+    ],
+    "faces": [
+      [
+        4,
+        1,
+        0
+      ],
+      [
+        3,
+        4,
+        0
+      ],
+      [
+        5,
+        2,
+        1
+      ],
+      [
+        4,
+        5,
+        1
+      ],
+      [
+        3,
+        0,
+        2
+      ],
+      [
+        5,
+        3,
+        2
+      ],
+      [
+        1,
+        2,
+        0
+      ],
+      [
+        5,
+        4,
+        3
+      ]
+    ],
+    "face_colors": [
+      "#e5ad80",
+      "#e0aa7d",
+      "#eab083",
+      "#e5ad80",
+      "#e5ad80",
+      "#e0aa7d",
+      "#eab083",
+      "#e5ad80"
+    ]
+  },
+  "material": {
+    "base_color_srgb": "#E5AD80",
+    "flat_shading": true,
+    "roughness": 0.92,
+    "metalness": 0,
+    "uv_required": false
+  },
+  "construction": "Prisma triangular cerrado, ocho triángulos.",
+  "sockets": {
+    "origin": {
+      "position_local_H": [
+        0,
+        0,
+        0
+      ],
+      "description": "Origen numérico de esta pieza; montaje mediante assembly.json."
+    },
+    "mount_P13_L": {
+      "position_local_H": [
+        0.0,
+        -0.125,
+        0.0
+      ],
+      "description": "Anclaje derivado en reposo para P13-L. Ver instancia padre P12-L.",
+      "instance_scope": "P12-L"
+    },
+    "mount_P13_R": {
+      "position_local_H": [
+        -0.0,
+        -0.125,
+        0.0
+      ],
+      "description": "Anclaje derivado en reposo para P13-R. Ver instancia padre P12-R.",
+      "instance_scope": "P12-R"
+    }
+  },
+  "metadata": {
+    "surface_kind": "closed",
+    "limitations": [
+      "Prisma triangular de apoyo; revisar silueta del codo en giro."
+    ],
+    "triangles": 8,
+    "bounds_local_H": {
+      "min": [
+        -0.023,
+        -0.133,
+        -0.029249999999999998
+      ],
+      "max": [
+        0.023,
+        -0.03,
+        0.01575
+      ],
+      "size": [
+        0.046,
+        0.10300000000000001,
+        0.045
+      ]
+    },
+    "dimensions_scene": [
+      0.03588,
+      0.08034000000000001,
+      0.0351
+    ],
+    "authoritative_for": "support_geometry_only",
+    "reference_render_policy": "Las vistas técnicas muestran ambos lados de superficies abiertas; eso no añade caras a los JSON ni obliga a DoubleSide en runtime."
+  }
+}

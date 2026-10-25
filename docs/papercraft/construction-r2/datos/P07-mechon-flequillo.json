@@ -1,0 +1,125 @@
+{
+  "schema_version": "2.0",
+  "id": "P07",
+  "slug": "P07-mechon-flequillo",
+  "name": "Mechón de flequillo",
+  "purpose": "Mechón ancho de papel con una cresta longitudinal; tres instancias forman el flequillo.",
+  "units": "normalized_H",
+  "scene_height": 0.78,
+  "coordinate_system": {
+    "up": "+Y",
+    "front": "+Z",
+    "anatomical_left": "+X"
+  },
+  "mesh": {
+    "vertices": [
+      [
+        -0.022,
+        0,
+        0.0
+      ],
+      [
+        0,
+        0.004,
+        0.012571428571428572
+      ],
+      [
+        0.022,
+        0,
+        0.0
+      ],
+      [
+        -0.0176,
+        -0.045649999999999996,
+        -0.006521428571428579
+      ],
+      [
+        0,
+        -0.055,
+        0.004142857142857132
+      ],
+      [
+        0.015399999999999999,
+        -0.045649999999999996,
+        -0.006521428571428579
+      ]
+    ],
+    "faces": [
+      [
+        0,
+        3,
+        4
+      ],
+      [
+        0,
+        4,
+        1
+      ],
+      [
+        1,
+        4,
+        5
+      ],
+      [
+        1,
+        5,
+        2
+      ]
+    ],
+    "face_colors": [
+      "#3a2e5c",
+      "#392d5a",
+      "#3b2f5e",
+      "#3a2e5c"
+    ]
+  },
+  "material": {
+    "base_color_srgb": "#3A2E5C",
+    "flat_shading": true,
+    "roughness": 0.92,
+    "metalness": 0,
+    "uv_required": false
+  },
+  "construction": "Dos cuadriláteros no coplanares, cuatro triángulos.",
+  "sockets": {
+    "origin": {
+      "position_local_H": [
+        0,
+        0,
+        0
+      ],
+      "description": "Origen numérico de esta pieza; montaje mediante assembly.json."
+    }
+  },
+  "metadata": {
+    "surface_kind": "open",
+    "limitations": [
+      "Superficie plegada sin espesor. Las puntas deben permanecer por encima de los ojos."
+    ],
+    "triangles": 4,
+    "bounds_local_H": {
+      "min": [
+        -0.022,
+        -0.055,
+        -0.006521428571428579
+      ],
+      "max": [
+        0.022,
+        0.004,
+        0.012571428571428572
+      ],
+      "size": [
+        0.044,
+        0.059,
+        0.01909285714285715
+      ]
+    },
+    "dimensions_scene": [
+      0.034319999999999996,
+      0.04602,
+      0.014892428571428579
+    ],
+    "authoritative_for": "support_geometry_only",
+    "reference_render_policy": "Las vistas técnicas muestran ambos lados de superficies abiertas; eso no añade caras a los JSON ni obliga a DoubleSide en runtime."
+  }
+}

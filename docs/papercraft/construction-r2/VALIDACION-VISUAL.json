@@ -1,0 +1,669 @@
+{
+  "schema_version": 1,
+  "project": "GuateGeeks · Primaria por piezas R2",
+  "review_date": "2026-10-25",
+  "status": "revision_completa_con_limites_documentados",
+  "scope": "Inspección visual individual de las veinte láminas de piezas y las dos láminas artísticas de conjunto; revisión por muestreo de seis planos técnicos finales.",
+  "conceptual_sheets_reviewed": 22,
+  "component_sheets_reviewed": 20,
+  "technical_sheets_visually_sampled": 6,
+  "all_conceptual_sheets_accepted_for_reference_role": true,
+  "unresolved_visual_blockers": [],
+  "authority": {
+    "geometry_and_assembly": [
+      "datos/*.json",
+      "planos/*.svg",
+      "planos/*.png",
+      "vistas/*/*.png"
+    ],
+    "art_direction": [
+      "imagenes/*.png"
+    ],
+    "difference_register": "docs/DIFERENCIAS-ARTE-GEOMETRIA.md"
+  },
+  "limitations": [
+    "Vistas artísticas orientativas: cámaras, secciones y facetas no son ortografía exacta.",
+    "Los JSON y planos derivados fijan medidas, conteos, espesor cero, huesos y montaje.",
+    "Nariz, ojos ovalados, calcetas, pulgares u otros microdetalles de los insets no amplían el inventario.",
+    "Fibra, líneas de pliegue y sombras de los PNG no se convierten automáticamente en texturas o geometría.",
+    "Los PNG artísticos no son plantillas de fabricación ni mediciones ortográficas. Las seis vistas exactas por pieza se derivan de las recetas numéricas.",
+    "Los conteos y transformaciones de la malla de apoyo no prueban equivalencia exacta con el acabado de la ilustración.",
+    "La inspección estática no valida colisiones en animación, encaje durante todas las poses, coste de GPU o mejora de FPS.",
+    "La nariz de la figura ensamblada de imagenes/21-montaje-explotado.png está excluida de la implementación base."
+  ],
+  "resolved_corrections": [
+    "P01: retiradas las orejas de las siete vistas de la cabeza aislada.",
+    "P14: retirados pulgar y bloque de muñeca adicionales de la mano aislada.",
+    "P20: corregida la forma a tres paneles con tramo frontal, puente y retorno posterior.",
+    "00: corregida errata del subtítulo y simplificados nariz, manos y tobillos.",
+    "21: retirado collar duplicado en el torso, separados los apliques de camisa y simplificada la mochila.",
+    "Planos 00/21: ampliada escala de inspección.",
+    "Planos oscuros: mejorado contraste de aristas y numeración de vértices.",
+    "Modelo de apoyo montado: corregida la pequeña cuña de piel que asomaba sobre el cabello."
+  ],
+  "artistic_sheets": [
+    {
+      "id": "00-personaje-completo",
+      "path": "imagenes/00-personaje-completo.png",
+      "sha256": "d19cdd56cd9aca99d99e1501975ae75fa8e214854ccd75ae238113a83930df2a",
+      "format": "PNG",
+      "dimensions_px": [
+        1536,
+        1024
+      ],
+      "status": "aceptada_como_concepto",
+      "approved_for_role": true,
+      "role": "referencia_artistica_conceptual",
+      "notes": [
+        "Cuatro vistas completas del alumno, identidad y paleta consistentes.",
+        "Ojos ovalados, biseles, secciones y acabado ilustrados difieren de la malla de apoyo."
+      ],
+      "revision_reviewed": "v2: subtítulo corregido, nariz saliente, pulgares y calcetas retirados",
+      "visual_checks": {
+        "labels_legible": true,
+        "assembly_or_character_readable": true,
+        "exact_topology_match_claimed": false
+      }
+    },
+    {
+      "id": "21-montaje-explotado",
+      "path": "imagenes/21-montaje-explotado.png",
+      "sha256": "3bbea3e952478c5ccf15177227b837b75fbc6b9ee051e23463f7b5e9dba40b25",
+      "format": "PNG",
+      "dimensions_px": [
+        1536,
+        1024
+      ],
+      "status": "aceptada_como_concepto",
+      "approved_for_role": true,
+      "role": "referencia_artistica_conceptual",
+      "notes": [
+        "Despiece artístico y figura ensamblada legibles; las posiciones y cantidades exactas proceden de assembly.json y del plano técnico de 33 instancias.",
+        "La figura ensamblada aún incluye una nariz triangular pequeña: es un microdetalle artístico excluido del inventario de veinte piezas.",
+        "El perfil de correas, ojos ovalados y subdivisiones artísticas no reemplaza las recetas numéricas."
+      ],
+      "revision_reviewed": "v2: torso sin camisa adherida, pechera y dos solapas separadas, manos sin pulgar y mochila sin bolsillo añadido",
+      "visual_checks": {
+        "labels_legible": true,
+        "assembly_or_character_readable": true,
+        "exact_topology_match_claimed": false
+      }
+    },
+    {
+      "id": "P01-cabeza",
+      "path": "imagenes/P01-cabeza.png",
+      "sha256": "e3e26a81d799fa583ff26677d736a5f2174c311a2ddfe165488afe89cc15b161",
+      "format": "PNG",
+      "dimensions_px": [
+        1536,
+        1024
+      ],
+      "status": "aceptada_como_concepto",
+      "approved_for_role": true,
+      "role": "referencia_artistica_conceptual",
+      "notes": [
+        "Cabeza artística con mejillas y mentón suavizados mediante más biseles; apoyo de veinte triángulos conserva sección hexagonal y una mandíbula simplificada."
+      ],
+      "revision_reviewed": "v2 sin orejas en vistas aisladas y sin nariz en inset",
+      "visual_checks": {
+        "isolated_component_in_seven_main_panels": true,
+        "six_principal_view_labels_present": true,
+        "three_quarter_view_present": true,
+        "contextual_location_inset_present": true,
+        "labels_legible": true,
+        "exact_orthographic_projection_claimed": false,
+        "exact_topology_match_claimed": false
+      }
+    },
+    {
+      "id": "P02-cuello",
+      "path": "imagenes/P02-cuello.png",
+      "sha256": "cb9638f5857ef110b4390c15b94917af709027fa488a879e9e722a5df9970447",
+      "format": "PNG",
+      "dimensions_px": [
+        1536,
+        1024
+      ],
+      "status": "aceptada_como_concepto",
+      "approved_for_role": true,
+      "role": "referencia_artistica_conceptual",
+      "notes": [
+        "Lectura de sección variable en arte; JSON define prisma triangular."
+      ],
+      "visual_checks": {
+        "isolated_component_in_seven_main_panels": true,
+        "six_principal_view_labels_present": true,
+        "three_quarter_view_present": true,
+        "contextual_location_inset_present": true,
+        "labels_legible": true,
+        "exact_orthographic_projection_claimed": false,
+        "exact_topology_match_claimed": false
+      }
+    },
+    {
+      "id": "P03-oreja",
+      "path": "imagenes/P03-oreja.png",
+      "sha256": "17f0a9c499487f5af69084f1ae150d3fccf1367072521214602d5e96373d0623",
+      "format": "PNG",
+      "dimensions_px": [
+        1536,
+        1024
+      ],
+      "status": "aceptada_como_concepto",
+      "approved_for_role": true,
+      "role": "referencia_artistica_conceptual",
+      "notes": [
+        "Arte con biseles adicionales; soporte tetraédrico de cuatro triángulos."
+      ],
+      "visual_checks": {
+        "isolated_component_in_seven_main_panels": true,
+        "six_principal_view_labels_present": true,
+        "three_quarter_view_present": true,
+        "contextual_location_inset_present": true,
+        "labels_legible": true,
+        "exact_orthographic_projection_claimed": false,
+        "exact_topology_match_claimed": false
+      }
+    },
+    {
+      "id": "P04-ojo",
+      "path": "imagenes/P04-ojo.png",
+      "sha256": "884fa67c9e324394df8147dd16dddcbbc53cda728044b3db66f0d70c098f4f34",
+      "format": "PNG",
+      "dimensions_px": [
+        1536,
+        1024
+      ],
+      "status": "aceptada_como_concepto",
+      "approved_for_role": true,
+      "role": "referencia_artistica_conceptual",
+      "notes": [
+        "Arte presenta relieve y cuatro facetas; receta plana de dos triángulos."
+      ],
+      "visual_checks": {
+        "isolated_component_in_seven_main_panels": true,
+        "six_principal_view_labels_present": true,
+        "three_quarter_view_present": true,
+        "contextual_location_inset_present": true,
+        "labels_legible": true,
+        "exact_orthographic_projection_claimed": false,
+        "exact_topology_match_claimed": false
+      }
+    },
+    {
+      "id": "P05-sonrisa",
+      "path": "imagenes/P05-sonrisa.png",
+      "sha256": "3d2e3acd7650c9f1a6b9ab7ebf984e218d2c02a27bb24a39f5fd8becfc3dc007",
+      "format": "PNG",
+      "dimensions_px": [
+        1536,
+        1024
+      ],
+      "status": "aceptada_como_concepto",
+      "approved_for_role": true,
+      "role": "referencia_artistica_conceptual",
+      "notes": [
+        "Arte tiene más facetas y banda más elaborada; soporte de tres triángulos."
+      ],
+      "visual_checks": {
+        "isolated_component_in_seven_main_panels": true,
+        "six_principal_view_labels_present": true,
+        "three_quarter_view_present": true,
+        "contextual_location_inset_present": true,
+        "labels_legible": true,
+        "exact_orthographic_projection_claimed": false,
+        "exact_topology_match_claimed": false
+      }
+    },
+    {
+      "id": "P06-cabello-nucleo",
+      "path": "imagenes/P06-cabello-nucleo.png",
+      "sha256": "a4fdadb7c0e3b8596d19e257d10e734f0c5512d5148877ca950760014b2d2515",
+      "format": "PNG",
+      "dimensions_px": [
+        1536,
+        1024
+      ],
+      "status": "aceptada_como_concepto",
+      "approved_for_role": true,
+      "role": "referencia_artistica_conceptual",
+      "notes": [
+        "Borde frontal artístico parece pequeño flequillo, interpretar como rim; P07 se monta aparte.",
+        "Núcleo hueco y siete vistas completas."
+      ],
+      "visual_checks": {
+        "isolated_component_in_seven_main_panels": true,
+        "six_principal_view_labels_present": true,
+        "three_quarter_view_present": true,
+        "contextual_location_inset_present": true,
+        "labels_legible": true,
+        "exact_orthographic_projection_claimed": false,
+        "exact_topology_match_claimed": false
+      }
+    },
+    {
+      "id": "P07-mechon-flequillo",
+      "path": "imagenes/P07-mechon-flequillo.png",
+      "sha256": "2a96be16a9875c66164ad3f10a62b8d8e65bc1028e4a841102fbd560445badbe",
+      "format": "PNG",
+      "dimensions_px": [
+        1536,
+        1024
+      ],
+      "status": "aceptada_como_concepto",
+      "approved_for_role": true,
+      "role": "referencia_artistica_conceptual",
+      "notes": [
+        "Arte con subdivisiones y perfil más elaborado; receta cuatro triángulos."
+      ],
+      "visual_checks": {
+        "isolated_component_in_seven_main_panels": true,
+        "six_principal_view_labels_present": true,
+        "three_quarter_view_present": true,
+        "contextual_location_inset_present": true,
+        "labels_legible": true,
+        "exact_orthographic_projection_claimed": false,
+        "exact_topology_match_claimed": false
+      }
+    },
+    {
+      "id": "P08-torso-chaleco",
+      "path": "imagenes/P08-torso-chaleco.png",
+      "sha256": "f96e5b22f1ae3ddfe151dcda8b88a02f0f1623bd393993d79f6ee8c780c760b2",
+      "format": "PNG",
+      "dimensions_px": [
+        1536,
+        1024
+      ],
+      "status": "aceptada_como_concepto",
+      "approved_for_role": true,
+      "role": "referencia_artistica_conceptual",
+      "notes": [
+        "Arte hueco con escote y sisas recortadas; soporte octagonal simplificado usa P09 y P10 para lectura de camisa."
+      ],
+      "visual_checks": {
+        "isolated_component_in_seven_main_panels": true,
+        "six_principal_view_labels_present": true,
+        "three_quarter_view_present": true,
+        "contextual_location_inset_present": true,
+        "labels_legible": true,
+        "exact_orthographic_projection_claimed": false,
+        "exact_topology_match_claimed": false
+      }
+    },
+    {
+      "id": "P09-pechera-camisa",
+      "path": "imagenes/P09-pechera-camisa.png",
+      "sha256": "a25442ca2ac5d907112a965ff1177f9e63e6db1dba52e7bec574c5c527c6981a",
+      "format": "PNG",
+      "dimensions_px": [
+        1536,
+        1024
+      ],
+      "status": "aceptada_como_concepto",
+      "approved_for_role": true,
+      "role": "referencia_artistica_conceptual",
+      "notes": [
+        "Triángulo plano consistente; leve canto visual de cartulina no se añade a la receta plana."
+      ],
+      "visual_checks": {
+        "isolated_component_in_seven_main_panels": true,
+        "six_principal_view_labels_present": true,
+        "three_quarter_view_present": true,
+        "contextual_location_inset_present": true,
+        "labels_legible": true,
+        "exact_orthographic_projection_claimed": false,
+        "exact_topology_match_claimed": false
+      }
+    },
+    {
+      "id": "P10-solapa-cuello",
+      "path": "imagenes/P10-solapa-cuello.png",
+      "sha256": "f00ce5c40cfe19131db5576d2298800c76249c47123e7e6a4cbc509a5b74a157",
+      "format": "PNG",
+      "dimensions_px": [
+        1536,
+        1024
+      ],
+      "status": "aceptada_como_concepto",
+      "approved_for_role": true,
+      "role": "referencia_artistica_conceptual",
+      "notes": [
+        "Ilustración con pliegue/bisel; receta plana de un triángulo."
+      ],
+      "visual_checks": {
+        "isolated_component_in_seven_main_panels": true,
+        "six_principal_view_labels_present": true,
+        "three_quarter_view_present": true,
+        "contextual_location_inset_present": true,
+        "labels_legible": true,
+        "exact_orthographic_projection_claimed": false,
+        "exact_topology_match_claimed": false
+      }
+    },
+    {
+      "id": "P11-manga",
+      "path": "imagenes/P11-manga.png",
+      "sha256": "4c63c96c52f8076ee399b4a7d53b00d1273e919af634b327f4020b047b92ba1b",
+      "format": "PNG",
+      "dimensions_px": [
+        1536,
+        1024
+      ],
+      "status": "aceptada_como_concepto",
+      "approved_for_role": true,
+      "role": "referencia_artistica_conceptual",
+      "notes": [
+        "Abertura superior positiva y sin hombrera puntual.",
+        "Arte muestra biseles más complejos; soporte cuatro paneles."
+      ],
+      "visual_checks": {
+        "isolated_component_in_seven_main_panels": true,
+        "six_principal_view_labels_present": true,
+        "three_quarter_view_present": true,
+        "contextual_location_inset_present": true,
+        "labels_legible": true,
+        "exact_orthographic_projection_claimed": false,
+        "exact_topology_match_claimed": false
+      }
+    },
+    {
+      "id": "P12-brazo",
+      "path": "imagenes/P12-brazo.png",
+      "sha256": "bec59687820972170cdcd6c1ed63e80f4401914c8244808a69c04613bb5e9329",
+      "format": "PNG",
+      "dimensions_px": [
+        1536,
+        1024
+      ],
+      "status": "aceptada_como_concepto",
+      "approved_for_role": true,
+      "role": "referencia_artistica_conceptual",
+      "notes": [
+        "Extremos biselados en arte; soporte prisma triangular cerrado de ocho triángulos."
+      ],
+      "visual_checks": {
+        "isolated_component_in_seven_main_panels": true,
+        "six_principal_view_labels_present": true,
+        "three_quarter_view_present": true,
+        "contextual_location_inset_present": true,
+        "labels_legible": true,
+        "exact_orthographic_projection_claimed": false,
+        "exact_topology_match_claimed": false
+      }
+    },
+    {
+      "id": "P13-antebrazo",
+      "path": "imagenes/P13-antebrazo.png",
+      "sha256": "44dfecd67f595d86d2ead176a75e418a7eee9425d6ff37b1d9a320f277d5d753",
+      "format": "PNG",
+      "dimensions_px": [
+        1536,
+        1024
+      ],
+      "status": "aceptada_como_concepto",
+      "approved_for_role": true,
+      "role": "referencia_artistica_conceptual",
+      "notes": [
+        "Biseles y sección más compleja en varias vistas; soporte prisma triangular."
+      ],
+      "visual_checks": {
+        "isolated_component_in_seven_main_panels": true,
+        "six_principal_view_labels_present": true,
+        "three_quarter_view_present": true,
+        "contextual_location_inset_present": true,
+        "labels_legible": true,
+        "exact_orthographic_projection_claimed": false,
+        "exact_topology_match_claimed": false
+      }
+    },
+    {
+      "id": "P14-mano",
+      "path": "imagenes/P14-mano.png",
+      "sha256": "d1861f2d5779f69806e6a78f88c1d24e9fa73f6aff5d46e293d7560e0fb400ae",
+      "format": "PNG",
+      "dimensions_px": [
+        1536,
+        1024
+      ],
+      "status": "aceptada_como_concepto",
+      "approved_for_role": true,
+      "role": "referencia_artistica_conceptual",
+      "notes": [
+        "Mitón compacto legible, con más biseles ilustrados que el apoyo de ocho triángulos."
+      ],
+      "revision_reviewed": "v2 sin pulgar ni bloque de muñeca adicional",
+      "visual_checks": {
+        "isolated_component_in_seven_main_panels": true,
+        "six_principal_view_labels_present": true,
+        "three_quarter_view_present": true,
+        "contextual_location_inset_present": true,
+        "labels_legible": true,
+        "exact_orthographic_projection_claimed": false,
+        "exact_topology_match_claimed": false
+      }
+    },
+    {
+      "id": "P15-pelvis-pantalon",
+      "path": "imagenes/P15-pelvis-pantalon.png",
+      "sha256": "a55d8467ae818bda00dc146357df6c6af7f635cf163d4a3d601774032d8959c5",
+      "format": "PNG",
+      "dimensions_px": [
+        1536,
+        1024
+      ],
+      "status": "aceptada_como_concepto",
+      "approved_for_role": true,
+      "role": "referencia_artistica_conceptual",
+      "notes": [
+        "Arte banda octagonal; soporte banda rectangular abierta de cuatro paneles."
+      ],
+      "visual_checks": {
+        "isolated_component_in_seven_main_panels": true,
+        "six_principal_view_labels_present": true,
+        "three_quarter_view_present": true,
+        "contextual_location_inset_present": true,
+        "labels_legible": true,
+        "exact_orthographic_projection_claimed": false,
+        "exact_topology_match_claimed": false
+      }
+    },
+    {
+      "id": "P16-muslo-pantalon",
+      "path": "imagenes/P16-muslo-pantalon.png",
+      "sha256": "b701440c0cd023f958ac39feb18a17c7a183064ae8f4cf380092d0ee602d17d6",
+      "format": "PNG",
+      "dimensions_px": [
+        1536,
+        1024
+      ],
+      "status": "aceptada_como_concepto",
+      "approved_for_role": true,
+      "role": "referencia_artistica_conceptual",
+      "notes": [
+        "Biseles ilustrados adicionales; soporte rectangular cerrado de doce triángulos."
+      ],
+      "visual_checks": {
+        "isolated_component_in_seven_main_panels": true,
+        "six_principal_view_labels_present": true,
+        "three_quarter_view_present": true,
+        "contextual_location_inset_present": true,
+        "labels_legible": true,
+        "exact_orthographic_projection_claimed": false,
+        "exact_topology_match_claimed": false
+      }
+    },
+    {
+      "id": "P17-pantorrilla-pantalon",
+      "path": "imagenes/P17-pantorrilla-pantalon.png",
+      "sha256": "911b72d6a2675af7fbf931a1ece4e1d7a31a7a22533397facb3a1e5e364133cc",
+      "format": "PNG",
+      "dimensions_px": [
+        1536,
+        1024
+      ],
+      "status": "aceptada_como_concepto",
+      "approved_for_role": true,
+      "role": "referencia_artistica_conceptual",
+      "notes": [
+        "Arte con abertura superior y biseles; soporte cerrado de doce triángulos.",
+        "Inset resalta casi toda la pierna, ubicación aproximada del segmento inferior."
+      ],
+      "visual_checks": {
+        "isolated_component_in_seven_main_panels": true,
+        "six_principal_view_labels_present": true,
+        "three_quarter_view_present": true,
+        "contextual_location_inset_present": true,
+        "labels_legible": true,
+        "exact_orthographic_projection_claimed": false,
+        "exact_topology_match_claimed": false
+      }
+    },
+    {
+      "id": "P18-zapato",
+      "path": "imagenes/P18-zapato.png",
+      "sha256": "df00f016a1be1088b044ace811f62fe9a6d1d090b5eb6b74769f1210ac0ef50a",
+      "format": "PNG",
+      "dimensions_px": [
+        1536,
+        1024
+      ],
+      "status": "aceptada_como_concepto",
+      "approved_for_role": true,
+      "role": "referencia_artistica_conceptual",
+      "notes": [
+        "Buen perfil compacto, puntera con altura.",
+        "Arte hueco/biselado; soporte cerrado de doce triángulos. Calcetas en inset fuera del inventario."
+      ],
+      "visual_checks": {
+        "isolated_component_in_seven_main_panels": true,
+        "six_principal_view_labels_present": true,
+        "three_quarter_view_present": true,
+        "contextual_location_inset_present": true,
+        "labels_legible": true,
+        "exact_orthographic_projection_claimed": false,
+        "exact_topology_match_claimed": false
+      }
+    },
+    {
+      "id": "P19-mochila",
+      "path": "imagenes/P19-mochila.png",
+      "sha256": "b96d6d2d5218ba326d454dc2b303a1fb5358054edbe203d19e6f10c1bfad7ce0",
+      "format": "PNG",
+      "dimensions_px": [
+        1536,
+        1024
+      ],
+      "status": "aceptada_como_concepto",
+      "approved_for_role": true,
+      "role": "referencia_artistica_conceptual",
+      "notes": [
+        "Volumen aislado sin correas ni bolsillos; arte añade biseles frente al soporte cerrado de doce triángulos."
+      ],
+      "visual_checks": {
+        "isolated_component_in_seven_main_panels": true,
+        "six_principal_view_labels_present": true,
+        "three_quarter_view_present": true,
+        "contextual_location_inset_present": true,
+        "labels_legible": true,
+        "exact_orthographic_projection_claimed": false,
+        "exact_topology_match_claimed": false
+      }
+    },
+    {
+      "id": "P20-tirante",
+      "path": "imagenes/P20-tirante.png",
+      "sha256": "98c551ab791dca1efa722c67b55e3c7805b1cab4c8569ea357001809f655f609",
+      "format": "PNG",
+      "dimensions_px": [
+        1536,
+        1024
+      ],
+      "status": "aceptada_como_concepto",
+      "approved_for_role": true,
+      "role": "referencia_artistica_conceptual",
+      "notes": [
+        "Ruta de tres paneles en U invertida corregida.",
+        "Espesor y cantos ilustrados no se añaden al soporte abierto de seis triángulos."
+      ],
+      "revision_reviewed": "v2 con tres paneles, pecho-puente-retorno posterior",
+      "visual_checks": {
+        "isolated_component_in_seven_main_panels": true,
+        "six_principal_view_labels_present": true,
+        "three_quarter_view_present": true,
+        "contextual_location_inset_present": true,
+        "labels_legible": true,
+        "exact_orthographic_projection_claimed": false,
+        "exact_topology_match_claimed": false
+      }
+    }
+  ],
+  "technical_visual_sample": [
+    {
+      "path": "planos/00-personaje-montado.png",
+      "sha256": "cba5b9c3c0bfa169e50635534767fa11d3f2fc9bfca1c65b971ad5ac2660abb5",
+      "status": "revisado_visualmente",
+      "checks": [
+        "Texto legible y sin recortes relevantes.",
+        "Escala de figura suficiente para inspección.",
+        "Aristas y etiquetas distinguibles.",
+        "Límites del modelo de apoyo explícitos en la lámina."
+      ]
+    },
+    {
+      "path": "planos/21-despiece-montaje.png",
+      "sha256": "e935ca51ea6dc8c1eef7b09f0c31b527cfc67eb060277c2a78cd290c64663647",
+      "status": "revisado_visualmente",
+      "checks": [
+        "Texto legible y sin recortes relevantes.",
+        "Escala de figura suficiente para inspección.",
+        "Aristas y etiquetas distinguibles.",
+        "Límites del modelo de apoyo explícitos en la lámina."
+      ]
+    },
+    {
+      "path": "planos/P01-cabeza.png",
+      "sha256": "1abd92d8a61722987c14cf4017c641a179fba04bacf3988ada8a799d79c08d8b",
+      "status": "revisado_visualmente",
+      "checks": [
+        "Texto legible y sin recortes relevantes.",
+        "Escala de figura suficiente para inspección.",
+        "Aristas y etiquetas distinguibles.",
+        "Límites del modelo de apoyo explícitos en la lámina."
+      ]
+    },
+    {
+      "path": "planos/P06-cabello-nucleo.png",
+      "sha256": "b86c2881f1f505fc4cbf97a20b91c6776cc12311142514664da246e3dbdae913",
+      "status": "revisado_visualmente",
+      "checks": [
+        "Texto legible y sin recortes relevantes.",
+        "Escala de figura suficiente para inspección.",
+        "Aristas y etiquetas distinguibles.",
+        "Límites del modelo de apoyo explícitos en la lámina."
+      ]
+    },
+    {
+      "path": "planos/P11-manga.png",
+      "sha256": "1661bb2d962314e70841f03ec2a1b2e052edfefda0d95da180659432c103ea02",
+      "status": "revisado_visualmente",
+      "checks": [
+        "Texto legible y sin recortes relevantes.",
+        "Escala de figura suficiente para inspección.",
+        "Aristas y etiquetas distinguibles.",
+        "Límites del modelo de apoyo explícitos en la lámina."
+      ]
+    },
+    {
+      "path": "planos/P18-zapato.png",
+      "sha256": "79a301f8f83f479a6a7eab8d41d639f926acf7185089195a8c0ac4e84a4aec8f",
+      "status": "revisado_visualmente",
+      "checks": [
+        "Texto legible y sin recortes relevantes.",
+        "Escala de figura suficiente para inspección.",
+        "Aristas y etiquetas distinguibles.",
+        "Límites del modelo de apoyo explícitos en la lámina."
+      ]
+    }
+  ]
+}

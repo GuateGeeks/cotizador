@@ -1,0 +1,441 @@
+{
+  "id": "GG-PRIMARIA-R2",
+  "scale_to_scene": 0.78,
+  "total_triangles": 280,
+  "instance_count": 33,
+  "parts": [
+    {
+      "id": "P01",
+      "name": "Cabeza",
+      "slug": "P01-cabeza",
+      "file": "P01-cabeza.json",
+      "triangles_per_instance": 20,
+      "instances": [
+        "P01"
+      ],
+      "surface_kind": "closed",
+      "dimensions_local_H": [
+        0.225,
+        0.22,
+        0.17
+      ],
+      "dimensions_scene": [
+        0.17550000000000002,
+        0.1716,
+        0.13260000000000002
+      ]
+    },
+    {
+      "id": "P02",
+      "name": "Cuello",
+      "slug": "P02-cuello",
+      "file": "P02-cuello.json",
+      "triangles_per_instance": 8,
+      "instances": [
+        "P02"
+      ],
+      "surface_kind": "closed",
+      "dimensions_local_H": [
+        0.045,
+        0.065,
+        0.04
+      ],
+      "dimensions_scene": [
+        0.0351,
+        0.0507,
+        0.031200000000000002
+      ]
+    },
+    {
+      "id": "P03",
+      "name": "Oreja",
+      "slug": "P03-oreja",
+      "file": "P03-oreja.json",
+      "triangles_per_instance": 4,
+      "instances": [
+        "P03-L",
+        "P03-R"
+      ],
+      "surface_kind": "closed",
+      "dimensions_local_H": [
+        0.038,
+        0.028,
+        0.016
+      ],
+      "dimensions_scene": [
+        0.02964,
+        0.021840000000000002,
+        0.012480000000000002
+      ]
+    },
+    {
+      "id": "P04",
+      "name": "Ojo",
+      "slug": "P04-ojo",
+      "file": "P04-ojo.json",
+      "triangles_per_instance": 2,
+      "instances": [
+        "P04-L",
+        "P04-R"
+      ],
+      "surface_kind": "planar",
+      "dimensions_local_H": [
+        0.012,
+        0.018,
+        0.0019472727272727272
+      ],
+      "dimensions_scene": [
+        0.00936,
+        0.014039999999999999,
+        0.0015188727272727272
+      ]
+    },
+    {
+      "id": "P05",
+      "name": "Sonrisa",
+      "slug": "P05-sonrisa",
+      "file": "P05-sonrisa.json",
+      "triangles_per_instance": 3,
+      "instances": [
+        "P05"
+      ],
+      "surface_kind": "planar",
+      "dimensions_local_H": [
+        0.036,
+        0.008,
+        0.0008654545454545454
+      ],
+      "dimensions_scene": [
+        0.028079999999999997,
+        0.006240000000000001,
+        0.0006750545454545455
+      ]
+    },
+    {
+      "id": "P06",
+      "name": "Núcleo del cabello",
+      "slug": "P06-cabello-nucleo",
+      "file": "P06-cabello-nucleo.json",
+      "triangles_per_instance": 32,
+      "instances": [
+        "P06"
+      ],
+      "surface_kind": "open",
+      "dimensions_local_H": [
+        0.274,
+        0.26,
+        0.21
+      ],
+      "dimensions_scene": [
+        0.21372000000000002,
+        0.2028,
+        0.1638
+      ]
+    },
+    {
+      "id": "P07",
+      "name": "Mechón de flequillo",
+      "slug": "P07-mechon-flequillo",
+      "file": "P07-mechon-flequillo.json",
+      "triangles_per_instance": 4,
+      "instances": [
+        "P07-L",
+        "P07-C",
+        "P07-R"
+      ],
+      "surface_kind": "open",
+      "dimensions_local_H": [
+        0.044,
+        0.059,
+        0.01909285714285715
+      ],
+      "dimensions_scene": [
+        0.034319999999999996,
+        0.04602,
+        0.014892428571428579
+      ]
+    },
+    {
+      "id": "P08",
+      "name": "Torso y chaleco",
+      "slug": "P08-torso-chaleco",
+      "file": "P08-torso-chaleco.json",
+      "triangles_per_instance": 22,
+      "instances": [
+        "P08"
+      ],
+      "surface_kind": "open",
+      "dimensions_local_H": [
+        0.26,
+        0.26,
+        0.142
+      ],
+      "dimensions_scene": [
+        0.2028,
+        0.2028,
+        0.11076
+      ]
+    },
+    {
+      "id": "P09",
+      "name": "Pechera de camisa",
+      "slug": "P09-pechera-camisa",
+      "file": "P09-pechera-camisa.json",
+      "triangles_per_instance": 1,
+      "instances": [
+        "P09"
+      ],
+      "surface_kind": "planar",
+      "dimensions_local_H": [
+        0.078,
+        0.076,
+        0.0026307692307692286
+      ],
+      "dimensions_scene": [
+        0.060840000000000005,
+        0.05928,
+        0.0020519999999999983
+      ]
+    },
+    {
+      "id": "P10",
+      "name": "Solapa del cuello",
+      "slug": "P10-solapa-cuello",
+      "file": "P10-solapa-cuello.json",
+      "triangles_per_instance": 1,
+      "instances": [
+        "P10-L",
+        "P10-R"
+      ],
+      "surface_kind": "planar",
+      "dimensions_local_H": [
+        0.045,
+        0.044,
+        0.004523076923076922
+      ],
+      "dimensions_scene": [
+        0.0351,
+        0.034319999999999996,
+        0.0035279999999999995
+      ]
+    },
+    {
+      "id": "P11",
+      "name": "Manga corta",
+      "slug": "P11-manga",
+      "file": "P11-manga.json",
+      "triangles_per_instance": 8,
+      "instances": [
+        "P11-L",
+        "P11-R"
+      ],
+      "surface_kind": "open",
+      "dimensions_local_H": [
+        0.084,
+        0.075,
+        0.074
+      ],
+      "dimensions_scene": [
+        0.06552000000000001,
+        0.058499999999999996,
+        0.05772
+      ]
+    },
+    {
+      "id": "P12",
+      "name": "Brazo",
+      "slug": "P12-brazo",
+      "file": "P12-brazo.json",
+      "triangles_per_instance": 8,
+      "instances": [
+        "P12-L",
+        "P12-R"
+      ],
+      "surface_kind": "closed",
+      "dimensions_local_H": [
+        0.046,
+        0.10300000000000001,
+        0.045
+      ],
+      "dimensions_scene": [
+        0.03588,
+        0.08034000000000001,
+        0.0351
+      ]
+    },
+    {
+      "id": "P13",
+      "name": "Antebrazo",
+      "slug": "P13-antebrazo",
+      "file": "P13-antebrazo.json",
+      "triangles_per_instance": 8,
+      "instances": [
+        "P13-L",
+        "P13-R"
+      ],
+      "surface_kind": "closed",
+      "dimensions_local_H": [
+        0.041,
+        0.127,
+        0.0499
+      ],
+      "dimensions_scene": [
+        0.03198,
+        0.09906000000000001,
+        0.038922
+      ]
+    },
+    {
+      "id": "P14",
+      "name": "Mano",
+      "slug": "P14-mano",
+      "file": "P14-mano.json",
+      "triangles_per_instance": 8,
+      "instances": [
+        "P14-L",
+        "P14-R"
+      ],
+      "surface_kind": "closed",
+      "dimensions_local_H": [
+        0.041,
+        0.053,
+        0.045149999999999996
+      ],
+      "dimensions_scene": [
+        0.03198,
+        0.04134,
+        0.035217
+      ]
+    },
+    {
+      "id": "P15",
+      "name": "Pelvis del pantalón",
+      "slug": "P15-pelvis-pantalon",
+      "file": "P15-pelvis-pantalon.json",
+      "triangles_per_instance": 8,
+      "instances": [
+        "P15"
+      ],
+      "surface_kind": "open",
+      "dimensions_local_H": [
+        0.235,
+        0.053,
+        0.13
+      ],
+      "dimensions_scene": [
+        0.1833,
+        0.04134,
+        0.1014
+      ]
+    },
+    {
+      "id": "P16",
+      "name": "Muslo del pantalón",
+      "slug": "P16-muslo-pantalon",
+      "file": "P16-muslo-pantalon.json",
+      "triangles_per_instance": 12,
+      "instances": [
+        "P16-L",
+        "P16-R"
+      ],
+      "surface_kind": "closed",
+      "dimensions_local_H": [
+        0.084,
+        0.21000000000000002,
+        0.105
+      ],
+      "dimensions_scene": [
+        0.06552000000000001,
+        0.16380000000000003,
+        0.0819
+      ]
+    },
+    {
+      "id": "P17",
+      "name": "Pantorrilla del pantalón",
+      "slug": "P17-pantorrilla-pantalon",
+      "file": "P17-pantorrilla-pantalon.json",
+      "triangles_per_instance": 12,
+      "instances": [
+        "P17-L",
+        "P17-R"
+      ],
+      "surface_kind": "closed",
+      "dimensions_local_H": [
+        0.073,
+        0.22,
+        0.094
+      ],
+      "dimensions_scene": [
+        0.05694,
+        0.1716,
+        0.07332
+      ]
+    },
+    {
+      "id": "P18",
+      "name": "Zapato",
+      "slug": "P18-zapato",
+      "file": "P18-zapato.json",
+      "triangles_per_instance": 12,
+      "instances": [
+        "P18-L",
+        "P18-R"
+      ],
+      "surface_kind": "closed",
+      "dimensions_local_H": [
+        0.087,
+        0.06,
+        0.136
+      ],
+      "dimensions_scene": [
+        0.06786,
+        0.0468,
+        0.10608000000000001
+      ]
+    },
+    {
+      "id": "P19",
+      "name": "Mochila",
+      "slug": "P19-mochila",
+      "file": "P19-mochila.json",
+      "triangles_per_instance": 12,
+      "instances": [
+        "P19"
+      ],
+      "surface_kind": "closed",
+      "dimensions_local_H": [
+        0.155,
+        0.155,
+        0.067
+      ],
+      "dimensions_scene": [
+        0.12090000000000001,
+        0.12090000000000001,
+        0.05226000000000001
+      ]
+    },
+    {
+      "id": "P20",
+      "name": "Tirante",
+      "slug": "P20-tirante",
+      "file": "P20-tirante.json",
+      "triangles_per_instance": 6,
+      "instances": [
+        "P20-L",
+        "P20-R"
+      ],
+      "surface_kind": "open",
+      "dimensions_local_H": [
+        0.018,
+        0.16999999999999998,
+        0.163
+      ],
+      "dimensions_scene": [
+        0.014039999999999999,
+        0.1326,
+        0.12714
+      ]
+    }
+  ]
+}

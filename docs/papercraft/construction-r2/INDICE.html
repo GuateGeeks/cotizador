@@ -1,0 +1,192 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>GuateGeeks · Primaria por piezas R2</title>
+<style>
+:root{--ink:#321853;--purple:#6942a1;--teal:#19bccd;--paper:#f4f1f6;--line:#e5dcec;--muted:#726481}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.55 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+a{color:#4b2c86;text-decoration-thickness:1px;text-underline-offset:3px}a:focus-visible,select:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid #e9811f;outline-offset:4px}
+.wrap{width:min(1400px,94vw);margin:auto}header{padding:42px 0 24px}.brand{font-weight:800;letter-spacing:.03em;font-size:14px}.brand span{color:#168b96}h1{font-size:clamp(32px,5vw,58px);line-height:1.07;letter-spacing:-.04em;max-width:850px;margin:16px 0}
+.lead{max-width:900px;font-size:19px;color:var(--muted)}.stats{display:flex;flex-wrap:wrap;gap:10px;margin:22px 0}.stats span{border:1px solid var(--line);background:white;border-radius:24px;padding:7px 14px;font-size:14px;font-weight:650}
+.start{display:flex;flex-wrap:wrap;gap:10px}.start a{background:var(--purple);color:white;padding:11px 17px;border-radius:10px;text-decoration:none;font-weight:650}.start a.secondary{background:white;color:var(--ink);border:1px solid var(--line)}
+.overview{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:28px 0}.overview figure{margin:0;background:white;border:1px solid var(--line);border-radius:16px;overflow:hidden}.overview img{display:block;width:100%;aspect-ratio:3/2;object-fit:contain}.overview figcaption{padding:12px 18px;font-weight:650}
+.notice{background:#fff8ec;border-left:4px solid #ff9d38;border-radius:6px;padding:15px 18px;margin:22px 0;max-width:1100px}.notice p{margin:0}
+.toolbar{position:sticky;top:0;z-index:2;display:flex;flex-wrap:wrap;gap:12px;padding:16px 0;background:rgba(244,241,246,.97);border-bottom:1px solid var(--line);margin:14px 0 24px}
+.field{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:650}.field input,.field select{border:1px solid #cfbfdc;background:white;color:var(--ink);border-radius:9px;padding:11px;font:inherit}.field input{min-width:240px}.visible-count{margin-left:auto;align-self:center;font-size:14px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}.part{background:white;border:1px solid var(--line);border-radius:16px;overflow:hidden;scroll-margin-top:100px}.card-head{display:flex;align-items:center;gap:12px;padding:17px 18px;border-bottom:1px solid var(--line)}h2{font-size:19px;line-height:1.2;margin:0;flex:1}.code{font-size:13px;font-weight:800;background:#eee6f6;color:#4b2c86;padding:6px 8px;border-radius:6px}.count{font-size:12px;color:var(--muted)}
+.preview{display:block;width:100%;aspect-ratio:3/2;object-fit:contain;background:#faf8fc}.meta{font-size:13px;color:var(--muted);padding:13px 18px 0}.purpose{padding:0 18px;margin:7px 0 14px;font-size:14px}.file-links{display:flex;flex-wrap:wrap;gap:9px 16px;padding:0 18px 16px;font-size:14px;font-weight:650}details{border-top:1px solid var(--line);padding:12px 18px;font-size:14px}summary{cursor:pointer;font-weight:650}.view-links{display:flex;flex-wrap:wrap;gap:10px 16px;padding-top:12px}.empty{display:none;padding:40px 0;color:var(--muted)}
+footer{padding:36px 0 50px;font-size:14px;color:var(--muted)}footer p{max-width:1000px}
+@media(max-width:780px){.grid,.overview{grid-template-columns:1fr}.toolbar{position:static}.field{width:100%;justify-content:space-between}.field input,.field select{min-width:0;width:70%}.visible-count{margin-left:0}.count{display:none}header{padding-top:26px}}
+@media print{.toolbar{position:static}.grid{display:block}.part{break-inside:avoid;margin-bottom:20px}.start,details{display:none}}
+</style></head><body><div class="wrap">
+<header><div class="brand">GUATEGEEKS <span> / REFERENCIAS DE CONSTRUCCIÓN</span></div><h1>Un alumno.<br>Veinte piezas.</h1>
+<p class="lead">Kit del personaje de primaria papercraft para construir por componentes, revisar cada forma y ensamblar el conjunto con anclajes definidos.</p>
+<div class="stats"><span>20 recetas</span><span>33 instancias</span><span>140 vistas individuales</span><span>280 triángulos de apoyo</span><span>R2 · Octubre 2026</span></div>
+<div class="start"><a href="GUIA-PARA-CLAUDE.md">Empezar con Claude</a><a class="secondary" href="docs/MONTAJE.md">Guía de montaje</a><a class="secondary" href="README.md">Contenido y uso</a><a class="secondary" href="datos/assembly.json">Ensamblaje numérico</a></div></header>
+<div class="overview"><figure><a href="imagenes/00-personaje-completo.png" target="_blank" rel="noopener"><img src="imagenes/00-personaje-completo.png" alt="Referencia del personaje completo"></a><figcaption>Aspecto del alumno base</figcaption></figure><figure><a href="imagenes/21-montaje-explotado.png" target="_blank" rel="noopener"><img src="imagenes/21-montaje-explotado.png" alt="Referencia de montaje del personaje por piezas"></a><figcaption>Montaje y relación entre componentes</figcaption></figure></div>
+<aside class="notice"><p><strong>Cómo leer el kit.</strong> Las ilustraciones muestran material, intención de forma y ubicación. Los planos y JSON definen la geometría de apoyo reproducible, sus medidas y su conteo. Los biseles, espesores o microdetalles sugeridos por las ilustraciones no se añaden automáticamente. La integración, las poses y el rendimiento deben comprobarse en el cotizador.</p></aside>
+<div class="toolbar"><label class="field">Buscar pieza <input id="search" type="search" placeholder="Cabello, manga, P18…" autocomplete="off"></label><label class="field">Mostrar <select id="mode"><option value="arte">Referencia papercraft</option><option value="plano">Plano técnico completo</option><option value="frente">Frente · vista técnica</option><option value="espalda">Espalda · vista técnica</option><option value="izquierda">Izquierda · vista técnica</option><option value="derecha">Derecha · vista técnica</option><option value="superior">Superior · vista técnica</option><option value="inferior">Inferior · vista técnica</option><option value="tres-cuartos">Tres cuartos · vista técnica</option></select></label><span id="visibleCount" class="visible-count" aria-live="polite">20 piezas</span></div>
+<main class="grid">
+<article class="part" id="P01" data-title="p01 cabeza">
+<div class="card-head"><span class="code">P01</span><h2>Cabeza</h2><span class="count">1 instancia</span></div>
+<a class="preview-link" href="imagenes/P01-cabeza.png" target="_blank" rel="noopener"><img class="preview" data-slug="P01-cabeza" src="imagenes/P01-cabeza.png" alt="Lámina de cabeza" loading="lazy"></a>
+<div class="meta">20 triángulos por pieza · 20 en el conjunto</div>
+<p class="purpose">Volumen facial facetado, mandíbula más estrecha que sienes.</p>
+<div class="file-links"><a href="docs/fichas/P01-cabeza.md">Ficha de construcción</a><a href="datos/P01-cabeza.json">Geometría JSON</a><a href="planos/P01-cabeza.svg" target="_blank" rel="noopener">Plano SVG</a></div>
+<details><summary>Descargar vistas individuales</summary><div class="view-links"><a href="vistas/P01-cabeza/frente.png" target="_blank" rel="noopener">Frente</a> <a href="vistas/P01-cabeza/espalda.png" target="_blank" rel="noopener">Espalda</a> <a href="vistas/P01-cabeza/izquierda.png" target="_blank" rel="noopener">Izquierda</a> <a href="vistas/P01-cabeza/derecha.png" target="_blank" rel="noopener">Derecha</a> <a href="vistas/P01-cabeza/superior.png" target="_blank" rel="noopener">Superior</a> <a href="vistas/P01-cabeza/inferior.png" target="_blank" rel="noopener">Inferior</a> <a href="vistas/P01-cabeza/tres-cuartos.png" target="_blank" rel="noopener">Tres cuartos</a></div></details>
+</article>
+<article class="part" id="P02" data-title="p02 cuello">
+<div class="card-head"><span class="code">P02</span><h2>Cuello</h2><span class="count">1 instancia</span></div>
+<a class="preview-link" href="imagenes/P02-cuello.png" target="_blank" rel="noopener"><img class="preview" data-slug="P02-cuello" src="imagenes/P02-cuello.png" alt="Lámina de cuello" loading="lazy"></a>
+<div class="meta">8 triángulos por pieza · 8 en el conjunto</div>
+<p class="purpose">Conecta el torso con la cabeza manteniendo un volumen visible pequeño.</p>
+<div class="file-links"><a href="docs/fichas/P02-cuello.md">Ficha de construcción</a><a href="datos/P02-cuello.json">Geometría JSON</a><a href="planos/P02-cuello.svg" target="_blank" rel="noopener">Plano SVG</a></div>
+<details><summary>Descargar vistas individuales</summary><div class="view-links"><a href="vistas/P02-cuello/frente.png" target="_blank" rel="noopener">Frente</a> <a href="vistas/P02-cuello/espalda.png" target="_blank" rel="noopener">Espalda</a> <a href="vistas/P02-cuello/izquierda.png" target="_blank" rel="noopener">Izquierda</a> <a href="vistas/P02-cuello/derecha.png" target="_blank" rel="noopener">Derecha</a> <a href="vistas/P02-cuello/superior.png" target="_blank" rel="noopener">Superior</a> <a href="vistas/P02-cuello/inferior.png" target="_blank" rel="noopener">Inferior</a> <a href="vistas/P02-cuello/tres-cuartos.png" target="_blank" rel="noopener">Tres cuartos</a></div></details>
+</article>
+<article class="part" id="P03" data-title="p03 oreja">
+<div class="card-head"><span class="code">P03</span><h2>Oreja</h2><span class="count">2 instancias</span></div>
+<a class="preview-link" href="imagenes/P03-oreja.png" target="_blank" rel="noopener"><img class="preview" data-slug="P03-oreja" src="imagenes/P03-oreja.png" alt="Lámina de oreja" loading="lazy"></a>
+<div class="meta">4 triángulos por pieza · 8 en el conjunto</div>
+<p class="purpose">Pequeña oreja facetada; una receta se refleja para el lado derecho.</p>
+<div class="file-links"><a href="docs/fichas/P03-oreja.md">Ficha de construcción</a><a href="datos/P03-oreja.json">Geometría JSON</a><a href="planos/P03-oreja.svg" target="_blank" rel="noopener">Plano SVG</a></div>
+<details><summary>Descargar vistas individuales</summary><div class="view-links"><a href="vistas/P03-oreja/frente.png" target="_blank" rel="noopener">Frente</a> <a href="vistas/P03-oreja/espalda.png" target="_blank" rel="noopener">Espalda</a> <a href="vistas/P03-oreja/izquierda.png" target="_blank" rel="noopener">Izquierda</a> <a href="vistas/P03-oreja/derecha.png" target="_blank" rel="noopener">Derecha</a> <a href="vistas/P03-oreja/superior.png" target="_blank" rel="noopener">Superior</a> <a href="vistas/P03-oreja/inferior.png" target="_blank" rel="noopener">Inferior</a> <a href="vistas/P03-oreja/tres-cuartos.png" target="_blank" rel="noopener">Tres cuartos</a></div></details>
+</article>
+<article class="part" id="P04" data-title="p04 ojo">
+<div class="card-head"><span class="code">P04</span><h2>Ojo</h2><span class="count">2 instancias</span></div>
+<a class="preview-link" href="imagenes/P04-ojo.png" target="_blank" rel="noopener"><img class="preview" data-slug="P04-ojo" src="imagenes/P04-ojo.png" alt="Lámina de ojo" loading="lazy"></a>
+<div class="meta">2 triángulos por pieza · 4 en el conjunto</div>
+<p class="purpose">Aplique oscuro de ojo; repetir dos veces sin volumen adicional.</p>
+<div class="file-links"><a href="docs/fichas/P04-ojo.md">Ficha de construcción</a><a href="datos/P04-ojo.json">Geometría JSON</a><a href="planos/P04-ojo.svg" target="_blank" rel="noopener">Plano SVG</a></div>
+<details><summary>Descargar vistas individuales</summary><div class="view-links"><a href="vistas/P04-ojo/frente.png" target="_blank" rel="noopener">Frente</a> <a href="vistas/P04-ojo/espalda.png" target="_blank" rel="noopener">Espalda</a> <a href="vistas/P04-ojo/izquierda.png" target="_blank" rel="noopener">Izquierda</a> <a href="vistas/P04-ojo/derecha.png" target="_blank" rel="noopener">Derecha</a> <a href="vistas/P04-ojo/superior.png" target="_blank" rel="noopener">Superior</a> <a href="vistas/P04-ojo/inferior.png" target="_blank" rel="noopener">Inferior</a> <a href="vistas/P04-ojo/tres-cuartos.png" target="_blank" rel="noopener">Tres cuartos</a></div></details>
+</article>
+<article class="part" id="P05" data-title="p05 sonrisa">
+<div class="card-head"><span class="code">P05</span><h2>Sonrisa</h2><span class="count">1 instancia</span></div>
+<a class="preview-link" href="imagenes/P05-sonrisa.png" target="_blank" rel="noopener"><img class="preview" data-slug="P05-sonrisa" src="imagenes/P05-sonrisa.png" alt="Lámina de sonrisa" loading="lazy"></a>
+<div class="meta">3 triángulos por pieza · 3 en el conjunto</div>
+<p class="purpose">Sonrisa breve, angular y legible como un aplique de papel.</p>
+<div class="file-links"><a href="docs/fichas/P05-sonrisa.md">Ficha de construcción</a><a href="datos/P05-sonrisa.json">Geometría JSON</a><a href="planos/P05-sonrisa.svg" target="_blank" rel="noopener">Plano SVG</a></div>
+<details><summary>Descargar vistas individuales</summary><div class="view-links"><a href="vistas/P05-sonrisa/frente.png" target="_blank" rel="noopener">Frente</a> <a href="vistas/P05-sonrisa/espalda.png" target="_blank" rel="noopener">Espalda</a> <a href="vistas/P05-sonrisa/izquierda.png" target="_blank" rel="noopener">Izquierda</a> <a href="vistas/P05-sonrisa/derecha.png" target="_blank" rel="noopener">Derecha</a> <a href="vistas/P05-sonrisa/superior.png" target="_blank" rel="noopener">Superior</a> <a href="vistas/P05-sonrisa/inferior.png" target="_blank" rel="noopener">Inferior</a> <a href="vistas/P05-sonrisa/tres-cuartos.png" target="_blank" rel="noopener">Tres cuartos</a></div></details>
+</article>
+<article class="part" id="P06" data-title="p06 núcleo del cabello">
+<div class="card-head"><span class="code">P06</span><h2>Núcleo del cabello</h2><span class="count">1 instancia</span></div>
+<a class="preview-link" href="imagenes/P06-cabello-nucleo.png" target="_blank" rel="noopener"><img class="preview" data-slug="P06-cabello-nucleo" src="imagenes/P06-cabello-nucleo.png" alt="Lámina de núcleo del cabello" loading="lazy"></a>
+<div class="meta">32 triángulos por pieza · 32 en el conjunto</div>
+<p class="purpose">Masa principal con coronilla elevada y silueta ancha, sin cierre plano grande.</p>
+<div class="file-links"><a href="docs/fichas/P06-cabello-nucleo.md">Ficha de construcción</a><a href="datos/P06-cabello-nucleo.json">Geometría JSON</a><a href="planos/P06-cabello-nucleo.svg" target="_blank" rel="noopener">Plano SVG</a></div>
+<details><summary>Descargar vistas individuales</summary><div class="view-links"><a href="vistas/P06-cabello-nucleo/frente.png" target="_blank" rel="noopener">Frente</a> <a href="vistas/P06-cabello-nucleo/espalda.png" target="_blank" rel="noopener">Espalda</a> <a href="vistas/P06-cabello-nucleo/izquierda.png" target="_blank" rel="noopener">Izquierda</a> <a href="vistas/P06-cabello-nucleo/derecha.png" target="_blank" rel="noopener">Derecha</a> <a href="vistas/P06-cabello-nucleo/superior.png" target="_blank" rel="noopener">Superior</a> <a href="vistas/P06-cabello-nucleo/inferior.png" target="_blank" rel="noopener">Inferior</a> <a href="vistas/P06-cabello-nucleo/tres-cuartos.png" target="_blank" rel="noopener">Tres cuartos</a></div></details>
+</article>
+<article class="part" id="P07" data-title="p07 mechón del flequillo">
+<div class="card-head"><span class="code">P07</span><h2>Mechón del flequillo</h2><span class="count">3 instancias</span></div>
+<a class="preview-link" href="imagenes/P07-mechon-flequillo.png" target="_blank" rel="noopener"><img class="preview" data-slug="P07-mechon-flequillo" src="imagenes/P07-mechon-flequillo.png" alt="Lámina de mechón del flequillo" loading="lazy"></a>
+<div class="meta">4 triángulos por pieza · 12 en el conjunto</div>
+<p class="purpose">Mechón ancho de papel con una cresta longitudinal; tres instancias forman el flequillo.</p>
+<div class="file-links"><a href="docs/fichas/P07-mechon-flequillo.md">Ficha de construcción</a><a href="datos/P07-mechon-flequillo.json">Geometría JSON</a><a href="planos/P07-mechon-flequillo.svg" target="_blank" rel="noopener">Plano SVG</a></div>
+<details><summary>Descargar vistas individuales</summary><div class="view-links"><a href="vistas/P07-mechon-flequillo/frente.png" target="_blank" rel="noopener">Frente</a> <a href="vistas/P07-mechon-flequillo/espalda.png" target="_blank" rel="noopener">Espalda</a> <a href="vistas/P07-mechon-flequillo/izquierda.png" target="_blank" rel="noopener">Izquierda</a> <a href="vistas/P07-mechon-flequillo/derecha.png" target="_blank" rel="noopener">Derecha</a> <a href="vistas/P07-mechon-flequillo/superior.png" target="_blank" rel="noopener">Superior</a> <a href="vistas/P07-mechon-flequillo/inferior.png" target="_blank" rel="noopener">Inferior</a> <a href="vistas/P07-mechon-flequillo/tres-cuartos.png" target="_blank" rel="noopener">Tres cuartos</a></div></details>
+</article>
+<article class="part" id="P08" data-title="p08 torso y chaleco">
+<div class="card-head"><span class="code">P08</span><h2>Torso y chaleco</h2><span class="count">1 instancia</span></div>
+<a class="preview-link" href="imagenes/P08-torso-chaleco.png" target="_blank" rel="noopener"><img class="preview" data-slug="P08-torso-chaleco" src="imagenes/P08-torso-chaleco.png" alt="Lámina de torso y chaleco" loading="lazy"></a>
+<div class="meta">22 triángulos por pieza · 22 en el conjunto</div>
+<p class="purpose">Chaleco de torso ancho, cintura más estrecha y hombros descendentes.</p>
+<div class="file-links"><a href="docs/fichas/P08-torso-chaleco.md">Ficha de construcción</a><a href="datos/P08-torso-chaleco.json">Geometría JSON</a><a href="planos/P08-torso-chaleco.svg" target="_blank" rel="noopener">Plano SVG</a></div>
+<details><summary>Descargar vistas individuales</summary><div class="view-links"><a href="vistas/P08-torso-chaleco/frente.png" target="_blank" rel="noopener">Frente</a> <a href="vistas/P08-torso-chaleco/espalda.png" target="_blank" rel="noopener">Espalda</a> <a href="vistas/P08-torso-chaleco/izquierda.png" target="_blank" rel="noopener">Izquierda</a> <a href="vistas/P08-torso-chaleco/derecha.png" target="_blank" rel="noopener">Derecha</a> <a href="vistas/P08-torso-chaleco/superior.png" target="_blank" rel="noopener">Superior</a> <a href="vistas/P08-torso-chaleco/inferior.png" target="_blank" rel="noopener">Inferior</a> <a href="vistas/P08-torso-chaleco/tres-cuartos.png" target="_blank" rel="noopener">Tres cuartos</a></div></details>
+</article>
+<article class="part" id="P09" data-title="p09 pechera de camisa">
+<div class="card-head"><span class="code">P09</span><h2>Pechera de camisa</h2><span class="count">1 instancia</span></div>
+<a class="preview-link" href="imagenes/P09-pechera-camisa.png" target="_blank" rel="noopener"><img class="preview" data-slug="P09-pechera-camisa" src="imagenes/P09-pechera-camisa.png" alt="Lámina de pechera de camisa" loading="lazy"></a>
+<div class="meta">1 triángulos por pieza · 1 en el conjunto</div>
+<p class="purpose">Triángulo blanco que hace visible el escote en V.</p>
+<div class="file-links"><a href="docs/fichas/P09-pechera-camisa.md">Ficha de construcción</a><a href="datos/P09-pechera-camisa.json">Geometría JSON</a><a href="planos/P09-pechera-camisa.svg" target="_blank" rel="noopener">Plano SVG</a></div>
+<details><summary>Descargar vistas individuales</summary><div class="view-links"><a href="vistas/P09-pechera-camisa/frente.png" target="_blank" rel="noopener">Frente</a> <a href="vistas/P09-pechera-camisa/espalda.png" target="_blank" rel="noopener">Espalda</a> <a href="vistas/P09-pechera-camisa/izquierda.png" target="_blank" rel="noopener">Izquierda</a> <a href="vistas/P09-pechera-camisa/derecha.png" target="_blank" rel="noopener">Derecha</a> <a href="vistas/P09-pechera-camisa/superior.png" target="_blank" rel="noopener">Superior</a> <a href="vistas/P09-pechera-camisa/inferior.png" target="_blank" rel="noopener">Inferior</a> <a href="vistas/P09-pechera-camisa/tres-cuartos.png" target="_blank" rel="noopener">Tres cuartos</a></div></details>
+</article>
+<article class="part" id="P10" data-title="p10 solapa del cuello">
+<div class="card-head"><span class="code">P10</span><h2>Solapa del cuello</h2><span class="count">2 instancias</span></div>
+<a class="preview-link" href="imagenes/P10-solapa-cuello.png" target="_blank" rel="noopener"><img class="preview" data-slug="P10-solapa-cuello" src="imagenes/P10-solapa-cuello.png" alt="Lámina de solapa del cuello" loading="lazy"></a>
+<div class="meta">1 triángulos por pieza · 2 en el conjunto</div>
+<p class="purpose">Una hoja triangular del cuello; reflejar para obtener la segunda.</p>
+<div class="file-links"><a href="docs/fichas/P10-solapa-cuello.md">Ficha de construcción</a><a href="datos/P10-solapa-cuello.json">Geometría JSON</a><a href="planos/P10-solapa-cuello.svg" target="_blank" rel="noopener">Plano SVG</a></div>
+<details><summary>Descargar vistas individuales</summary><div class="view-links"><a href="vistas/P10-solapa-cuello/frente.png" target="_blank" rel="noopener">Frente</a> <a href="vistas/P10-solapa-cuello/espalda.png" target="_blank" rel="noopener">Espalda</a> <a href="vistas/P10-solapa-cuello/izquierda.png" target="_blank" rel="noopener">Izquierda</a> <a href="vistas/P10-solapa-cuello/derecha.png" target="_blank" rel="noopener">Derecha</a> <a href="vistas/P10-solapa-cuello/superior.png" target="_blank" rel="noopener">Superior</a> <a href="vistas/P10-solapa-cuello/inferior.png" target="_blank" rel="noopener">Inferior</a> <a href="vistas/P10-solapa-cuello/tres-cuartos.png" target="_blank" rel="noopener">Tres cuartos</a></div></details>
+</article>
+<article class="part" id="P11" data-title="p11 manga corta">
+<div class="card-head"><span class="code">P11</span><h2>Manga corta</h2><span class="count">2 instancias</span></div>
+<a class="preview-link" href="imagenes/P11-manga.png" target="_blank" rel="noopener"><img class="preview" data-slug="P11-manga" src="imagenes/P11-manga.png" alt="Lámina de manga corta" loading="lazy"></a>
+<div class="meta">8 triángulos por pieza · 16 en el conjunto</div>
+<p class="purpose">Manga corta con boca superior positiva y salida amplia para el brazo.</p>
+<div class="file-links"><a href="docs/fichas/P11-manga.md">Ficha de construcción</a><a href="datos/P11-manga.json">Geometría JSON</a><a href="planos/P11-manga.svg" target="_blank" rel="noopener">Plano SVG</a></div>
+<details><summary>Descargar vistas individuales</summary><div class="view-links"><a href="vistas/P11-manga/frente.png" target="_blank" rel="noopener">Frente</a> <a href="vistas/P11-manga/espalda.png" target="_blank" rel="noopener">Espalda</a> <a href="vistas/P11-manga/izquierda.png" target="_blank" rel="noopener">Izquierda</a> <a href="vistas/P11-manga/derecha.png" target="_blank" rel="noopener">Derecha</a> <a href="vistas/P11-manga/superior.png" target="_blank" rel="noopener">Superior</a> <a href="vistas/P11-manga/inferior.png" target="_blank" rel="noopener">Inferior</a> <a href="vistas/P11-manga/tres-cuartos.png" target="_blank" rel="noopener">Tres cuartos</a></div></details>
+</article>
+<article class="part" id="P12" data-title="p12 brazo superior">
+<div class="card-head"><span class="code">P12</span><h2>Brazo superior</h2><span class="count">2 instancias</span></div>
+<a class="preview-link" href="imagenes/P12-brazo.png" target="_blank" rel="noopener"><img class="preview" data-slug="P12-brazo" src="imagenes/P12-brazo.png" alt="Lámina de brazo superior" loading="lazy"></a>
+<div class="meta">8 triángulos por pieza · 16 en el conjunto</div>
+<p class="purpose">Segmento superior del brazo, parcialmente cubierto por la manga.</p>
+<div class="file-links"><a href="docs/fichas/P12-brazo.md">Ficha de construcción</a><a href="datos/P12-brazo.json">Geometría JSON</a><a href="planos/P12-brazo.svg" target="_blank" rel="noopener">Plano SVG</a></div>
+<details><summary>Descargar vistas individuales</summary><div class="view-links"><a href="vistas/P12-brazo/frente.png" target="_blank" rel="noopener">Frente</a> <a href="vistas/P12-brazo/espalda.png" target="_blank" rel="noopener">Espalda</a> <a href="vistas/P12-brazo/izquierda.png" target="_blank" rel="noopener">Izquierda</a> <a href="vistas/P12-brazo/derecha.png" target="_blank" rel="noopener">Derecha</a> <a href="vistas/P12-brazo/superior.png" target="_blank" rel="noopener">Superior</a> <a href="vistas/P12-brazo/inferior.png" target="_blank" rel="noopener">Inferior</a> <a href="vistas/P12-brazo/tres-cuartos.png" target="_blank" rel="noopener">Tres cuartos</a></div></details>
+</article>
+<article class="part" id="P13" data-title="p13 antebrazo">
+<div class="card-head"><span class="code">P13</span><h2>Antebrazo</h2><span class="count">2 instancias</span></div>
+<a class="preview-link" href="imagenes/P13-antebrazo.png" target="_blank" rel="noopener"><img class="preview" data-slug="P13-antebrazo" src="imagenes/P13-antebrazo.png" alt="Lámina de antebrazo" loading="lazy"></a>
+<div class="meta">8 triángulos por pieza · 16 en el conjunto</div>
+<p class="purpose">Antebrazo más estrecho hacia la muñeca, con leve desplazamiento hacia delante.</p>
+<div class="file-links"><a href="docs/fichas/P13-antebrazo.md">Ficha de construcción</a><a href="datos/P13-antebrazo.json">Geometría JSON</a><a href="planos/P13-antebrazo.svg" target="_blank" rel="noopener">Plano SVG</a></div>
+<details><summary>Descargar vistas individuales</summary><div class="view-links"><a href="vistas/P13-antebrazo/frente.png" target="_blank" rel="noopener">Frente</a> <a href="vistas/P13-antebrazo/espalda.png" target="_blank" rel="noopener">Espalda</a> <a href="vistas/P13-antebrazo/izquierda.png" target="_blank" rel="noopener">Izquierda</a> <a href="vistas/P13-antebrazo/derecha.png" target="_blank" rel="noopener">Derecha</a> <a href="vistas/P13-antebrazo/superior.png" target="_blank" rel="noopener">Superior</a> <a href="vistas/P13-antebrazo/inferior.png" target="_blank" rel="noopener">Inferior</a> <a href="vistas/P13-antebrazo/tres-cuartos.png" target="_blank" rel="noopener">Tres cuartos</a></div></details>
+</article>
+<article class="part" id="P14" data-title="p14 mano simplificada">
+<div class="card-head"><span class="code">P14</span><h2>Mano simplificada</h2><span class="count">2 instancias</span></div>
+<a class="preview-link" href="imagenes/P14-mano.png" target="_blank" rel="noopener"><img class="preview" data-slug="P14-mano" src="imagenes/P14-mano.png" alt="Lámina de mano simplificada" loading="lazy"></a>
+<div class="meta">8 triángulos por pieza · 16 en el conjunto</div>
+<p class="purpose">Mano simplificada de palma ancha y dedos reunidos.</p>
+<div class="file-links"><a href="docs/fichas/P14-mano.md">Ficha de construcción</a><a href="datos/P14-mano.json">Geometría JSON</a><a href="planos/P14-mano.svg" target="_blank" rel="noopener">Plano SVG</a></div>
+<details><summary>Descargar vistas individuales</summary><div class="view-links"><a href="vistas/P14-mano/frente.png" target="_blank" rel="noopener">Frente</a> <a href="vistas/P14-mano/espalda.png" target="_blank" rel="noopener">Espalda</a> <a href="vistas/P14-mano/izquierda.png" target="_blank" rel="noopener">Izquierda</a> <a href="vistas/P14-mano/derecha.png" target="_blank" rel="noopener">Derecha</a> <a href="vistas/P14-mano/superior.png" target="_blank" rel="noopener">Superior</a> <a href="vistas/P14-mano/inferior.png" target="_blank" rel="noopener">Inferior</a> <a href="vistas/P14-mano/tres-cuartos.png" target="_blank" rel="noopener">Tres cuartos</a></div></details>
+</article>
+<article class="part" id="P15" data-title="p15 pelvis del pantalón">
+<div class="card-head"><span class="code">P15</span><h2>Pelvis del pantalón</h2><span class="count">1 instancia</span></div>
+<a class="preview-link" href="imagenes/P15-pelvis-pantalon.png" target="_blank" rel="noopener"><img class="preview" data-slug="P15-pelvis-pantalon" src="imagenes/P15-pelvis-pantalon.png" alt="Lámina de pelvis del pantalón" loading="lazy"></a>
+<div class="meta">8 triángulos por pieza · 8 en el conjunto</div>
+<p class="purpose">Cintura y pelvis del pantalón que enlazan chaleco y muslos.</p>
+<div class="file-links"><a href="docs/fichas/P15-pelvis-pantalon.md">Ficha de construcción</a><a href="datos/P15-pelvis-pantalon.json">Geometría JSON</a><a href="planos/P15-pelvis-pantalon.svg" target="_blank" rel="noopener">Plano SVG</a></div>
+<details><summary>Descargar vistas individuales</summary><div class="view-links"><a href="vistas/P15-pelvis-pantalon/frente.png" target="_blank" rel="noopener">Frente</a> <a href="vistas/P15-pelvis-pantalon/espalda.png" target="_blank" rel="noopener">Espalda</a> <a href="vistas/P15-pelvis-pantalon/izquierda.png" target="_blank" rel="noopener">Izquierda</a> <a href="vistas/P15-pelvis-pantalon/derecha.png" target="_blank" rel="noopener">Derecha</a> <a href="vistas/P15-pelvis-pantalon/superior.png" target="_blank" rel="noopener">Superior</a> <a href="vistas/P15-pelvis-pantalon/inferior.png" target="_blank" rel="noopener">Inferior</a> <a href="vistas/P15-pelvis-pantalon/tres-cuartos.png" target="_blank" rel="noopener">Tres cuartos</a></div></details>
+</article>
+<article class="part" id="P16" data-title="p16 muslo del pantalón">
+<div class="card-head"><span class="code">P16</span><h2>Muslo del pantalón</h2><span class="count">2 instancias</span></div>
+<a class="preview-link" href="imagenes/P16-muslo-pantalon.png" target="_blank" rel="noopener"><img class="preview" data-slug="P16-muslo-pantalon" src="imagenes/P16-muslo-pantalon.png" alt="Lámina de muslo del pantalón" loading="lazy"></a>
+<div class="meta">12 triángulos por pieza · 24 en el conjunto</div>
+<p class="purpose">Pierna de pantalón desde cadera a rodilla, ligeramente cónica.</p>
+<div class="file-links"><a href="docs/fichas/P16-muslo-pantalon.md">Ficha de construcción</a><a href="datos/P16-muslo-pantalon.json">Geometría JSON</a><a href="planos/P16-muslo-pantalon.svg" target="_blank" rel="noopener">Plano SVG</a></div>
+<details><summary>Descargar vistas individuales</summary><div class="view-links"><a href="vistas/P16-muslo-pantalon/frente.png" target="_blank" rel="noopener">Frente</a> <a href="vistas/P16-muslo-pantalon/espalda.png" target="_blank" rel="noopener">Espalda</a> <a href="vistas/P16-muslo-pantalon/izquierda.png" target="_blank" rel="noopener">Izquierda</a> <a href="vistas/P16-muslo-pantalon/derecha.png" target="_blank" rel="noopener">Derecha</a> <a href="vistas/P16-muslo-pantalon/superior.png" target="_blank" rel="noopener">Superior</a> <a href="vistas/P16-muslo-pantalon/inferior.png" target="_blank" rel="noopener">Inferior</a> <a href="vistas/P16-muslo-pantalon/tres-cuartos.png" target="_blank" rel="noopener">Tres cuartos</a></div></details>
+</article>
+<article class="part" id="P17" data-title="p17 pantorrilla del pantalón">
+<div class="card-head"><span class="code">P17</span><h2>Pantorrilla del pantalón</h2><span class="count">2 instancias</span></div>
+<a class="preview-link" href="imagenes/P17-pantorrilla-pantalon.png" target="_blank" rel="noopener"><img class="preview" data-slug="P17-pantorrilla-pantalon" src="imagenes/P17-pantorrilla-pantalon.png" alt="Lámina de pantorrilla del pantalón" loading="lazy"></a>
+<div class="meta">12 triángulos por pieza · 24 en el conjunto</div>
+<p class="purpose">Pantalón desde rodilla hasta tobillo, con solape de unión.</p>
+<div class="file-links"><a href="docs/fichas/P17-pantorrilla-pantalon.md">Ficha de construcción</a><a href="datos/P17-pantorrilla-pantalon.json">Geometría JSON</a><a href="planos/P17-pantorrilla-pantalon.svg" target="_blank" rel="noopener">Plano SVG</a></div>
+<details><summary>Descargar vistas individuales</summary><div class="view-links"><a href="vistas/P17-pantorrilla-pantalon/frente.png" target="_blank" rel="noopener">Frente</a> <a href="vistas/P17-pantorrilla-pantalon/espalda.png" target="_blank" rel="noopener">Espalda</a> <a href="vistas/P17-pantorrilla-pantalon/izquierda.png" target="_blank" rel="noopener">Izquierda</a> <a href="vistas/P17-pantorrilla-pantalon/derecha.png" target="_blank" rel="noopener">Derecha</a> <a href="vistas/P17-pantorrilla-pantalon/superior.png" target="_blank" rel="noopener">Superior</a> <a href="vistas/P17-pantorrilla-pantalon/inferior.png" target="_blank" rel="noopener">Inferior</a> <a href="vistas/P17-pantorrilla-pantalon/tres-cuartos.png" target="_blank" rel="noopener">Tres cuartos</a></div></details>
+</article>
+<article class="part" id="P18" data-title="p18 zapato">
+<div class="card-head"><span class="code">P18</span><h2>Zapato</h2><span class="count">2 instancias</span></div>
+<a class="preview-link" href="imagenes/P18-zapato.png" target="_blank" rel="noopener"><img class="preview" data-slug="P18-zapato" src="imagenes/P18-zapato.png" alt="Lámina de zapato" loading="lazy"></a>
+<div class="meta">12 triángulos por pieza · 24 en el conjunto</div>
+<p class="purpose">Zapato compacto con talón, empeine alto y puntera de espesor visible.</p>
+<div class="file-links"><a href="docs/fichas/P18-zapato.md">Ficha de construcción</a><a href="datos/P18-zapato.json">Geometría JSON</a><a href="planos/P18-zapato.svg" target="_blank" rel="noopener">Plano SVG</a></div>
+<details><summary>Descargar vistas individuales</summary><div class="view-links"><a href="vistas/P18-zapato/frente.png" target="_blank" rel="noopener">Frente</a> <a href="vistas/P18-zapato/espalda.png" target="_blank" rel="noopener">Espalda</a> <a href="vistas/P18-zapato/izquierda.png" target="_blank" rel="noopener">Izquierda</a> <a href="vistas/P18-zapato/derecha.png" target="_blank" rel="noopener">Derecha</a> <a href="vistas/P18-zapato/superior.png" target="_blank" rel="noopener">Superior</a> <a href="vistas/P18-zapato/inferior.png" target="_blank" rel="noopener">Inferior</a> <a href="vistas/P18-zapato/tres-cuartos.png" target="_blank" rel="noopener">Tres cuartos</a></div></details>
+</article>
+<article class="part" id="P19" data-title="p19 cuerpo de mochila">
+<div class="card-head"><span class="code">P19</span><h2>Cuerpo de mochila</h2><span class="count">1 instancia</span></div>
+<a class="preview-link" href="imagenes/P19-mochila.png" target="_blank" rel="noopener"><img class="preview" data-slug="P19-mochila" src="imagenes/P19-mochila.png" alt="Lámina de cuerpo de mochila" loading="lazy"></a>
+<div class="meta">12 triángulos por pieza · 12 en el conjunto</div>
+<p class="purpose">Cuerpo de mochila compacto y cónico, situado en la espalda.</p>
+<div class="file-links"><a href="docs/fichas/P19-mochila.md">Ficha de construcción</a><a href="datos/P19-mochila.json">Geometría JSON</a><a href="planos/P19-mochila.svg" target="_blank" rel="noopener">Plano SVG</a></div>
+<details><summary>Descargar vistas individuales</summary><div class="view-links"><a href="vistas/P19-mochila/frente.png" target="_blank" rel="noopener">Frente</a> <a href="vistas/P19-mochila/espalda.png" target="_blank" rel="noopener">Espalda</a> <a href="vistas/P19-mochila/izquierda.png" target="_blank" rel="noopener">Izquierda</a> <a href="vistas/P19-mochila/derecha.png" target="_blank" rel="noopener">Derecha</a> <a href="vistas/P19-mochila/superior.png" target="_blank" rel="noopener">Superior</a> <a href="vistas/P19-mochila/inferior.png" target="_blank" rel="noopener">Inferior</a> <a href="vistas/P19-mochila/tres-cuartos.png" target="_blank" rel="noopener">Tres cuartos</a></div></details>
+</article>
+<article class="part" id="P20" data-title="p20 tirante de mochila">
+<div class="card-head"><span class="code">P20</span><h2>Tirante de mochila</h2><span class="count">2 instancias</span></div>
+<a class="preview-link" href="imagenes/P20-tirante.png" target="_blank" rel="noopener"><img class="preview" data-slug="P20-tirante" src="imagenes/P20-tirante.png" alt="Lámina de tirante de mochila" loading="lazy"></a>
+<div class="meta">6 triángulos por pieza · 12 en el conjunto</div>
+<p class="purpose">Correa plana de tres tramos: pecho, puente de hombro y unión trasera.</p>
+<div class="file-links"><a href="docs/fichas/P20-tirante.md">Ficha de construcción</a><a href="datos/P20-tirante.json">Geometría JSON</a><a href="planos/P20-tirante.svg" target="_blank" rel="noopener">Plano SVG</a></div>
+<details><summary>Descargar vistas individuales</summary><div class="view-links"><a href="vistas/P20-tirante/frente.png" target="_blank" rel="noopener">Frente</a> <a href="vistas/P20-tirante/espalda.png" target="_blank" rel="noopener">Espalda</a> <a href="vistas/P20-tirante/izquierda.png" target="_blank" rel="noopener">Izquierda</a> <a href="vistas/P20-tirante/derecha.png" target="_blank" rel="noopener">Derecha</a> <a href="vistas/P20-tirante/superior.png" target="_blank" rel="noopener">Superior</a> <a href="vistas/P20-tirante/inferior.png" target="_blank" rel="noopener">Inferior</a> <a href="vistas/P20-tirante/tres-cuartos.png" target="_blank" rel="noopener">Tres cuartos</a></div></details>
+</article></main><p id="empty" class="empty">No hay piezas que coincidan con esa búsqueda.</p>
+<footer><p>Este índice funciona sin conexión después de descomprimir el ZIP. Cada ficha enlaza su imagen, planos, coordenadas e instancias. L/R corresponden a los lados anatómicos del personaje. Las cifras de triángulos describen exclusivamente las mallas de apoyo entregadas; no incluyen sombras, auxiliares ni accesorios añadidos.</p><p><a href="VALIDACION-GEOMETRICA.json">Validación geométrica</a> · <a href="VALIDACION-VISUAL.json">Revisión visual</a> · <a href="PROMPTS.md">Prompts de las ilustraciones</a> · <a href="MANIFIESTO.json">Inventario de archivos</a></p></footer>
+</div><script>
+const cards=[...document.querySelectorAll('.part')],norm=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+document.getElementById('search').addEventListener('input',e=>{const q=norm(e.target.value);let n=0;cards.forEach(c=>{const show=norm(c.dataset.title).includes(q);c.hidden=!show;if(show)n++});document.getElementById('visibleCount').textContent=n+' piezas';document.getElementById('empty').style.display=n?'none':'block'});
+document.getElementById('mode').addEventListener('change',e=>{const m=e.target.value;document.querySelectorAll('.preview').forEach(img=>{const s=img.dataset.slug;const p=m==='arte'?'imagenes/'+s+'.png':m==='plano'?'planos/'+s+'.png':'vistas/'+s+'/'+m+'.png';img.src=p;img.parentElement.href=p;img.alt=m==='arte'?'Referencia artística '+s:m==='plano'?'Plano técnico '+s:'Vista '+m+' de '+s})});
+</script></body></html>

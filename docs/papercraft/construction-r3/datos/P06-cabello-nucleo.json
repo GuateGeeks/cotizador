@@ -1,0 +1,541 @@
+{
+  "schema_version": "2.0",
+  "id": "P06",
+  "slug": "P06-cabello-nucleo",
+  "name": "Núcleo del cabello",
+  "purpose": "Casquete facetado con coronilla, flequillo frontal, patillas y nuca; deja la cara visible.",
+  "units": "normalized_H",
+  "scene_height": 0.78,
+  "coordinate_system": {
+    "up": "+Y",
+    "front": "+Z",
+    "anatomical_left": "+X"
+  },
+  "mesh": {
+    "vertices": [
+      [
+        0.0,
+        0.28,
+        -0.025
+      ],
+      [
+        0.0,
+        0.245,
+        0.09
+      ],
+      [
+        0.085,
+        0.251,
+        0.058
+      ],
+      [
+        0.113,
+        0.255,
+        -0.028
+      ],
+      [
+        0.082,
+        0.252,
+        -0.118
+      ],
+      [
+        0.0,
+        0.25,
+        -0.14
+      ],
+      [
+        -0.082,
+        0.252,
+        -0.118
+      ],
+      [
+        -0.113,
+        0.255,
+        -0.028
+      ],
+      [
+        -0.085,
+        0.251,
+        0.058
+      ],
+      [
+        0.0,
+        0.176,
+        0.12
+      ],
+      [
+        0.09,
+        0.19,
+        0.11
+      ],
+      [
+        0.152,
+        0.19,
+        -0.02
+      ],
+      [
+        0.118,
+        0.165,
+        -0.152
+      ],
+      [
+        0.0,
+        0.16,
+        -0.175
+      ],
+      [
+        -0.118,
+        0.165,
+        -0.152
+      ],
+      [
+        -0.152,
+        0.19,
+        -0.02
+      ],
+      [
+        -0.09,
+        0.19,
+        0.11
+      ],
+      [
+        0.095,
+        0.146,
+        0.102
+      ],
+      [
+        0.13,
+        0.168,
+        0.07
+      ],
+      [
+        0.105,
+        0.085,
+        0.055
+      ],
+      [
+        0.138,
+        0.135,
+        -0.014
+      ],
+      [
+        0.132,
+        0.07,
+        -0.08
+      ],
+      [
+        0.09,
+        0.035,
+        -0.125
+      ],
+      [
+        0.045,
+        0.022,
+        -0.14
+      ],
+      [
+        -0.095,
+        0.146,
+        0.102
+      ],
+      [
+        -0.13,
+        0.168,
+        0.07
+      ],
+      [
+        -0.105,
+        0.085,
+        0.055
+      ],
+      [
+        -0.138,
+        0.135,
+        -0.014
+      ],
+      [
+        -0.132,
+        0.07,
+        -0.08
+      ],
+      [
+        -0.09,
+        0.035,
+        -0.125
+      ],
+      [
+        -0.045,
+        0.022,
+        -0.14
+      ],
+      [
+        0.0,
+        0.045,
+        -0.145
+      ]
+    ],
+    "faces": [
+      [
+        1,
+        2,
+        0
+      ],
+      [
+        2,
+        3,
+        0
+      ],
+      [
+        3,
+        4,
+        0
+      ],
+      [
+        4,
+        5,
+        0
+      ],
+      [
+        5,
+        6,
+        0
+      ],
+      [
+        6,
+        7,
+        0
+      ],
+      [
+        7,
+        8,
+        0
+      ],
+      [
+        8,
+        1,
+        0
+      ],
+      [
+        9,
+        10,
+        1
+      ],
+      [
+        1,
+        10,
+        2
+      ],
+      [
+        10,
+        11,
+        3
+      ],
+      [
+        10,
+        3,
+        2
+      ],
+      [
+        11,
+        12,
+        4
+      ],
+      [
+        11,
+        4,
+        3
+      ],
+      [
+        12,
+        13,
+        5
+      ],
+      [
+        12,
+        5,
+        4
+      ],
+      [
+        13,
+        14,
+        6
+      ],
+      [
+        13,
+        6,
+        5
+      ],
+      [
+        14,
+        15,
+        7
+      ],
+      [
+        14,
+        7,
+        6
+      ],
+      [
+        15,
+        16,
+        8
+      ],
+      [
+        15,
+        8,
+        7
+      ],
+      [
+        16,
+        9,
+        1
+      ],
+      [
+        16,
+        1,
+        8
+      ],
+      [
+        10,
+        17,
+        18
+      ],
+      [
+        17,
+        19,
+        18
+      ],
+      [
+        10,
+        18,
+        11
+      ],
+      [
+        18,
+        19,
+        11
+      ],
+      [
+        19,
+        20,
+        11
+      ],
+      [
+        11,
+        20,
+        21
+      ],
+      [
+        11,
+        21,
+        12
+      ],
+      [
+        12,
+        21,
+        22
+      ],
+      [
+        12,
+        22,
+        23
+      ],
+      [
+        12,
+        23,
+        13
+      ],
+      [
+        23,
+        31,
+        13
+      ],
+      [
+        16,
+        25,
+        24
+      ],
+      [
+        24,
+        25,
+        26
+      ],
+      [
+        16,
+        15,
+        25
+      ],
+      [
+        25,
+        15,
+        26
+      ],
+      [
+        26,
+        15,
+        27
+      ],
+      [
+        15,
+        28,
+        27
+      ],
+      [
+        15,
+        14,
+        28
+      ],
+      [
+        14,
+        29,
+        28
+      ],
+      [
+        14,
+        30,
+        29
+      ],
+      [
+        14,
+        13,
+        30
+      ],
+      [
+        30,
+        13,
+        31
+      ]
+    ],
+    "face_colors": [
+      "#3A2E5C",
+      "#392D5A",
+      "#3B2F5E",
+      "#3A2E5C",
+      "#392D5A",
+      "#3B2F5E",
+      "#3A2E5C",
+      "#392D5A",
+      "#392D5A",
+      "#3B2F5E",
+      "#3B2F5E",
+      "#3B2F5E",
+      "#3A2E5C",
+      "#3A2E5C",
+      "#392D5A",
+      "#392D5A",
+      "#3B2F5E",
+      "#3B2F5E",
+      "#3A2E5C",
+      "#3A2E5C",
+      "#392D5A",
+      "#392D5A",
+      "#392D5A",
+      "#3B2F5E",
+      "#3A2E5C",
+      "#3B2F5E",
+      "#392D5A",
+      "#392D5A",
+      "#3B2F5E",
+      "#3A2E5C",
+      "#3A2E5C",
+      "#3B2F5E",
+      "#392D5A",
+      "#392D5A",
+      "#3B2F5E",
+      "#3A2E5C",
+      "#3B2F5E",
+      "#392D5A",
+      "#392D5A",
+      "#3B2F5E",
+      "#3A2E5C",
+      "#3A2E5C",
+      "#3B2F5E",
+      "#392D5A",
+      "#392D5A",
+      "#3B2F5E"
+    ]
+  },
+  "material": {
+    "base_color_srgb": "#3A2E5C",
+    "flat_shading": true,
+    "roughness": 0.92,
+    "metalness": 0,
+    "uv_required": false
+  },
+  "construction": "Ápice de coronilla con abanico de 8, banda de 8 a 8 hasta el ecuador (16, con el rombo frontal del flequillo), y paredes laterales y traseras de 11 triángulos por lado: punta de sien, patilla delante de la oreja, muesca sobre la oreja, mechón detrás, punta de nuca y muesca central.",
+  "sockets": {
+    "origin": {
+      "position_local_H": [
+        0,
+        0,
+        0
+      ],
+      "description": "Origen numérico de esta pieza; montaje mediante assembly.json."
+    },
+    "mount_P07_L": {
+      "position_local_H": [
+        0.038,
+        0.19000000000000006,
+        0.094
+      ],
+      "description": "Anclaje derivado en reposo para P07-L. Ver instancia padre P06.",
+      "instance_scope": "P06"
+    },
+    "mount_P07_C": {
+      "position_local_H": [
+        0.0,
+        0.19000000000000006,
+        0.094
+      ],
+      "description": "Anclaje derivado en reposo para P07-C. Ver instancia padre P06.",
+      "instance_scope": "P06"
+    },
+    "mount_P07_R": {
+      "position_local_H": [
+        -0.038,
+        0.19000000000000006,
+        0.094
+      ],
+      "description": "Anclaje derivado en reposo para P07-R. Ver instancia padre P06.",
+      "instance_scope": "P06"
+    }
+  },
+  "metadata": {
+    "surface_kind": "open",
+    "limitations": [
+      "Superficie abierta: abertura inferior intencional sobre la cabeza y la cara. No es un sólido imprimible.",
+      "El flequillo del núcleo termina sobre las raíces de los tres P07; las puntas del flequillo las aportan los P07."
+    ],
+    "triangles": 46,
+    "bounds_local_H": {
+      "min": [
+        -0.152,
+        0.022,
+        -0.175
+      ],
+      "max": [
+        0.152,
+        0.28,
+        0.12
+      ],
+      "size": [
+        0.304,
+        0.258,
+        0.295
+      ]
+    },
+    "dimensions_scene": [
+      0.23712,
+      0.20124,
+      0.2301
+    ],
+    "authoritative_for": "support_geometry_only",
+    "reference_render_policy": "Las vistas técnicas muestran ambos lados de superficies abiertas; eso no añade caras a los JSON ni obliga a DoubleSide en runtime.",
+    "provenance": {
+      "revision": "R3",
+      "replaces": "construction-r2/datos/P06-cabello-nucleo.json",
+      "source": "Pliegues de imagenes/P06-cabello-nucleo.png; ver construction-r3/README.md",
+      "generator": "construction-r3/herramientas/r3_cabeza.py"
+    }
+  }
+}

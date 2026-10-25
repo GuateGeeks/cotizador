@@ -1,0 +1,92 @@
+{
+  "schema_version": "2.0",
+  "id": "P10",
+  "slug": "P10-solapa-cuello",
+  "name": "Solapa del cuello",
+  "purpose": "Una hoja triangular del cuello; reflejar para obtener la segunda.",
+  "units": "normalized_H",
+  "scene_height": 0.78,
+  "coordinate_system": {
+    "up": "+Y",
+    "front": "+Z",
+    "anatomical_left": "+X"
+  },
+  "mesh": {
+    "vertices": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        0.025,
+        -0.044,
+        0.004523076923076922
+      ],
+      [
+        0.045,
+        -0.008,
+        0.00027692307692307673
+      ]
+    ],
+    "faces": [
+      [
+        0,
+        1,
+        2
+      ]
+    ],
+    "face_colors": [
+      "#fbfaf7"
+    ]
+  },
+  "material": {
+    "base_color_srgb": "#FBFAF7",
+    "flat_shading": true,
+    "roughness": 0.92,
+    "metalness": 0,
+    "uv_required": false
+  },
+  "construction": "Un triángulo por solapa; dos instancias.",
+  "sockets": {
+    "origin": {
+      "position_local_H": [
+        0,
+        0,
+        0
+      ],
+      "description": "Origen numérico de esta pieza; montaje mediante assembly.json."
+    }
+  },
+  "metadata": {
+    "surface_kind": "planar",
+    "limitations": [
+      "Aplique triangular inclinado. Requiere distancia normal respecto a la pechera."
+    ],
+    "triangles": 1,
+    "bounds_local_H": {
+      "min": [
+        0,
+        -0.044,
+        0
+      ],
+      "max": [
+        0.045,
+        0,
+        0.004523076923076922
+      ],
+      "size": [
+        0.045,
+        0.044,
+        0.004523076923076922
+      ]
+    },
+    "dimensions_scene": [
+      0.0351,
+      0.034319999999999996,
+      0.0035279999999999995
+    ],
+    "authoritative_for": "support_geometry_only",
+    "reference_render_policy": "Las vistas técnicas muestran ambos lados de superficies abiertas; eso no añade caras a los JSON ni obliga a DoubleSide en runtime."
+  }
+}

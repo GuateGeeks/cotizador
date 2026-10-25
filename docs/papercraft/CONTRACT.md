@@ -113,7 +113,7 @@ Llamada: `stage(meta, hueso, orden, estilo, extra)`.
 - **Escala:** respeta `SCALE`:
   - puerta de 0.52 × 1.08;
   - mesa de 0.36 de alto y asiento a 0.22;
-  - persona de primaria de 0.78 y adulta de 1.02;
+  - persona de primaria de 0.78 y adulta de 0.98 (perfiles de `construction/FICHAS-TECNICAS.md`);
   - piso de 1.7 y losa de 0.12.
 
   Nunca escales una pieza para que «quepa».

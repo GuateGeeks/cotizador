@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 Z" fill="#7180A5"/></marker></defs>
+<style>text{font-family:"DejaVu Sans",sans-serif;} .label{font-weight:700;fill:#33438A} .small{fill:#536185} .title{font-weight:700;fill:#33438A}</style>
+<rect x="0" y="0" width="1600" height="1000" rx="0" fill="#FBFAF7"/>
+<rect x="48" y="44" width="52" height="6" rx="3" fill="#6942A1"/>
+<text x="114.000" y="54.000" font-size="17" fill="#6942A1" font-weight="700" text-anchor="start" >GUATE GEEKS  /  CONSTRUCCIÓN PAPERCRAFT</text>
+<text x="48.000" y="115.000" font-size="40" fill="#33438A" font-weight="700" text-anchor="start" >01  Mechón plegado</text>
+<text x="48.000" y="157.000" font-size="22" fill="#536185" font-weight="400" text-anchor="start" >Esquema geométrico de apoyo · H = 1 · coordenadas verificadas por panel</text>
+<rect x="48" y="190" width="854" height="580" rx="20" fill="#FFFFFF" stroke="#E3E5EF"/>
+<rect x="926" y="190" width="626" height="580" rx="20" fill="#FFFFFF" stroke="#E3E5EF"/>
+<text x="78.000" y="233.000" font-size="21" fill="#6942A1" font-weight="700" text-anchor="start" >DESPLEGADO 2D</text>
+<text x="78.000" y="268.000" font-size="19" fill="#536185" font-weight="400" text-anchor="start" >Dos triángulos unidos por una sola bisagra.</text>
+<text x="956.000" y="233.000" font-size="21" fill="#6942A1" font-weight="700" text-anchor="start" >VOLUMEN PLEGADO</text>
+<text x="956.000" y="268.000" font-size="18" fill="#536185" font-weight="400" text-anchor="start" >Proyección ortográfica · escala visual independiente</text>
+<polygon points="387.500,350.000 475.000,630.000 475.000,350.000" fill="#DCD1EE" opacity="1"/>
+<polygon points="475.000,350.000 475.000,630.000 562.500,350.000" fill="#BCE4EE" opacity="1"/>
+<line x1="387.500" y1="350.000" x2="475.000" y2="630.000" stroke="#33438A" stroke-width="2.4" />
+<line x1="475.000" y1="630.000" x2="475.000" y2="350.000" stroke="#33438A" stroke-width="2.4" />
+<line x1="475.000" y1="350.000" x2="387.500" y2="350.000" stroke="#33438A" stroke-width="2.4" />
+<line x1="475.000" y1="350.000" x2="475.000" y2="630.000" stroke="#33438A" stroke-width="2.4" />
+<line x1="475.000" y1="630.000" x2="562.500" y2="350.000" stroke="#33438A" stroke-width="2.4" />
+<line x1="562.500" y1="350.000" x2="475.000" y2="350.000" stroke="#33438A" stroke-width="2.4" />
+<line x1="475.000" y1="350.000" x2="475.000" y2="630.000" stroke="#FBFAF7" stroke-width="5.6" />
+<line x1="475.000" y1="350.000" x2="475.000" y2="630.000" stroke="#6942A1" stroke-width="2.7" stroke-dasharray="10 7" />
+<text x="441.833" y="449.333" font-size="20" fill="#33438A" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#FBFAF7" stroke-width="4" stroke-linejoin="round">H01</text>
+<text x="508.167" y="449.333" font-size="20" fill="#33438A" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#FBFAF7" stroke-width="4" stroke-linejoin="round">H02</text>
+<circle cx="387.500" cy="350.000" r="3.8" fill="#33438A"/>
+<text x="372.500" y="338.000" font-size="19" fill="#33438A" font-weight="700" text-anchor="middle" >A</text>
+<circle cx="475.000" cy="350.000" r="3.8" fill="#33438A"/>
+<text x="475.000" y="336.000" font-size="19" fill="#33438A" font-weight="700" text-anchor="middle" >M</text>
+<circle cx="562.500" cy="350.000" r="3.8" fill="#33438A"/>
+<text x="577.500" y="338.000" font-size="19" fill="#33438A" font-weight="700" text-anchor="middle" >B</text>
+<circle cx="475.000" cy="630.000" r="3.8" fill="#33438A"/>
+<text x="475.000" y="658.000" font-size="19" fill="#33438A" font-weight="700" text-anchor="middle" >T</text>
+<line x1="387.500" y1="305.000" x2="562.500" y2="305.000" stroke="#7180A5" stroke-width="1.6" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+<text x="475.000" y="295.000" font-size="19" fill="#33438A" font-weight="600" text-anchor="middle" >0.050 H</text>
+<line x1="627.500" y1="350.000" x2="627.500" y2="630.000" stroke="#7180A5" stroke-width="1.6" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+<text x="643.500" y="490.000" font-size="18" fill="#33438A" font-weight="400" text-anchor="start" >0.080 H</text>
+<polygon points="1165.685,316.314 1266.018,625.000 1266.018,315.000" fill="#DCD1EE" opacity="1" stroke="#33438A" stroke-width="2.4" stroke-linejoin="round"/>
+<text x="1228.574" y="424.771" font-size="20" fill="#33438A" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#FBFAF7" stroke-width="4" stroke-linejoin="round">H01</text>
+<polygon points="1266.018,315.000 1266.018,625.000 1334.315,334.494" fill="#BCE4EE" opacity="1" stroke="#33438A" stroke-width="2.4" stroke-linejoin="round"/>
+<text x="1292.784" y="430.831" font-size="20" fill="#33438A" font-weight="700" text-anchor="middle" paint-order="stroke" stroke="#FBFAF7" stroke-width="4" stroke-linejoin="round">H02</text>
+<line x1="1266.018" y1="315.000" x2="1266.018" y2="625.000" stroke="#6942A1" stroke-width="2.4" stroke-dasharray="10 7" />
+<text x="1150.685" y="308.314" font-size="18" fill="#33438A" font-weight="700" text-anchor="middle" >A</text>
+<text x="1266.018" y="299.000" font-size="18" fill="#33438A" font-weight="700" text-anchor="middle" >M</text>
+<text x="1346.315" y="326.494" font-size="18" fill="#33438A" font-weight="700" text-anchor="middle" >B</text>
+<text x="1266.018" y="653.000" font-size="18" fill="#33438A" font-weight="700" text-anchor="middle" >T</text>
+<line x1="1022.000" y1="648.000" x2="1053.487" y2="651.395" stroke="#6942A1" stroke-width="2" />
+<text x="1060.487" y="656.395" font-size="13" fill="#6942A1" font-weight="700" text-anchor="middle" >X</text>
+<line x1="1022.000" y1="648.000" x2="1022.000" y2="615.212" stroke="#33438A" stroke-width="2" />
+<text x="1029.000" y="620.212" font-size="13" fill="#33438A" font-weight="700" text-anchor="middle" >Y</text>
+<line x1="1022.000" y1="648.000" x2="1009.172" y2="656.332" stroke="#3B9DB5" stroke-width="2" />
+<text x="1001.172" y="661.332" font-size="13" fill="#3B9DB5" font-weight="700" text-anchor="middle" >Z</text>
+<text x="78.000" y="692.000" font-size="18" fill="#536185" font-weight="400" text-anchor="start" >La línea central M–T es un pliegue real.</text>
+<text x="78.000" y="719.000" font-size="18" fill="#536185" font-weight="400" text-anchor="start" >La base A–M–B queda quebrada al plegar.</text>
+<text x="956.000" y="692.000" font-size="18" fill="#536185" font-weight="400" text-anchor="start" >25° por lado respecto al plano inicial.</text>
+<text x="956.000" y="719.000" font-size="18" fill="#536185" font-weight="400" text-anchor="start" >Base A–M–B oculta bajo la banda de cabello.</text>
+<line x1="78.000" y1="746.000" x2="113.000" y2="746.000" stroke="#33438A" stroke-width="2.4" />
+<text x="125.000" y="752.000" font-size="16" fill="#536185" font-weight="400" text-anchor="start" >Corte / borde</text>
+<line x1="290.000" y1="746.000" x2="325.000" y2="746.000" stroke="#6942A1" stroke-width="2.7" stroke-dasharray="10 7" />
+<text x="337.000" y="752.000" font-size="16" fill="#536185" font-weight="400" text-anchor="start" >Pliegue</text>
+<line x1="455.000" y1="746.000" x2="490.000" y2="746.000" stroke="#A3AAC2" stroke-width="1.5" stroke-dasharray="3 6" />
+<text x="502.000" y="752.000" font-size="16" fill="#536185" font-weight="400" text-anchor="start" >Diagonal de triangulación</text>
+<text x="956.000" y="752.000" font-size="16" fill="#536185" font-weight="400" text-anchor="start" >X lateral · Y arriba · +Z frente</text>
+<rect x="48" y="792" width="1504" height="164" rx="18" fill="#ECE8F3"/>
+<rect x="72" y="812" width="160" height="34" rx="17" fill="#FFFFFF"/>
+<text x="152.000" y="835.000" font-size="18" fill="#6942A1" font-weight="600" text-anchor="middle" >2 PANELES</text>
+<rect x="244" y="812" width="190" height="34" rx="17" fill="#FFFFFF"/>
+<text x="339.000" y="835.000" font-size="18" fill="#6942A1" font-weight="600" text-anchor="middle" >2 TRIÁNGULOS</text>
+<rect x="446" y="812" width="270" height="34" rx="17" fill="#DFF1EE"/>
+<text x="581.000" y="835.000" font-size="18" fill="#2D6C69" font-weight="600" text-anchor="middle" >ARISTAS CONSERVADAS</text>
+<rect x="728" y="812" width="205" height="34" rx="17" fill="#DFF1EE"/>
+<text x="830.500" y="835.000" font-size="18" fill="#2D6C69" font-weight="600" text-anchor="middle" >SIN SOLAPE 2D</text>
+<text x="72.000" y="877.000" font-size="22" fill="#33438A" font-weight="600" text-anchor="start" >Ancho plano 0.050 H · largo 0.080 H · 25° por lado</text>
+<text x="72.000" y="910.000" font-size="19" fill="#536185" font-weight="400" text-anchor="start" >Superficie abierta de 2 triángulos; no incluye la cabeza ni su unión.</text>
+<text x="72.000" y="940.000" font-size="18" fill="#6942A1" font-weight="600" text-anchor="start" >No es un patrón completo de personaje. Sin pestañas de pegado. Cotas de ejemplo, no medidas obligatorias.</text>
+<text x="1548.000" y="982.000" font-size="14" fill="#7B84A0" font-weight="400" text-anchor="end" >GuateGeeks · Referencias de construcción · R1</text>
+</svg>

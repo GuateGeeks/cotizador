@@ -184,7 +184,8 @@ export function composeCampus(plan, { furnish = true, people = true, only = null
         const standIn = (id, who, at, ry) => ({ id, level: who.levelId || 'prim', x: at.x, y: floor, z: at.z, ry, seed: id, parent, seated: true });
         const sitPose = (project, id) => ctrl => applyPose(ctrl, blendBody(POSES.sit(), project ? reach(.1, 'B') : POSES.type(hash(id) * 4)), 'sit', SCALE.seat + .02);
         for (const who of occupants) {
-          const id = `${m.key}.p${who.seat ?? seat}`;
+          // Staff and students both start at seat 0: distinct ids keep one bone (and one assembly stage) each.
+          const id = who.role === 'student' ? `${m.key}.p${who.seat ?? seat}` : `${m.key}.${who.role}`;
           if (who.role === 'teacher' || who.role === 'facilitator') {
             // Teacher by the screen; facilitator at the free end of the first table.
             const at = who.role === 'teacher' ? [.15, floor, -.8] : [tables[0][0] + .62, floor, tables[0][2]];
@@ -263,6 +264,8 @@ export function composeCampus(plan, { furnish = true, people = true, only = null
         // Walkers and patio groups stand in their module, spread deterministically.
         // Fixed, spaced spots around each host module: people never overlap.
         const SPOTS = [[-.55, .45], [.55, .4], [0, .85], [-.6, -.35], [.6, -.4], [0, -.7], [-1.0, .9], [1.0, .9]];
+        // In front of the entrance door (porch and the path before the first classroom), never beside or behind it.
+        const GATE_SPOTS = [[-.4, .95], [.45, .95], [0, 1.4], [1.05, .9], [-.75, 1.45], [.7, 1.5], [1.6, 1.2], [1.1, 1.65]];
         const used = new Map(), standing = [], benchTaken = new Map();
         const benchesAll = all.filter(m => m.type === 'bench' && (m.y || 0) < .5);
         const benchFor = host => {
@@ -278,11 +281,12 @@ export function composeCampus(plan, { furnish = true, people = true, only = null
           if (!host) continue;
           // Next free spot of this host that keeps 0.4 from everyone already standing.
           let k = used.get(host.key) || 0;
-          const spotZ = i => ROOMS.has(host.type) ? 1.55 + Math.abs(SPOTS[i][1]) * .5 : SPOTS[i][1];
-          while (k < SPOTS.length && standing.some(([x, z]) => Math.hypot(x - host.x - SPOTS[k][0], z - host.z - spotZ(k)) < .4)) k++;
+          const spots = host.type === 'entrance' ? GATE_SPOTS : SPOTS;
+          const spotZ = i => ROOMS.has(host.type) ? 1.55 + Math.abs(spots[i][1]) * .5 : spots[i][1];
+          while (k < spots.length && standing.some(([x, z]) => Math.hypot(x - host.x - spots[k][0], z - host.z - spotZ(k)) < .4)) k++;
           used.set(host.key, k + 1);
-          if (k >= SPOTS.length) continue;
-          const id = `walk.${who.key}`, [u, v0] = SPOTS[k];
+          if (k >= spots.length) continue;
+          const id = `walk.${who.key}`, [u, v0] = spots[k];
           // Patio groups sit on a free bench when the plan has one nearby.
           const bench = who.activity === 'patio' && benchFor(host);
           if (bench) {

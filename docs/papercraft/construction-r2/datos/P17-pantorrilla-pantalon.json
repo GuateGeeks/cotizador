@@ -1,0 +1,201 @@
+{
+  "schema_version": "2.0",
+  "id": "P17",
+  "slug": "P17-pantorrilla-pantalon",
+  "name": "Pantorrilla del pantalón",
+  "purpose": "Pantalón desde rodilla hasta tobillo, con solape de unión.",
+  "units": "normalized_H",
+  "scene_height": 0.78,
+  "coordinate_system": {
+    "up": "+Y",
+    "front": "+Z",
+    "anatomical_left": "+X"
+  },
+  "mesh": {
+    "vertices": [
+      [
+        -0.0335,
+        -0.21,
+        -0.0435
+      ],
+      [
+        0.0335,
+        -0.21,
+        -0.0435
+      ],
+      [
+        0.0335,
+        -0.21,
+        0.0435
+      ],
+      [
+        -0.0335,
+        -0.21,
+        0.0435
+      ],
+      [
+        -0.0365,
+        0.01,
+        -0.047
+      ],
+      [
+        0.0365,
+        0.01,
+        -0.047
+      ],
+      [
+        0.0365,
+        0.01,
+        0.047
+      ],
+      [
+        -0.0365,
+        0.01,
+        0.047
+      ]
+    ],
+    "faces": [
+      [
+        5,
+        1,
+        0
+      ],
+      [
+        4,
+        5,
+        0
+      ],
+      [
+        6,
+        2,
+        1
+      ],
+      [
+        5,
+        6,
+        1
+      ],
+      [
+        7,
+        3,
+        2
+      ],
+      [
+        6,
+        7,
+        2
+      ],
+      [
+        4,
+        0,
+        3
+      ],
+      [
+        7,
+        4,
+        3
+      ],
+      [
+        1,
+        2,
+        0
+      ],
+      [
+        6,
+        5,
+        4
+      ],
+      [
+        2,
+        3,
+        0
+      ],
+      [
+        7,
+        6,
+        4
+      ]
+    ],
+    "face_colors": [
+      "#33438a",
+      "#324287",
+      "#34448d",
+      "#33438a",
+      "#33438a",
+      "#324287",
+      "#34448d",
+      "#33438a",
+      "#33438a",
+      "#324287",
+      "#34448d",
+      "#33438a"
+    ]
+  },
+  "material": {
+    "base_color_srgb": "#33438A",
+    "flat_shading": true,
+    "roughness": 0.92,
+    "metalness": 0,
+    "uv_required": false
+  },
+  "construction": "Prisma rectangular cerrado de doce triángulos.",
+  "sockets": {
+    "origin": {
+      "position_local_H": [
+        0,
+        0,
+        0
+      ],
+      "description": "Origen numérico de esta pieza; montaje mediante assembly.json."
+    },
+    "mount_P18_L": {
+      "position_local_H": [
+        0.0,
+        -0.255,
+        0.0
+      ],
+      "description": "Anclaje derivado en reposo para P18-L. Ver instancia padre P17-L.",
+      "instance_scope": "P17-L"
+    },
+    "mount_P18_R": {
+      "position_local_H": [
+        -0.0,
+        -0.255,
+        0.0
+      ],
+      "description": "Anclaje derivado en reposo para P18-R. Ver instancia padre P17-R.",
+      "instance_scope": "P17-R"
+    }
+  },
+  "metadata": {
+    "surface_kind": "closed",
+    "limitations": [
+      "Revisar alineación con zapato y cobertura del cambio de hueso."
+    ],
+    "triangles": 12,
+    "bounds_local_H": {
+      "min": [
+        -0.0365,
+        -0.21,
+        -0.047
+      ],
+      "max": [
+        0.0365,
+        0.01,
+        0.047
+      ],
+      "size": [
+        0.073,
+        0.22,
+        0.094
+      ]
+    },
+    "dimensions_scene": [
+      0.05694,
+      0.1716,
+      0.07332
+    ],
+    "authoritative_for": "support_geometry_only",
+    "reference_render_policy": "Las vistas técnicas muestran ambos lados de superficies abiertas; eso no añade caras a los JSON ni obliga a DoubleSide en runtime."
+  }
+}

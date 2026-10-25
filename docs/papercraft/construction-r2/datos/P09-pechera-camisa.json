@@ -1,0 +1,92 @@
+{
+  "schema_version": "2.0",
+  "id": "P09",
+  "slug": "P09-pechera-camisa",
+  "name": "Pechera de camisa",
+  "purpose": "Triángulo blanco que hace visible el escote en V.",
+  "units": "normalized_H",
+  "scene_height": 0.78,
+  "coordinate_system": {
+    "up": "+Y",
+    "front": "+Z",
+    "anatomical_left": "+X"
+  },
+  "mesh": {
+    "vertices": [
+      [
+        -0.039,
+        0,
+        0
+      ],
+      [
+        0,
+        -0.076,
+        0.0026307692307692286
+      ],
+      [
+        0.039,
+        0,
+        0
+      ]
+    ],
+    "faces": [
+      [
+        0,
+        1,
+        2
+      ]
+    ],
+    "face_colors": [
+      "#fbfaf7"
+    ]
+  },
+  "material": {
+    "base_color_srgb": "#FBFAF7",
+    "flat_shading": true,
+    "roughness": 0.92,
+    "metalness": 0,
+    "uv_required": false
+  },
+  "construction": "Un triángulo; no tiene espesor ni volumen de camisa oculto.",
+  "sockets": {
+    "origin": {
+      "position_local_H": [
+        0,
+        0,
+        0
+      ],
+      "description": "Origen numérico de esta pieza; montaje mediante assembly.json."
+    }
+  },
+  "metadata": {
+    "surface_kind": "planar",
+    "limitations": [
+      "Aplique plano colocado a distancia normal controlada del chaleco."
+    ],
+    "triangles": 1,
+    "bounds_local_H": {
+      "min": [
+        -0.039,
+        -0.076,
+        0
+      ],
+      "max": [
+        0.039,
+        0,
+        0.0026307692307692286
+      ],
+      "size": [
+        0.078,
+        0.076,
+        0.0026307692307692286
+      ]
+    },
+    "dimensions_scene": [
+      0.060840000000000005,
+      0.05928,
+      0.0020519999999999983
+    ],
+    "authoritative_for": "support_geometry_only",
+    "reference_render_policy": "Las vistas técnicas muestran ambos lados de superficies abiertas; eso no añade caras a los JSON ni obliga a DoubleSide en runtime."
+  }
+}

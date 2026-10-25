@@ -1,0 +1,115 @@
+{
+  "schema_version": "2.0",
+  "id": "P03",
+  "slug": "P03-oreja",
+  "name": "Oreja",
+  "purpose": "Pequeña oreja facetada; una receta se refleja para el lado derecho.",
+  "units": "normalized_H",
+  "scene_height": 0.78,
+  "coordinate_system": {
+    "up": "+Y",
+    "front": "+Z",
+    "anatomical_left": "+X"
+  },
+  "mesh": {
+    "vertices": [
+      [
+        0,
+        -0.014,
+        0
+      ],
+      [
+        0,
+        0.014,
+        0
+      ],
+      [
+        0,
+        0,
+        -0.016
+      ],
+      [
+        0.038,
+        0,
+        0
+      ]
+    ],
+    "faces": [
+      [
+        0,
+        1,
+        2
+      ],
+      [
+        0,
+        3,
+        1
+      ],
+      [
+        1,
+        3,
+        2
+      ],
+      [
+        2,
+        3,
+        0
+      ]
+    ],
+    "face_colors": [
+      "#e5ad80",
+      "#e0aa7d",
+      "#eab083",
+      "#e5ad80"
+    ]
+  },
+  "material": {
+    "base_color_srgb": "#E5AD80",
+    "flat_shading": true,
+    "roughness": 0.92,
+    "metalness": 0,
+    "uv_required": false
+  },
+  "construction": "Tetraedro de cuatro caras con base de encaje oculta.",
+  "sockets": {
+    "origin": {
+      "position_local_H": [
+        0,
+        0,
+        0
+      ],
+      "description": "Origen numérico de esta pieza; montaje mediante assembly.json."
+    }
+  },
+  "metadata": {
+    "surface_kind": "closed",
+    "limitations": [
+      "La base penetra de forma intencional en la cabeza y el cabello; solo el extremo exterior queda visible. Sin cavidad anatómica ni detalles interiores."
+    ],
+    "triangles": 4,
+    "bounds_local_H": {
+      "min": [
+        0,
+        -0.014,
+        -0.016
+      ],
+      "max": [
+        0.038,
+        0.014,
+        0
+      ],
+      "size": [
+        0.038,
+        0.028,
+        0.016
+      ]
+    },
+    "dimensions_scene": [
+      0.02964,
+      0.021840000000000002,
+      0.012480000000000002
+    ],
+    "authoritative_for": "support_geometry_only",
+    "reference_render_policy": "Las vistas técnicas muestran ambos lados de superficies abiertas; eso no añade caras a los JSON ni obliga a DoubleSide en runtime."
+  }
+}

@@ -1,0 +1,478 @@
+{
+  "schema_version": "2.0",
+  "id": "P08",
+  "slug": "P08-torso-chaleco",
+  "name": "Torso y chaleco",
+  "purpose": "Chaleco abierto con escote en V profundo, pliegue central delantero y trasero, hombros descendentes con bisel, sisas y bajo facetado ligeramente acampanado (R3, fiel a la lámina).",
+  "units": "normalized_H",
+  "scene_height": 0.78,
+  "coordinate_system": {
+    "up": "+Y",
+    "front": "+Z",
+    "anatomical_left": "+X"
+  },
+  "mesh": {
+    "vertices": [
+      [
+        0,
+        -0.01,
+        0.085
+      ],
+      [
+        0,
+        0.162,
+        0.079
+      ],
+      [
+        0,
+        -0.01,
+        -0.074
+      ],
+      [
+        0,
+        0.262,
+        -0.082
+      ],
+      [
+        0.108,
+        -0.01,
+        0.0795
+      ],
+      [
+        0.132,
+        -0.01,
+        0.055
+      ],
+      [
+        0.132,
+        -0.01,
+        -0.062
+      ],
+      [
+        0.108,
+        -0.01,
+        -0.0697
+      ],
+      [
+        0.099,
+        0.183,
+        0.07323
+      ],
+      [
+        0.118,
+        0.125,
+        0.0
+      ],
+      [
+        0.099,
+        0.183,
+        -0.07573
+      ],
+      [
+        0.115,
+        0.24,
+        -0.004
+      ],
+      [
+        0.056,
+        0.268,
+        0.06
+      ],
+      [
+        0.056,
+        0.264,
+        -0.07983
+      ],
+      [
+        -0.108,
+        -0.01,
+        0.0795
+      ],
+      [
+        -0.132,
+        -0.01,
+        0.055
+      ],
+      [
+        -0.132,
+        -0.01,
+        -0.062
+      ],
+      [
+        -0.108,
+        -0.01,
+        -0.0697
+      ],
+      [
+        -0.099,
+        0.183,
+        0.07323
+      ],
+      [
+        -0.118,
+        0.125,
+        0.0
+      ],
+      [
+        -0.099,
+        0.183,
+        -0.07573
+      ],
+      [
+        -0.115,
+        0.24,
+        -0.004
+      ],
+      [
+        -0.056,
+        0.268,
+        0.06
+      ],
+      [
+        -0.056,
+        0.264,
+        -0.07983
+      ]
+    ],
+    "faces": [
+      [
+        0,
+        4,
+        8
+      ],
+      [
+        0,
+        8,
+        1
+      ],
+      [
+        1,
+        8,
+        12
+      ],
+      [
+        12,
+        8,
+        11
+      ],
+      [
+        12,
+        11,
+        13
+      ],
+      [
+        13,
+        11,
+        10
+      ],
+      [
+        2,
+        3,
+        13
+      ],
+      [
+        2,
+        13,
+        10
+      ],
+      [
+        2,
+        10,
+        7
+      ],
+      [
+        4,
+        5,
+        8
+      ],
+      [
+        5,
+        9,
+        8
+      ],
+      [
+        5,
+        6,
+        9
+      ],
+      [
+        6,
+        7,
+        10
+      ],
+      [
+        6,
+        10,
+        9
+      ],
+      [
+        11,
+        8,
+        10
+      ],
+      [
+        8,
+        9,
+        10
+      ],
+      [
+        18,
+        14,
+        0
+      ],
+      [
+        1,
+        18,
+        0
+      ],
+      [
+        22,
+        18,
+        1
+      ],
+      [
+        21,
+        18,
+        22
+      ],
+      [
+        23,
+        21,
+        22
+      ],
+      [
+        20,
+        21,
+        23
+      ],
+      [
+        23,
+        3,
+        2
+      ],
+      [
+        20,
+        23,
+        2
+      ],
+      [
+        17,
+        20,
+        2
+      ],
+      [
+        18,
+        15,
+        14
+      ],
+      [
+        18,
+        19,
+        15
+      ],
+      [
+        19,
+        16,
+        15
+      ],
+      [
+        20,
+        17,
+        16
+      ],
+      [
+        19,
+        20,
+        16
+      ],
+      [
+        20,
+        18,
+        21
+      ],
+      [
+        20,
+        19,
+        18
+      ],
+      [
+        1,
+        12,
+        13
+      ],
+      [
+        1,
+        13,
+        3
+      ],
+      [
+        1,
+        3,
+        23
+      ],
+      [
+        1,
+        23,
+        22
+      ]
+    ],
+    "face_colors": [
+      "#6C44A6",
+      "#6C44A6",
+      "#6E45A9",
+      "#734BB1",
+      "#774FB5",
+      "#6D45A8",
+      "#6A43A3",
+      "#6A43A3",
+      "#6A43A3",
+      "#6842A0",
+      "#6842A0",
+      "#65409C",
+      "#67419F",
+      "#67419F",
+      "#35215A",
+      "#35215A",
+      "#66409C",
+      "#66409C",
+      "#68419F",
+      "#6D47A7",
+      "#714BAB",
+      "#67419E",
+      "#643F99",
+      "#643F99",
+      "#643F99",
+      "#623E96",
+      "#623E96",
+      "#5F3C92",
+      "#613D95",
+      "#613D95",
+      "#35215A",
+      "#35215A",
+      "#2F1D4C",
+      "#2F1D4C",
+      "#2F1D4C",
+      "#2F1D4C"
+    ]
+  },
+  "material": {
+    "base_color_srgb": "#6942A1",
+    "flat_shading": true,
+    "roughness": 0.92,
+    "metalness": 0,
+    "uv_required": false
+  },
+  "construction": "R3: 24 vértices. Por lado: panel delantero bajo (2), solapa del escote (1), bisel del hombro (1), hombro superior (1), bisel trasero (1), panel trasero (3), costado en abanico desde el fondo de la sisa (5) y sisa cerrada por un valle oscuro (2). Tapa interior oscura del escote (4). 36 triángulos.",
+  "sockets": {
+    "origin": {
+      "position_local_H": [
+        0,
+        0,
+        0
+      ],
+      "description": "Origen numérico de esta pieza; montaje mediante assembly.json."
+    },
+    "mount_P02": {
+      "position_local_H": [
+        0.0,
+        0.24999999999999994,
+        0.0
+      ],
+      "description": "Anclaje derivado en reposo para P02. Ver instancia padre P08.",
+      "instance_scope": "P08"
+    },
+    "mount_P09": {
+      "position_local_H": [
+        0.0,
+        0.24017740853706032,
+        0.06747128936123317
+      ],
+      "description": "Anclaje derivado en reposo para P09. Ver instancia padre P08.",
+      "instance_scope": "P08"
+    },
+    "mount_P10_L": {
+      "position_local_H": [
+        0.004,
+        0.2553725579278268,
+        0.07258970765858967
+      ],
+      "description": "Anclaje derivado en reposo para P10-L. Ver instancia padre P08.",
+      "instance_scope": "P08"
+    },
+    "mount_P10_R": {
+      "position_local_H": [
+        -0.004,
+        0.2553725579278268,
+        0.07258970765858967
+      ],
+      "description": "Anclaje derivado en reposo para P10-R. Ver instancia padre P08.",
+      "instance_scope": "P08"
+    },
+    "mount_P11_L": {
+      "position_local_H": [
+        0.148,
+        0.23000000000000004,
+        0.0
+      ],
+      "description": "Anclaje derivado en reposo para P11-L. Ver instancia padre P08.",
+      "instance_scope": "P08"
+    },
+    "mount_P11_R": {
+      "position_local_H": [
+        -0.148,
+        0.23000000000000004,
+        0.0
+      ],
+      "description": "Anclaje derivado en reposo para P11-R. Ver instancia padre P08.",
+      "instance_scope": "P08"
+    },
+    "mount_P19": {
+      "position_local_H": [
+        0.0,
+        0.04999999999999999,
+        -0.109
+      ],
+      "description": "Anclaje derivado en reposo para P19. Ver instancia padre P08.",
+      "instance_scope": "P08"
+    }
+  },
+  "metadata": {
+    "surface_kind": "open",
+    "limitations": [
+      "Bajo abierto: la pelvis P15 entra por el borde inferior y su caja queda dentro del chaleco en reposo.",
+      "El escote y las sisas se ven huecos mediante caras interiores oscuras orientadas hacia fuera (tapa del escote y valle de la sisa); no hay segunda capa de camisa.",
+      "Perfil más recto que la lámina: la pechera P09, las solapas P10 y los tirantes P20 de R2 fijan el frente y la espalda casi verticales."
+    ],
+    "triangles": 36,
+    "bounds_local_H": {
+      "min": [
+        -0.132,
+        -0.01,
+        -0.082
+      ],
+      "max": [
+        0.132,
+        0.268,
+        0.085
+      ],
+      "size": [
+        0.264,
+        0.278,
+        0.167
+      ]
+    },
+    "dimensions_scene": [
+      0.20592,
+      0.21684,
+      0.13026
+    ],
+    "authoritative_for": "support_geometry_only",
+    "reference_render_policy": "Las vistas técnicas muestran ambos lados de superficies abiertas; eso no añade caras a los JSON ni obliga a DoubleSide en runtime.",
+    "r3": {
+      "replaces": "construction-r2/datos/P08-torso-chaleco.json",
+      "art": "construction-r2/imagenes/P08-torso-chaleco.png",
+      "sockets": "idénticos a R2",
+      "notes": "Ver docs/papercraft/construction-r3/README.md"
+    }
+  }
+}

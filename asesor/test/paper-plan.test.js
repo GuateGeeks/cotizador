@@ -377,7 +377,7 @@ test('vegetation is hashed, tall trees stay behind and aside, only low planting 
   const data = planCampus(STATES[5]);
   const trees = data.modules.filter(m => m.type.startsWith('tree'));
   assert.ok(trees.length >= 6);
-  assert.ok(trees.every(t => t.z < .45), 'no tall tree in the front row');
+  assert.ok(trees.every(t => t.z < .45 || t.x < -5.2), 'tall trees in the front row only on the west porch');
   assert.ok(data.modules.filter(m => ['planter', 'bench', 'bush', 'flowers'].includes(m.type)).length > 0);
   assert.deepEqual(data.modules.filter(m => m.order === 4), planCampus(structuredClone(STATES[5])).modules.filter(m => m.order === 4));
   assert.ok(data.modules.every(m => [0, 1, 2, 3, 4].includes(m.order)));
@@ -396,9 +396,11 @@ test('no classroom stands in front of another on the same floor and the campus i
     }
   }
   const six = planCampus(STATES[5]), one = planCampus(STATES[0]);
-  assert.ok(six.bounds.width <= 13.0 + 1e-6, `width ${six.bounds.width}`);
-  assert.ok(six.bounds.depth > six.bounds.width * .7 && six.bounds.depth > one.bounds.depth, 'depth grows in rows');
-  assert.ok(planCampus(huge).bounds.width <= 13.0 + 1e-6);
+  // five columns plus the west porch of the entrance; the base ends 3.0 in front of the wings (no empty plaza)
+  assert.ok(six.bounds.width <= 13.0 + 1.6 + 1e-6, `width ${six.bounds.width}`);
+  assert.ok(six.bounds.depth > one.bounds.depth, 'depth grows in rows');
+  assert.ok(six.bounds.z1 - .45 <= 3.0 + 1e-6, `front plaza ${six.bounds.z1 - .45}`);
+  assert.ok(planCampus(huge).bounds.width <= 13.0 + 1.6 + 1e-6);
   const g = six.modules.filter(m => m.type.startsWith('room-') && m.floor === 0 && ['room:pre:0', 'room:prim:0', 'room:bas:0', 'room:bach:0', 'project:tale'].includes(m.key));
   // U: back pair behind, wings in front of the patio, patio open towards +Z
   const z = key => six.modules.find(m => m.key === key).z, x = key => six.modules.find(m => m.key === key).x;

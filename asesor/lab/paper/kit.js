@@ -19,7 +19,7 @@ export const SCALE = Object.freeze({
   floor: 1.7, slab: .12, cell: 2.6, roomDepth: 2.3,
   door: { w: .52, h: 1.08 }, window: { sill: .55, h: .62 },
   table: .36, seat: .22, bench: .24, rail: .42,
-  person: { pre: .62, prim: .78, bas: .9, bach: .94, adult: 1.02 }
+  person: { pre: .62, prim: .78, bas: .9, bach: .94, adult: .98 }
 });
 
 /**

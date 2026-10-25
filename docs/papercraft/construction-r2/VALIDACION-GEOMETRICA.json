@@ -1,0 +1,309 @@
+{
+  "schema_version": "2.0",
+  "input_mode": "delivered_json",
+  "all_passed": true,
+  "part_count": 20,
+  "instance_count": 33,
+  "triangles_total": 280,
+  "bounds_root_H": {
+    "min": [
+      -0.19,
+      0.0,
+      -0.14250000000000002
+    ],
+    "max": [
+      0.19,
+      1.0,
+      0.10657142857142857
+    ],
+    "size": [
+      0.38,
+      1.0,
+      0.24907142857142858
+    ]
+  },
+  "height_scene": 0.78,
+  "sockets_mismatched": [],
+  "layer_plane_checks": [
+    {
+      "instance": "P04-L",
+      "reference_plane": "P01",
+      "min_normal_distance_scene": 0.003999999999999992,
+      "passed": true
+    },
+    {
+      "instance": "P04-R",
+      "reference_plane": "P01",
+      "min_normal_distance_scene": 0.003999999999999992,
+      "passed": true
+    },
+    {
+      "instance": "P05",
+      "reference_plane": "P01",
+      "min_normal_distance_scene": 0.004000000000000005,
+      "passed": true
+    },
+    {
+      "instance": "P09",
+      "reference_plane": "P08",
+      "min_normal_distance_scene": 0.003999999999999997,
+      "passed": true
+    },
+    {
+      "instance": "P10-L",
+      "reference_plane": "P09",
+      "min_normal_distance_scene": 0.004400000000000006,
+      "passed": true
+    },
+    {
+      "instance": "P10-R",
+      "reference_plane": "P09",
+      "min_normal_distance_scene": 0.004400000000000006,
+      "passed": true
+    }
+  ],
+  "parts": [
+    {
+      "id": "P01",
+      "triangles": 20,
+      "vertices": 12,
+      "boundary_edges": 0,
+      "surface_kind": "closed",
+      "min_triangle_area_H2": 0.002950825925058949,
+      "signed_volume_H3": 0.004627638000000001,
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "P02",
+      "triangles": 8,
+      "vertices": 6,
+      "boundary_edges": 0,
+      "surface_kind": "closed",
+      "min_triangle_area_H2": 0.00076,
+      "signed_volume_H3": 5.389583333333333e-05,
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "P03",
+      "triangles": 4,
+      "vertices": 4,
+      "boundary_edges": 0,
+      "surface_kind": "closed",
+      "min_triangle_area_H2": 0.000224,
+      "signed_volume_H3": 2.8373333333333338e-06,
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "P04",
+      "triangles": 2,
+      "vertices": 4,
+      "boundary_edges": 4,
+      "surface_kind": "planar",
+      "min_triangle_area_H2": 5.431507009725221e-05,
+      "signed_volume_H3": null,
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "P05",
+      "triangles": 3,
+      "vertices": 5,
+      "boundary_edges": 5,
+      "surface_kind": "planar",
+      "min_triangle_area_H2": 4.526255841437684e-05,
+      "signed_volume_H3": null,
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "P06",
+      "triangles": 32,
+      "vertices": 21,
+      "boundary_edges": 8,
+      "surface_kind": "open",
+      "min_triangle_area_H2": 0.00261465944543931,
+      "signed_volume_H3": null,
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "P07",
+      "triangles": 4,
+      "vertices": 6,
+      "boundary_edges": 6,
+      "surface_kind": "open",
+      "min_triangle_area_H2": 0.0004762701491800636,
+      "signed_volume_H3": null,
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "P08",
+      "triangles": 22,
+      "vertices": 16,
+      "boundary_edges": 8,
+      "surface_kind": "open",
+      "min_triangle_area_H2": 0.001502460981190527,
+      "signed_volume_H3": null,
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "P09",
+      "triangles": 1,
+      "vertices": 3,
+      "boundary_edges": 3,
+      "surface_kind": "planar",
+      "min_triangle_area_H2": 0.0029657752376065186,
+      "signed_volume_H3": null,
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "P10",
+      "triangles": 1,
+      "vertices": 3,
+      "boundary_edges": 3,
+      "surface_kind": "planar",
+      "min_triangle_area_H2": 0.0008954933848816885,
+      "signed_volume_H3": null,
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "P11",
+      "triangles": 8,
+      "vertices": 8,
+      "boundary_edges": 8,
+      "surface_kind": "open",
+      "min_triangle_area_H2": 0.0025595587510350297,
+      "signed_volume_H3": null,
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "P12",
+      "triangles": 8,
+      "vertices": 6,
+      "boundary_edges": 0,
+      "surface_kind": "closed",
+      "min_triangle_area_H2": 0.0008,
+      "signed_volume_H3": 9.424500000000002e-05,
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "P13",
+      "triangles": 8,
+      "vertices": 6,
+      "boundary_edges": 0,
+      "surface_kind": "closed",
+      "min_triangle_area_H2": 0.0005610000000000001,
+      "signed_volume_H3": 8.718550000000001e-05,
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "P14",
+      "triangles": 8,
+      "vertices": 6,
+      "boundary_edges": 0,
+      "surface_kind": "closed",
+      "min_triangle_area_H2": 0.0005610000000000001,
+      "signed_volume_H3": 3.790825e-05,
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "P15",
+      "triangles": 8,
+      "vertices": 8,
+      "boundary_edges": 8,
+      "surface_kind": "open",
+      "min_triangle_area_H2": 0.0032361087744388318,
+      "signed_volume_H3": null,
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "P16",
+      "triangles": 12,
+      "vertices": 8,
+      "boundary_edges": 0,
+      "surface_kind": "closed",
+      "min_triangle_area_H2": 0.003312,
+      "signed_volume_H3": 0.00161616,
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "P17",
+      "triangles": 12,
+      "vertices": 8,
+      "boundary_edges": 0,
+      "surface_kind": "closed",
+      "min_triangle_area_H2": 0.0029145,
+      "signed_volume_H3": 0.0013944699999999999,
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "P18",
+      "triangles": 12,
+      "vertices": 8,
+      "boundary_edges": 0,
+      "surface_kind": "closed",
+      "min_triangle_area_H2": 0.0013650000000000001,
+      "signed_volume_H3": 0.0005356541666666667,
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "P19",
+      "triangles": 12,
+      "vertices": 8,
+      "boundary_edges": 0,
+      "surface_kind": "closed",
+      "min_triangle_area_H2": 0.004422499999999999,
+      "signed_volume_H3": 0.001488775,
+      "passed": true,
+      "errors": []
+    },
+    {
+      "id": "P20",
+      "triangles": 6,
+      "vertices": 8,
+      "boundary_edges": 8,
+      "surface_kind": "open",
+      "min_triangle_area_H2": 0.000585,
+      "signed_volume_H3": null,
+      "passed": true,
+      "errors": []
+    }
+  ],
+  "errors": [],
+  "verified": [
+    "Lectura de los JSON entregados",
+    "Índices y coordenadas finitas",
+    "Área positiva por triángulo",
+    "Ausencia de duplicados geométricos exactos dentro de cada pieza",
+    "Coherencia de winding por arista interior",
+    "Cierre y volumen positivo solo para piezas declaradas cerradas",
+    "Conteo y bounds almacenados contra recálculo",
+    "12 huesos y jerarquía sin ciclos",
+    "Transformaciones de 33 instancias y correspondencia de anclajes",
+    "Altura montada y presupuesto",
+    "Distancia normal a planos de apoyo de ojos, sonrisa, pechera y solapas"
+  ],
+  "not_verified": [
+    "Ausencia global de intersecciones entre piezas",
+    "Colisiones durante animación",
+    "Cobertura de todas las articulaciones en todas las poses",
+    "Identidad pixel a pixel con las ilustraciones",
+    "Integración en el builder real",
+    "Rendimiento CPU/GPU o FPS"
+  ]
+}
