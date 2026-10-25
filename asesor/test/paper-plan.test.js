@@ -372,6 +372,21 @@ test('people are representative, bounded and attached to real modules', async ()
   }
 });
 
+test('workshops get a believable group and services are reserved under the people limit', async () => {
+  const { planCampus } = await plan;
+  const { CAMPUS_LIMITS } = await import(pathToFileURL(path.join(__dirname, '../lab/campus-layout.js')).href);
+  for (const input of STATES) {
+    const data = planCampus(input), reserved = (data.serviceRooms.training ? 2 : 0) + (data.serviceRooms.followup ? 1 : 0);
+    assert.ok(data.people.length + reserved <= CAMPUS_LIMITS.people, 'service teachers fit under the limit');
+    for (const room of data.modules.filter(m => m.programId && isRoom(m))) {
+      const students = data.people.filter(p => p.moduleKey === room.key && p.role === 'student').length;
+      assert.ok(students >= 2 && students <= 3, `${room.key}: ${students} students`);
+      if (room.key !== data.serviceRooms.training) assert.equal(students, 3, `${room.key}: a group of three`);
+    }
+  }
+  assert.deepEqual(planCampus(STATES[5]).serviceRooms, { training: 'project:electronics', followup: 'room:pre:0' });
+});
+
 test('vegetation is hashed, tall trees stay behind and aside, only low planting in front', async () => {
   const { planCampus } = await plan;
   const data = planCampus(STATES[5]);
@@ -457,8 +472,13 @@ test('the entrance is attached to a building, the base hugs what is built, and t
     const data = planCampus(input), e = footprintOf(data.modules.find(m => m.type === 'entrance'));
     assert.ok(data.modules.some(m => isRoom(m) && m.floor === 0 && touch(footprintOf(m), e)), 'entrance touches the facade of a classroom');
   }
-  const six = planCampus(STATES[5]);
-  assert.ok(six.people.filter(p => p.activity === 'patio' || p.activity === 'walk').length >= 6, 'the yard keeps at least 6 people');
+  // The drone yard is a workshop: two pilots and at least one spectator survive the people limit
+  // (workshop groups of 3-4 come before extra walkers, so the yard no longer keeps 6 walkers).
+  for (const n of [5, 6]) {
+    const yard = planCampus(STATES[n - 1]).people.filter(p => p.moduleKey === 'patio:drones');
+    assert.equal(yard.filter(p => p.pilot).length, 2, `state ${n}: two pilots`);
+    assert.ok(yard.filter(p => !p.pilot).length >= 1, `state ${n}: a spectator`);
+  }
 });
 
 test('flank and back trees grow with the campus', async () => {

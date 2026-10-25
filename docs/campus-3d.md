@@ -108,6 +108,58 @@ Resumen; las reglas completas están en la cabecera de `plan.js` y las pruebas e
     «Alumno de primaria» elige pose y vista, aísla componentes y muestra aristas, hueso y triángulos.
     Capturas reproducibles: `npm run shot:alumno -- <carpeta-nueva>` y `tools/alumno-compare.py`.
 
+## Composición de actividades
+
+Cada tipo de aula tiene una sola actividad legible desde la vista general (yaw −0.55, pitch 0.6), desde
+el aula enfocada y en un acercamiento. Lo implementa `furnishRoom` en `asesor/lab/paper/compose.js`; el
+contrato con la animación está en [papercraft/ACTORES.md](papercraft/ACTORES.md).
+
+**Reglas comunes**
+
+- La cámara mira desde el frente izquierdo y la losa con su faldón tapa el fondo de las aulas. Por eso la
+  actividad va a la derecha del pasillo central y hacia el frente abierto. El pasillo (x = 0) queda libre
+  para quien camina.
+- Equipos a escala de diorama (`DEVICE_SCALE`): Tale-Bot 2.7×, dino 1.8×, SPIKE 2.6×, protoboard 2.3×,
+  holograma 3.6×, dron 2.2×, laptop 1.4×. La escala vive en un hueso hijo (`.size`), así que la animación
+  y el ensamblaje siguen moviendo la montura sin escala.
+- Cada kit va sobre un tapete del color del programa, que contrasta con la mesa.
+- Solo hay sillas donde alguien se sienta. La distancia silla-mesa depende del nivel, para que las manos
+  sentadas queden justo antes del borde. Cada laptop queda abierta, entera sobre la cubierta y de frente a su
+  usuario.
+
+**Por tipo**
+
+| Aula | Composición |
+|---|---|
+| Nivel | Dos mesas frente a la pantalla. Los estudiantes se sientan del lado del frente, de espaldas a la cámara, cada uno con su laptop abierta. El docente está junto a la pantalla y señala. |
+| Tale-Bot (preprimaria) | Pista amarilla con circuito blanco en el piso y el robot encima. Tres niños de preprimaria de rodillas en los bordes; el facilitador de pie a la izquierda. |
+| Robot Master | Mesa de taller con el dino de perfil sobre tapete lima, laptop del grupo y tres constructores: dos detrás, de frente a la cámara, y uno delante. |
+| SPIKE | La misma mesa con el kit, sus vigas sueltas sobre tapete rosa, la laptop y tres constructores. |
+| Electrónica | Mesa de banco con la protoboard sobre tapete azul, la bandeja de componentes y la laptop. Con estaciones, cada silla está sobre su tapete numerado. |
+| Inmersiva | Holograma grande al centro y el grupo con visores en círculo, abierto hacia la cámara, con el docente en el círculo. |
+| Drones | Dron sobre la plataforma, dos pilotos en el borde oeste con el control en las manos y público en la banca cercana o de pie al este. |
+| Formación docente | Mesa lateral al fondo izquierdo con caja de kit y bandeja; dos docentes sentados. |
+| Seguimiento | Un docente con laptop del lado opuesto de la segunda mesa del aula de nivel más baja. |
+| Grupos simultáneos | Segunda mesa a la izquierda del pasillo, con su set y su grupo. |
+
+**Personas por aula.** El tope sigue en 40. `plan.js` reserva a los docentes de servicio y prioriza
+talleres de 3–4 personas: facilitador y tres estudiantes. También prioriza el grupo del dron, con dos
+pilotos y un espectador. Después van los caminantes y el tercer estudiante de las aulas de nivel.
+
+**Comprobación.** `node tools/paper-activity-check.mjs <carpeta-nueva>` revisa los seis estados en
+reposo, como los muestra la escena:
+
+- apoyo de laptops, equipos, tapetes y cajas sobre su superficie;
+- laptops de frente a su usuario;
+- cruces triángulo-triángulo de utilería contra mesas, sillas, muros y personas, y de personas entre sí;
+- píxeles visibles de cada equipo con un z-buffer por software, usando las cámaras de la app (vista general
+  y aula enfocada con rayos X).
+
+Objetivos: ≥ 250 px² en la vista general y ≥ 2 500 px² en el aula enfocada, a 1440 × 1000 (lienzo de
+1020 × 924). La prueba `asesor/test/paper-composition.test.js` lo ejecuta. `--masks 6` guarda máscaras
+para superponerlas a una captura real. `node tools/campus-rooms.cjs <carpeta>` toma las capturas por tipo
+de aula (general, enfocada y cercana) y guarda los encuadres.
+
 ## Visor e interacción
 
 **HUD**
@@ -194,6 +246,14 @@ vegetación, piezas a ras de suelo y decoraciones de muro usan sombras de contac
 | Igual | 6 (actividad) | 36 952–38 808 | 75 | 10 | 60 |
 | SwiftShader (CPU), 1440 × 1000, baja a `eco` | 6 | 33 906 | 62 | 10 | No medido (CPU) |
 
+Con la composición de actividades (`tools/campus-perf.cjs`, misma GPU, renderer «ANGLE (… D3D12
+(NVIDIA GeForce RTX 3060 Ti) …)», una corrida completa por vista):
+
+| Vista, estado 6 | Triángulos antes | Triángulos después | Draw calls | Materiales | fps (p95 ms) |
+|---|---|---|---|---|---|
+| General | 36 952–38 284 | 34 870–36 202 | 75–92 | 10 | 59 (16.7) |
+| Taller enfocado (Robot Master) | 36 868–38 060 | 34 786–35 978 | 82–100 | 10 | 60 (16.8) |
+
 - Geeky aporta unos 2 100 triángulos en reposo y hasta unos 4 200 en `celebrate`, con 2
   materiales propios.
 - No hay fuga de memoria en ciclos entre los estados 2 y 6, ni en el inspector ni en la escena.
@@ -202,9 +262,12 @@ vegetación, piezas a ras de suelo y decoraciones de muro usan sombras de contac
 ## Verificación
 
 ```bash
-npm test                                   # Node: motor, planificador, PDF, experiencia, personajes (115)
+npm test                                   # Node: motor, planificador, PDF, experiencia, personajes, composición (118)
 npm run check:paper -- artifacts/paper/<run>   # mallas: presupuesto, coplanares, suelo, determinismo
 npm run check:people -- artifacts/paper/<run>  # personajes: manifiesto plan/real, rig, capas, poses, proporciones
+node tools/paper-activity-check.mjs artifacts/paper/<run>  # composición: apoyo, cruces, laptops, visibilidad de equipos
+node tools/campus-rooms.cjs artifacts/campus/<run>         # acercamientos por tipo de aula y encuadres (framings.json)
+GALLIUM_DRIVER=d3d12 LD_LIBRARY_PATH=/usr/lib/wsl/lib node tools/campus-perf.cjs artifacts/campus/<run> --gpu  # triángulos, llamadas y fps
 node tools/people-shot.cjs artifacts/paper/<run> --piece person-prim --sizes 40,60,80,120,600 --dpr 1,2
 python3 tools/people-compare.py <out> --shots <carpeta con ladder/, levels/, poses/>
 PLAYWRIGHT_MODULE=… BROWSER_CHANNEL=chromium BROWSER_ARGS="--use-angle=swiftshader --enable-unsafe-swiftshader" \

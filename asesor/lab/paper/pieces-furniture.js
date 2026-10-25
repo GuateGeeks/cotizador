@@ -53,14 +53,17 @@ function shelfBox(b, p, x, y0, hex) {
 
 export const PIECES = [
   {
+    // opts.w / opts.d: worktable size (a workshop shares one larger table); same triangles at any size.
     id: 'table', label: 'Mesa de trabajo', group: 'furniture', size: { w: .9, d: .55, h: .36 }, budget: 70,
-    build(b, p) {
+    build(b, p, opts = {}) {
+      const w = opts.w || .9, d = opts.d || .55;
       const meta = newMeta({ focus: [0, .2, 0], anchors: {
-        'seat-n': [0, 0, -.48], 'seat-s': [0, 0, .48], 'seat-e': [.66, 0, 0], 'seat-w': [-.66, 0, 0], top: [0, .36, 0]
+        'seat-n': [0, 0, -d / 2 - .205], 'seat-s': [0, 0, d / 2 + .205], 'seat-e': [w / 2 + .21, 0, 0], 'seat-w': [-w / 2 - .21, 0, 0], top: [0, .36, 0]
       } });
-      p.shadow(0, 0, 0, .52, .36);
-      p.slab(0, .33, 0, .9, T, .55, C.wood, { edge: C.woodEdge });
-      for (const [x, z] of [[-.39, -.2], [.39, -.2], [-.39, .2], [.39, .2]]) p.prism(x, 0, z, 4, .022, .33, C.leg, { ry: PI / 4, top: false });
+      p.shadow(0, 0, 0, w * .58, d * .65);
+      p.slab(0, .33, 0, w, T, d, C.wood, { edge: C.woodEdge });
+      const lx = w / 2 - .06, lz = d / 2 - .075;
+      for (const [x, z] of [[-lx, -lz], [lx, -lz], [-lx, lz], [lx, lz]]) p.prism(x, 0, z, 4, .022, .33, C.leg, { ry: PI / 4, top: false });
       return meta;
     }
   },

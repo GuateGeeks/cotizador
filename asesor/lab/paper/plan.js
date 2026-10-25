@@ -57,8 +57,10 @@
  *    Trees: garden row, row B and outer columns; rows G/H only low planting.
  *  - services (equipment modalities): FLEX/EV8/EV16 -> training, guided, followup
  *    true; INTEGRA only -> training 'basic' (1 h); otherwise all false.
- *  - People: teacher per level room, 2-3 seated students, facilitator in project
- *    rooms when `guided`, walkers in the yard; never above CAMPUS_LIMITS.people.
+ *  - People: teacher per level room with 2-3 seated students, a workshop group of 3
+ *    students (+ facilitator when `guided`), two drone pilots and a spectator, walkers;
+ *    service teachers are reserved (`serviceRooms`) so the total never exceeds
+ *    CAMPUS_LIMITS.people.
  *
  * order: 0 base (pedestal, entrance), 1 rooms/columns, 2 roofs and upper rooms,
  * 3 connections (paths, walkways, stairs, bridge, drone pad), 4 exterior.
@@ -153,6 +155,20 @@ export function derivePlanServices(normalized) {
   if (full) return { training: true, guided: true, followup: true };
   if (plans.has('INTEGRA')) return { training: 'basic', guided: false, followup: false };
   return { training: false, guided: false, followup: false };
+}
+
+/**
+ * Rooms that host the services (they never get a room of their own): training in the project room nearest
+ * the entrance (not drones or immersive), follow-up in the ground room of the lowest level. Keys or null.
+ */
+export function serviceRoomsOf(modules, services) {
+  const entrance = modules.find(m => m.type === 'entrance') || { x: 0, z: 2 };
+  const rooms = modules.filter(m => m.type.startsWith('room-') && !m.empty);
+  const cost = m => Math.hypot(m.x - entrance.x, m.z - entrance.z) + (m.y || 0) * 2;
+  const RANK = { pre: 0, prim: 1, bas: 2, bach: 3 };
+  const training = services?.training ? rooms.filter(m => m.programId && m.programId !== 'drones' && m.programId !== 'immersive').sort((a, c) => cost(a) - cost(c))[0] : null;
+  const followup = services?.followup ? rooms.filter(m => !m.programId && (m.y || 0) < .5).sort((a, c) => (RANK[a.levelId] ?? -1) - (RANK[c.levelId] ?? -1))[0] : null;
+  return { training: training?.key || null, followup: followup?.key || null };
 }
 
 export function planCampus(input = {}) {
@@ -313,29 +329,45 @@ export function planCampus(input = {}) {
   sortModules(modules);
 
   // ---- people ------------------------------------------------------------------------------------------------
+  // Service teachers (training, follow-up) are drawn by the composer inside existing rooms; their places are
+  // reserved here so the people limit holds without dropping anyone afterwards.
+  const serviceRooms = serviceRoomsOf(modules, services);
+  const limit = CAMPUS_LIMITS.people - (serviceRooms.training ? 2 : 0) - (serviceRooms.followup ? 1 : 0);
   const roomList = modules.filter(m => m.type.startsWith('room-'));
   const levelRooms = roomList.filter(m => m.levelId || m.opts.example);
-  const tiers = [[], [], [], [], []];
+  // Priority when the limit binds: staff, the drone group, two students per room, the third student of a
+  // workshop (a believable group of 3-4 around one kit), walkers, the third student of a level room, the rest.
+  const tiers = [[], [], [], [], [], [], []];
   for (const room of roomList) {
     const isProject = !!room.programId && !room.levelId;
     const floors = levelRooms.filter(m => m.levelId === room.levelId).length || 1;
     const share = room.opts.example ? 36 : Math.ceil((room.opts.students || 0) / floors);
-    const seats = isProject ? 2 : share >= 30 ? 3 : 2;
+    const seats = isProject ? 3 : share >= 30 ? 3 : 2;
     const levelId = room.levelId || null;
     const activity = isProject ? 'project' : 'class';
     if (!isProject) tiers[0].push({ key: room.key + ':teacher', role: 'teacher', levelId, moduleKey: room.key, activity, seat: 0 });
     else if (services.guided) tiers[0].push({ key: room.key + ':facilitator', role: 'facilitator', levelId, moduleKey: room.key, activity, seat: 0 });
     for (let seat = 0; seat < seats; seat++) {
-      tiers[seat < 2 ? 2 : 3].push({ key: `${room.key}:seat:${seat}`, role: 'student', levelId, moduleKey: room.key, activity, seat });
+      // The training room gives its third workshop seat last: two teachers already join it.
+      const third = isProject ? (room.key === serviceRooms.training ? 5 : 3) : 5;
+      tiers[seat < 2 ? 2 : third].push({ key: `${room.key}:seat:${seat}`, role: 'student', levelId, moduleKey: room.key, activity, seat });
     }
   }
   const walkerCount = example ? 2 : normalized.students > 0 ? Math.min(CAMPUS_LIMITS.walkers, Math.ceil(normalized.students / 45)) : 0;
-  const yard = has.program('drones') ? 'patio:drones' : 'entrance';
+  const drones = has.program('drones');
+  const yard = drones ? 'patio:drones' : 'entrance';
+  if (drones) {
+    // The drone yard is a workshop: two pilots with controllers at the pad, never dropped before a classroom seat.
+    const level = normalized.levels.find(id => normalized.equipment.drones.groupIds.some(gid => normalized.enrollment.find(row => row.id === gid)?.levelId === id)) || normalized.levels[0] || 'bas';
+    for (let seat = 0; seat < 2; seat++) tiers[1].push({ key: `patio:drones:pilot:${seat}`, role: 'student', levelId: level, moduleKey: 'patio:drones', activity: 'patio', seat, pilot: true });
+  }
   for (let index = 0; index < walkerCount; index++) {
-    tiers[index < 6 ? 1 : 4].push({ key: 'walker:' + index, role: 'student', levelId: normalized.levels.length ? normalized.levels[index % normalized.levels.length] : ['prim', 'pre'][index % 2],
+    // With drones the first yard walker (index 1) is the audience of the flight and joins the pilots' tier.
+    const tier = drones && index === 1 ? 1 : index < 4 ? 4 : 6;
+    tiers[tier].push({ key: 'walker:' + index, role: 'student', levelId: normalized.levels.length ? normalized.levels[index % normalized.levels.length] : ['prim', 'pre'][index % 2],
       moduleKey: index % 2 ? yard : 'entrance', activity: index % 2 ? 'patio' : 'walk', seat: index });
   }
-  const people = tiers.flat().slice(0, CAMPUS_LIMITS.people).sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
+  const people = tiers.flat().slice(0, Math.max(0, limit)).sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
 
   // ---- stats and bounds ---------------------------------------------------------------------------------------------
   const pedestals = modules.filter(m => m.type === 'pedestal');
@@ -343,7 +375,7 @@ export function planCampus(input = {}) {
   const x0 = Math.min(...pedestals.map(m => m.x - m.opts.w / 2)), x1 = Math.max(...pedestals.map(m => m.x + m.opts.w / 2));
   const z0 = Math.min(...pedestals.map(m => m.z - m.opts.d / 2)), z1 = Math.max(...pedestals.map(m => m.z + m.opts.d / 2));
   return {
-    normalized, modules, services, people,
+    normalized, modules, services, people, serviceRooms,
     stats: { rooms: roomList.length, upperRooms: roomList.filter(m => m.type === 'room-upper').length,
       projectRooms: roomList.filter(m => m.programId).length, modules: modules.length,
       footprint: round(pedestals.reduce((sum, m) => sum + m.opts.w * m.opts.d, 0)), people: people.length },
