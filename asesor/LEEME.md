@@ -25,7 +25,7 @@ La prueba de navegador requiere una instalación de Playwright y el navegador de
 | Archivo | Qué contiene |
 |---|---|
 | `asesor/config.js` | Datos editables: niveles, programas, compatibilidad, ratios, modalidades, tarifas, fiscalidad, acceso a Sócrates y fotos |
-| `asesor/motor.js` | Cálculo puro (equipos, capacidad, estudiantes únicos, importes, estados). Sin DOM |
+| `asesor/motor.js` | Cálculo puro (equipos, capacidad, estudiantes únicos, precios, estados). Sin DOM |
 | `asesor/asesor.js` | Interfaz y borrador local (clave `gg_asesor_v1`, esquema versión 1) |
 | `asesor/asesor.css` | Configuración lateral con jerarquía móvil y canvas adaptable |
 | `asesor/lab/campus-layout.js` | Normalización y reglas puras del campus, sin DOM ni WebGL |
@@ -59,15 +59,15 @@ La prueba de navegador requiere una instalación de Playwright y el navegador de
 - Grupos en horarios distintos: el máximo de los grupos. Grupos simultáneos: la suma de sus equipos; la recomendación es el mayor entre el bloque simultáneo y los demás grupos.
 - Horarios desconocidos: se muestra un escenario mínimo y uno máximo, sin cobertura garantizada.
 - Con menos equipos que los recomendados se muestra la capacidad por turno y las rotaciones mínimas, y hay que elegir trabajo por estaciones.
-- Importes en quetzales enteros (redondeados).
-- Cualquier cambio de estudiantes, grupos, equipos, horarios o modalidad deja el importe como «pendiente de actualizar» hasta recalcularlo.
+- Precios en quetzales enteros (redondeados).
+- Cualquier cambio de estudiantes, grupos, equipos, horarios o modalidad deja el precio como «pendiente de actualizar» hasta recalcularlo.
 
 ## Lógica de cotización (tomada de costa-sur.js)
 
 - INTEGRA: precio de compra × equipos; pago único.
 - FLEX: renta por equipo y bimestre × equipos × bimestres, con descuento de 0, 2, 4 o 5 % según 1, 2, 3 o 4 bimestres. Es un solo monto por todo el periodo, sin pago inicial ni cuotas (como la compra); el plazo (bimestres × 2 meses) solo se usa en el simulador.
 - Evoluciona 8 y 16 (los únicos con pago inicial y cuotas): precio de referencia por 5 equipos ÷ 5 × equipos × 1.06 (8 meses) o 1.10 (16 meses); 20 % de pago inicial y el resto en cuotas mensuales.
-- IVA 12 %. Importes en quetzales enteros. En Evoluciona todas las cuotas son iguales: el precio absorbe el ajuste de unos pocos quetzales para que no quede una cuota final distinta.
+- IVA 12 %. Precios en quetzales enteros. En Evoluciona todas las cuotas son iguales: el precio absorbe el ajuste de unos pocos quetzales para que no quede una cuota final distinta.
 - Aviso informativo cuando hay menos de 5 equipos (mínimo comercial).
 - Simulador (resumen y PDF): una sola cuota mensual por estudiante para toda la propuesta, calculada sobre el total de estudiantes únicos de los programas en renta (Flex) y en cuotas (Evoluciona), sin separar por nivel ni por programa. Cuota sugerida = total con IVA de esos programas ÷ estudiantes ÷ meses del programa más largo ÷ 0.75, redondeada hacia arriba a múltiplos de 5; el colegio puede quitar la sugerencia y escribir otra. Se muestra como «ganancia del colegio» (ingresos menos pago a GuateGeeks, antes de sus gastos propios). No aplica a Integra.
 
@@ -139,15 +139,15 @@ La franja de la primera hoja del PDF lleva los ojos de GuateGeeks (`assets/brand
 
 `node --test asesor/test/precios.test.js` recalcula de forma independiente (fórmula de `costa-sur.js`) las 6 tecnologías, de 1 a 150 equipos, en Integra, Flex (1 a 4 bimestres) y Evoluciona 8 y 16: neto, IVA del 12 %, total, pago inicial del 20 %, cuotas iguales y descuentos por bimestres; además prueba instituciones de ejemplo de punta a punta (equipos por grupo y horario, varias modalidades, cantidad elegida por el colegio y precios que se invalidan al cambiar la matrícula).
 
-## IVA: importes sin IVA por defecto
+## IVA: precios sin IVA por defecto
 
-Las instituciones educativas están exentas de IVA, así que todo se calcula y se muestra **sin IVA**: el importe de cada programa, el pago inicial, las cuotas, la cuota por estudiante del simulador y el PDF. El monto con IVA (12 %) se indica siempre como referencia, y quien lo necesite puede activar «Mostrar los pagos con IVA» en la sección de inversión (la preferencia se guarda y también la sigue el PDF).
+Las instituciones educativas están exentas de IVA, así que todo se calcula y se muestra **sin IVA**: el precio de cada programa, el pago inicial, las cuotas, la cuota por estudiante del simulador y el PDF. El monto con IVA (12 %) se indica siempre como referencia, y quien lo necesite puede activar «Mostrar los pagos con IVA» en la sección de inversión (la preferencia se guarda y también la sigue el PDF).
 
 En `motor.js`, `quoteFor` devuelve `net`, `initial` y `schedule` (sin IVA, principales) y `total`, `initialIva`, `scheduleIva` y `tax` (con IVA, referencia). En Evoluciona las cuotas son iguales en ambas vistas; por eso el IVA de referencia puede diferir unos quetzales del 12 % exacto del neto.
 
-## Modalidad por programa, importes unificados
+## Modalidad por programa, precios unificados
 
-Cada programa elige su propia modalidad en su tarjeta (Comprar/Integra, Rentar/Flex con 1 a 4 bimestres, o Evoluciona 8/16 meses), así una institución puede, por ejemplo, rentar electrónica un bimestre y llevar robótica a largo plazo con Evoluciona, o comprar el equipo de un nivel y usar Evoluciona en otros. Las tarjetas no muestran importes.
+Cada programa elige su propia modalidad en su tarjeta (Comprar/Integra, Rentar/Flex con 1 a 4 bimestres, o Evoluciona 8/16 meses), así una institución puede, por ejemplo, rentar electrónica un bimestre y llevar robótica a largo plazo con Evoluciona, o comprar el equipo de un nivel y usar Evoluciona en otros. Las tarjetas no muestran precios.
 
 - La inversión se muestra **agrupada por modalidad** (un total por cada modalidad usada) y **un total general** con estudiantes atendidos, equipos y costo por estudiante. Nunca por nivel ni por programa.
 - La compra no muestra formas de pago; si hay renta o cuotas, "Así quedan tus pagos" suma todo mes a mes (el plazo más largo manda). Evoluciona avisa que el equipo queda en la institución.
@@ -156,3 +156,10 @@ Cada programa elige su propia modalidad en su tarjeta (Comprar/Integra, Rentar/F
 - El simulador usa una sola cuota para los programas en renta o cuotas, explicada en frases sencillas: "Cobras a cada estudiante / Pagas a GuateGeeks por cada estudiante / Te queda por estudiante".
 - El PDF sigue el mismo criterio: tabla de inversión por modalidad, total, "Así se paga" y proyección opcional.
 
+
+## Grados nuevos y cobertura de la propuesta
+
+Cada grado con estudiantes debe quedar en un programa o marcarse "sin programa por ahora" (`state.skipped`). Al agregar un nivel (por ejemplo Bachillerato) y registrar sus estudiantes, el asesor abre de inmediato **"Configura los grados nuevos"**: ofrece sumarlos a los programas ya elegidos que sean compatibles (por ejemplo SPIKE Prime), elegir otros programas en el catálogo o dejarlos sin programa. Al sumarlos, el programa vuelve a "por configurar" y se piden de nuevo grupos, horarios y equipos, así la cantidad y el precio se recalculan.
+
+- El resumen muestra "Estudiantes y grados de tu propuesta": cuántos estudiantes están incluidos y el detalle grado por grado.
+- El PDF no se descarga mientras haya grados sin programa (que el colegio no haya descartado) o programas por configurar; el PDF incluye la tabla "Grados y estudiantes considerados" y avisa los estudiantes no incluidos.

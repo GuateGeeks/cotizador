@@ -1,6 +1,6 @@
 /*
  * Motor del asesor GuateGeeks: funciones puras y deterministas, sin DOM.
- * Calcula equipos, capacidad, estudiantes únicos e importes. No usa IA.
+ * Calcula equipos, capacidad, estudiantes únicos e precios. No usa IA.
  * Se usa en el navegador (window.GGMotor) y en las pruebas de Node (require).
  */
 (function (root, factory) {
@@ -94,7 +94,7 @@
     return out;
   }
 
-  // ---------- Importes (quetzales enteros) ----------
+  // ---------- Precios (quetzales enteros) ----------
 
   // Reparte un monto entero en n partes que suman exacto; la última absorbe el residuo.
   function splitEven(amount, n) {
@@ -105,8 +105,8 @@
   }
 
   // tariff: precios por equipo (ver config.js). fiscal: {iva, initialRate, ...}
-  // Devuelve null si no hay tarifa. Todos los importes son enteros (se redondean).
-  // Las instituciones educativas están exentas de IVA: el importe principal, el pago inicial y las cuotas se
+  // Devuelve null si no hay tarifa. Todos los precios son enteros (se redondean).
+  // Las instituciones educativas están exentas de IVA: el precio principal, el pago inicial y las cuotas se
   // calculan SIN IVA (`net`, `initial`, `schedule`). El monto con IVA es solo referencia (`total`, `initialIva`,
   // `scheduleIva`) para quien lo necesite; `tax` es la diferencia entre ambos.
   function quoteFor(plan, bimestres, units, tariff, fiscal) {
@@ -167,7 +167,7 @@
 
   // ---------- Estado de cada programa de la propuesta ----------
 
-  // Firma de todo lo que afecta equipos o importes. Si cambia, el cálculo previo queda pendiente.
+  // Firma de todo lo que afecta equipos o precios. Si cambia, el cálculo previo queda pendiente.
   function entrySignature(entry, groups) {
     const mine = groups.filter(g => entry.groupIds.includes(g.id)).map(g => [g.id, g.students]);
     return JSON.stringify([mine, entry.sharing, [...entry.simIds].sort(), entry.units, entry.plan, entry.flexBimestres]);

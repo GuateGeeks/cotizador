@@ -72,7 +72,7 @@
     immersive:   { buy: 5550, rent: 1750, evo8: 44400, evo16: 51100 }
   };
 
-  // Configuración fiscal y reglas comerciales vigentes. Importes en quetzales enteros.
+  // Configuración fiscal y reglas comerciales vigentes. Precios en quetzales enteros.
   const FISCAL = {
     iva: 0.12,
     initialRate: 0.2,                       // pago inicial solo en Evoluciona (compra y renta son un solo pago)

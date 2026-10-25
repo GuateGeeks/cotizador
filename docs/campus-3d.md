@@ -92,7 +92,7 @@ Pausa y movimiento reducido congelan las actividades y presentan cada cambio en 
 
 ## Datos y reglas
 
-`mascotData()` en `asesor/asesor.js` adapta el estado del configurador. El motor comercial sigue siendo la fuente de verdad de equipos, capacidad e importes.
+`mascotData()` en `asesor/asesor.js` adapta el estado del configurador. El motor comercial sigue siendo la fuente de verdad de equipos, capacidad e precios.
 
 | Campo | Uso |
 | --- | --- |
