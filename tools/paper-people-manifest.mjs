@@ -120,7 +120,18 @@ const POSE_SET = {
   type: p => applyPose(p, blendBody(POSES.sit(), POSES.type(.3)), 'sit', p.shin + .04 * p.scale - .03),
   point: p => applyPose(p, POSES.point(.2), 'stand'), hand: p => applyPose(p, POSES.hand(), 'stand'),
   'hand-mid': p => applyPose(p, (() => { const q = POSES.hand(); q.armR = q.armR.map(x => x / 2); return q; })(), 'stand'),
-  vr: p => applyPose(p, POSES.vr(1.2, 0), 'stand')
+  vr: p => applyPose(p, POSES.vr(1.2, 0), 'stand'),
+  // Ambient-life vocabulary (scene-activity.js): seated at a table or standing.
+  raise: p => applyPose(p, blendBody(POSES.sit(), POSES.raise(.4)), 'sit', p.shin + .04 * p.scale - .03),
+  talk: p => applyPose(p, POSES.talk(1.1, .5), 'stand'),
+  lean: p => applyPose(p, blendBody(POSES.sit(), POSES.lean(1)), 'sit', p.shin + .04 * p.scale - .03),
+  press: p => applyPose(p, blendBody(POSES.sit(), POSES.press(.3)), 'sit', p.shin + .04 * p.scale - .03),
+  'high-five': p => applyPose(p, POSES.highFive('R'), 'stand'), cheer: p => applyPose(p, POSES.cheer(.2), 'stand'),
+  oops: p => applyPose(p, POSES.oops(), 'stand'), think: p => applyPose(p, POSES.think(), 'stand'),
+  hold: p => applyPose(p, POSES.hold(.6, .3), 'stand'), grab: p => applyPose(p, POSES.grab(.7, 0), 'stand'),
+  visor: p => applyPose(p, POSES.visor(.5), 'stand'), wave: p => applyPose(p, POSES.wave(.3), 'stand'),
+  // compose.js lifts kneelers 0.022 onto the floor (the kneel pose drops the shins below the hips' ground).
+  kneel: p => { applyPose(p, blendBody(POSES.kneel(), POSES.lean(.6)), 'kneel'); p.root.position.y = .022; }
 };
 
 const report = { date: new Date().toISOString(), node: process.version, minGap: MIN_GAP, reserve: RESERVE, shadow: SHADOW_TRIANGLES, combos: [], poses: [], proportions: [], determinism: {}, summary: {} };

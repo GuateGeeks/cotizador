@@ -32,8 +32,10 @@ Hay un solo canvas WebGL. La escena consume `planCampus(data)` y agrupa los mód
 entidades: una por pila de aulas, una de conexiones y una de terreno. Cada entidad tiene clave
 estable y firma por contenido, así que solo se reconstruye lo que cambió y se libera lo que sale.
 
-El render es bajo demanda. La escena se construye, corre su actividad durante unos 13 s y luego
-reposa sin pedir cuadros.
+El campus vive mientras está a la vista: cada aula sigue un ciclo continuo de actividades (ver
+[Vida del campus](#vida-del-campus)). Las transiciones de cámara y de ensamblaje se dibujan hasta a
+60 fps y la vida ambiental a un ritmo menor. Con pausa, pestaña oculta, campus fuera de pantalla,
+contexto perdido o movimiento reducido no se piden cuadros: el render vuelve a ser bajo demanda.
 
 ## Crecimiento
 
@@ -160,6 +162,54 @@ Objetivos: ≥ 250 px² en la vista general y ≥ 2 500 px² en el aula enfocada
 para superponerlas a una captura real. `node tools/campus-rooms.cjs <carpeta>` toma las capturas por tipo
 de aula (general, enfocada y cercana) y guarda los encuadres.
 
+## Vida del campus
+
+`asesor/lab/paper/scene-activity.js` (`tickLife`) anima los actores de `meta.actors`
+([papercraft/ACTORES.md](papercraft/ACTORES.md)). Cada pose es una función pura de los actores y del
+reloj de animación: el mismo estado y el mismo tiempo dan la misma pose, aunque la entidad se haya
+reconstruido o la pestaña haya estado oculta. `tickActors(actors, run, u)` se conserva sobre ese reloj, y
+`u ≥ RUN` (fin de una corrida) da el estado de reposo.
+
+**Ciclo.** Cada aula sigue una secuencia de momentos («beats») de duración fija. El orden se baraja en
+cada ciclo a partir de la clave del aula y del número de ciclo, y cada aula empieza en su propia fase:
+las aulas no van sincronizadas y no se repiten en un minuto. Debajo, cada persona tiene una capa propia
+(ritmo de tecleo, miradas, asentimientos), así que dos cuadros separados 1.8 s siempre difieren (lo
+comprueba `asesor/test/campus-life.test.js`).
+
+| Aula | Momentos e interacciones |
+|---|---|
+| Nivel | Exposición (el docente se gira y señala la pantalla; la clase mira y asiente) · pregunta (dos manos levantadas, el docente señala a una, esa estudiante habla y la clase la mira) · ronda (el docente camina hasta una laptop, revisa, señala y asiente) · parejas (vecinos que se giran y hablan por turnos) · pizarra (una estudiante se levanta, va a la pantalla, señala y vuelve; el docente se aparta y aplaude) · trabajo en silencio. |
+| Robótica (Robot Master, SPIKE) | Ronda de 20 s: programar (la laptop del grupo o los botones del robot), correr (el equipo se mueve dentro de su `range` y sobre su `surface`; ruedas, cabeza y cola si existen), reaccionar (porra y choque de manos con el facilitador, o manos a la cabeza si falla) y devolver el robot. El facilitador acompaña al programador, luego ayuda desde su `away` y vuelve. |
+| Tale-Bot | El grupo de rodillas alrededor de la pista programa con los botones, sigue el recorrido y celebra; el grupo que espera de pie conversa. El facilitador se acerca a la pista en una de cada dos rondas. |
+| Electrónica | Conectar componentes (manos que presionan), probar, asentir cuando funciona y comentar. Con estaciones, cada dos rondas los estudiantes rotan de asiento uno por uno, con un lugar de espera libre calculado, y la ronda espera. |
+| Inmersiva | Mirar alrededor, alcanzar objetos virtuales (el holograma gira más rápido y sube), levantar el visor para hablar con otro y señalar el holograma. El facilitador rodea el círculo por fuera para guiar a uno. |
+| Drones | El dron flota sobre la plataforma, sube, hace dos ochos, baja, toca la plataforma y vuelve a flotar (32 s). Los pilotos sostienen el control (el hueso del control sigue sus manos), lo inclinan con el vuelo y miran al dron; el público lo sigue y aplaude al aterrizar. |
+| Servicios | Formación: los docentes se pasan la caja del kit sobre su mesa. Seguimiento: el docente teclea, piensa y asiente. |
+| Patio | Las parejas caminan de la entrada a una puerta y vuelven conversando; una saluda en la puerta. Los grupos de pie conversan por turnos y saludan; en la banca conversan entre sí. |
+| Relevo (horarios distintos) | Tras cuatro rondas, el grupo sentado sale a un lugar libre, el que espera ocupa las sillas y el primero se sienta en la banca, en orden y por el pasillo. |
+
+**Sin cruces.** Las rutas pasan por el pasillo central y, si una silla o una mesa estorba, salen primero
+por detrás de la silla. Sentados a una mesa, los brazos suben hasta que las manos quedan sobre la
+cubierta (`tops`). En el patio, quienes caminan se apartan de quien está de pie y entre sí. La prueba
+`campus-life.test.js` recorre los estados 3 a 6 durante 260 s y busca personas dentro de mesas, muebles,
+muros, el holograma u otras personas, manos dentro de las cubiertas y equipos fuera de su superficie o de
+su `range`.
+
+**Poses nuevas** (`campus-people.js`, mismo rig de 12 huesos): `raise` (mano arriba), `talk`, `lean`,
+`pointDown`, `highFive`, `oops`, `think`, `press`, `hold` (control), `grab` y `visor` (RV); `cheer` (brazos
+en V) y `wave` (brazo junto a la cabeza) se rehicieron para que las manos no tapen la cara. `applySeated`
+mezcla estar sentado y de pie. `npm run check:people` revisa capas y suelo en estas poses; las hojas de
+`tools/life-poses.cjs` las muestran sentado, de pie y en el docente.
+
+**Geeky** reacciona a los grandes momentos con acciones breves y sin partículas: `giggle` cuando un robot
+llega a la meta o el dron aterriza y `nod` cuando el circuito funciona. Atiende solo a los momentos del
+aula enfocada o, en la vista general, al aterrizaje del dron, y como mucho cada 15 s. Conserva su lugar.
+Al enfocar una actividad flota sobre el techo del lado contrario a la escalera o las galerías, si estas
+quedan cerca.
+
+**Reposo** (movimiento reducido y comprobaciones): todos en su lugar compuesto, sentados trabajando, los
+equipos en `home`, el dron flotando a su altura y el holograma quieto.
+
 ## Visor e interacción
 
 **HUD**
@@ -236,7 +286,20 @@ vegetación, piezas a ras de suelo y decoraciones de muro usan sombras de contac
 - `eco`: sin sombras, píxel 1× y 30 fps. Se activa cuando los cuadros superan 75 ms de forma
   sostenida.
 
-**Movimiento reducido.** El resultado se muestra directo, sin animación.
+**Ritmo de cuadros y energía**
+
+| Situación | Cuadros |
+|---|---|
+| Transición (cámara, ensamblaje, viaje de Geeky) | 60 fps con `full` y puntero fino; 30 fps en táctil o `eco` |
+| Solo vida ambiental | 30 fps con `full` y puntero fino; 20 fps en táctil o `eco` |
+| Pausa, movimiento reducido | Bajo demanda: solo al cambiar algo; sin reloj de animación |
+| Pestaña oculta, campus fuera de pantalla, contexto perdido | Ninguno (`IntersectionObserver`, `visibilitychange`, `webglcontextlost`) |
+
+La vida ambiental no cuenta como transición: `transitionsActive` vuelve a 0 y `targetFps` baja al ritmo
+ambiental. `getDiagnostics()` informa `ambientFps`, `targetFps`, `tickCost` (media, p95 y máximo de los
+últimos 240 ticks, en ms) y `life` (reacciones de Geeky).
+
+**Movimiento reducido.** El resultado se muestra directo, en el estado de reposo, sin animación.
 
 **Mediciones del 2026-10-25** (Chromium headless; incluyen los personajes R3 y las correcciones r2):
 
@@ -254,6 +317,19 @@ Con la composición de actividades (`tools/campus-perf.cjs`, misma GPU, renderer
 | General | 36 952–38 284 | 34 870–36 202 | 75–92 | 10 | 59 (16.7) |
 | Taller enfocado (Robot Master) | 36 868–38 060 | 34 786–35 978 | 82–100 | 10 | 60 (16.8) |
 
+**Mediciones de la vida del campus** (2026-10-25, estado 6, 40 personas, 1440 × 1000;
+`tools/campus-life.cjs`, `tools/campus-life-fps.cjs`):
+
+| Condición | Ambiental | Transición | Tick (media / p95) | Triángulos | Draw calls | Materiales |
+|---|---|---|---|---|---|---|
+| GPU RTX 3060 Ti (renderer «ANGLE (Microsoft Corporation, D3D12 (NVIDIA GeForce RTX 3060 Ti), OpenGL ES 3.1)»), `full` | 30.0 fps | 59.3 fps | 0.71–0.94 / 0.9–1.5 ms | 26 109–36 350 | 60–95 | 10 |
+| SwiftShader (CPU), baja a `eco` | 5–7 fps (limitado por el render en CPU) | 5.7 fps | 1.3–1.9 / 2.3–4.0 ms | 23 859–33 464 | 47–89 | 10 |
+| Node, sin render (`campus-life.test.js`) | — | — | 0.57 / 0.91 ms | — | — | — |
+
+- La GPU se mide con el Chromium headless por defecto (`headless_shell`): con `BROWSER_CHANNEL=chromium`
+  el contexto WebGL de ANGLE/D3D12 no se crea en este host (`BindToCurrentSequence failed`).
+- La animación no agrega geometrías ni materiales (la suite de navegador lo comprueba durante la vida
+  ambiental). Con Geeky reaccionando en un taller enfocado, el máximo medido fue 33 987 triángulos.
 - Geeky aporta unos 2 100 triángulos en reposo y hasta unos 4 200 en `celebrate`, con 2
   materiales propios.
 - No hay fuga de memoria en ciclos entre los estados 2 y 6, ni en el inspector ni en la escena.
@@ -262,7 +338,7 @@ Con la composición de actividades (`tools/campus-perf.cjs`, misma GPU, renderer
 ## Verificación
 
 ```bash
-npm test                                   # Node: motor, planificador, PDF, experiencia, personajes, composición (118)
+npm test                                   # Node: motor, planificador, PDF, experiencia, personajes, composición, vida (128)
 npm run check:paper -- artifacts/paper/<run>   # mallas: presupuesto, coplanares, suelo, determinismo
 npm run check:people -- artifacts/paper/<run>  # personajes: manifiesto plan/real, rig, capas, poses, proporciones
 node tools/paper-activity-check.mjs artifacts/paper/<run>  # composición: apoyo, cruces, laptops, visibilidad de equipos
@@ -273,6 +349,10 @@ python3 tools/people-compare.py <out> --shots <carpeta con ladder/, levels/, pos
 PLAYWRIGHT_MODULE=… BROWSER_CHANNEL=chromium BROWSER_ARGS="--use-angle=swiftshader --enable-unsafe-swiftshader" \
   node asesor/test/campus-browser.cjs      # escritorio, móvil, movimiento reducido y sin WebGL
 npm run capture -- artifacts/campus/<run>  # seis estados y cuatro vistas del cotizador real
+node tools/campus-life.cjs artifacts/vida/<run> [--gpu] --fps 10   # vida: 12 cuadros por tipo de aula y 60 s de vista general
+python3 -I tools/campus-life-sheets.py artifacts/vida/<run> --compare artifacts/vida/<antes>  # hojas, GIF y cambio entre cuadros
+node tools/campus-life-fps.cjs             # fps de transición y ambiental, coste del tick (GPU=1 para la GPU)
+node tools/life-poses.cjs artifacts/vida/<run>                     # hojas de las poses de la vida del campus
 python3 tools/paper-compare.py <out> --sheets <paper-shot run> --states <paper-shot --states run>
 ```
 

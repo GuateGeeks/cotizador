@@ -311,19 +311,27 @@ async function verifyLivingCampus(page, result, reducedMotion) {
     assert.equal(moving.scene.activityTicks, initial.scene.activityTicks, 'Reduced motion does not run ambient animation');
     assert.equal(moving.scene.framePending, false, 'Reduced motion does not schedule idle frames');
   } else {
-    // Papercraft campus: activities run with a purpose after a change and then the scene rests
-    // (render on demand). Start a run by exploring a program and expect it to advance, then rest.
+    // Living campus: after a change the construction and camera transitions settle (render on demand
+    // for them), but the ambient activities keep going while the campus is visible, at the ambient
+    // frame rate, without adding geometry or materials. Pause, offscreen and reduced motion stop it (below).
     const before = await snapshot(page);
     await page.evaluate(() => { const id = state.selected[0]?.programId; if (id) inspectCampus('program', id); else inspectCampus('overview'); });
     await page.waitForFunction(ticks => mascot.getDiagnostics().activityTicks > ticks, before.scene.activityTicks, { timeout: 5000 });
-    const running = await snapshot(page);
-    assert.ok(running.scene.activityTicks > before.scene.activityTicks, 'A change starts a visible activity run');
-    // activityRun counts runs; rest means no frame is pending any more (on-demand rendering).
-    await page.waitForFunction(() => !mascot.getDiagnostics().framePending, null, { timeout: 45000 });
-    const rest = await snapshot(page);
-    await page.waitForTimeout(450);
-    const restAfter = await snapshot(page);
-    assert.equal(restAfter.scene.activityTicks, rest.scene.activityTicks, 'After its run the campus rests without idle frames');
+    await settled(page);
+    const a = await snapshot(page), start = Date.now();
+    await page.waitForTimeout(2000);
+    const b = await snapshot(page), seconds = (Date.now() - start) / 1000;
+    assert.ok(b.scene.activityTicks > a.scene.activityTicks, 'Ambient life keeps animating after the transitions settle');
+    assert.ok(b.scene.animationTime > a.scene.animationTime, 'The animation clock advances while the campus is visible');
+    assert.equal(b.scene.transitionsActive, 0, 'Ambient life is not reported as a camera or assembly transition');
+    assert.equal(b.scene.framePending, true, 'A visible living campus keeps its frame loop');
+    assert.equal(b.scene.targetFps, b.scene.ambientFps, 'Without transitions the campus renders at the ambient rate');
+    assert.ok((b.scene.activityTicks - a.scene.activityTicks) / seconds <= b.scene.ambientFps + 4, 'The ambient frame rate is capped');
+    assert.equal(b.scene.materials, a.scene.materials, 'Animation adds no materials');
+    assert.equal(b.scene.geometries, a.scene.geometries, 'Animation adds no geometries');
+    verifyBudgets(b.scene, 'Living campus');
+    assert.ok(b.scene.tickCost.samples > 0 && b.scene.tickCost.p95 < 16, `Ticking the actors stays within a frame (p95 ${b.scene.tickCost.p95} ms)`);
+    result.life = { ticksPerSecond: (b.scene.activityTicks - a.scene.activityTicks) / seconds, tickCost: b.scene.tickCost, ambientFps: b.scene.ambientFps, quality: b.scene.quality };
     await page.evaluate(() => inspectCampus('overview'));
   }
   await page.locator('.campus-pause').click();
@@ -351,7 +359,7 @@ async function verifyLivingCampus(page, result, reducedMotion) {
     await page.waitForFunction(previous => mascot.getDiagnostics().activityTicks > previous, hidden.scene.activityTicks);
   }
   result.motion = { initialTicks: initial.scene.activityTicks, movingTicks: moving.scene.activityTicks, pausedTicks: paused.scene.activityTicks };
-  result.checks.push(reducedMotion ? 'Reduced motion and explicit pause freeze ambient animation' : 'Visible scene animates continuously, pause/offscreen suspend it, visibility resumes it');
+  result.checks.push(reducedMotion ? 'Reduced motion and explicit pause freeze ambient animation' : 'Visible scene lives continuously at the ambient rate after transitions settle, with stable geometry and materials; pause/offscreen suspend it, visibility resumes it');
 }
 
 async function verifyFeedback(page, kind, diagram, program = 'tale') {
