@@ -23,7 +23,11 @@ export const VIEWS = Object.freeze({
   'char-front': { yaw: 0, pitch: .12 }, 'char-side': { yaw: -Math.PI / 2, pitch: .12 }, 'char-back': { yaw: Math.PI, pitch: .12 },
   'char-34': { yaw: -.6, pitch: .2 },
   // The campus camera (campus-scene.js: DEFAULT_YAW -.55, PITCH .6).
-  campus: { yaw: -.55, pitch: .6 }
+  campus: { yaw: -.55, pitch: .6 },
+  // The seven views of the R2 piece sheets (imagenes/Pxx): left/right are anatomical (+X is the person's left).
+  'part-front': { yaw: 0, pitch: .22 }, 'part-back': { yaw: Math.PI, pitch: .22 }, 'part-left': { yaw: Math.PI / 2, pitch: .22 },
+  'part-right': { yaw: -Math.PI / 2, pitch: .22 }, 'part-top': { yaw: 0, pitch: 1.45 }, 'part-bottom': { yaw: 0, pitch: -1.45 },
+  'part-34': { yaw: -.6, pitch: .35 }
 });
 const AXES = { x: new Vector3(1, 0, 0), y: new Vector3(0, 1, 0), z: new Vector3(0, 0, 1) };
 
