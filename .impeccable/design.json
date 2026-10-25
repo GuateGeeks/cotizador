@@ -1,0 +1,156 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-24T20:09:19Z",
+  "title": "Campus vivo del asesor",
+  "extensions": {
+    "typographyMeta": {
+      "body": {
+        "displayName": "Texto del asesor",
+        "purpose": "Tipografía heredada para formulario, controles y cantidades."
+      },
+      "step-title": {
+        "displayName": "Título del paso",
+        "purpose": "Jerarquía compacta común a escritorio y móvil."
+      }
+    },
+    "shadows": [],
+    "motion": [
+      {
+        "name": "camera-control-background",
+        "value": "background 160ms ease",
+        "purpose": "Respuesta de controles de cámara; sin transición con movimiento reducido."
+      },
+      {
+        "name": "entity-build",
+        "value": "130ms stagger + 500ms per part",
+        "purpose": "Construcción por etapas: piso, muros que suben, mobiliario, cubierta que cae con rebote y personas; solo se animan las piezas nuevas. Sin movimiento en pausa o con movimiento reducido."
+      },
+      {
+        "name": "context-feedback",
+        "value": "380ms cubic-bezier(.16,1,.3,1)",
+        "purpose": "Entrada breve de la explicación cuando cambia una decisión o el foco."
+      },
+      {
+        "name": "visible-activities",
+        "value": "33.34ms minimum frame interval",
+        "purpose": "Máximo configurado de 30 FPS para ciclos de actividad visibles; con intervalos sostenidos superiores a ~75 ms pasa a calidad eco (sin mapa de sombras, relación de píxel 1). Suspender en pausa, movimiento reducido, fuera de vista o pestaña oculta."
+      },
+      {
+        "name": "focus-reveal",
+        "value": "exponential approach, rate 6/s",
+        "purpose": "Cámara, pérgolas y techos al explorar una actividad; interrumpible y conserva giro y zoom del usuario. Geeky vuela con un resorte críticamente amortiguado."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "compact-mobile",
+        "value": "400px"
+      },
+      {
+        "name": "stacked-campus",
+        "value": "980px"
+      },
+      {
+        "name": "narrow-desktop",
+        "value": "1180px"
+      },
+      {
+        "name": "short-mobile",
+        "value": "600px height"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Acción principal",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Avanza en el formulario lateral.",
+      "html": "<button class=\"ds-primary\">Continuar</button>",
+      "css": ".ds-primary{font-family:\"Avenir Next\",Avenir,Inter,\"Segoe UI\",system-ui,sans-serif;font-size:12px;font-weight:750;min-height:44px;padding:10px 14px;border:1px solid #ff9d38;border-radius:12px;background:#ff9d38;color:#321853;cursor:pointer;transition:background .16s,transform .16s}.ds-primary:hover{background:#ffb356;transform:translateY(-2px)}.ds-primary:active{transform:translateY(1px)}.ds-primary:focus-visible{outline:3px solid #ef8556;outline-offset:2px}.ds-primary:disabled{background:#eadfcf;border-color:#eadfcf;color:#796b77;transform:none;cursor:not-allowed}@media(prefers-reduced-motion:reduce){.ds-primary{transition:none}.ds-primary:hover{transform:none}}"
+    },
+    {
+      "name": "Control de cámara",
+      "kind": "button",
+      "refersTo": "camera-control",
+      "description": "Gira el campus; área operable mínima de 44 × 44 px.",
+      "html": "<div class=\"ds-camera-surface\"><button class=\"ds-camera\" aria-label=\"Girar a la izquierda\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 10a8 8 0 1 1 2 9M4 4v6h6\"/></svg></button></div>",
+      "css": ".ds-camera-surface{display:inline-block;background:var(--scene,#2e1853);padding:8px}.ds-camera{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;padding:8px;border:0;border-radius:9px;background:transparent;color:#eadcf7;cursor:pointer;transition:background .16s}.ds-camera:hover{background:#503075}.ds-camera:focus-visible{outline:3px solid #ffc857;outline-offset:2px}.ds-camera:disabled{opacity:.45;cursor:default}@media(prefers-reduced-motion:reduce){.ds-camera{transition:none}}"
+    },
+    {
+      "name": "Matrícula",
+      "kind": "input",
+      "refersTo": "enrollment-input",
+      "description": "Cantidad editable con cifras tabulares.",
+      "html": "<label class=\"ds-enrollment-label\">Estudiantes <input class=\"ds-enrollment\" type=\"number\" min=\"0\" value=\"24\"></label>",
+      "css": ".ds-enrollment-label{font-family:\"Avenir Next\",Avenir,Inter,\"Segoe UI\",system-ui,sans-serif;font-size:12px;color:var(--ink,#321853);display:inline-flex;align-items:center;gap:8px}.ds-enrollment{width:62px;min-height:44px;font:inherit;font-size:19px;font-weight:700;font-variant-numeric:tabular-nums;text-align:center;border:1px solid #dbcae7;border-radius:7px;background:#fff;color:var(--ink,#321853)}.ds-enrollment:focus-visible{outline:3px solid #ef8556;outline-offset:2px}"
+    },
+    {
+      "name": "Nivel activo",
+      "kind": "nav",
+      "refersTo": "level-tab",
+      "description": "Pestañas compactas de niveles educativos.",
+      "html": "<nav class=\"ds-levels\" aria-label=\"Nivel educativo\"><button class=\"ds-tab ds-tab-active\" aria-current=\"page\">Primaria</button><button class=\"ds-tab\">Básico</button></nav>",
+      "css": ".ds-levels{display:flex;flex-wrap:wrap;gap:6px}.ds-tab{font-family:\"Avenir Next\",Avenir,Inter,\"Segoe UI\",system-ui,sans-serif;font-size:12px;font-weight:750;padding:9px;border:1px solid var(--line,#e5dfe9);border-radius:8px;background:#fff;color:var(--ink,#321853);cursor:pointer}.ds-tab-active{background:var(--plum-dark,#321853);border-color:var(--plum-dark,#321853);color:#fff}.ds-tab:focus-visible{outline:3px solid #ef8556;outline-offset:2px}"
+    },
+    {
+      "name": "Nivel seleccionado",
+      "kind": "card",
+      "refersTo": "level-option",
+      "description": "Opción de una sola columna para elegir un nivel.",
+      "html": "<button class=\"ds-option ds-option-selected\" aria-pressed=\"true\"><span class=\"ds-option-icon\" aria-hidden=\"true\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\"><path d=\"m3 9 9-6 9 6M5 9v12h14V9M10 21v-6h4v6M8 11h.01M16 11h.01\"/></svg></span><strong>Primaria</strong><small>Configura estudiantes y programas.</small></button>",
+      "css": ".ds-option{display:grid;grid-template-columns:36px 1fr;column-gap:12px;min-height:88px;padding:16px;text-align:left;font-family:\"Avenir Next\",Avenir,Inter,\"Segoe UI\",system-ui,sans-serif;border:1px solid #e8dded;border-radius:16px;background:#fff;color:#321853;cursor:pointer;transition:background .18s,border-color .18s,transform .18s}.ds-option-icon{grid-row:1/3;display:grid;place-items:center;width:34px;height:34px;border-radius:10px;align-self:center;background:#c9f2ef;color:#321853}.ds-option strong{font-size:15px;line-height:1.4}.ds-option small{font-size:12px;line-height:1.5;margin-top:3px;color:#6d5879}.ds-option:hover{border-color:#a27fc3;transform:translateX(3px)}.ds-option-selected{background:#eee4fb;border-color:#7142a4;box-shadow:none}.ds-option:focus-visible{outline:3px solid #ef8556;outline-offset:2px}@media(prefers-reduced-motion:reduce){.ds-option{transition:none}.ds-option:hover{transform:none}}"
+    },
+    {
+      "name": "Actividad del campus",
+      "kind": "chip",
+      "refersTo": "activity-tab",
+      "description": "Explora una tecnología sin abandonar el paso de configuración.",
+      "html": "<div class=\"ds-activity-surface\"><button class=\"ds-activity-tab\" aria-pressed=\"true\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" aria-hidden=\"true\"><rect x=\"5\" y=\"7\" width=\"14\" height=\"12\" rx=\"4\"/><path d=\"M12 3v4M2 11v5M22 11v5M9 22v-3M15 22v-3\"/><circle cx=\"9\" cy=\"12\" r=\"1\"/><circle cx=\"15\" cy=\"12\" r=\"1\"/><path d=\"M9 16h6\"/></svg>Tale-Bot</button></div>",
+      "css": ".ds-activity-surface{display:inline-block;background:#2e1853;padding:12px}.ds-activity-tab{display:flex;align-items:center;gap:7px;min-height:40px;padding:7px 12px;border:1px solid #70528c;border-radius:9px;background:transparent;color:#f5eafe;font-family:\"Avenir Next\",Avenir,Inter,\"Segoe UI\",system-ui,sans-serif;font-size:12px;cursor:pointer;transition:background .15s,transform .15s}.ds-activity-tab:hover{background:#4d2d70;transform:translateY(-2px)}.ds-activity-tab[aria-pressed=\"true\"]{background:#ffc857;border-color:#ffc857;color:#2e1853;font-weight:700}.ds-activity-tab:focus-visible{outline:3px solid #ffc857;outline-offset:2px}@media(prefers-reduced-motion:reduce){.ds-activity-tab{transition:none}.ds-activity-tab:hover{transform:none}}"
+    },
+    {
+      "name": "Respuesta de una decisión",
+      "kind": "custom",
+      "refersTo": "activity-feedback",
+      "description": "Explicación contextual de la decisión y de su efecto en la actividad.",
+      "html": "<section class=\"ds-feedback\" role=\"status\"><strong>Un taller, distintos turnos</strong><p>Los grupos se relevan usando el mismo conjunto de equipos.</p></section>",
+      "css": ".ds-feedback{background:#2e1853;color:#fff4e8;border-top:1px solid #644280;padding:18px 16px;font-family:\"Avenir Next\",Avenir,Inter,\"Segoe UI\",system-ui,sans-serif}.ds-feedback strong{display:block;font-size:18px;font-weight:700;line-height:1.25}.ds-feedback p{margin:6px 0 0;max-width:60ch;color:#dccbe9;font-size:12px;line-height:1.5}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Campus vivo del asesor",
+    "overview": "La configuración educativa conserva una columna compacta y una escuela animada muestra actividades que se pueden explorar. Cada decisión produce una explicación contextual con las cantidades y condiciones reales del configurador.",
+    "keyCharacteristics": [
+      "Configuración lateral de 360–390 px; campus en el espacio restante.",
+      "Actividades seleccionables mediante canvas y tira de tecnologías; foco destacado en primer plano.",
+      "Móvil fijo de 200–210 px, compacto a 130 px al editar campos.",
+      "Actividad visible con máximo configurado de 30 FPS; sin afirmar rendimiento medido.",
+      "Modalidades explicadas mediante diagramas, sin edificios ni servicios añadidos."
+    ],
+    "rules": [
+      {
+        "name": "Foco y configuración",
+        "body": "Conservar canvas, cámara y foco de edición. Explorar una tecnología no cambia la cotización; el control de la ficha permite abrir su configuración.",
+        "section": "components"
+      },
+      {
+        "name": "Actividad y pausa",
+        "body": "Animar actividades relacionadas con el aprendizaje mientras el campus es visible. Pausa, movimiento reducido y ocultación detienen la actividad; los datos y controles siguen disponibles.",
+        "section": "motion"
+      }
+    ],
+    "dos": [
+      "Relacionar la respuesta visual y la explicación con la decisión editada.",
+      "Mantener cantidades exactas del motor junto a representaciones agrupadas.",
+      "Usar #2e1853 como fondo del visor, #fff4e8 para titulares y #dccbe9 para explicación.",
+      "Preservar el espacio de edición móvil compactando temporalmente el campus."
+    ],
+    "donts": [
+      "No añadir edificios por avanzar de paso o cambiar únicamente de modalidad.",
+      "No convertir la maqueta o sus actividades en una promesa de capacidad física.",
+      "No mantener cuadros o temporizadores de actividades cuando el campus está pausado u oculto.",
+      "No presentar el máximo configurado de 30 FPS como rendimiento medido."
+    ]
+  }
+}

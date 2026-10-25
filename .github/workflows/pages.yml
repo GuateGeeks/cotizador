@@ -30,7 +30,7 @@ jobs:
       - name: Prepare the site (asesor de programas educativos)
         run: |
           mkdir -p _site
-          cp asesor/index.html asesor/asesor.css asesor/asesor.js asesor/config.js asesor/motor.js asesor/pdf.js asesor/propuesta-pdf.js _site/
+          cp asesor/index.html asesor/asesor.css asesor/asesor.js asesor/campus-experience.js asesor/config.js asesor/motor.js asesor/pdf.js asesor/propuesta-pdf.js _site/
           cp -R asesor/vendor _site/vendor
           cp -R assets _site/assets
           # el asesor vive en la raíz del sitio: sus rutas ../assets pasan a assets

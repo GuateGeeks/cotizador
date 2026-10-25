@@ -1,0 +1,12 @@
+{
+  "name": "guategeeks-cotizador",
+  "private": true,
+  "scripts": {
+    "build": "esbuild asesor/lab/lab-scene.js --bundle --minify --format=iife --global-name=GGLab --target=es2019 --legal-comments=none --outfile=asesor/vendor/lab-scene.min.js",
+    "test": "node --test asesor/test/*.test.js"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12",
+    "three": "0.186.1"
+  }
+}

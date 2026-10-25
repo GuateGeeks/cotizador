@@ -1,1 +1,4 @@
 _site/
+node_modules/
+artifacts/
+before-desktop.png

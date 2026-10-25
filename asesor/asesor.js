@@ -44,6 +44,15 @@ const plural = (n, one, many) => n === 1 ? one : many;
 const uid = () => Math.random().toString(36).slice(2, 7);
 
 const ICONS = {
+  robot: '<rect x="5" y="7" width="14" height="12" rx="4"/><path d="M12 3v4M2 11v5M22 11v5M9 22v-3M15 22v-3"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><path d="M9 16h6"/>',
+  drone: '<path d="m8 8 8 8m0-8-8 8"/><circle cx="6" cy="6" r="4"/><circle cx="18" cy="6" r="4"/><circle cx="6" cy="18" r="4"/><circle cx="18" cy="18" r="4"/><rect x="9" y="9" width="6" height="6" rx="2"/>',
+  circuit: '<rect x="7" y="7" width="10" height="10" rx="2"/><path d="M10 2v5M14 2v5M10 17v5M14 17v5M2 10h5M2 14h5M17 10h5M17 14h5M10 10h4v4h-4z"/>',
+  vr: '<path d="M5 6h14l2 3v8h-6l-3-3-3 3H3V9zM7 10h2m6 0h2M3 10H1m20 0h2"/>',
+  calendar: '<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 2v6M17 2v6M3 11h18M7 15h2M12 15h2M7 18h2"/>',
+  pause: '<path d="M9 5v14M15 5v14"/>',
+  rotateLeft: '<path d="M4 10a8 8 0 1 1 2 9M4 4v6h6"/>',
+  rotateRight: '<path d="M20 10a8 8 0 1 0-2 9M20 4v6h-6"/>',
+  minus: '<path d="M5 12h14"/>', home: '<path d="m4 11 8-7 8 7M6 10v10h12V10M10 20v-6h4v6"/>',
   arrow: '<path d="M4 12h15m-6-6 6 6-6 6"/>', check: '<path d="m5 12 4 4L19 6"/>',
   photo: '<rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.4"/><path d="m3 17 6-6 4 4 3-3 5 5"/>',
   plus: '<path d="M12 5v14M5 12h14"/>', edit: '<path d="m14 5 5 5M4 20l5-1L20 8a2 2 0 0 0-5-5L4 14z"/>',
@@ -56,7 +65,9 @@ const ICONS = {
   download: '<path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/>', file: '<path d="M14 3H5v18h14V8zM14 3v5h5M8 12h8M8 16h8"/>',
   send: '<path d="m22 2-11 11M22 2l-7 20-4-9-9-4z"/>',
   chart: '<path d="M4 20V11M10 20V4M16 20v-6M22 20H2"/>',
-  play: '<path d="M7 4.5v15l12-7.5z"/>'
+  play: '<path d="M7 4.5v15l12-7.5z"/>',
+  cube: '<path d="m12 2 9 5v10l-9 5-9-5V7z"/><path d="m3 7 9 5 9-5M12 12v10"/>',
+  panel: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M10 4v16M5.5 8h2M5.5 11h2"/>'
 };
 const icon = name => `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name] || ICONS.grid}</svg>`;
 
@@ -162,7 +173,7 @@ function resetAll() {
 }
 
 function updateHeader() {
-  document.querySelector('.top').innerHTML = `<div class="top-inner"><button class="brand" onclick="step(0)" aria-label="GuateGeeks, ir al inicio"><img src="../assets/brand/guategeeks-logo.png" alt="GuateGeeks" width="82" height="54"></button><div class="brand-caption">Experiencias STEAM<br>para instituciones educativas</div><div style="flex:1"></div><div class="top-right"></div></div>`;
+  document.querySelector('.top').innerHTML = `<div class="top-inner"><button class="brand" onclick="step(0)" aria-label="GuateGeeks, ir al inicio"><img src="../assets/brand/guategeeks-logo.png" alt="GuateGeeks" width="82" height="54"></button><div class="brand-caption">Experiencias STEAM<br>para instituciones educativas</div><div style="flex:1"></div><div class="top-right">${state.step >= 1 ? campusToggleButton() : ''}</div></div>`;
   const n = document.getElementById('notice');
   n.hidden = !ui.notice; n.querySelector('span').textContent = ui.notice;
 }
@@ -170,6 +181,10 @@ function updateHeader() {
 // (para que el navegador no recorte el desplazamiento) y solo se sube al inicio al cambiar de paso.
 function html(markup) {
   const changed = previousStep !== state.step || ui.focusTitle, y = window.scrollY; ui.focusTitle = false;
+  const panelScroll = $.querySelector('.main-panel')?.scrollTop || 0;
+  const active = document.activeElement;
+  const focusAttribute = !changed && active?.closest('.main-panel') && ['id', 'onclick', 'onchange', 'aria-label'].find(name => active.hasAttribute(name));
+  const focusValue = focusAttribute ? active.getAttribute(focusAttribute) : null;
   if (!changed) $.style.minHeight = $.offsetHeight + 'px';
   if (lab) { lab.dispose(); lab = null; labOpen = false; }
   $.classList.toggle('landing', state.step === 0);
@@ -179,10 +194,15 @@ function html(markup) {
     window.scrollTo(0, 0);
     const h = $.querySelector('h1'); if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); }
   } else {
+    const panel = $.querySelector('.main-panel'); if (panel) panel.scrollTop = panelScroll;
+    if (focusAttribute) [...$.querySelectorAll('.main-panel [' + focusAttribute + ']')].find(el => el.getAttribute(focusAttribute) === focusValue)?.focus({ preventScroll: true });
     window.scrollTo(0, y);
     requestAnimationFrame(() => { $.style.minHeight = ''; });
   }
   previousStep = state.step;
+  if (changed && state.step > 0 && !animPaused && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    $.querySelector('.step-title')?.animate([{ opacity: .5, transform: 'translateX(12px)' }, { opacity: 1, transform: 'translateX(0)' }], { duration: 280, easing: 'cubic-bezier(.16,1,.3,1)' });
+  }
 }
 // Pato robot que acompaña el avance: espera sobre el paso actual y, al cambiar de paso, sale corriendo hacia el siguiente.
 const DUCK_SVG = `<svg viewBox="0 0 64 64" width="46" height="46" focusable="false"><ellipse class="d-shadow" cx="32" cy="60" rx="15" ry="3" fill="#241d38" opacity=".22"/>
@@ -221,11 +241,11 @@ function progressMarkup() {
 }
 function summaryAside() {
   const t = M.proposalTotals(state.selected, PROGRAMS, groups(), TARIFFS, FISCAL);
-  return `<aside class="side-panel" aria-label="Resumen de tu propuesta"><h2 class="side-head">Tu propuesta</h2><p class="side-summary">${state.selected.length} ${plural(state.selected.length, 'programa elegido', 'programas elegidos')}</p><div class="side-metrics"><div><b data-participants>${selectedParticipants()}</b><small>estudiantes únicos</small></div></div>${state.selected.map((s, i) => { const p = findP(s.programId); const r = t.rows[i]; return `<div class="side-item">${miniature(s)}<div style="min-width:0"><b>${esc(p.name)}</b><small>${esc(levelsLabel(s))} · ${p.ratio && r.units ? r.units + ' equipos' : 'por definir'}</small><button class="text-btn" onclick="editProgram(${i})" style="font-size:12px;margin-top:3px">${esc(planOf(s.plan).tag)} · Editar</button></div></div>`; }).join('') || '<div class="empty" style="margin-top:18px">Tu propuesta empieza con tus estudiantes. Después podrás agregar los programas.</div>'}<div class="side-actions">${state.selected.length ? `<button class="btn btn-primary" onclick="step(5)">Revisar mi propuesta ${icon('arrow')}</button>` : ''}<button class="btn btn-outline" onclick="resetAll()">Empezar de nuevo</button></div><p class="side-note">${icon('info')} Tu avance se guarda en este navegador. Los importes se confirman con GuateGeeks.</p></aside>`;
+  return `<aside class="side-panel campus-panel" aria-label="Tu colegio y propuesta en vivo"><div id="campus-slot"></div><details class="campus-proposal" ${ui.campusSummary ? 'open' : ''} ontoggle="ui.campusSummary=this.open"><summary>Mi propuesta <span>${state.selected.length} ${plural(state.selected.length, 'programa', 'programas')}</span></summary><div class="campus-proposal-body"><p class="side-summary"><b data-participants>${selectedParticipants()}</b> estudiantes únicos participantes</p>${state.selected.map((s, i) => { const p = findP(s.programId), r = t.rows[i]; return `<div class="side-item"><div><b>${esc(p.name)}</b><small>${esc(levelsLabel(s))} · <span data-campus-units="${i}">${p.ratio && r.units ? r.units + ' equipos' : 'por definir'}</span></small><button class="text-btn" onclick="editProgram(${i})">${esc(planOf(s.plan).tag)} · Editar</button></div></div>`; }).join('') || '<p class="campus-empty">Elige niveles y registra estudiantes. Aquí verás los programas que agregues.</p>'}<div class="side-actions">${state.selected.length ? `<button class="btn btn-primary" onclick="step(5)">Revisar mi propuesta ${icon('arrow')}</button>` : ''}<button class="text-btn" onclick="resetAll()">Empezar de nuevo</button></div><p class="side-note">Tu avance se guarda en este navegador.</p></div></details></aside>`;
 }
 function frame(title, description, content) {
-  const mobile = state.step > 0 ? `<div class="mobile-summary"><div><b>Mi propuesta · ${state.selected.length} ${plural(state.selected.length, 'programa', 'programas')}</b><small>${selectedParticipants()} participantes únicos</small></div><button class="btn btn-primary" onclick="step(5)" ${state.selected.length ? '' : 'disabled'}>Ver propuesta ${icon('arrow')}</button></div>` : '';
-  html(`<div class="layout"><section class="main-panel">${progressMarkup()}<h1 class="step-title">${title}</h1><p class="step-desc">${description}</p>${content}</section>${summaryAside()}</div>${mobile}`);
+  html(`<div class="layout campus-layout"><section class="main-panel">${progressMarkup()}<h1 class="step-title">${title}</h1><p class="step-desc">${description}</p>${content}</section><div class="config-resizer" role="separator" tabindex="0" aria-orientation="vertical" aria-label="Ancho de la configuración. Usa las flechas para ajustarlo; Inicio y Fin para el mínimo y el máximo; Enter restablece." title="Arrastra para ajustar el ancho · doble clic restablece"></div>${summaryAside()}</div>`);
+  syncConfigWidth();
 }
 
 // ---------- Paso 0: inicio ----------
@@ -271,9 +291,9 @@ function loadLab(cb) {
   if (window.GGLab) { cb(); return; }
   if (loadLab.queue) { loadLab.queue.push(cb); return; }
   loadLab.queue = [cb];
-  const sc = document.createElement('script'); sc.src = 'vendor/lab-scene.min.js?v=36'; sc.async = true;
-  sc.onload = () => { const q = loadLab.queue; loadLab.queue = null; q.forEach(f => f()); };
-  sc.onerror = () => { loadLab.queue = null; /* se queda la ilustración estática */ };
+  const sc = document.createElement('script'); sc.src = 'vendor/lab-scene.min.js?v=campus-live-3'; sc.async = true;
+  sc.onload = () => { const q = loadLab.queue || []; loadLab.queue = null; q.forEach(f => { try { f(); } catch (e) { console.error('No se pudo iniciar la vista 3D.', e); } }); };
+  sc.onerror = () => { loadLab.queue = null; sc.remove(); campusUnavailable('No se pudo cargar la vista 3D. Tu configuración sigue disponible.'); };
   document.head.appendChild(sc);
 }
 function initLab() {
@@ -288,28 +308,247 @@ function initLab() {
     } catch (e) { lab = null; st.classList.remove('is-3d'); }
   });
 }
-// Mini colegio 3D del recorrido: crece con la propuesta (niveles, estudiantes, programas) y se puede recorrer jugando.
-// Vive arriba del resumen lateral (solo escritorio) y se cambia de lugar tras cada pantalla sin recrear el WebGL.
+// Un solo campus para escritorio y móvil. Sus datos vienen del motor, no del paso del recorrido.
 let mascot = null, mascotHost = null;
+let campusPrevious = null, campusFeedback = null, campusContextKey = '', campusInspection = null;
 let animPaused = false; try { animPaused = localStorage.getItem('gg_asesor_pause') === '1'; } catch (e) { /* sin almacenamiento */ }
 function setAnimPaused(v) {
   animPaused = !!v; try { localStorage.setItem('gg_asesor_pause', v ? '1' : '0'); } catch (e) { /* ignorar */ }
   if (mascot) mascot.setPaused(animPaused); if (duck3) duck3.setPaused(animPaused); syncPauseBtn();
 }
-function syncPauseBtn() { const b = mascotHost && mascotHost.querySelector('.mascot-pause'); if (!b) return; b.setAttribute('aria-pressed', String(animPaused)); b.setAttribute('aria-label', animPaused ? 'Reanudar la animación del colegio y del robot' : 'Pausar la animación del colegio y del robot'); b.innerHTML = (animPaused ? '▶' : '❚❚') + '<span>' + (animPaused ? 'Reanudar' : 'Pausar') + '</span>'; }
+function syncPauseBtn() { const b = mascotHost && mascotHost.querySelector('.campus-pause'); if (!b) return; b.setAttribute('aria-pressed', String(animPaused)); b.setAttribute('aria-label', animPaused ? 'Activar animaciones del colegio' : 'Pausar animaciones del colegio'); b.innerHTML = `${icon(animPaused ? 'play' : 'pause')}<span>${animPaused ? 'Reanudar' : 'Pausar'}</span>`; mascotHost.dataset.paused = String(animPaused); if (mascotHost.classList.contains('campus-ready')) mascotHost.querySelector('.campus-status').textContent = animPaused ? 'En pausa' : 'En vivo'; }
 const STATION_OF = { tale: 'robotics', master: 'robotics', spike: 'robotics', electronics: 'electronics', drones: 'drones', immersive: 'immersive' };
-function mascotData() { return { step: state.step, levels: state.levels.slice(), students: registered(), programs: [...new Set(state.selected.map(s => s.programId))] }; }
+function campusContext() {
+  if (campusInspection?.step === state.step) return campusInspection.focus;
+  if (state.step === 2) return { kind: 'enrollment', levelId: activeLevels()[state.levelIndex]?.id, emphasis: 'edit' };
+  if (state.step === 4 && cur()) {
+    const s = cur(), key = stepKeys(s)[ui.sub] || 'program';
+    return { kind: key === 'quantity' ? (s.stations ? 'stations' : 'equipment') : key, programId: s.programId, entryId: s.id, emphasis: 'edit' };
+  }
+  if ((state.step === 3 || state.step === 5) && state.selected.length) return { kind: 'program', programId: state.selected[0].programId };
+  return { kind: 'overview' };
+}
+function mascotData() {
+  const context = campusContext();
+  return {
+    step: state.step, levels: state.levels.slice(), students: registered(),
+    focusedLevel: context.levelId, focusedProgram: context.programId, activeConfig: context,
+    programs: [...new Set(state.selected.map(s => s.programId))],
+    enrollment: groups().map(g => ({ id: g.id, gradeId: g.gradeId, label: g.label, sectionName: g.sectionName, levelId: g.levelId, students: g.students })),
+    equipment: state.selected.map(s => { const an = analysis(s), units = unitsOf(s), ratio = findP(s.programId).ratio; return { id: s.id, programId: s.programId, units, plan: s.plan, stations: s.stations, sharing: s.sharing, flexBimestres: s.flexBimestres, groupIds: [...s.groupIds], simIds: [...s.simIds], participants: participation(s), capacity: units != null && ratio ? units * ratio : null, rotations: an.rotations || [] }; })
+  };
+}
+// Clicking a workshop or classroom in the model goes straight to its edition.
+function editFromCampus(kind, id) {
+  campusInspection = null;
+  if (kind === 'program') {
+    const index = state.selected.findIndex(s => s.programId === id);
+    if (index >= 0) { openProgram(index); return; }
+  }
+  if (kind === 'level') {
+    const index = activeLevels().findIndex(level => level.id === id);
+    if (index >= 0) { state.levelIndex = index; ui.focusTitle = true; step(2); return; }
+  }
+  inspectCampus(kind, id);
+}
+function inspectCampus(kind, id) {
+  const focus = kind === 'program' ? { kind, programId: id, emphasis: 'explore' } : kind === 'level' ? { kind, levelId: id, emphasis: 'explore' } : { kind: 'overview' };
+  campusInspection = { step: state.step, focus }; campusContextKey = ''; syncCampus();
+}
+// The explanation is announced to assistive technology; the model itself stays uncluttered.
+function paintCampusFeedback(feedback) {
+  const box = mascotHost.querySelector('[data-campus-feedback]');
+  box.dataset.kind = feedback.focus.kind; box.dataset.diagram = feedback.diagram; box.dataset.program = feedback.focus.programId || '';
+  box.textContent = `${feedback.title}. ${feedback.text}`;
+}
+function campusUnavailable(message) {
+  if (!mascotHost) return;
+  mascotHost.classList.remove('campus-ready');
+  mascotHost.querySelector('.campus-status').textContent = 'Vista sin 3D';
+  const fallback = mascotHost.querySelector('.campus-fallback');
+  fallback.textContent = message;
+  mascotHost.querySelectorAll('[data-camera],.campus-pause').forEach(b => b.disabled = true);
+}
+function syncCampus() {
+  if (!mascotHost) return;
+  const data = mascotData(), units = data.equipment.reduce((sum, e) => sum + (e.units || 0), 0);
+  const context = data.activeConfig, contextKey = JSON.stringify(context) + ':' + state.step;
+  const next = window.GGCampusExperience.describe(data, campusPrevious, context);
+  const changed = next.changed || contextKey !== campusContextKey || !campusFeedback;
+  if (changed) { campusFeedback = next; if (next.changed) campusInspection = null; }
+  const focus = campusFeedback.focus;
+  data.activeConfig = focus; data.focusedLevel = focus.levelId; data.focusedProgram = focus.programId;
+  const title = state.step === 1 ? 'Un aula. Mil posibilidades.' : state.step === 2 ? 'Aquí empieza la comunidad.' : state.step === 3 ? '¿Qué van a crear hoy?' : state.step === 4 ? 'Así se aprende en tu colegio.' : 'Tu colegio, en acción.';
+  mascotHost.querySelector('.campus-heading h2').textContent = title;
+  mascotHost.querySelector('[data-campus-students]').textContent = data.students.toLocaleString('es-GT');
+  mascotHost.querySelector('[data-campus-equipment]').textContent = units.toLocaleString('es-GT');
+  mascotHost.querySelector('.campus-description').textContent = `${data.levels.length} niveles, ${data.students} estudiantes registrados, ${data.programs.length} programas y ${units} equipos. La maqueta agrupa las cantidades para facilitar su lectura.`;
+  document.querySelectorAll('[data-campus-units]').forEach(el => { const u = data.equipment[Number(el.dataset.campusUnits)]?.units; el.textContent = u ? u + ' equipos' : 'por definir'; });
+  if (changed) paintCampusFeedback(campusFeedback);
+  mascot?.update(data);
+  if (changed) mascot?.setFocus?.(focus);
+  campusPrevious = data; campusContextKey = contextKey;
+  queueCampusInsets();
+}
+// ---- Visor a pantalla completa: la cámara encuadra el área que dejan libre las capas.
+let insetsFrame = 0;
+function queueCampusInsets() { if (!insetsFrame) insetsFrame = requestAnimationFrame(() => { insetsFrame = 0; syncCampusInsets(); }); }
+function syncCampusInsets() {
+  if (!mascot || !mascotHost || !mascotHost.isConnected || typeof mascot.setInsets !== 'function') return;
+  const stage = mascotHost.querySelector('.campus-stage').getBoundingClientRect();
+  if (!stage.width || !stage.height) return;
+  const visible = el => el && !el.hidden && el.getClientRects().length && getComputedStyle(el).display !== 'none' && getComputedStyle(el).visibility !== 'hidden';
+  const topItems = [...mascotHost.querySelectorAll('.campus-heading, .campus-message'), document.querySelector('.campus-proposal > summary')].filter(visible);
+  const bottomItems = [];
+  const tools = mascotHost.querySelector('.campus-tools'), box = tools && visible(tools) ? tools.getBoundingClientRect() : null;
+  // A vertical toolbar on the side reserves its width; a horizontal one joins the bottom band.
+  const vertical = box && box.height > box.width;
+  const top = topItems.reduce((max, el) => Math.max(max, el.getBoundingClientRect().bottom - stage.top), 0);
+  const bottom = bottomItems.reduce((max, el) => Math.max(max, stage.bottom - el.getBoundingClientRect().top), box && !vertical ? stage.bottom - box.top : 0);
+  const right = vertical ? Math.max(0, stage.right - box.left) : 0;
+  mascot.setInsets({ top: Math.min(top, stage.height * .45), bottom: Math.min(bottom, stage.height * .45), right: Math.min(right, stage.width * .25), left: 0 });
+}
+window.addEventListener('resize', queueCampusInsets);
+document.addEventListener('toggle', e => { if (e.target.matches?.('.campus-proposal')) queueCampusInsets(); }, true);
+
+// ---- Solo configuración: oculta el campus y conserva todo el recorrido.
+let campusHidden = false; try { campusHidden = localStorage.getItem('gg_asesor_campus') === 'off'; } catch (e) { /* sin almacenamiento */ }
+document.documentElement.classList.toggle('campus-off', campusHidden);
+function campusToggleButton() {
+  return `<button type="button" class="btn btn-small btn-outline campus-toggle" aria-pressed="${campusHidden}" onclick="toggleCampus()" title="${campusHidden ? 'Mostrar el campus 3D' : 'Ocultar el campus 3D y trabajar solo con la configuración'}">${icon(campusHidden ? 'cube' : 'panel')}<span>${campusHidden ? 'Mostrar campus 3D' : 'Solo configuración'}</span></button>`;
+}
+function toggleCampus() {
+  campusHidden = !campusHidden;
+  try { localStorage.setItem('gg_asesor_campus', campusHidden ? 'off' : 'on'); } catch (e) { /* ignorar */ }
+  document.documentElement.classList.toggle('campus-off', campusHidden);
+  updateHeader();
+  document.querySelector('.campus-toggle')?.focus();
+  placeMascot(); syncConfigWidth();
+  requestAnimationFrame(() => { mascot?.resize(); queueCampusInsets(); });
+}
+
+// ---- Ancho ajustable de la configuración (escritorio). Se recuerda en este navegador.
+const CONFIG_WIDTH = { min: 320, fallback: 390, step: 24 };
+let configWidth = null; try { configWidth = Number(localStorage.getItem('gg_asesor_config_w')) || null; } catch (e) { /* sin almacenamiento */ }
+const configMax = () => Math.max(CONFIG_WIDTH.min, Math.min(900, window.innerWidth - 420));
+const defaultConfigWidth = () => Math.round(Math.min(Math.max(window.innerWidth * .3, 360), 430));
+function syncConfigWidth() {
+  const width = Math.round(Math.min(configMax(), Math.max(CONFIG_WIDTH.min, configWidth || defaultConfigWidth())));
+  document.documentElement.style.setProperty('--config-w', width + 'px');
+  const handle = document.querySelector('.config-resizer');
+  if (handle) { handle.setAttribute('aria-valuemin', CONFIG_WIDTH.min); handle.setAttribute('aria-valuemax', configMax()); handle.setAttribute('aria-valuenow', width); }
+  return width;
+}
+function setConfigWidth(value, persist = true) {
+  configWidth = value == null ? null : Math.round(Math.min(configMax(), Math.max(CONFIG_WIDTH.min, value)));
+  if (persist) try { configWidth == null ? localStorage.removeItem('gg_asesor_config_w') : localStorage.setItem('gg_asesor_config_w', String(configWidth)); } catch (e) { /* ignorar */ }
+  syncConfigWidth(); queueCampusInsets();
+}
+let resizeDrag = null;
+document.addEventListener('pointerdown', e => {
+  const handle = e.target.closest?.('.config-resizer');
+  if (!handle || e.button > 0) return;
+  e.preventDefault();
+  resizeDrag = { id: e.pointerId, left: handle.parentElement.getBoundingClientRect().left };
+  handle.setPointerCapture?.(e.pointerId);
+  document.documentElement.classList.add('config-resizing');
+});
+document.addEventListener('pointermove', e => {
+  if (!resizeDrag || e.pointerId !== resizeDrag.id) return;
+  setConfigWidth(e.clientX - resizeDrag.left, false);
+});
+const endResize = e => {
+  if (!resizeDrag || e.pointerId !== resizeDrag.id) return;
+  resizeDrag = null; document.documentElement.classList.remove('config-resizing');
+  setConfigWidth(configWidth);
+};
+document.addEventListener('pointerup', endResize);
+document.addEventListener('pointercancel', endResize);
+document.addEventListener('dblclick', e => { if (e.target.closest?.('.config-resizer')) setConfigWidth(null); });
+document.addEventListener('keydown', e => {
+  if (!e.target.closest?.('.config-resizer')) return;
+  const current = syncConfigWidth();
+  const next = { ArrowLeft: current - CONFIG_WIDTH.step, ArrowRight: current + CONFIG_WIDTH.step, Home: CONFIG_WIDTH.min, End: configMax() }[e.key];
+  if (next != null) { e.preventDefault(); setConfigWidth(next); }
+  if (e.key === 'Enter') { e.preventDefault(); setConfigWidth(null); }
+});
+window.addEventListener('resize', () => syncConfigWidth());
+
+function createCampusHost() {
+  const host = document.createElement('section'); host.className = 'campus-preview';
+  const cameraButton = (action, label, glyph) => `<button type="button" data-camera="${action}" aria-label="${label}" title="${label}">${icon(glyph)}</button>`;
+  // The stage fills the panel; only a few quiet layers float over the model.
+  host.innerHTML = `<div class="campus-stage" tabindex="0" role="group" aria-label="Campus interactivo. Toca un taller o un aula para editarlo. Arrastra para girar y usa la rueda o el pellizco para acercarte. Flechas arriba y abajo recorren talleres y aulas y Enter abre su edición; izquierda y derecha giran; más y menos acercan; Inicio o Escape vuelven a la vista general." aria-describedby="campus-description"><p class="campus-fallback">Preparando tu colegio…</p></div>`
+    + `<div class="campus-hud">`
+    + `<div class="campus-hud-top" data-hud-top><div class="campus-heading"><h2>Tu colegio</h2><span class="campus-status" role="status">Cargando vista</span></div><p class="campus-message">Toca un taller o un aula para editarlo</p></div>`
+    + `<div class="campus-tools" aria-label="Controles de la vista 3D">${cameraButton('reset','Restablecer vista','home')}<button type="button" class="campus-pause"></button></div>`
+    + `<div class="campus-counts" aria-label="Totales de la propuesta"><span><b data-campus-students>0</b> estudiantes</span><span><b data-campus-equipment>0</b> equipos</span></div>`
+    + `</div><p class="sr-only" data-campus-feedback role="status" aria-live="polite" aria-atomic="true"></p><p class="sr-only campus-description" id="campus-description"></p>`;
+  function camera(action) {
+    if (!mascot) return;
+    if (action === 'reset') { campusInspection = { step: state.step, focus: { kind: 'overview' } }; campusContextKey = ''; syncCampus(); mascot.resetView(); }
+    if (action === 'left' || action === 'right') mascot.rotate(action === 'left' ? -.25 : .25);
+    if (action === 'in' || action === 'out') mascot.zoom(action === 'in' ? .12 : -.12);
+  }
+  host.querySelectorAll('[data-camera]').forEach(b => { b.disabled = true; b.addEventListener('click', () => camera(b.dataset.camera)); });
+  host.querySelector('.campus-pause').addEventListener('click', () => setAnimPaused(!animPaused));
+  host.querySelector('.campus-stage').addEventListener('keydown', e => {
+    const action = { ArrowLeft: 'left', ArrowRight: 'right', '+': 'in', '=': 'in', '-': 'out', Home: 'reset', Escape: 'reset' }[e.key];
+    if (action) { e.preventDefault(); camera(action); return; }
+    const current = campusFeedback?.focus || {};
+    if (e.key === 'Enter' && (current.programId || current.levelId)) { e.preventDefault(); editFromCampus(current.programId ? 'program' : 'level', current.programId || current.levelId); return; }
+    // Up/down tour every activity, then every level, as a keyboard alternative to tapping.
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      const data = mascotData(), stops = [...data.programs.map(id => ['program', id]), ...data.levels.map(id => ['level', id])];
+      if (!stops.length) return;
+      e.preventDefault();
+      const current = campusFeedback?.focus || {}, index = stops.findIndex(([kind, id]) => (kind === 'program' ? current.programId : current.levelId) === id && (kind === 'program') === !!current.programId);
+      const [kind, id] = stops[(index + (e.key === 'ArrowDown' ? 1 : -1) + stops.length) % stops.length];
+      inspectCampus(kind, id);
+    }
+  });
+  let inView = true;
+  const syncVisibility = () => { host.dataset.suspended = String(document.hidden || !inView); };
+  document.addEventListener('visibilitychange', syncVisibility);
+  if (typeof IntersectionObserver !== 'undefined') {
+    const observer = new IntersectionObserver(entries => { inView = entries[0]?.isIntersecting ?? true; syncVisibility(); });
+    observer.observe(host);
+  }
+  syncVisibility();
+  if (typeof ResizeObserver !== 'undefined') new ResizeObserver(queueCampusInsets).observe(host);
+  return host;
+}
 function placeMascot() {
-  const panel = document.querySelector('.side-panel');
-  if (state.step < 1 || !panel || innerWidth <= 980 || !webglOk() || matchMedia('(prefers-reduced-motion: reduce)').matches) { if (mascotHost && mascotHost.parentNode) mascotHost.remove(); return; }
-  if (!mascotHost) { mascotHost = document.createElement('div'); mascotHost.className = 'mascot'; const pb = document.createElement('button'); pb.type = 'button'; pb.className = 'mascot-pause'; pb.addEventListener('click', e => { e.stopPropagation(); setAnimPaused(!animPaused); }); pb.addEventListener('pointerdown', e => e.stopPropagation()); mascotHost.appendChild(pb); syncPauseBtn(); }
-  panel.insertBefore(mascotHost, panel.firstChild);
-  if (mascot) { mascot.resize(); mascot.update(mascotData()); return; }
+  const panel = document.getElementById('campus-slot');
+  if (state.step < 1 || !panel) { mascotHost?.remove(); return; }
+  if (!mascotHost) mascotHost = createCampusHost();
+  panel.appendChild(mascotHost); syncPauseBtn(); syncCampus();
+  if (mascot) { mascot.resize(); return; }
+  if (!webglOk()) { campusUnavailable('La vista 3D no está disponible en este navegador. Puedes seguir configurando tu propuesta.'); return; }
+  if (campusHidden) return; // Solo configuración: no se carga ni se renderiza la escena.
   loadLab(() => {
     if (mascot || !window.GGLab || !mascotHost || !mascotHost.isConnected) return;
-    try { mascot = window.GGLab.createMascot(mascotHost, {}); mascot.setPaused(animPaused); mascot.update(mascotData()); } catch (e) { mascot = null; }
+    try {
+      mascot = window.GGLab.createMascot(mascotHost.querySelector('.campus-stage'), {
+        reduceMotion: matchMedia('(prefers-reduced-motion: reduce)').matches,
+        onSelect: ({ kind, id }) => editFromCampus(kind, id),
+        onReady: () => { mascotHost.classList.add('campus-ready'); syncPauseBtn(); mascotHost.querySelectorAll('[data-camera],.campus-pause').forEach(b => b.disabled = false); },
+        onLost: () => { campusUnavailable('Se interrumpió la vista 3D. Recarga la página para recuperarla; tu avance está guardado.'); }
+      });
+      mascot.setPaused(animPaused); syncCampus(); queueCampusInsets();
+    } catch (e) { mascot = null; campusUnavailable('No se pudo iniciar la vista 3D. Puedes seguir configurando tu propuesta.'); }
   });
 }
+// Keep the activity visible without occupying the keyboard's editing space.
+function compactCampusForInput() {
+  if (!mascotHost) return;
+  const editing = matchMedia('(max-width: 980px)').matches && !!document.activeElement?.matches('.main-panel input:not([type="radio"]):not([type="checkbox"]), .main-panel select, .main-panel textarea');
+  mascotHost.classList.toggle('campus-editing', editing);
+  document.body.classList.toggle('campus-input-active', editing);
+}
+document.addEventListener('focusin', compactCampusForInput);
+document.addEventListener('focusout', () => requestAnimationFrame(compactCampusForInput));
+window.visualViewport?.addEventListener('resize', compactCampusForInput);
 function renderLanding() {
   const cur = ui.labLevel || 'bas', saved = state.levels.length > 0;
   html(`<section class="lab-hero" aria-labelledby="lab-title"><div class="lab-inner">
@@ -371,6 +610,7 @@ function refreshTotals(gid) {
   const st = document.querySelector('[data-level-total]'); if (st && lv) st.textContent = levelTotalText(lv);
   document.querySelectorAll('[data-registered]').forEach(e => e.textContent = registered());
   document.querySelectorAll('[data-participants]').forEach(e => e.textContent = selectedParticipants());
+  syncCampus();
 }
 function gradeTotalText(gid) {
   const secs = sectionsOf(gid), n = secs.reduce((a, s) => a + (s.students || 0), 0), pend = secs.filter(s => s.students == null).length;
