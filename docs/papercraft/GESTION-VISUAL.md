@@ -40,6 +40,16 @@ Piezas acopladas se trabajan juntas (cabeza y núcleo del cabello: el pelo debe 
 - **Nada atraviesa nada**: el mismo check verifica apoyo de laptops, equipos, tapetes y cajas sobre su superficie, y cruces contra mesas, sillas, muros y personas, en los seis estados.
 - Solo se dibujan sillas ocupadas; los grupos son de 3–4 personas por taller dentro del tope de 40 personas.
 
+### Vida y energía
+
+- La escena vive de forma continua mientras está a la vista. Cada aula sigue un ciclo de
+  momentos barajado por su clave, y las rutas pasan la prueba de cruces.
+  Detalle en `docs/campus-3d.md` («Vida del campus»).
+- Ritmo: 30 fps ambientales (20 en táctil o `eco`) y hasta 60 fps en transiciones.
+  En pausa, oculta o fuera de pantalla no hay cuadros; con movimiento reducido, el reposo.
+- La animación no añade triángulos, draw calls ni materiales. El coste del tick se mide
+  (`getDiagnostics().tickCost`; p95 menor de 2 ms en GPU con 40 personas).
+
 ## 4. Presupuestos y decisiones vigentes
 
 | Elemento | Límite | Nota |

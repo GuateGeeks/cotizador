@@ -67,8 +67,11 @@ con mediciones antes/después en `docs/campus-3d.md`. Obtén
   rotación, transición de crecimiento).
 - Una emulación de viewport móvil **no** es una prueba en dispositivo real:
   nómbrala como emulación.
-- En reposo, la escena debe dejar de pedir cuadros (render bajo demanda).
-  Compruébalo con `activityTicks` estable.
+- Mientras el campus está a la vista, la vida ambiental sigue a un ritmo fijo
+  (30 fps con `full` y puntero fino, 20 fps en táctil o `eco`); las transiciones
+  suben hasta 60. En pausa, pestaña oculta, fuera de pantalla o contexto perdido
+  no se pide ningún cuadro, y con movimiento reducido se muestra el reposo bajo
+  demanda. Compruébalo con `targetFps`, `ambientFps`, `framePending` y `tickCost`.
 - Agrega y quita módulos de forma repetida (por ejemplo, 20 ciclos de los
   estados 2↔6). `getDiagnostics().geometries` (y `renderer.info.memory`) no debe crecer
   de ciclo en ciclo.
