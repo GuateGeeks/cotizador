@@ -1,0 +1,156 @@
+{
+  "package": "GuateGeeks_Papercraft_Construccion_R1",
+  "version": "R1",
+  "created_at_utc": "2026-10-25T06:02:19.535820+00:00",
+  "file_count_including_manifest": 20,
+  "conceptual_png_count": 5,
+  "geometric_svg_count": 3,
+  "geometric_png_count": 3,
+  "geometry_json_count": 3,
+  "scope": "Visual construction references and isolated geometric examples. No implemented character model or runtime performance measurement.",
+  "validation": {
+    "png_integrity_checked": true,
+    "conceptual_images_copied_without_pixel_changes": true,
+    "distinct_conceptual_images": true,
+    "geometry_report_all_passed": true,
+    "relative_markdown_file_links_checked": true,
+    "character_3d_models_implemented": false,
+    "runtime_performance_measured": false
+  },
+  "manifest_hash_note": "Hashes cover all packaged files except this manifest itself.",
+  "files": [
+    {
+      "path": "GUIA-PARA-CLAUDE.md",
+      "size_bytes": 10720,
+      "sha256": "5ebb1a44e79b6294547c88a60af8adc8d884ce86f489338db08ea808ffe6a100"
+    },
+    {
+      "path": "PROMPTS.md",
+      "size_bytes": 15364,
+      "sha256": "de920a5cc6336978719bf0d4d6c1377362973fc603a25bfe60291631a7024a90"
+    },
+    {
+      "path": "README.md",
+      "size_bytes": 5027,
+      "sha256": "b55ed04470a22b5613fa870ee6eac4b3f5d9e716cc5c9ebad9393c5a7645456f"
+    },
+    {
+      "path": "docs/papercraft/construction/FICHAS-TECNICAS.md",
+      "size_bytes": 18908,
+      "sha256": "5f0b191bb7803b6d460a5a6822c7a77b1b7bea72934f5d0fb6a878e784c849a3"
+    },
+    {
+      "path": "docs/papercraft/construction/esquemas/01-mechon-plegado.geometry.json",
+      "size_bytes": 5457,
+      "sha256": "4e55143c5eee2f33e169c31f2d5e2558b000062689692e6ee2f7069eac51e6e5",
+      "role": "exact_geometry_of_isolated_example"
+    },
+    {
+      "path": "docs/papercraft/construction/esquemas/01-mechon-plegado.png",
+      "size_bytes": 205955,
+      "sha256": "a44898c66da18e8465f0d140b4f632483bbbec3d76fac7bcfc42b4c73211859c",
+      "width_px": 1600,
+      "height_px": 1000,
+      "mode": "RGBA",
+      "role": "raster_preview_of_geometric_support_scheme"
+    },
+    {
+      "path": "docs/papercraft/construction/esquemas/01-mechon-plegado.svg",
+      "size_bytes": 9165,
+      "sha256": "a362da6c2be87753ed09ab1a142c73c308c250d8b79f69cf22f15c9724aff205",
+      "role": "verified_geometric_support_scheme"
+    },
+    {
+      "path": "docs/papercraft/construction/esquemas/02-manga-desplegada.geometry.json",
+      "size_bytes": 13567,
+      "sha256": "5cde58c392ae4cf9fd6a91e1fcf8fa40db0140404b67e560f32e16baa0a2b8c8",
+      "role": "exact_geometry_of_isolated_example"
+    },
+    {
+      "path": "docs/papercraft/construction/esquemas/02-manga-desplegada.png",
+      "size_bytes": 255937,
+      "sha256": "51022a4df68101dda8535c63cd7cf476af30254d34eb9bf5a1dd5867c02ccbf5",
+      "width_px": 1600,
+      "height_px": 1000,
+      "mode": "RGBA",
+      "role": "raster_preview_of_geometric_support_scheme"
+    },
+    {
+      "path": "docs/papercraft/construction/esquemas/02-manga-desplegada.svg",
+      "size_bytes": 12348,
+      "sha256": "6a230ca39da83a90c91c88303b19203e8fcbff0a088bc4ae04fa38703ec6107b",
+      "role": "verified_geometric_support_scheme"
+    },
+    {
+      "path": "docs/papercraft/construction/esquemas/03-media-falda-plisada.geometry.json",
+      "size_bytes": 21139,
+      "sha256": "2a7ef57be10ce819e94ed38ea0be20aaf1f6d59682ea2b213224642580894213",
+      "role": "exact_geometry_of_isolated_example"
+    },
+    {
+      "path": "docs/papercraft/construction/esquemas/03-media-falda-plisada.png",
+      "size_bytes": 288634,
+      "sha256": "bcc891d8ecff0e3c4972d7ecd06ec5e3f2b3dc1742a0612645c42adce5aae87b",
+      "width_px": 1600,
+      "height_px": 1000,
+      "mode": "RGBA",
+      "role": "raster_preview_of_geometric_support_scheme"
+    },
+    {
+      "path": "docs/papercraft/construction/esquemas/03-media-falda-plisada.svg",
+      "size_bytes": 18316,
+      "sha256": "73f495d95374a284533183d22677b90eca7c950aacaefbed3bbae72d4e53d36d",
+      "role": "verified_geometric_support_scheme"
+    },
+    {
+      "path": "docs/papercraft/construction/esquemas/verificaciones.json",
+      "size_bytes": 2618,
+      "sha256": "9872d7db9d97e5b262b726e5ad9a52d41cf29ce585ff1fadff640e13990cc64d"
+    },
+    {
+      "path": "docs/papercraft/construction/reference/01-personaje-maestro.png",
+      "size_bytes": 1841400,
+      "sha256": "3a23c072d47d526aac01878e5a030a4b3023dc800bd61a25117d12ebdc9d41cd",
+      "width_px": 1536,
+      "height_px": 1024,
+      "mode": "RGB",
+      "role": "conceptual_image_reference"
+    },
+    {
+      "path": "docs/papercraft/construction/reference/02-despiece-personaje.png",
+      "size_bytes": 1799923,
+      "sha256": "52a80eb7269d37138a754f30c222ceba79dbf61f04c5383d5ccf840abfd4bb76",
+      "width_px": 1536,
+      "height_px": 1024,
+      "mode": "RGB",
+      "role": "conceptual_image_reference"
+    },
+    {
+      "path": "docs/papercraft/construction/reference/03-cabello-construccion.png",
+      "size_bytes": 1957739,
+      "sha256": "24c234d69e18219636257cbb659105f12e5b2beb7beddcee2d385a157e26fb2c",
+      "width_px": 1536,
+      "height_px": 1024,
+      "mode": "RGB",
+      "role": "conceptual_image_reference"
+    },
+    {
+      "path": "docs/papercraft/construction/reference/04-mangas-construccion.png",
+      "size_bytes": 1849645,
+      "sha256": "de1d2c2df1253d3018b216469b2502ef2a0bda10beb275679da92b6cc1557b24",
+      "width_px": 1536,
+      "height_px": 1024,
+      "mode": "RGB",
+      "role": "conceptual_image_reference"
+    },
+    {
+      "path": "docs/papercraft/construction/reference/05-falda-construccion.png",
+      "size_bytes": 1870984,
+      "sha256": "742fbee4b3d9c55c94b151d241c12a5205f086ba4c0d1a34b274d485b8e48b4c",
+      "width_px": 1536,
+      "height_px": 1024,
+      "mode": "RGB",
+      "role": "conceptual_image_reference"
+    }
+  ]
+}

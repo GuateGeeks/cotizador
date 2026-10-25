@@ -1,0 +1,69 @@
+{
+  "schema_version": "1.0",
+  "purpose": "Validación de tres piezas geométricas de apoyo, no de un personaje completo.",
+  "method": "Despliegue isométrico de caras planas por aristas compartidas. Comprobación de todas las distancias intrapanel, extremos de bisagras, planaridad, triangulación y áreas de intersección convexa en 2D.",
+  "source_images_used_for_geometry": false,
+  "actual_character_models_modified": false,
+  "all_passed": true,
+  "pieces": [
+    {
+      "passed": true,
+      "distance_tolerance_H": 1e-10,
+      "overlap_area_tolerance_H2": 1e-12,
+      "triangle_count": 2,
+      "expected_triangle_count": 2,
+      "panel_count": 2,
+      "max_distance_error_H": 0.0,
+      "max_planarity_error_H": 1.5291507981718436e-18,
+      "max_hinge_endpoint_error_H": 0.0,
+      "max_interior_overlap_H2": 0.0,
+      "min_triangle_area_H2": 0.001,
+      "all_triangle_areas_positive": true,
+      "file": "01-mechon-plegado"
+    },
+    {
+      "passed": true,
+      "distance_tolerance_H": 1e-10,
+      "overlap_area_tolerance_H2": 1e-12,
+      "triangle_count": 8,
+      "expected_triangle_count": 8,
+      "panel_count": 4,
+      "max_distance_error_H": 4.163336342344337e-17,
+      "max_planarity_error_H": 1.0309982106120731e-18,
+      "max_hinge_endpoint_error_H": 1.3877787807814457e-17,
+      "max_interior_overlap_H2": 0.0,
+      "min_triangle_area_H2": 0.002253197727675048,
+      "all_triangle_areas_positive": true,
+      "file": "02-manga-desplegada"
+    },
+    {
+      "passed": true,
+      "distance_tolerance_H": 1e-10,
+      "overlap_area_tolerance_H2": 1e-12,
+      "triangle_count": 12,
+      "expected_triangle_count": 12,
+      "panel_count": 6,
+      "max_distance_error_H": 8.326672684688674e-17,
+      "max_planarity_error_H": 7.571405253624431e-18,
+      "max_hinge_endpoint_error_H": 1.4946834900704541e-16,
+      "max_interior_overlap_H2": 1.214306433183765e-17,
+      "min_triangle_area_H2": 0.0030111234722606187,
+      "all_triangle_areas_positive": true,
+      "alternating_concave_and_convex_turns": true,
+      "top_profile_signed_turns_H2": [
+        0.0006925045004647307,
+        -0.002037536661917258,
+        0.000692504500464731,
+        -0.0020375366619172575,
+        0.0006925045004647303
+      ],
+      "file": "03-media-falda-plisada"
+    }
+  ],
+  "limits": [
+    "No valida un patrón completo de personaje.",
+    "No incluye pestañas ni tolerancias físicas de cartulina.",
+    "No acredita mejora de FPS: estas referencias no se cargan como mallas de producción.",
+    "El montaje al personaje requiere transformación y decisiones de unión."
+  ]
+}

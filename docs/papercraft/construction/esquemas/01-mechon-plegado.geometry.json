@@ -1,0 +1,281 @@
+{
+  "schema_version": "1.0",
+  "type": "geometric-support-example",
+  "name": "Mechón plegado",
+  "triangle_count": 2,
+  "units": {
+    "length": "H",
+    "H": 1,
+    "meaning": "fracción normalizada de la altura de referencia del personaje; no metros"
+  },
+  "scope": "Esquema geométrico de apoyo. No es un patrón completo de personaje. No derivado automáticamente de imágenes conceptuales.",
+  "coordinate_system": {
+    "handedness": "right",
+    "x": "lateral",
+    "y": "up",
+    "z": "front",
+    "unfolded2d": "X derecha; Y hacia abajo en la lámina. Cada panel conserva sus coordenadas propias en los cortes.",
+    "note": "X lateral; Y arriba; +Z frente. Este ejemplo usa +Z como salida del pliegue; requiere rotación y traslación para montarse.",
+    "mounting": "Origen local en M, base central. Se extiende hacia −Y; las alas se abren hacia +Z. Orientar la pieza sobre la superficie de la cabeza y ocultar la base quebrada A–M–B bajo una banda de cabello.",
+    "final_character_transform_included": false
+  },
+  "parameters": {
+    "unfolded_width_H": 0.05,
+    "unfolded_length_H": 0.08,
+    "half_fold_degrees": 25,
+    "folded_width_H": 0.0453153893518325,
+    "folded_depth_H": 0.010565456543517487
+  },
+  "vertices_folded3d": {
+    "A": [
+      -0.02265769467591625,
+      0,
+      0.010565456543517487
+    ],
+    "M": [
+      0,
+      0,
+      0
+    ],
+    "B": [
+      0.02265769467591625,
+      0,
+      0.010565456543517487
+    ],
+    "T": [
+      0,
+      -0.08,
+      0
+    ]
+  },
+  "panels": [
+    {
+      "id": "H01",
+      "vertex_ids": [
+        "A",
+        "T",
+        "M"
+      ],
+      "unfolded2d": [
+        [
+          -0.025,
+          0.0
+        ],
+        [
+          0.0,
+          0.08
+        ],
+        [
+          0.0,
+          0.0
+        ]
+      ],
+      "triangles": [
+        [
+          "A",
+          "T",
+          "M"
+        ]
+      ]
+    },
+    {
+      "id": "H02",
+      "vertex_ids": [
+        "M",
+        "T",
+        "B"
+      ],
+      "unfolded2d": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.08
+        ],
+        [
+          0.025,
+          0.0
+        ]
+      ],
+      "triangles": [
+        [
+          "M",
+          "T",
+          "B"
+        ]
+      ]
+    }
+  ],
+  "hinges": [
+    {
+      "id": "P1",
+      "vertex_ids": [
+        "M",
+        "T"
+      ],
+      "panels": [
+        "H01",
+        "H02"
+      ],
+      "length_H": 0.08,
+      "signed_normal_rotation_degrees": 50.0,
+      "angle_convention": "atan2(edge_unit · (normal_previous × normal_next), normal_previous · normal_next); edge ordered by vertex_ids"
+    }
+  ],
+  "cut_edges": [
+    [
+      "A",
+      "T"
+    ],
+    [
+      "A",
+      "M"
+    ],
+    [
+      "B",
+      "T"
+    ],
+    [
+      "B",
+      "M"
+    ]
+  ],
+  "closure_seam": null,
+  "bounds_unfolded_H": {
+    "min": [
+      -0.025,
+      0.0
+    ],
+    "max": [
+      0.025,
+      0.08
+    ],
+    "extent": [
+      0.05,
+      0.08
+    ]
+  },
+  "bounds_folded_H": {
+    "min": [
+      -0.02265769467591625,
+      -0.08,
+      0.0
+    ],
+    "max": [
+      0.02265769467591625,
+      0.0,
+      0.010565456543517487
+    ],
+    "extent": [
+      0.0453153893518325,
+      0.08,
+      0.010565456543517487
+    ]
+  },
+  "display": {
+    "projection": "orthographic",
+    "canvas_px": [
+      1600,
+      1000
+    ],
+    "independent_scale_for_2d_and_3d": true,
+    "camera_direction": [
+      1.1,
+      0.8,
+      2.7
+    ],
+    "palette": {
+      "purple": "#6942A1",
+      "navy": "#33438A",
+      "background": "#FBFAF7",
+      "cyan": "#8FD3E6"
+    }
+  },
+  "qa": {
+    "passed": true,
+    "distance_tolerance_H": 1e-10,
+    "overlap_area_tolerance_H2": 1e-12,
+    "triangle_count": 2,
+    "expected_triangle_count": 2,
+    "panel_count": 2,
+    "max_distance_error_H": 0.0,
+    "max_planarity_error_H": 1.5291507981718436e-18,
+    "max_hinge_endpoint_error_H": 0.0,
+    "max_interior_overlap_H2": 0.0,
+    "min_triangle_area_H2": 0.001,
+    "all_triangle_areas_positive": true,
+    "all_pair_distances": [
+      {
+        "panel": "H01",
+        "vertices": [
+          "A",
+          "T"
+        ],
+        "length_3d_H": 0.08381527307120105,
+        "length_2d_H": 0.08381527307120105,
+        "absolute_error_H": 0.0
+      },
+      {
+        "panel": "H01",
+        "vertices": [
+          "A",
+          "M"
+        ],
+        "length_3d_H": 0.025,
+        "length_2d_H": 0.025,
+        "absolute_error_H": 0.0
+      },
+      {
+        "panel": "H01",
+        "vertices": [
+          "T",
+          "M"
+        ],
+        "length_3d_H": 0.08,
+        "length_2d_H": 0.08,
+        "absolute_error_H": 0.0
+      },
+      {
+        "panel": "H02",
+        "vertices": [
+          "M",
+          "T"
+        ],
+        "length_3d_H": 0.08,
+        "length_2d_H": 0.08,
+        "absolute_error_H": 0.0
+      },
+      {
+        "panel": "H02",
+        "vertices": [
+          "M",
+          "B"
+        ],
+        "length_3d_H": 0.025,
+        "length_2d_H": 0.025,
+        "absolute_error_H": 0.0
+      },
+      {
+        "panel": "H02",
+        "vertices": [
+          "T",
+          "B"
+        ],
+        "length_3d_H": 0.08381527307120105,
+        "length_2d_H": 0.08381527307120105,
+        "absolute_error_H": 0.0
+      }
+    ],
+    "panel_intersections": [
+      {
+        "panels": [
+          "H01",
+          "H02"
+        ],
+        "interior_overlap_H2": 0.0
+      }
+    ]
+  }
+}

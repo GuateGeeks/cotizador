@@ -6,3 +6,7 @@ before-desktop.png
 # Referencias de diseño papercraft: se guardan localmente (pesan ~47 MB); ver docs/papercraft/reference/README.md
 docs/papercraft/reference/*.png
 docs/papercraft/reference/*.zip
+
+# Paquete de construcción R1: los PNG se conservan localmente; md, json y svg se versionan
+docs/papercraft/construction/reference/*.png
+docs/papercraft/construction/esquemas/*.png

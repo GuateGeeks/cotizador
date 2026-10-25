@@ -70,6 +70,21 @@ Resumen; las reglas completas están en la cabecera de `plan.js` y las pruebas e
 
 - Son representativos, con un tope de `CAMPUS_LIMITS.people` (40).
 - Los contadores muestran las cifras reales del motor.
+- Se construyen según el paquete de construcción R1
+  ([`papercraft/construction/`](papercraft/construction/README.md)): perfil → plan → topología →
+  auditoría en `pieces-people.js` (`resolvePersonProfile`, `planPerson`, `addPaperPerson`).
+  - Alturas H por nivel (suela a cima del cabello): preprimaria 0.62, primaria 0.78, básico 0.90,
+    bachillerato 0.94, docente 0.98; cabeza/H 0.32–0.225 y hombros/H 0.275–0.255, medidos.
+  - Cabello con núcleo de 32 triángulos (banda 8→8, transición 8→4, ápice desplazado) y mechones
+    plegados de dos triángulos; variantes de coste fijo: corto 48, cola 56, moño 56, coletas 60,
+    melena 60, gorra 48, gorra con coletas 60. Con visor VR se omiten el flequillo y la visera.
+  - Mangas de dos secciones y cuatro paneles (8 por manga); falda en dos mitades rígidas de seis
+    paneles (alternancia radial 1 / 0.78) sobre `legL`/`legR`; manos y zapatos cerrados (8 cada uno).
+  - Presupuesto: geometría ≤ 271 por estudiante (279 con la reserva de 8) y ≤ 291 por docente,
+    más 7 triángulos de sombra de contacto. Máximo medido: 278 estudiante, 252 docente.
+  - `npm run check:people -- <carpeta-nueva>` genera el manifiesto (plan frente a caras emitidas en
+    236 combinaciones, huesos, rigidez, capas ≥ 0.004 en 12 poses, proporciones y determinismo);
+    `npm run shot:people` produce la escalera de lectura a 40/60/80/120/600 px con DPR 1 y 2.
 
 ## Visor e interacción
 
@@ -148,6 +163,9 @@ vegetación, piezas a ras de suelo y decoraciones de muro usan sombras de contac
 ```bash
 npm test                                   # Node: motor, planificador, PDF, experiencia (108)
 npm run check:paper -- artifacts/paper/<run>   # mallas: presupuesto, coplanares, suelo, determinismo
+npm run check:people -- artifacts/paper/<run>  # personajes: manifiesto plan/real, rig, capas, poses, proporciones
+node tools/people-shot.cjs artifacts/paper/<run> --piece person-prim --sizes 40,60,80,120,600 --dpr 1,2
+python3 tools/people-compare.py <out> --shots <carpeta con ladder/, levels/, poses/>
 PLAYWRIGHT_MODULE=… BROWSER_CHANNEL=chromium BROWSER_ARGS="--use-angle=swiftshader --enable-unsafe-swiftshader" \
   node asesor/test/campus-browser.cjs      # escritorio, móvil, movimiento reducido y sin WebGL
 npm run capture -- artifacts/campus/<run>  # seis estados y cuatro vistas del cotizador real

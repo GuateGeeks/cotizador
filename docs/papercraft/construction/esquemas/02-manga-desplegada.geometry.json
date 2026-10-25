@@ -1,0 +1,683 @@
+{
+  "schema_version": "1.0",
+  "type": "geometric-support-example",
+  "name": "Manga desplegada",
+  "triangle_count": 8,
+  "units": {
+    "length": "H",
+    "H": 1,
+    "meaning": "fracción normalizada de la altura de referencia del personaje; no metros"
+  },
+  "scope": "Esquema geométrico de apoyo. No es un patrón completo de personaje. No derivado automáticamente de imágenes conceptuales.",
+  "coordinate_system": {
+    "handedness": "right",
+    "x": "lateral",
+    "y": "up",
+    "z": "front",
+    "unfolded2d": "X derecha; Y hacia abajo en la lámina. Cada panel conserva sus coordenadas propias en los cortes.",
+    "note": "X lateral; Y arriba; +Z frente. Geometría local de ejemplo, sin transformación final de montaje.",
+    "mounting": "Origen en el centro de la abertura superior. Eje longitudinal en −Y. Trasladar y rotar al hombro/brazo; el montaje requiere que los dos bordes S1 coincidan. El ejemplo no contiene tapas ni pestañas.",
+    "final_character_transform_included": false
+  },
+  "parameters": {
+    "top_width_H": 0.066,
+    "top_depth_H": 0.06,
+    "bottom_width_H": 0.074,
+    "bottom_depth_H": 0.07,
+    "axial_height_H": 0.075,
+    "top_and_bottom_open": true,
+    "closure_cut_edge": [
+      "t0",
+      "b0"
+    ]
+  },
+  "vertices_folded3d": {
+    "t0": [
+      -0.033,
+      0,
+      0.03
+    ],
+    "t1": [
+      0.033,
+      0,
+      0.03
+    ],
+    "t2": [
+      0.033,
+      0,
+      -0.03
+    ],
+    "t3": [
+      -0.033,
+      0,
+      -0.03
+    ],
+    "b0": [
+      -0.037,
+      -0.075,
+      0.035
+    ],
+    "b1": [
+      0.037,
+      -0.075,
+      0.035
+    ],
+    "b2": [
+      0.037,
+      -0.075,
+      -0.035
+    ],
+    "b3": [
+      -0.037,
+      -0.075,
+      -0.035
+    ]
+  },
+  "panels": [
+    {
+      "id": "M01",
+      "vertex_ids": [
+        "t0",
+        "b0",
+        "b1",
+        "t1"
+      ],
+      "unfolded2d": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          -0.003999999999999997,
+          0.07516648189186455
+        ],
+        [
+          0.07,
+          0.07516648189186455
+        ],
+        [
+          0.066,
+          0.0
+        ]
+      ],
+      "triangles": [
+        [
+          "t0",
+          "b0",
+          "b1"
+        ],
+        [
+          "t0",
+          "b1",
+          "t1"
+        ]
+      ]
+    },
+    {
+      "id": "M02",
+      "vertex_ids": [
+        "t1",
+        "b1",
+        "b2",
+        "t2"
+      ],
+      "unfolded2d": [
+        [
+          0.066,
+          0.0
+        ],
+        [
+          0.06999999999999999,
+          0.07516648189186455
+        ],
+        [
+          0.13949962486013284,
+          0.06681171413322476
+        ],
+        [
+          0.125571107022971,
+          -0.007161229507405538
+        ]
+      ],
+      "triangles": [
+        [
+          "t1",
+          "b1",
+          "b2"
+        ],
+        [
+          "t1",
+          "b2",
+          "t2"
+        ]
+      ]
+    },
+    {
+      "id": "M03",
+      "vertex_ids": [
+        "t2",
+        "b2",
+        "b3",
+        "t3"
+      ],
+      "unfolded2d": [
+        [
+          0.125571107022971,
+          -0.007161229507405538
+        ],
+        [
+          0.13949962486013284,
+          0.06681171413322476
+        ],
+        [
+          0.211391315195537,
+          0.04927361672448767
+        ],
+        [
+          0.1896907227275207,
+          -0.02280331638546835
+        ]
+      ],
+      "triangles": [
+        [
+          "t2",
+          "b2",
+          "b3"
+        ],
+        [
+          "t2",
+          "b3",
+          "t3"
+        ]
+      ]
+    },
+    {
+      "id": "M04",
+      "vertex_ids": [
+        "t3",
+        "b3",
+        "b0",
+        "t0"
+      ],
+      "unfolded2d": [
+        [
+          0.1896907227275207,
+          -0.02280331638546835
+        ],
+        [
+          0.211391315195537,
+          0.04927361672448768
+        ],
+        [
+          0.2769307581427401,
+          0.02468537932994654
+        ],
+        [
+          0.24586738811083764,
+          -0.04387894843793218
+        ]
+      ],
+      "triangles": [
+        [
+          "t3",
+          "b3",
+          "b0"
+        ],
+        [
+          "t3",
+          "b0",
+          "t0"
+        ]
+      ]
+    }
+  ],
+  "hinges": [
+    {
+      "id": "P1",
+      "vertex_ids": [
+        "t1",
+        "b1"
+      ],
+      "panels": [
+        "M01",
+        "M02"
+      ],
+      "length_H": 0.07527283706623525,
+      "signed_normal_rotation_degrees": -89.79702092795165,
+      "angle_convention": "atan2(edge_unit · (normal_previous × normal_next), normal_previous · normal_next); edge ordered by vertex_ids"
+    },
+    {
+      "id": "P2",
+      "vertex_ids": [
+        "t2",
+        "b2"
+      ],
+      "panels": [
+        "M02",
+        "M03"
+      ],
+      "length_H": 0.07527283706623525,
+      "signed_normal_rotation_degrees": -89.79702092795165,
+      "angle_convention": "atan2(edge_unit · (normal_previous × normal_next), normal_previous · normal_next); edge ordered by vertex_ids"
+    },
+    {
+      "id": "P3",
+      "vertex_ids": [
+        "t3",
+        "b3"
+      ],
+      "panels": [
+        "M03",
+        "M04"
+      ],
+      "length_H": 0.07527283706623525,
+      "signed_normal_rotation_degrees": -89.79702092795165,
+      "angle_convention": "atan2(edge_unit · (normal_previous × normal_next), normal_previous · normal_next); edge ordered by vertex_ids"
+    }
+  ],
+  "cut_edges": [
+    [
+      "b0",
+      "b1"
+    ],
+    [
+      "t0",
+      "t1"
+    ],
+    [
+      "b1",
+      "b2"
+    ],
+    [
+      "t1",
+      "t2"
+    ],
+    [
+      "b2",
+      "b3"
+    ],
+    [
+      "t2",
+      "t3"
+    ],
+    [
+      "b0",
+      "b3"
+    ],
+    [
+      "t0",
+      "t3"
+    ],
+    [
+      "t0",
+      "b0"
+    ]
+  ],
+  "closure_seam": {
+    "id": "S1",
+    "vertex_ids": [
+      "t0",
+      "b0"
+    ],
+    "copies": [
+      {
+        "panel": "M01",
+        "label": "S1a"
+      },
+      {
+        "panel": "M04",
+        "label": "S1b"
+      }
+    ]
+  },
+  "bounds_unfolded_H": {
+    "min": [
+      -0.003999999999999997,
+      -0.04387894843793218
+    ],
+    "max": [
+      0.2769307581427401,
+      0.07516648189186455
+    ],
+    "extent": [
+      0.2809307581427401,
+      0.11904543032979673
+    ]
+  },
+  "bounds_folded_H": {
+    "min": [
+      -0.037,
+      -0.075,
+      -0.035
+    ],
+    "max": [
+      0.037,
+      0.0,
+      0.035
+    ],
+    "extent": [
+      0.074,
+      0.075,
+      0.07
+    ]
+  },
+  "display": {
+    "projection": "orthographic",
+    "canvas_px": [
+      1600,
+      1000
+    ],
+    "independent_scale_for_2d_and_3d": true,
+    "camera_direction": [
+      1.65,
+      1.3,
+      2.2
+    ],
+    "palette": {
+      "purple": "#6942A1",
+      "navy": "#33438A",
+      "background": "#FBFAF7",
+      "cyan": "#8FD3E6"
+    }
+  },
+  "qa": {
+    "passed": true,
+    "distance_tolerance_H": 1e-10,
+    "overlap_area_tolerance_H2": 1e-12,
+    "triangle_count": 8,
+    "expected_triangle_count": 8,
+    "panel_count": 4,
+    "max_distance_error_H": 4.163336342344337e-17,
+    "max_planarity_error_H": 1.0309982106120731e-18,
+    "max_hinge_endpoint_error_H": 1.3877787807814457e-17,
+    "max_interior_overlap_H2": 0.0,
+    "min_triangle_area_H2": 0.002253197727675048,
+    "all_triangle_areas_positive": true,
+    "all_pair_distances": [
+      {
+        "panel": "M01",
+        "vertices": [
+          "t0",
+          "b0"
+        ],
+        "length_3d_H": 0.07527283706623525,
+        "length_2d_H": 0.07527283706623526,
+        "absolute_error_H": 1.3877787807814457e-17
+      },
+      {
+        "panel": "M01",
+        "vertices": [
+          "t0",
+          "b1"
+        ],
+        "length_3d_H": 0.1027131929208707,
+        "length_2d_H": 0.1027131929208707,
+        "absolute_error_H": 0.0
+      },
+      {
+        "panel": "M01",
+        "vertices": [
+          "t0",
+          "t1"
+        ],
+        "length_3d_H": 0.066,
+        "length_2d_H": 0.066,
+        "absolute_error_H": 0.0
+      },
+      {
+        "panel": "M01",
+        "vertices": [
+          "b0",
+          "b1"
+        ],
+        "length_3d_H": 0.074,
+        "length_2d_H": 0.07400000000000001,
+        "absolute_error_H": 1.3877787807814457e-17
+      },
+      {
+        "panel": "M01",
+        "vertices": [
+          "b0",
+          "t1"
+        ],
+        "length_3d_H": 0.1027131929208707,
+        "length_2d_H": 0.1027131929208707,
+        "absolute_error_H": 0.0
+      },
+      {
+        "panel": "M01",
+        "vertices": [
+          "b1",
+          "t1"
+        ],
+        "length_3d_H": 0.07527283706623525,
+        "length_2d_H": 0.07527283706623526,
+        "absolute_error_H": 1.3877787807814457e-17
+      },
+      {
+        "panel": "M02",
+        "vertices": [
+          "t1",
+          "b1"
+        ],
+        "length_3d_H": 0.07527283706623525,
+        "length_2d_H": 0.07527283706623526,
+        "absolute_error_H": 1.3877787807814457e-17
+      },
+      {
+        "panel": "M02",
+        "vertices": [
+          "t1",
+          "b2"
+        ],
+        "length_3d_H": 0.09932774033471213,
+        "length_2d_H": 0.09932774033471214,
+        "absolute_error_H": 1.3877787807814457e-17
+      },
+      {
+        "panel": "M02",
+        "vertices": [
+          "t1",
+          "t2"
+        ],
+        "length_3d_H": 0.06,
+        "length_2d_H": 0.060000000000000005,
+        "absolute_error_H": 6.938893903907228e-18
+      },
+      {
+        "panel": "M02",
+        "vertices": [
+          "b1",
+          "b2"
+        ],
+        "length_3d_H": 0.07,
+        "length_2d_H": 0.07000000000000002,
+        "absolute_error_H": 1.3877787807814457e-17
+      },
+      {
+        "panel": "M02",
+        "vertices": [
+          "b1",
+          "t2"
+        ],
+        "length_3d_H": 0.09932774033471213,
+        "length_2d_H": 0.09932774033471216,
+        "absolute_error_H": 2.7755575615628914e-17
+      },
+      {
+        "panel": "M02",
+        "vertices": [
+          "b2",
+          "t2"
+        ],
+        "length_3d_H": 0.07527283706623525,
+        "length_2d_H": 0.07527283706623526,
+        "absolute_error_H": 1.3877787807814457e-17
+      },
+      {
+        "panel": "M03",
+        "vertices": [
+          "t2",
+          "b2"
+        ],
+        "length_3d_H": 0.07527283706623525,
+        "length_2d_H": 0.07527283706623526,
+        "absolute_error_H": 1.3877787807814457e-17
+      },
+      {
+        "panel": "M03",
+        "vertices": [
+          "t2",
+          "b3"
+        ],
+        "length_3d_H": 0.1027131929208707,
+        "length_2d_H": 0.10271319292087067,
+        "absolute_error_H": 2.7755575615628914e-17
+      },
+      {
+        "panel": "M03",
+        "vertices": [
+          "t2",
+          "t3"
+        ],
+        "length_3d_H": 0.066,
+        "length_2d_H": 0.066,
+        "absolute_error_H": 0.0
+      },
+      {
+        "panel": "M03",
+        "vertices": [
+          "b2",
+          "b3"
+        ],
+        "length_3d_H": 0.074,
+        "length_2d_H": 0.07399999999999995,
+        "absolute_error_H": 4.163336342344337e-17
+      },
+      {
+        "panel": "M03",
+        "vertices": [
+          "b2",
+          "t3"
+        ],
+        "length_3d_H": 0.1027131929208707,
+        "length_2d_H": 0.1027131929208707,
+        "absolute_error_H": 0.0
+      },
+      {
+        "panel": "M03",
+        "vertices": [
+          "b3",
+          "t3"
+        ],
+        "length_3d_H": 0.07527283706623525,
+        "length_2d_H": 0.07527283706623526,
+        "absolute_error_H": 1.3877787807814457e-17
+      },
+      {
+        "panel": "M04",
+        "vertices": [
+          "t3",
+          "b3"
+        ],
+        "length_3d_H": 0.07527283706623525,
+        "length_2d_H": 0.07527283706623526,
+        "absolute_error_H": 1.3877787807814457e-17
+      },
+      {
+        "panel": "M04",
+        "vertices": [
+          "t3",
+          "b0"
+        ],
+        "length_3d_H": 0.09932774033471213,
+        "length_2d_H": 0.09932774033471214,
+        "absolute_error_H": 1.3877787807814457e-17
+      },
+      {
+        "panel": "M04",
+        "vertices": [
+          "t3",
+          "t0"
+        ],
+        "length_3d_H": 0.06,
+        "length_2d_H": 0.06000000000000001,
+        "absolute_error_H": 1.3877787807814457e-17
+      },
+      {
+        "panel": "M04",
+        "vertices": [
+          "b3",
+          "b0"
+        ],
+        "length_3d_H": 0.07,
+        "length_2d_H": 0.07,
+        "absolute_error_H": 0.0
+      },
+      {
+        "panel": "M04",
+        "vertices": [
+          "b3",
+          "t0"
+        ],
+        "length_3d_H": 0.09932774033471213,
+        "length_2d_H": 0.09932774033471214,
+        "absolute_error_H": 1.3877787807814457e-17
+      },
+      {
+        "panel": "M04",
+        "vertices": [
+          "b0",
+          "t0"
+        ],
+        "length_3d_H": 0.07527283706623525,
+        "length_2d_H": 0.07527283706623525,
+        "absolute_error_H": 0.0
+      }
+    ],
+    "panel_intersections": [
+      {
+        "panels": [
+          "M01",
+          "M02"
+        ],
+        "interior_overlap_H2": 0.0
+      },
+      {
+        "panels": [
+          "M01",
+          "M03"
+        ],
+        "interior_overlap_H2": 0.0
+      },
+      {
+        "panels": [
+          "M01",
+          "M04"
+        ],
+        "interior_overlap_H2": 0.0
+      },
+      {
+        "panels": [
+          "M02",
+          "M03"
+        ],
+        "interior_overlap_H2": 0.0
+      },
+      {
+        "panels": [
+          "M02",
+          "M04"
+        ],
+        "interior_overlap_H2": 0.0
+      },
+      {
+        "panels": [
+          "M03",
+          "M04"
+        ],
+        "interior_overlap_H2": 0.0
+      }
+    ]
+  }
+}
