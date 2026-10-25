@@ -4,19 +4,26 @@
  * asesor/lab/inspector.html and tools/paper-shot.cjs. Not loaded by the asesor.
  */
 import {
-  WebGLRenderer, Scene, OrthographicCamera, HemisphereLight, DirectionalLight, Color, Mesh, PlaneGeometry,
+  WebGLRenderer, Scene, OrthographicCamera, MeshBasicMaterial, SkinnedMesh, HemisphereLight, DirectionalLight, Color, Mesh, PlaneGeometry,
   ShadowMaterial, Vector3, Quaternion, SRGBColorSpace, NeutralToneMapping, PCFShadowMap, Box3
 } from 'three';
-import { createBuilder, releaseEntityGroup, clamp, smooth, backOut } from '../campus-kit.js';
+import { createBuilder, releaseEntityGroup, clamp, smooth, backOut, rigidSkinning } from '../campus-kit.js';
 import { paperKit, newMeta, PAPER } from './kit.js';
 import { paperMaterials } from './material.js';
 import { CATALOG, GROUPS } from './catalog.js';
+import { personPiece, PERSON_POSES } from './inspector-person.js';
+import { PRIMARIA_BASE } from './pieces-people.js';
 
 export const VIEWS = Object.freeze({
   '34': { yaw: -.55, pitch: .6 }, front: { yaw: 0, pitch: .4 }, side: { yaw: -Math.PI / 2, pitch: .28 },
   back: { yaw: Math.PI - .55, pitch: .5 }, top: { yaw: 0, pitch: 1.5 }, close: { yaw: -.55, pitch: .45, zoom: 2.6 },
   // Low and close: people and equipment at a table, under the slab of the floor above.
-  people: { yaw: -.4, pitch: .22, zoom: 2.6 }
+  people: { yaw: -.4, pitch: .22, zoom: 2.6 },
+  // Character sheets (construction sheet 01): almost level, so proportions read as drawn.
+  'char-front': { yaw: 0, pitch: .12 }, 'char-side': { yaw: -Math.PI / 2, pitch: .12 }, 'char-back': { yaw: Math.PI, pitch: .12 },
+  'char-34': { yaw: -.6, pitch: .2 },
+  // The campus camera (campus-scene.js: DEFAULT_YAW -.55, PITCH .6).
+  campus: { yaw: -.55, pitch: .6 }
 });
 const AXES = { x: new Vector3(1, 0, 0), y: new Vector3(0, 1, 0), z: new Vector3(0, 0, 1) };
 
@@ -73,7 +80,18 @@ export function createInspector(container, { pieces = CATALOG, ui = false, label
 
   const camera = new OrthographicCamera(-1, 1, 1, -1, -200, 400);
   const materials = paperMaterials();
-  let shown = [], view = VIEWS['34'], viewName = '34', assembly = 1, focusPoint = null, fixed = null;
+  let shown = [], view = VIEWS['34'], viewName = '34', assembly = 1, focusPoint = null, fixed = null, wire = false;
+  // Fold edges / wireframe overlay: one shared material, a skinned twin per mesh (follows poses).
+  const wireMaterial = rigidSkinning(new MeshBasicMaterial({ color: PAPER.ink, wireframe: true, transparent: true, opacity: .5, depthTest: true }));
+  function applyWire() {
+    for (const s of shown) s.group.traverse(o => {
+      if (o.isSkinnedMesh && o.userData.wireTwin === undefined && (o.name === 'solid' || o.name === 'soft')) {
+        const twin = new SkinnedMesh(o.geometry, wireMaterial); twin.name = 'wire'; twin.frustumCulled = false;
+        twin.bind(o.skeleton, o.bindMatrix); twin.visible = wire; o.userData.wireTwin = twin; o.parent.add(twin);
+      }
+      if (o.name === 'wire') o.visible = wire;
+    });
+  }
 
   function clear() { shown.forEach(s => releaseEntityGroup(s.group)); shown = []; overlay.textContent = ''; }
 
@@ -186,7 +204,7 @@ export function createInspector(container, { pieces = CATALOG, ui = false, label
     }
   }
 
-  function render() { frame(); applyAssembly(); renderer.render(scene, camera); paintLabels(); }
+  function render() { frame(); applyAssembly(); applyWire(); renderer.render(scene, camera); paintLabels(); }
 
   function buildList(ids) {
     const list = ids.map(id => pieces.find(piece => piece.id === id)).filter(Boolean).map(piece => buildPiece(piece, materials));
@@ -225,6 +243,29 @@ export function createInspector(container, { pieces = CATALOG, ui = false, label
       render();
     },
     setAssembly(value) { assembly = clamp(value); render(); },
+    /** Toggle the fold-edge (wireframe) overlay. */
+    setWire(value) { wire = !!value; render(); },
+    /**
+     * Character mode: one person from an explicit spec (default: the primaria base
+     * student), a named pose and an optional list of components to isolate.
+     * Returns id / bone / real triangles per component and the measured landmarks.
+     */
+    showPerson({ spec = PRIMARIA_BASE, pose = 'rest', only = null, view: name = viewName, zoom = null, focus = null, frame = null } = {}) {
+      clear(); fixed = frame ? new Box3(new Vector3(frame[0], frame[1], frame[2]), new Vector3(frame[3], frame[4], frame[5])) : null; viewName = name; view = { ...(VIEWS[name] || VIEWS['34']), ...(zoom ? { zoom } : {}) };
+      focusPoint = focus ? new Vector3(...focus) : null;
+      const s = buildPiece(personPiece({ spec, pose, only }), materials);
+      scene.add(s.group); shown = [s];
+      render();
+      const person = s.meta.person, call = renderer.info.render;
+      return { ...api.info()[0], pose, only, render: { calls: call.calls, triangles: call.triangles }, components: person?.components || null, plan: person?.plan || null, landmarks: person?.landmarks || null };
+    },
+    poses: () => Object.keys(PERSON_POSES),
+    /** CSS-pixel distance between two world points with the current camera (scale probes). */
+    projectedDistance(a, b) {
+      const w = container.clientWidth, h = container.clientHeight;
+      const pa = new Vector3(...a).project(camera), pb = new Vector3(...b).project(camera);
+      return Math.hypot((pa.x - pb.x) / 2 * w, (pa.y - pb.y) / 2 * h);
+    },
     /** GPU resources the renderer still holds (leak checks). */
     memory: () => ({ ...renderer.info.memory, programs: renderer.info.programs?.length ?? null }),
     info: () => shown.map(s => ({ id: s.piece.id, label: s.piece.label, group: s.piece.group, triangles: s.triangles, budget: s.piece.budget ?? null,
@@ -234,7 +275,7 @@ export function createInspector(container, { pieces = CATALOG, ui = false, label
     render,
     dispose() { clear(); renderer.dispose(); renderer.domElement.remove(); overlay.remove(); }
   };
-  if (ui) mountUI(container, api);
+  if (ui) { mountUI(container, api); mountPersonUI(container, api); }
   window.addEventListener('resize', render);
   return api;
 }
@@ -257,4 +298,39 @@ function mountUI(container, api) {
   });
   const first = api.groups()[0];
   if (first) api.showGroup(first.id);
+}
+
+/** Character panel: pose, view, edges and one checkbox per component of the primaria student. */
+function mountPersonUI(container, api) {
+  const box = document.createElement('div');
+  box.style.cssText = 'position:absolute;right:12px;top:12px;display:flex;flex-direction:column;gap:6px;max-height:calc(100% - 24px);overflow:auto;background:#fffaf3e6;border-radius:12px;padding:10px;font:500 13px Inter,system-ui,sans-serif;color:#321853;z-index:2;width:250px';
+  container.appendChild(box);
+  const state = { pose: 'rest', view: 'char-34', only: new Set(), wire: false };
+  const title = document.createElement('strong'); title.textContent = 'Alumno de primaria'; box.appendChild(title);
+  const select = (label, options, key) => {
+    const l = document.createElement('label'); l.textContent = label + ' '; const s = document.createElement('select');
+    options.forEach(o => { const opt = document.createElement('option'); opt.value = o; opt.textContent = o; s.appendChild(opt); });
+    s.value = state[key]; s.onchange = () => { state[key] = s.value; show(); }; l.appendChild(s); box.appendChild(l);
+  };
+  select('Pose', api.poses(), 'pose');
+  select('Vista', Object.keys(VIEWS), 'view');
+  const wire = document.createElement('label'); const wc = document.createElement('input'); wc.type = 'checkbox';
+  wc.onchange = () => { state.wire = wc.checked; api.setWire(state.wire); }; wire.append(wc, ' Aristas'); box.appendChild(wire);
+  const list = document.createElement('div'); box.appendChild(list);
+  const total = document.createElement('div'); box.appendChild(total);
+  function show() {
+    const info = api.showPerson({ pose: state.pose, view: state.view, only: [...state.only] });
+    api.setWire(state.wire);
+    list.textContent = '';
+    const all = (info.components || []);
+    all.forEach(c => {
+      const row = document.createElement('label'); row.style.cssText = 'display:flex;gap:6px;align-items:baseline';
+      const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = state.only.has(c.id);
+      cb.onchange = () => { if (cb.checked) state.only.add(c.id); else state.only.delete(c.id); show(); };
+      const txt = document.createElement('span'); txt.textContent = `${c.id} · ${c.bones.join('/')} · ${c.triangles}`;
+      row.append(cb, txt); list.appendChild(row);
+    });
+    total.textContent = `Triángulos: ${info.triangles} (marca piezas para aislarlas)`;
+  }
+  const open = document.createElement('button'); open.type = 'button'; open.textContent = 'Mostrar alumno'; open.onclick = show; box.appendChild(open);
 }

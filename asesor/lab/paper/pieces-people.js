@@ -37,8 +37,8 @@ const SHOE = .04;
 const GAP = .0045;
 /** Hair variants and their known costs (fichas §4); the cap replaces the hair core. */
 export const HAIR_COST = { short: 48, pony: 56, bun: 56, pig: 60, long: 60, cap: 48, 'cap-pig': 60 };
-/** Front strands that the VR goggles cover, and the cap's visor (10) they replace: not emitted with a headset. */
-const FRINGE = { short: 8, pony: 8, bun: 8, pig: 8, long: 6, cap: 14, 'cap-pig': 14 };
+/** Front strands (component `fringe`) per hair variant; the VR goggles replace them (and the cap's visor, 10). */
+const FRONT = { short: 8, pony: 8, bun: 8, pig: 8, long: 6, cap: 4, 'cap-pig': 4 };
 export const GEOMETRY_CAP = { student: 271, teacher: 291 };
 export const RESERVE = 8;
 export const SHADOW_TRIANGLES = 7;
@@ -70,6 +70,15 @@ function onPlane(a, c, d, x, y, lift = 0) {
   return add([x, y, z], mul(n, lift));
 }
 
+/**
+ * The primaria base student (construction sheet 01): explicit configuration, fixed seed.
+ * Inspector, capture tools and the generated contract all build this exact spec.
+ */
+export const PRIMARIA_BASE = Object.freeze({
+  id: 'alumno-primaria', label: 'Alumno de primaria (base)', level: 'prim', seed: 'prim-base',
+  hair: 'short', cap: false, skirt: false, headset: false, skin: C.skin[0], hairColor: C.hair[1], shoe: C.dark
+});
+
 /** Resolve level proportions, clothing, hair variant and colours from a person spec. */
 export function resolvePersonProfile(spec) {
   const teacher = spec.role === 'teacher', level = teacher ? 'adult' : (PROFILE[spec.level] ? spec.level : 'prim');
@@ -87,34 +96,150 @@ export function resolvePersonProfile(spec) {
   const bag = !teacher && !spec.seated && spec.backpack !== false ? (typeof spec.backpack === 'string' ? spec.backpack : C.level[level]) : null;
   return {
     seed, level, teacher, pre, H, style, skirt, bag, headset: !!spec.headset, notebook: !!(teacher && spec.notebook),
+    // Recipe v2 (ALUMNO-PRIMARIA.md): head, face and hair of every short-haired primaria student
+    // (clothing never changes the head); body upgrades only for the base outfit (trousers).
+    // Every other combination keeps recipe v1.
+    v2: level === 'prim' && !teacher && style === 'short', v2Body: level === 'prim' && !teacher && style === 'short' && !skirt,
     hc: P.head * H, sw: P.sw * H / 2, td: P.sw / .26 * .145 * H / 2,
     neck: BODY.neck * k * H, torso: BODY.torso * k * H, thigh: BODY.thigh * k * H, shin: BODY.shin * k * H, shoe: SHOE * H,
-    skin: pick(C.skin, seed, 'skin'),
+    skin: spec.skin || pick(C.skin, seed, 'skin'),
     // Sheet 07: dark violet hair dominates; near-black and brown stay as occasional variants.
-    hair: pick([C.hair[1], C.hair[1], C.hair[0], C.hair[1], C.hair[1], C.hair[0], C.hair[2]], seed, 'hair'),
+    hair: spec.hairColor || pick([C.hair[1], C.hair[1], C.hair[0], C.hair[1], C.hair[1], C.hair[0], C.hair[2]], seed, 'hair'),
     vest: spec.sweater || C.uniform, shirt: teacher ? C.teacher : C.shirt, pants: teacher ? C.teacherPants : C.navy,
     shoeHex: spec.shoe || (teacher ? C.dark : pick([C.dark, C.dark, C.leg], seed, 'shoe'))
   };
 }
 
-/** Planned triangles per part (fichas §8). Ears and straps only when they fit the cap. */
+/**
+ * Planned triangles per component (fichas §8). Ears and chest straps only when they fit
+ * the cap. The primaria base student (`pr.v2`) then upgrades, in the order of the brief
+ * and while the cap allows: vest with shoulders and straps over the shoulder, closed
+ * sleeves, shoes with toe box, backpack with flap. `plan.rich` lists the upgrades taken.
+ */
 export function planPerson(pr) {
+  const capped = pr.style === 'cap' || pr.style === 'cap-pig';
   const plan = {
-    head: 20, neck: 6, face: pr.headset ? 2 : 6, hair: HAIR_COST[pr.style] - (pr.headset ? FRINGE[pr.style] : 0),
-    torso: 19, sleeves: 16, upperArms: 16, forearms: 16, hands: 16, shoes: 16
+    headNeck: 26, face: pr.headset ? 2 : 6,
+    hairMass: HAIR_COST[pr.style] - FRONT[pr.style] - (pr.headset && capped ? 10 : 0), fringe: pr.headset ? 0 : FRONT[pr.style],
+    torsoVest: 16, collar: 3, sleeves: 16, upperArms: 16, forearmsHands: 32, shoes: 16
   };
   if (pr.headset) plan.goggles = 10;
-  if (pr.skirt) Object.assign(plan, { skirt: 24, thighs: 16, shins: 32 });
-  else Object.assign(plan, { hipPiece: 8, thighs: 16, shins: 16 });
+  if (pr.skirt) Object.assign(plan, { skirt: 24, legs: 48 });
+  else plan.pelvisTrousers = 40;
   if (pr.bag) plan.backpack = 8;
   if (pr.teacher) plan.tie = 2;
   if (pr.notebook) plan.notebook = 8;
   const cap = GEOMETRY_CAP[pr.teacher ? 'teacher' : 'student'], sum = () => Object.values(plan).reduce((s, v) => s + v, 0);
   if (sum() + 4 <= cap) plan.ears = 4;
   if (pr.bag && sum() + 4 <= cap) plan.straps = 4;
+  const rich = {};
+  if (pr.v2Body) {
+    const upgrade = (key, delta) => {
+      const total = Object.entries(delta).reduce((s, [, d]) => s + d, 0);
+      if (sum() + total > cap) return;
+      for (const [k, d] of Object.entries(delta)) plan[k] += d;
+      rich[key] = true;
+    };
+    upgrade('torso', plan.straps ? { torsoVest: 12, straps: 8 } : { torsoVest: 12 });
+    upgrade('sleeves', { sleeves: 4 });
+    upgrade('shoes', { shoes: 8 });
+    if (pr.bag) upgrade('backpack', { backpack: 4 });
+  }
+  Object.defineProperty(plan, 'rich', { value: rich, enumerable: false });
   return plan;
 }
 
+/**
+ * Landmarks of the rest pose, in the person's space (Y up, +Z front, sole at y = 0).
+ * The rig places its joints at these heights; the manifest checks bones against them.
+ */
+export function personLandmarks(pr) {
+  const H = pr.H, ankle = pr.shoe, knee = ankle + pr.shin, hip = knee + pr.thigh, neckBase = hip + pr.torso, chin = neckBase + pr.neck;
+  const shoulder = neckBase - .034 * H, elbow = shoulder - .125 * H, wrist = elbow - .105 * H;
+  return { sole: 0, ankle, knee, hip, shoulder, elbow, wrist, neckBase, chin, top: chin + pr.hc, shoulderX: pr.sw + .007 * H, legX: pr.sw * (pr.skirt ? .4 : .44), halfShoulders: pr.sw };
+}
+
+/** Parameters of the component recipes (scene units). One source for geometry and the contract. */
+export function componentParams(pr) {
+  const { H, sw: SW, td: TD, torso: torsoH } = pr;
+  return {
+    headNeck: { jaw: [.52, .7, .52, -.62], neckRadius: +(.2 * .4375 / 1.06 * pr.hc).toFixed(4), skullW: +(.4375 / 1.06 * pr.hc).toFixed(4), skullD: +(.4 * pr.hc).toFixed(4) },
+    face: { eyeV: .4, eye: [.027, .046], eyeX: .15, smileV: .16 },
+    ears: { reach: .12 },
+    hairMass: {
+      hairline: [.52, .4], lowV: [.52, .52, .38, .22, .18, .18, .22, .38], lowOut: [0, 0, .03, .04, .045, .045, .04, .03],
+      ringV: .67, ringFrontV: .66, ringFrontZ: 1.16, ringScale: 1.05, upper: [[0, .64], [.76, -.02], [0, -.72], [-.76, -.02]], upperV: .92,
+      apexSide: .07, apexZ: -.04, tint: 1.15, sideburnV: .3, napeV: .06
+    },
+    fringe: { sweep: .07, tipV: [.44, .49, .45, .5], tipZ: 1.05, crest: 1.3 },
+    torsoVest: { chestY: torsoH * .55, neckX: SW * .62, neckZ: TD * .8, shoulderX: SW * .94, drop: .03 * H },
+    collar: { halfWidth: .036 * H },
+    sleeves: { inset: .012 * H, topY: .02 * H, length: .08 * H, top: [.03 * H, .027 * H], bottom: [.036 * H, .034 * H], flare: .004 * H },
+    upperArms: { half: .026 * H, length: .125 * H },
+    forearmsHands: { length: .105 * H, hand: .045 * H },
+    pelvisTrousers: { seat: [-.075 * H, .004 * H], thighHalf: .05 * H, shinHalf: .044 * H },
+    shoes: { length: .145 * H, halfWidth: .043 * H, toeH: .03 * H, toeTopZ: .07 * H, spring: .008 * H },
+    backpack: { depth: .07 * H, flap: .45, halfWidth: SW * .72, height: torsoH * .7 },
+    straps: { x: .062 * H, w: .009 * H, chestEnd: torsoH * .57 }
+  };
+}
+
+/**
+ * Components of a person: id, visual role, controlling bones, local frame and attach,
+ * topology, overlap zones and review criteria. `rich` names the plan upgrade that
+ * switches a component to its v2+ topology. ALUMNO-PRIMARIA.md is generated from this.
+ */
+export const COMPONENTS = Object.freeze([
+  { id: 'headNeck', label: 'Cabeza y cuello', role: 'Volumen de la cabeza bajo el cabello y cuello corto', bones: ['head'],
+    frame: 'Origen en la base del cuello (hueso head, en y = cuello del torso); Y arriba, +Z frente', attach: 'Hueso head; el cuello nace dentro del torso',
+    topology: 'Anillo de mentón de 4 → anillo de mejillas de 8 (12), frente y sienes hasta la línea del cabello (8), cuello prisma triangular (6)',
+    overlaps: 'Cuello dentro del torso y de la cabeza; la piel termina en la línea del cabello (arista compartida con el cabello al frente)',
+    review: 'Aislado: mandíbula ancha, sin nariz. Montado: el mentón no se hunde en el cuello de la camisa' },
+  { id: 'face', label: 'Rostro', role: 'Ojos y sonrisa planos', bones: ['head'], frame: 'Sobre los paneles planos de frente y mentón', attach: 'Hueso head, desplazado 0.0045 sobre la piel',
+    topology: 'Dos ojos rectangulares (2 + 2), sonrisa en chevron (2)', overlaps: 'Capas sobre la piel a 0.0045', review: 'Legible a 120 px; a 80 px los ojos siguen visibles' },
+  { id: 'ears', label: 'Orejas', role: 'Detalle de identidad', bones: ['head'], frame: 'Panel lateral del cráneo', attach: 'Hueso head',
+    topology: 'Dos tiendas plegadas de 2 triángulos', overlaps: 'Base sobre el panel lateral (aristas en el plano)', review: 'Asoman bajo el cabello de perfil' },
+  { id: 'hairMass', label: 'Masa del cabello', role: 'Silueta del cabello: coronilla, lados, nuca', bones: ['head'],
+    frame: 'Anillos normalizados por la altura de cabeza hc desde el mentón', attach: 'Hueso head; al frente comparte la arista de la línea del cabello',
+    topology: 'Núcleo 32: banda 8→8 (16), transición 8→4 (12), coronilla a ápice desplazado (4); patillas 2 × 2, nuca 2 × 2',
+    overlaps: 'A los lados y atrás el borde inferior cuelga fuera del cráneo (no se ve el interior desde arriba)',
+    review: 'Aislado: cúpula sin cornisa de boina. Montado: cubre sienes y nuca, deja ver la cara entre la línea del cabello y el mentón' },
+  { id: 'fringe', label: 'Flequillo', role: 'Mechones frontales con dirección', bones: ['head'], frame: 'Base A–M–B en el anillo ancho, punta hacia abajo', attach: 'Hueso head',
+    topology: 'Cuatro mechones plegados de 2 triángulos (01-mechon-plegado)', overlaps: 'Por delante de la banda y de la frente', review: 'Barrido a un lado; las puntas no tapan los ojos' },
+  { id: 'torsoVest', label: 'Torso y chaleco', role: 'Volumen del torso, chaleco violeta y hombros de la camisa', bones: ['torso'], rich: 'torso',
+    frame: 'Origen en la cadera (hueso torso); prisma hexagonal', attach: 'Hueso torso',
+    topology: 'v1: banda de 6 paneles (12) y tapa (4). v2+: banda hasta el pecho (12), banda pecho→hombros con frente y espalda violeta y costados blancos (12), tapa blanca inclinada (4)',
+    overlaps: 'El bajo cubre el asiento del pantalón; mangas y cuello entran por dentro', review: 'Hombro inclinado; el borde del chaleco no se lee como repisa' },
+  { id: 'collar', label: 'Cuello de camisa', role: 'V blanca y dos puntas de cuello', bones: ['torso'], frame: 'Panel frontal superior del chaleco', attach: 'Hueso torso; capas a 0.0045–0.015',
+    topology: 'V (1), puntas (2)', overlaps: 'Sobre el chaleco y por encima de los tirantes', review: 'V centrada; puntas a ambos lados del cuello' },
+  { id: 'sleeves', label: 'Mangas', role: 'Manga corta que envuelve el brazo', bones: ['armL', 'armR'], rich: 'sleeves',
+    frame: 'Origen en el hombro (hueso armL/armR); eje −Y', attach: 'Hueso del brazo; la sección superior entra bajo el hombro',
+    topology: '02-manga-desplegada: dos secciones rectangulares y cuatro paneles (8); v2+ cierra la sección superior (2)',
+    overlaps: 'El brazo entra por la boca inferior; la parte interior se hunde en el torso', review: 'Boca inferior legible; de pie y con el brazo levantado no se ve el hueco superior' },
+  { id: 'upperArms', label: 'Brazos', role: 'Brazo superior', bones: ['armL', 'armR'], frame: 'Hueso del brazo, eje −Y', attach: 'Dentro de la manga',
+    topology: 'Tubo de 4 paneles (8 por brazo)', overlaps: 'El antebrazo entra 0.0075 H por dentro', review: 'Codo sin hueco al flexionar' },
+  { id: 'forearmsHands', label: 'Antebrazos y manos', role: 'Antebrazo y mano cerrada', bones: ['foreL', 'foreR'], frame: 'Hueso del antebrazo, eje −Y', attach: 'Codo dentro del brazo; la mano sigue al antebrazo',
+    topology: 'Antebrazo 8 + mano bipirámide de 8 por lado', overlaps: 'Mano más estrecha hacia el muslo', review: 'Manos cerradas, sin pulgar' },
+  { id: 'pelvisTrousers', label: 'Pelvis y pantalón', role: 'Asiento, muslos y tibias del pantalón', bones: ['hips', 'legL', 'legR', 'shinL', 'shinR'],
+    frame: 'Asiento en la cadera; muslo y tibia en sus huesos', attach: 'Asiento bajo el chaleco; la tibia nace dentro del muslo',
+    topology: 'Asiento 8, muslo 8 × 2, tibia 8 × 2', overlaps: 'Rodilla cubierta al caminar y al sentarse', review: 'Sin hueco en la rodilla; pantalón recto' },
+  { id: 'skirt', label: 'Falda', role: 'Falda plisada (no es parte del alumno base)', bones: ['legL', 'legR'], frame: '03-media-falda-plisada', attach: 'Una mitad por muslo',
+    topology: '2 × 6 paneles', overlaps: 'Cintura dentro del chaleco', review: 'Cubre el regazo sentada' },
+  { id: 'legs', label: 'Piernas con calceta', role: 'Piernas bajo la falda', bones: ['legL', 'legR', 'shinL', 'shinR'], frame: 'Huesos de pierna', attach: '—',
+    topology: 'Muslo 8, tibia 8 y calceta 8 por lado', overlaps: 'Calceta 0.0075 H por fuera de la piel', review: '—' },
+  { id: 'shoes', label: 'Zapatos', role: 'Calzado compacto', bones: ['shinL', 'shinR'], rich: 'shoes', frame: 'Hueso de la tibia; suela en y = 0 de pie', attach: 'El tobillo entra en el pantalón',
+    topology: 'v1: cuña cerrada (8). v2+: suela, talón, empeine, puntera y dos costados (12)', overlaps: 'Punta elevada: la suela solo toca el suelo en el talón', review: 'Talón, empeine y puntera legibles; largo proporcional a la pierna' },
+  { id: 'backpack', label: 'Mochila', role: 'Volumen de la mochila turquesa', bones: ['torso'], rich: 'backpack', frame: 'Espalda del torso', attach: 'Hueso torso; la cara delantera abierta queda dentro del chaleco',
+    topology: 'v1: caja abierta (8). v2+: más fondo (2) y solapa (2)', overlaps: 'Solapa a 0.0045 de la cara trasera', review: 'Volumen visible de espalda y de perfil' },
+  { id: 'straps', label: 'Tirantes', role: 'Recorrido de los tirantes', bones: ['torso'], rich: 'torso', frame: 'Paneles del chaleco', attach: 'Hueso torso, a 0.0045 del chaleco',
+    topology: 'v1: dos tiras en el pecho (4). v2+: pecho, hombro y espalda hasta la mochila (12)', overlaps: 'Por debajo de las puntas del cuello', review: 'Pasan por encima del hombro y llegan a la mochila' },
+  { id: 'goggles', label: 'Visor VR', role: 'Accesorio', bones: ['head'], frame: 'Frente', attach: 'Hueso head', topology: '10', overlaps: '—', review: '—' },
+  { id: 'tie', label: 'Corbata', role: 'Docente', bones: ['torso'], frame: 'Frente', attach: 'Hueso torso', topology: '2', overlaps: '—', review: '—' },
+  { id: 'notebook', label: 'Cuaderno', role: 'Docente', bones: ['foreR'], frame: 'Mano derecha', attach: 'Hueso foreR', topology: '8', overlaps: '—', review: '—' }
+]);
+
+/** Components whose recipe v2 applies to every short-haired primaria student (head, not clothing). */
+const V2_HEAD = new Set(['headNeck', 'hairMass', 'fringe']);
 /** Head ring columns [x, z] (unit): flat front panel, chamfers, flat sides, back. */
 const COLS = [[-.52, 1], [.52, 1], [.97, .5], [.97, -.46], [.5, -1], [-.5, -1], [-.97, -.46], [-.97, .5]];
 /** Torso hexagon [x, z] (unit): front panel, chamfered sides, back panel. */
@@ -126,13 +251,20 @@ export function addPaperPerson(b, spec) {
   const torsoH = pr.torso, thigh = pr.thigh, shin = pr.shin, shoeH = pr.shoe, hipY = shoeH + shin + thigh;
   const upper = .125 * H, fore = .105 * H, handL = .045 * H;
 
-  // ---- counting emitter: every triangle goes through `e`, tallied under the current part
-  const parts = {}, trace = spec.trace ? [] : null;
-  let part = null;
-  const at = name => { part = name; parts[name] = parts[name] || 0; };
+  // ---- counting emitter: every triangle goes through `e`, tallied under the current
+  // component and bone. `spec.only` (component ids) emits just those: isolation in the inspector.
+  const parts = {}, perBone = {}, trace = spec.trace ? [] : null, only = spec.only ? new Set(spec.only) : null;
+  let part = null, boneName = 'root';
+  const at = name => { part = name; parts[name] = parts[name] || 0; perBone[name] = perBone[name] || {}; };
+  const bone = target => { boneName = target.name.slice(target.name.lastIndexOf('.') + 1); b.bone(target); };
   const e = {
-    face(a, c, d, hex, toward) { parts[part]++; trace?.push(part); b.face(a, c, d, hex, toward); return e; }
+    face(a, c, d, hex, toward) {
+      if (only && !only.has(part)) return e;
+      parts[part]++; perBone[part][boneName] = (perBone[part][boneName] || 0) + 1; trace?.push(part);
+      b.face(a, c, d, hex, toward); return e;
+    }
   };
+  const rich = plan.rich, K = componentParams(pr);
   /** One flat facet facing away from `ctr`, tinted by its own normal. */
   const facet = (a, c, d, hex, ctr, amp = 1) => {
     let n = crossV(sub(c, a), sub(d, a));
@@ -198,15 +330,28 @@ export function addPaperPerson(b, spec) {
   const shinL = rig.add(id + '.shinL', legL, 0, -thigh, 0);
   const shinR = rig.add(id + '.shinR', legR, 0, -thigh, 0);
 
-  // ---- torso (19): hexagonal vest prism, sloping shoulders, white V and collar points
-  b.bone(torso); at('torso');
+  // ---- torsoVest: hexagonal vest prism. v1 (16): one band and a flat top. v2 (28): a chest
+  // ring, white shirt shoulders sloping to the sleeves, the vest rising front and back to the neck.
+  bone(torso); at('torsoVest');
   const hexRing = (y, w, d, drop = 0) => HEX.map(([fx, fz]) => [fx * w, y - (Math.abs(fx) > .9 ? drop : 0), fz * d]);
   const hem = hexRing(-.03 * H, SW * .93, TD * 1.02), top = hexRing(torsoH, SW, TD * .94, .022 * H);
   const tctr = [0, torsoH * .5, 0];
-  band(hem, top, vest, tctr);
-  facet4(top[0], top[1], top[3], top[4], vest, tctr); facet(top[1], top[2], top[3], vest, tctr); facet(top[4], top[5], top[0], vest, tctr);
-  const front = (x, y, lift) => onPlane(hem[0], hem[1], top[1], x, y, lift);
-  const nw = .036 * H, ny = torsoH * .995, vy = torsoH * (teacher ? .58 : .6);
+  let front = (x, y, lift) => onPlane(hem[0], hem[1], top[1], x, y, lift), chest = null, top2 = null;
+  if (rich.torso) {
+    const T = K.torsoVest;
+    chest = hexRing(T.chestY, SW, TD);
+    top2 = [[-T.neckX, torsoH, T.neckZ], [T.neckX, torsoH, T.neckZ], [T.shoulderX, torsoH - T.drop, 0], [T.neckX, torsoH, -T.neckZ], [-T.neckX, torsoH, -T.neckZ], [-T.shoulderX, torsoH - T.drop, 0]];
+    band(hem, chest, vest, tctr);
+    band(chest, top2, j => j === 0 || j === 3 ? vest : shadeTone(shirt, .97), tctr);
+    facet4(top2[0], top2[1], top2[3], top2[4], shirt, tctr); facet(top2[1], top2[2], top2[3], shirt, tctr); facet(top2[4], top2[5], top2[0], shirt, tctr);
+    front = (x, y, lift) => onPlane(chest[0], chest[1], top2[1], x, y, lift);
+  } else {
+    band(hem, top, vest, tctr);
+    facet4(top[0], top[1], top[3], top[4], vest, tctr); facet(top[1], top[2], top[3], vest, tctr); facet(top[4], top[5], top[0], vest, tctr);
+  }
+  // ---- collar (3): white V and two collar points, layered on the front panel
+  at('collar');
+  const nw = .036 * H, ny = torsoH * .995, vy = torsoH * (teacher ? .58 : rich.torso ? K.torsoVest.chestY / torsoH + .03 : .6);
   e.face(front(-nw, ny, GAP), front(nw, ny, GAP), front(0, vy, GAP), shirt, [0, 0, 1]);
   for (const sx of [-1, 1]) { // collar points, tilted off the V
     const A = front(sx * nw * 1.7, torsoH, GAP * 2), B = front(sx * nw * .25, torsoH * .97, GAP * 2.6), Cc = front(sx * nw * 1.45, torsoH * .84, GAP * 3.4);
@@ -217,15 +362,32 @@ export function addPaperPerson(b, spec) {
     const k = [[0, torsoH * .93], [.013 * H, torsoH * .84], [0, torsoH * .5], [-.013 * H, torsoH * .84]].map(([x, y]) => front(x, y, GAP * 2.2));
     e.face(k[0], k[1], k[2], C.turquoise, [0, 0, 1]).face(k[0], k[2], k[3], shadeTone(C.turquoise, .9), [0, 0, 1]);
   }
-  if (pr.bag) { // backpack (8): a box open toward the back and underneath
+  if (pr.bag) { // backpack: v1 (8) a box open toward the back and underneath; v2 (12) adds bottom and flap
     at('backpack');
-    const bz = -TD * .9, bd = .062 * H, bh = torsoH * .7, y0b = torsoH * .12, bw = SW * .72;
+    const Bp = K.backpack, bz = -TD * .9, bd = rich.backpack ? Bp.depth : .062 * H, bh = torsoH * .7, y0b = torsoH * .12, bw = SW * .72;
     const r0 = [[-bw, y0b, bz - bd], [bw, y0b, bz - bd], [bw, y0b, bz], [-bw, y0b, bz]];
     const r1 = [[-bw * .92, y0b + bh, bz - bd * .85], [bw * .92, y0b + bh, bz - bd * .85], [bw * .92, y0b + bh, bz], [-bw * .92, y0b + bh, bz]];
     const bc = mean([...r0, ...r1]);
     band(r0, r1, pr.bag, bc, j => j === 2);
     facet4(r1[0], r1[1], r1[2], r1[3], pr.bag, bc);
-    if (plan.straps) { // two straps over the chest
+    if (rich.backpack) {
+      facet4(r0[0], r0[1], r0[2], r0[3], shadeTone(pr.bag, .8), bc); // bottom
+      // flap: the upper part of the back face, lifted GAP off it, a little narrower
+      const n = normalOf(r0[0], r0[1], r1[1]), o = dotV(n, sub(mean([r0[0], r1[1]]), bc)) > 0 ? n : mul(n, -1);
+      const f = (u, k) => add(mix(mix(r0[0], r0[1], u), mix(r1[0], r1[1], u), k), mul(o, GAP));
+      e.face(f(.08, 1), f(.92, 1), f(.92, 1 - Bp.flap), shadeTone(pr.bag, 1.06), o).face(f(.08, 1), f(.92, 1 - Bp.flap), f(.08, 1 - Bp.flap), shadeTone(pr.bag, 1.06), o);
+    }
+    if (plan.straps && rich.torso) { // v2 (12): front, over the shoulder, down the back to the bag
+      at('straps');
+      const St = K.straps, col = shadeTone(pr.bag, .82), back = (x, y, lift) => { const q = onPlane([-chest[3][0], chest[3][1], -chest[3][2]], [-chest[4][0], chest[4][1], -chest[4][2]], [-top2[4][0], top2[4][1], -top2[4][2]], -x, y, lift); return [-q[0], q[1], -q[2]]; };
+      for (const sx of [-1, 1]) {
+        const x0 = sx * St.x - St.w, x1 = sx * St.x + St.w, zt = K.torsoVest.neckZ, yTop = torsoH + GAP;
+        const quad = (q, toward) => e.face(q[0], q[1], q[2], col, toward).face(q[0], q[2], q[3], col, toward);
+        quad([front(x0, torsoH, GAP), front(x1, torsoH, GAP), front(x1, St.chestEnd, GAP), front(x0, St.chestEnd, GAP)], [0, 0, 1]);
+        quad([[x0, yTop, zt], [x1, yTop, zt], [x1, yTop, -zt], [x0, yTop, -zt]], [0, 1, 0]);
+        quad([back(x0, torsoH, GAP), back(x1, torsoH, GAP), back(x1, y0b + bh, GAP), back(x0, y0b + bh, GAP)], [0, 0, -1]);
+      }
+    } else if (plan.straps) { // v1 (4): two straps over the chest
       at('straps');
       for (const sx of [-1, 1]) {
         const x = sx * .072 * H, w = .011 * H, ya = torsoH * .99, yb = torsoH * .4;
@@ -241,7 +403,7 @@ export function addPaperPerson(b, spec) {
     // 03-media-falda-plisada: stations every 30° with radial factors 1 / .78 at waist and hem.
     const ax = .115 * H, az = .07 * H, len = .165 * H * (pre ? .9 : 1), wy = .012 * H;
     for (const [leg, sx] of [[legL, 1], [legR, -1]]) {
-      b.bone(leg);
+      bone(leg);
       const st = [0, 1, 2, 3, 4, 5, 6].map(i => {
         const a = i * Math.PI / 6, f = i % 2 ? .78 : 1, over = i === 0 || i === 6 ? -.008 * H : 0;
         return [sx * (Math.sin(a) * ax * f + over) - sx * legX, Math.cos(a) * az * f];
@@ -251,30 +413,32 @@ export function addPaperPerson(b, spec) {
       for (let i = 0; i < 6; i++) facet4(tp[i], bt[i], bt[i + 1], tp[i + 1], C.navy, ctr, 1.3);
     }
   } else {
-    b.bone(hips); at('hipPiece');
+    bone(hips); at('pelvisTrousers');
     tube(-.075 * H, .004 * H, SW * .82, TD * .84, SW * .86, TD * .88, pr.pants);
   }
 
   // ---- head (20) and neck (6)
-  b.bone(neck);
+  bone(neck);
   const y0 = pr.neck, W = .4375 * hc / 1.06, D = .4 * hc, v = t => y0 + t * hc;
   const ringAt = (y, s = 1, dz = 0) => COLS.map(([fx, fz]) => [fx * W * s, y, fz * D * s + dz]);
   const Cr = ringAt(v(.3));
   const hctr = [0, v(.45), 0];
-  at('neck');
+  at('headNeck');
   { // triangular neck prism, from inside the torso into the head
     const nr = .2 * W, ring = yy => [0, 1, 2].map(i => { const a = i / 3 * Math.PI * 2 + Math.PI / 6; return [Math.cos(a) * nr, yy, Math.sin(a) * nr - .02 * hc]; });
     const n0 = ring(-.012 * H), n1 = ring(v(.12));
     band(n0, n1, shadeTone(skin, .88), [0, (n0[0][1] + n1[0][1]) / 2, -.02 * hc]);
   }
-  at('head');
-  const KL = [-.4 * W, y0, .72 * D], KR = [.4 * W, y0, .72 * D], KBR = [.46 * W, v(.08), -.6 * D], KBL = [-.46 * W, v(.08), -.6 * D];
+  // v2: a wider, rounder jaw (sheet 01) instead of the pointed chin of v1.
+  const jaw = pr.v2 ? K.headNeck.jaw : [.4, .72, .46, -.6];
+  const KL = [-jaw[0] * W, y0, jaw[1] * D], KR = [jaw[0] * W, y0, jaw[1] * D], KBR = [jaw[2] * W, v(.08), jaw[3] * D], KBL = [-jaw[2] * W, v(.08), jaw[3] * D];
   facet4(KL, KR, Cr[1], Cr[0], skin, hctr); // chin front
   facet(KR, Cr[1], Cr[2], skin, hctr); facet(KR, Cr[2], Cr[3], skin, hctr); facet4(KR, Cr[3], Cr[4], KBR, skin, hctr);
   facet4(KBR, Cr[4], Cr[5], KBL, skin, hctr);
   facet(KL, Cr[7], Cr[0], skin, hctr); facet(KL, Cr[6], Cr[7], skin, hctr); facet4(KBL, Cr[5], Cr[6], KL, skin, hctr);
   // Skin stops at the hairline HL; at the sides and back it coincides with the cheek ring.
-  const HL = Cr.map((q, k) => k === 0 || k === 1 ? [q[0] * .98, v(.56), q[2] * .97] : k === 2 || k === 7 ? [q[0] * .99, v(.42), q[2] * .99] : q);
+  const hl = pr.v2 ? K.hairMass.hairline : [.56, .42];
+  const HL = Cr.map((q, k) => k === 0 || k === 1 ? [q[0] * .98, v(hl[0]), q[2] * .97] : k === 2 || k === 7 ? [q[0] * .99, v(hl[1]), q[2] * .99] : q);
   facet4(Cr[0], Cr[1], HL[1], HL[0], skin, hctr); // forehead
   facet4(Cr[1], Cr[2], HL[2], HL[1], skin, hctr); facet4(Cr[7], Cr[0], HL[0], HL[7], skin, hctr);
   facet(Cr[2], Cr[3], HL[2], skin, hctr); facet(Cr[6], Cr[7], HL[7], skin, hctr);
@@ -295,18 +459,57 @@ export function addPaperPerson(b, spec) {
     at('ears');
     for (const [a, c, d, sx] of [[Cr[2], Cr[3], HL[2], 1], [Cr[7], Cr[6], HL[7], -1]]) {
       const top_ = mix(a, d, .85), low = mix(a, c, .35), mid = mix(mix(a, c, .5), d, .35);
-      const tip = add(mean([top_, low, mid]), [sx * .07 * hc, .01 * hc, .02 * hc]);
+      // v2: the ear reaches past the wider hair shell, as on sheet 01.
+      const tip = add(mean([top_, low, mid]), pr.v2 ? [sx * K.ears.reach * hc, -.01 * hc, .01 * hc] : [sx * .07 * hc, .01 * hc, .02 * hc]);
       e.face(top_, mid, tip, tone(skin, [sx, .3, .3]), [sx, .2, .3]).face(mid, low, tip, shadeTone(skin, .92), [sx, -.1, .2]);
     }
   }
 
   // ---- hair: a 32-triangle core (band 8→8, transition 8→4, offset apex) plus strands
-  at('hair');
+  at('hairMass');
   const hairHex = pr.hair, style = pr.style, capped = style === 'cap' || style === 'cap-pig';
   const side = hash(pr.seed, 'apex') < .5 ? -1 : 1, Wr = .4375 * hc, Dr = D * 1.1;
   const jitter = (key, k, s) => 1 + (hash(pr.seed, key, k) - .5) * s;
   const out = q => unit([q[0], 0, q[2] + .15 * D]);
-  if (!capped) {
+  if (!capped && pr.v2) {
+    // v2 short hair (48): a shell that hangs outside the skull at the sides and back (no
+    // beret ledge), a rounder crown with the apex a little off-centre, four swept fringe
+    // strands, two sideburns, two nape strands. Seed variation is bounded to ±1.5 %.
+    const Hr = K.hairMass, j3 = (key, k) => 1 + (hash(pr.seed, key, k) - .5) * .03;
+    const radial = k => unit([COLS[k][0] * W, 0, COLS[k][1] * D]);
+    const L = HL.map((q, k) => k < 2 ? q : add([q[0], v(Hr.lowV[k]), q[2]], mul(radial(k), Hr.lowOut[k] * hc)));
+    const Ws = Wr * Hr.ringScale, Ds = Dr * Hr.ringScale;
+    const R = COLS.map(([fx, fz], k) => [fx * Ws * j3('hr', k), v(fz > .9 ? Hr.ringFrontV : Hr.ringV), fz > .9 ? D * Hr.ringFrontZ : fz * Ds * j3('hd', k)]);
+    const U = Hr.upper.map(([fx, fz], j) => [fx * Ws, v(Hr.upperV + (hash(pr.seed, 'uy', j) - .5) * .02), fz * Ds]);
+    const apex = [side * Hr.apexSide * hc, v(1), Hr.apexZ * hc];
+    const hctr2 = [0, v(.6), 0], amp = Hr.tint;
+    band(L, R, hairHex, hctr2, null, amp); // 16
+    for (let j = 0; j < 4; j++) { // 8→4: 12
+      facet(R[2 * j], R[2 * j + 1], U[j], hairHex, hctr2, amp);
+      facet4(R[2 * j + 1], R[(2 * j + 2) % 8], U[(j + 1) % 4], U[j], hairHex, hctr2, amp);
+    }
+    for (let j = 0; j < 4; j++) facet(U[j], U[(j + 1) % 4], apex, hairHex, hctr2, amp); // crown: 4
+    const depth = .0106 * H;
+    for (const [a, c, sx] of [[R[2], R[3], 1], [R[6], R[7], -1]]) { // sideburns: 4
+      const A = mix(a, c, .1), B = mix(a, c, .7), m = mix(A, B, .5);
+      strand(A, B, [m[0] * 1.0, v(Hr.sideburnV), m[2] + .03 * hc], [sx, 0, .1], depth, hairHex);
+    }
+    const Mb = mix(R[4], R[5], .5); // nape: 4
+    for (const [A, B] of [[R[4], Mb], [Mb, R[5]]]) {
+      const m = mix(A, B, .5);
+      strand(A, B, [m[0] * .8, v(Hr.napeV), m[2] - .05 * hc], [0, -.1, -1], depth, hairHex);
+    }
+    if (!pr.headset) { // fringe (8): four strands across the front and chamfers, swept to one side
+      at('fringe');
+      const E = [R[7], R[0], R[1], R[2]], u = [0, .5, 1.5, 2.5, 3].map(t => t / 3);
+      const along = t => { const s_ = Math.min(2.999, t * 3), i = Math.floor(s_); return mix(E[i], E[i + 1], s_ - i); };
+      const F = K.fringe;
+      for (let i = 0; i < 4; i++) {
+        const A = along(u[i]), B = along(u[i + 1]), m = mix(A, B, .5);
+        strand(A, B, [m[0] + side * F.sweep * hc * (1 - Math.abs(m[0]) / Wr * .5), v(F.tipV[i]), D * F.tipZ], out(m), depth * F.crest, hairHex);
+      }
+    }
+  } else if (!capped) {
     const R = COLS.map(([fx, fz], k) => [fx * Wr * jitter('hr', k, .06), v(fz > .9 ? .67 : .66 + (hash(pr.seed, 'hy', k) - .5) * .04), fz * (fz > .9 ? D * 1.12 : Dr * jitter('hd', k, .06))]);
     const U = [[0, .52], [.6, -.05], [0, -.62], [-.6, -.05]].map(([fx, fz], j) => [fx * Wr, v(.87 + hash(pr.seed, 'uy', j) * .05), fz * Dr]);
     const apex = [side * (.05 + hash(pr.seed, 'ax') * .05) * hc, v(1), -.06 * hc];
@@ -320,11 +523,13 @@ export function addPaperPerson(b, spec) {
     const depth = .0106 * H;
     if (style === 'long') { // melena (60): three front strands and a folded mantle
       if (!pr.headset) {
+        at('fringe');
         const E = [R[7], R[0], R[1], R[2]];
         for (let i = 0; i < 3; i++) {
           const A = mix(E[i], E[i + 1], .05), B = mix(E[i], E[i + 1], .95), m = mix(A, B, .5);
           strand(A, B, [m[0] + side * .04 * hc, v(.49), Math.max(m[2] - .06 * hc, m[2] * .55 + D * .5)], out(m), depth, hairHex);
         }
+        at('hairMass');
       }
       const ex_ = (fx, fz, y, r) => [fx * Wr * r, y, fz * Dr * r];
       const X = [ex_(-1, .25, v(.64), .92), ex_(-.78, -1, v(.64), .92), ex_(.78, -1, v(.64), .92), ex_(1, .25, v(.64), .92)];
@@ -346,6 +551,7 @@ export function addPaperPerson(b, spec) {
         e.face(a, c, ci, shadeTone(hairHex, .9), [0, 0, 1]).face(a, ci, ai, shadeTone(hairHex, .9), [0, 0, 1]);
     } else {
       if (!pr.headset) { // four front strands across the front and chamfers, swept to one side
+        at('fringe');
         const E = [R[7], R[0], R[1], R[2]], u = [0, .5, 1.5, 2.5, 3].map(t => t / 3);
         const along = t => { const s = Math.min(2.999, t * 3), i = Math.floor(s); return mix(E[i], E[i + 1], s - i); };
         const sweep = side * .05 * hc;
@@ -353,6 +559,7 @@ export function addPaperPerson(b, spec) {
           const A = along(u[i]), B = along(u[i + 1]), m = mix(A, B, .5);
           strand(A, B, [m[0] + sweep * (1 - Math.abs(m[0]) / Wr * .5), v(.47 + (i % 2) * .04), Math.max(m[2] - .06 * hc, m[2] * .55 + D * .5)], out(m), depth, hairHex);
         }
+        at('hairMass');
       }
       for (const [a, c, sx] of [[R[2], R[3], 1], [R[6], R[7], -1]]) { // temples
         const A = mix(a, c, .1), B = mix(a, c, .7), m = mix(A, B, .5);
@@ -391,9 +598,13 @@ export function addPaperPerson(b, spec) {
       for (const [a, c, sx] of [[vl, fl, -1], [vr, fr, 1]]) e.face(a, c, dn(c), shadeTone(cap, .9), [sx, 0, 0]).face(a, dn(c), dn(a), shadeTone(cap, .9), [sx, 0, 0]);
     }
     const depth = .0106 * H;
-    if (!pr.headset) for (const [u0, u1] of [[.15, .5], [.5, .85]]) { // fringe under the visor
-      const A = mix(Lc[0], Lc[1], u0), B = mix(Lc[0], Lc[1], u1), m = mix(A, B, .5);
-      strand(A, B, [m[0] + side * .03 * hc, v(.58), m[2] + .04 * hc], [0, 0, 1], depth, hairHex);
+    if (!pr.headset) { // fringe under the visor
+      at('fringe');
+      for (const [u0, u1] of [[.15, .5], [.5, .85]]) {
+        const A = mix(Lc[0], Lc[1], u0), B = mix(Lc[0], Lc[1], u1), m = mix(A, B, .5);
+        strand(A, B, [m[0] + side * .03 * hc, v(.58), m[2] + .04 * hc], [0, 0, 1], depth, hairHex);
+      }
+      at('hairMass');
     }
     { const A = Lc[4], B = Lc[5], m = mix(A, B, .5); strand(A, B, [m[0], v(.2), m[2] - .06 * hc], [0, -.1, -1], depth, hairHex); }
     if (style === 'cap-pig') for (const sx of [-1, 1]) bundle([sx * .96 * Wr, v(.58), -.32 * Dr], [sx * 1.12 * Wr, v(-.04), -.42 * Dr], [sx * 1.16 * Wr, v(.3), -.38 * Dr], .16 * hc, 3, hairHex, 'pig' + sx);
@@ -406,7 +617,7 @@ export function addPaperPerson(b, spec) {
     const F2 = [vw * .9, ey + vh, fz - .07 * hc], F3 = [-vw * .9, ey + vh, fz - .07 * hc];
     e.face(P[3], P[2], F2, shadeTone(C.white, .95), [0, 1, 0]).face(P[3], F2, F3, shadeTone(C.white, .95), [0, 1, 0]);
     for (const sx of [-1, 1]) {
-      const f0 = [sx * vw, ey + vh * .6, fz], f1 = [sx * vw, ey - vh * .6, fz], r0 = [sx * W * 1.04, ey + vh * .5, -.3 * D], r1 = [sx * W * 1.04, ey - vh * .5, -.3 * D];
+      const f0 = [sx * vw, ey + vh * .6, fz], f1 = [sx * vw, ey - vh * .6, fz], gx = pr.v2 ? Wr * K.hairMass.ringScale * 1.08 : W * 1.04, r0 = [sx * gx, ey + vh * .5, -.3 * D], r1 = [sx * gx, ey - vh * .5, -.3 * D]; // v2: outside the wider hair
       e.face(f0, f1, r1, C.dark, [sx, 0, 0]).face(f0, r1, r0, C.dark, [sx, 0, 0]);
     }
     const lw = vw * .8, lh = vh * .62, lz = fz + GAP;
@@ -415,8 +626,15 @@ export function addPaperPerson(b, spec) {
 
   // ---- arms: two-section sleeve (8), upper arm (8), forearm (8), folded wedge hand (8)
   for (const [arm, forearm, sx] of [[armL, foreL, 1], [armR, foreR, -1]]) {
-    b.bone(arm); at('sleeves');
-    { // 02-manga-desplegada: top 0.066 × 0.060 H (0.052 deep here, so it stays under the shoulder when the arm rises), bottom 0.074 × 0.070 H, 0.075 H long, both ends open
+    bone(arm); at('sleeves');
+    if (rich.sleeves) { // v2 (10): sections of positive width and depth, hanging along the arm; the top is closed
+      const Sl = K.sleeves, ox = -sx * Sl.inset, oy = Sl.topY, len = Sl.length;
+      const t = [[-Sl.top[0], Sl.top[1]], [Sl.top[0], Sl.top[1]], [Sl.top[0], -Sl.top[1]], [-Sl.top[0], -Sl.top[1]]].map(([x, z]) => [ox + x, oy, z]);
+      const bt = [[-Sl.bottom[0], Sl.bottom[1]], [Sl.bottom[0], Sl.bottom[1]], [Sl.bottom[0], -Sl.bottom[1]], [-Sl.bottom[0], -Sl.bottom[1]]].map(([x, z]) => [x + sx * Sl.flare, oy - len, z]);
+      const sc = [ox / 2, oy - len / 2, 0];
+      band(t, bt, shirt, sc);
+      facet4(t[0], t[1], t[2], t[3], shadeTone(shirt, 1.02), sc); // shoulder cap
+    } else { // 02-manga-desplegada: top 0.066 × 0.060 H (0.052 deep here, so it stays under the shoulder when the arm rises), bottom 0.074 × 0.070 H, 0.075 H long, both ends open
       const len = (teacher ? .07 : .075) * H, ox = -sx * .03 * H, oy = -.002 * H;
       const t = [[-.033, .026], [.033, .026], [.033, -.026], [-.033, -.026]].map(([x, z]) => [ox + x * H, oy, z * H]);
       const bt = [[-.037, .035], [.037, .035], [.037, -.035], [-.037, -.035]].map(([x, z]) => [x * H + sx * .004 * H, oy - len, z * H]);
@@ -425,12 +643,11 @@ export function addPaperPerson(b, spec) {
     at('upperArms');
     const aw = .026 * H;
     tube(-.035 * H, -upper - .004 * H, aw, aw * 1.04, aw * .9, aw * .94, teacher ? shirt : skin);
-    b.bone(forearm); at('forearms');
+    bone(forearm); at('forearmsHands');
     const wz = fore * .12; // a relaxed elbow in rest pose
     // The forearm starts inside the upper arm, 0.0075 H inside its walls (≥ 0.004 at every level).
     const fw = aw * .9 - .0075 * H, ww = aw * .8;
     tube(.012 * H, -fore, fw, aw * .94 - .0075 * H, ww, ww * 1.06, teacher ? shadeTone(shirt, .96) : skin, { z1: wz, x1: sx * .004 * H }); // never parallel to the thigh
-    at('hands');
     { // closed hand (8): a knuckle ring low on the hand, the wrist apex inside the forearm, short finger point
       const hx = sx * .004 * H, yk = -fore - .028 * H, top_ = [hx, -fore + .022 * H, wz], tip = [hx + sx * .003 * H, -fore - handL, wz + .006 * H];
       const xo = hx + sx * ww * 1.1, xi = hx - sx * ww * .8; // narrower on the side that faces the thigh
@@ -455,10 +672,10 @@ export function addPaperPerson(b, spec) {
 
   // ---- legs: trousers, or skin with white socks under the skirt; closed wedge shoes (8)
   for (const [leg, lower] of [[legL, shinL], [legR, shinR]]) {
-    b.bone(leg); at('thighs');
+    bone(leg); at(pr.skirt ? 'legs' : 'pelvisTrousers');
     if (pr.skirt) tube(.008 * H, -thigh - .004 * H, .042 * H, .044 * H, .034 * H, .038 * H, skin);
     else tube(.008 * H, -thigh - .012 * H, .05 * H, .053 * H, .045 * H, .048 * H, pr.pants);
-    b.bone(lower); at('shins');
+    bone(lower); at(pr.skirt ? 'legs' : 'pelvisTrousers');
     if (pr.skirt) {
       const ys = -shin * .5;
       tube(.01 * H, ys, .033 * H, .036 * H, .031 * H, .034 * H, skin);
@@ -469,14 +686,24 @@ export function addPaperPerson(b, spec) {
     const hL = [-w, yb, -.045 * H], hR = [w, yb, -.045 * H], tL = [-w * .9, yb + .008 * H, .1 * H], tR = [w * .9, yb + .008 * H, .1 * H]; // toe spring: the sole touches the floor only at the heel edge
     const kL = [-w * .96, yt, -.04 * H], kR = [w * .96, yt, -.04 * H];
     const shoe = pr.shoeHex;
-    facet4(hL, hR, tR, tL, shadeTone(shoe, .8), sc); facet4(hL, hR, kR, kL, shadeTone(shoe, .9), sc);
-    facet4(kL, kR, tR, tL, shoe, sc); facet(hR, tR, kR, shoe, sc); facet(hL, tL, kL, shoe, sc);
+    if (rich.shoes) { // v2 (12): sole, heel, instep and toe box from few planes; length ∝ leg
+      const Sh = K.shoes, uL = [-w * .9, yb + Sh.toeH, Sh.toeTopZ], uR = [w * .9, yb + Sh.toeH, Sh.toeTopZ];
+      facet4(hL, hR, tR, tL, shadeTone(shoe, .8), sc); facet4(hL, hR, kR, kL, shadeTone(shoe, .9), sc);
+      facet4(kL, kR, uR, uL, shoe, sc); facet4(uL, uR, tR, tL, shadeTone(shoe, 1.06), sc);
+      facet4(hR, tR, uR, kR, shadeTone(shoe, .95), sc); facet4(hL, tL, uL, kL, shadeTone(shoe, .95), sc);
+    } else {
+      facet4(hL, hR, tR, tL, shadeTone(shoe, .8), sc); facet4(hL, hR, kR, kL, shadeTone(shoe, .9), sc);
+      facet4(kL, kR, tR, tL, shoe, sc); facet(hR, tR, kR, shoe, sc); facet(hL, tL, kL, shoe, sc);
+    }
   }
-  b.bone(root).blob(0, .004, 0, .2 * H, .16 * H, .26);
+  if (!only) b.bone(root).blob(0, .004, 0, .2 * H, .16 * H, .26); // auxiliary: not drawn when isolating components
   b.bone(rig.root);
 
   const joints = { hips, torso, head: neck, armL, armR, foreL, foreR, legL, legR, shinL, shinR };
-  return { id, root, joints, scale: H, hipY, thigh, shin, level: pr.level, teacher, head: hc, parts, plan, profile: pr, trace };
+  const components = COMPONENTS.filter(c => plan[c.id] != null).map(c => ({ id: c.id, bones: Object.keys(perBone[c.id] || {}).length ? Object.keys(perBone[c.id]) : c.bones,
+    triangles: parts[c.id] || 0, planned: plan[c.id], recipe: c.rich && rich[c.rich] ? 'v2+' : pr.v2 && V2_HEAD.has(c.id) ? 'v2' : 'v1', perBone: perBone[c.id] || {} }));
+  const landmarks = personLandmarks(pr);
+  return { id, root, joints, scale: H, hipY, thigh, shin, level: pr.level, teacher, head: hc, parts, plan, profile: pr, trace, components, landmarks, perBone };
 }
 
 // ---------------------------------------------------------------- catalog

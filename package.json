@@ -11,7 +11,9 @@
     "shot:paper": "node tools/paper-shot.cjs",
     "check:paper": "node tools/paper-mesh-check.mjs",
     "check:people": "node tools/paper-people-manifest.mjs",
-    "shot:people": "node tools/people-shot.cjs"
+    "shot:people": "node tools/people-shot.cjs",
+    "docs:people": "node tools/people-contract.mjs",
+    "shot:alumno": "node tools/alumno-shot.cjs"
   },
   "devDependencies": {
     "esbuild": "0.25.12",

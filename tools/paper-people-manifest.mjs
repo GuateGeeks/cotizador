@@ -16,7 +16,7 @@ import { Matrix4, Vector3 } from 'three';
 import { createBuilder } from '../asesor/lab/campus-kit.js';
 import { POSES, applyPose, blendBody } from '../asesor/lab/campus-people.js';
 import { SCALE } from '../asesor/lab/paper/kit.js';
-import { addPaperPerson, HAIR_COST, GEOMETRY_CAP, RESERVE, SHADOW_TRIANGLES } from '../asesor/lab/paper/pieces-people.js';
+import { addPaperPerson, HAIR_COST, GEOMETRY_CAP, RESERVE, SHADOW_TRIANGLES, COMPONENTS, PRIMARIA_BASE } from '../asesor/lab/paper/pieces-people.js';
 
 const out = process.argv[2];
 if (!out) { console.error('Uso: node tools/paper-people-manifest.mjs <carpeta-nueva>'); process.exit(2); }
@@ -25,13 +25,8 @@ fs.mkdirSync(out, { recursive: true });
 
 const MIN_GAP = .004;
 const BONES = { hips: 'root', torso: 'hips', head: 'torso', armL: 'torso', armR: 'torso', foreL: 'armL', foreR: 'armR', legL: 'hips', legR: 'hips', shinL: 'legL', shinR: 'legR' };
-/** Part → bones it must live on (fichas §9); `null` splits evenly over the listed pair. */
-const OWNER = {
-  head: ['head'], neck: ['head'], face: ['head'], hair: ['head'], ears: ['head'], goggles: ['head'],
-  torso: ['torso'], tie: ['torso'], backpack: ['torso'], straps: ['torso'], hipPiece: ['hips'],
-  skirt: ['legL', 'legR'], thighs: ['legL', 'legR'], sleeves: ['armL', 'armR'], upperArms: ['armL', 'armR'],
-  forearms: ['foreL', 'foreR'], hands: ['foreL', 'foreR'], notebook: ['foreR'], shins: ['shinL', 'shinR'], shoes: ['shinL', 'shinR']
-};
+/** Component → bones it may live on (fichas §9), from the component registry. */
+const OWNER = Object.fromEntries(COMPONENTS.map(c => [c.id, c.bones]));
 const status = ok => ok ? 'PASS' : 'FAIL';
 const sum = o => Object.values(o).reduce((s, v) => s + v, 0);
 const sub = (a, c) => [a[0] - c[0], a[1] - c[1], a[2] - c[2]];
@@ -123,8 +118,10 @@ for (const hair of ['short', 'long', 'bun']) for (const notebook of [false, true
 for (const spec of combos) {
   const r = build(spec), p = r.person, teacher = !!spec.role;
   const real = p.parts, plan = p.plan, geometry = sum(real), budget = teacher ? 300 : 280, cap = GEOMETRY_CAP[teacher ? 'teacher' : 'student'];
+  // Triangles per bone in the built geometry vs the emitter's per-component, per-bone tally.
   const perBone = {}; for (const t of r.tris) if (t.layer !== 'blob') { const k = t.owner.split('.').pop(); perBone[k] = (perBone[k] || 0) + 1; }
-  const expected = {}; for (const [part, n] of Object.entries(real)) { const own = OWNER[part]; for (const bone of own) expected[bone] = (expected[bone] || 0) + n / own.length; }
+  const expected = {}; for (const bones of Object.values(p.perBone)) for (const [bone, n] of Object.entries(bones)) expected[bone] = (expected[bone] || 0) + n;
+  const owners = Object.entries(p.perBone).every(([part, bones]) => Object.keys(bones).every(bone => OWNER[part]?.includes(bone)));
   const boneNames = r.bones.map(b => b.name);
   const rigOk = boneNames.length === 13 && Object.entries(BONES).every(([k, parent]) => {
     const bone = r.bones.find(b => b.name === `${spec.id}.${k}`), want = parent === 'root' ? spec.id : `${spec.id}.${parent}`;
@@ -132,7 +129,8 @@ for (const spec of combos) {
   });
   const gaps = layerGaps(r.tris);
   const checks = {
-    plan: status(Object.keys({ ...plan, ...real }).every(k => plan[k] === real[k])),
+    plan: status(Object.keys({ ...plan, ...real }).every(k => (plan[k] || 0) === (real[k] || 0))),
+    owners: status(owners),
     geometry: status(geometry + SHADOW_TRIANGLES === r.total),
     cap: status(geometry <= cap),
     budget: status(r.total <= budget),
@@ -141,11 +139,12 @@ for (const spec of combos) {
     degenerate: status(r.tris.every(t => Math.hypot(...cross(sub(t.v[1], t.v[0]), sub(t.v[2], t.v[0]))) > 2e-9)),
     layers: status(gaps.length === 0)
   };
-  report.combos.push({ id: spec.id, hair: p.profile.style, skirt: p.profile.skirt, backpack: !!p.profile.bag, headset: !!spec.headset, teacher, plan, real, geometry, planned: sum(plan), withReserve: sum(plan) + RESERVE, shadow: SHADOW_TRIANGLES, total: r.total, perBone, checks, gaps });
+  report.combos.push({ id: spec.id, recipe: p.profile.v2 ? 'v2' : 'v1', rich: Object.keys(plan.rich || {}), hair: p.profile.style, skirt: p.profile.skirt, backpack: !!p.profile.bag, headset: !!spec.headset, teacher, plan, real, geometry, planned: sum(plan), withReserve: sum(plan) + RESERVE, shadow: SHADOW_TRIANGLES, total: r.total, perBone, checks, gaps });
 }
 
 // Poses: the reference student with skirt and the longest hair, the teacher, and a capped preprimaria.
 for (const spec of [
+  { ...PRIMARIA_BASE, id: 'q.base' }, { ...PRIMARIA_BASE, id: 'q.base-seated', seated: true },
   { id: 'q.prim', level: 'prim', seed: 'prim-b', hair: 'short', skirt: false },
   { id: 'q.prim-skirt', level: 'prim', seed: 'prim-b', hair: 'long', skirt: true, seated: true },
   { id: 'q.pre', level: 'pre', seed: 'pre-a', hair: 'pig', cap: 'worn', skirt: true },
@@ -172,6 +171,27 @@ for (const [level, role] of [['pre'], ['prim'], ['bas'], ['bach'], ['adult', 'te
     checks: { height: status(Math.abs(H - SCALE.person[level]) <= SCALE.person[level] * .005), head: status(Math.abs(head / H - target[0]) <= .01), shoulders: status(Math.abs(shoulders / H - target[1]) <= .01) } });
 }
 
+// Primaria base student: landmarks vs bones, measured contract, components.
+{
+  const r = build({ ...PRIMARIA_BASE, id: 'b' }), p = r.person, L = p.landmarks, body = r.tris.filter(t => t.layer !== 'blob');
+  const world = name => { const bone = r.bones.find(x => x.name === `b.${name}`); const v = new Vector3(); bone.getWorldPosition(v); return v; };
+  const near = (a, c) => Math.abs(a - c) < 1e-6;
+  const ys = body.flatMap(t => t.v.map(q => q[1]));
+  const torsoX = body.filter(t => t.owner === 'b.torso').flatMap(t => t.v.map(q => q[0]));
+  const measured = { H: Math.max(...ys) - Math.min(...ys), head: Math.max(...ys) - L.chin, shoulders: Math.max(...torsoX) - Math.min(...torsoX) };
+  report.base = {
+    spec: PRIMARIA_BASE, landmarks: L, measured: Object.fromEntries(Object.entries(measured).map(([k, x]) => [k, +x.toFixed(4)])),
+    ratios: { head: +(measured.head / measured.H).toFixed(4), shoulders: +(measured.shoulders / measured.H).toFixed(4) },
+    components: p.components, geometry: sum(p.parts), total: r.total, rich: Object.keys(p.plan.rich),
+    checks: {
+      landmarks: status(near(world('hips').y, L.hip) && near(world('head').y, L.neckBase) && near(world('armL').y, L.shoulder) && near(world('armL').x, L.shoulderX)
+        && near(world('foreL').y, L.elbow) && near(world('legL').x, L.legX) && near(world('shinL').y, L.knee)),
+      height: status(Math.abs(measured.H - .78) <= .78 * .005), head: status(Math.abs(measured.head / measured.H - .28) <= .01),
+      budget: status(r.total <= 280)
+    }
+  };
+}
+
 // Determinism and independence of options (fichas §10).
 {
   const base = { id: 'd', level: 'prim', seed: 'prim-b', hair: 'short', skirt: false };
@@ -188,7 +208,8 @@ const fails = [
   ...report.combos.flatMap(c => Object.entries(c.checks).filter(([, s]) => s === 'FAIL').map(([k]) => `${c.id}:${k}`)),
   ...report.poses.flatMap(c => Object.entries(c.checks).filter(([, s]) => s === 'FAIL').map(([k]) => `${c.id}/${c.pose}:${k}`)),
   ...report.proportions.flatMap(c => Object.entries(c.checks).filter(([, s]) => s === 'FAIL').map(([k]) => `${c.level}:${k}`)),
-  ...Object.entries(report.determinism).filter(([, s]) => s === 'FAIL').map(([k]) => `determinism:${k}`)
+  ...Object.entries(report.determinism).filter(([, s]) => s === 'FAIL').map(([k]) => `determinism:${k}`),
+  ...Object.entries(report.base.checks).filter(([, s]) => s === 'FAIL').map(([k]) => `base:${k}`)
 ];
 const students = report.combos.filter(c => !c.teacher), teachers = report.combos.filter(c => c.teacher);
 report.summary = { combos: report.combos.length, poses: report.poses.length, maxStudent: Math.max(...students.map(c => c.total)), maxTeacher: Math.max(...teachers.map(c => c.total)),
@@ -197,7 +218,7 @@ fs.writeFileSync(path.join(out, 'manifest.json'), JSON.stringify(report, null, 2
 
 // Human-readable manifest: per-part plan vs real for representative combinations, and all totals.
 const pick = id => report.combos.find(c => c.id === id);
-const reps = ['m.prim.short.p.b', 'm.prim.short.f.b', 'm.prim.long.f.b', 'm.prim.pig.f.b', 'm.pre.cap-pig.f.b', 'm.bach.short.p.b.vr', 'm.teacher.long.nb'].map(pick).filter(Boolean);
+const reps = ['m.prim.short.p.b', 'm.prim.short.p.s', 'm.prim.short.f.b', 'm.prim.long.f.b', 'm.prim.pig.f.b', 'm.pre.cap-pig.f.b', 'm.bach.short.p.b.vr', 'm.teacher.long.nb'].map(pick).filter(Boolean);
 const partsAll = [...new Set(reps.flatMap(c => Object.keys(c.plan)))];
 const lines = ['# Manifiesto de personajes papercraft', '', `Generado ${report.date} con \`tools/paper-people-manifest.mjs\` a partir de las caras emitidas. Estado: **${report.summary.status}** (${report.combos.length} combinaciones, ${report.poses.length} poses).`, '',
   'Cada celda es plan / real. «Geometría» excluye la sombra de contacto (7 triángulos, capa `blob`); «Total» es lo que cuenta el presupuesto del proyecto.', '',

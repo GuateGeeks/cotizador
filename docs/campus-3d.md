@@ -85,6 +85,13 @@ Resumen; las reglas completas están en la cabecera de `plan.js` y las pruebas e
   - `npm run check:people -- <carpeta-nueva>` genera el manifiesto (plan frente a caras emitidas en
     236 combinaciones, huesos, rigidez, capas ≥ 0.004 en 12 poses, proporciones y determinismo);
     `npm run shot:people` produce la escalera de lectura a 40/60/80/120/600 px con DPR 1 y 2.
+  - El alumno base de primaria (`PRIMARIA_BASE`) se construye por componentes con contrato
+    generado desde el código: [papercraft/personajes/ALUMNO-PRIMARIA.md](papercraft/personajes/ALUMNO-PRIMARIA.md)
+    (`npm run docs:people`; una prueba falla si diverge). Receta v2 para el alumno base y la cabeza de
+    todo alumno de primaria con cabello corto; el resto de combinaciones conserva la receta v1.
+  - Inspector: `npm run build:inspector`, `npm run serve` y abrir `asesor/lab/inspector.html`; el panel
+    «Alumno de primaria» elige pose y vista, aísla componentes y muestra aristas, hueso y triángulos.
+    Capturas reproducibles: `npm run shot:alumno -- <carpeta-nueva>` y `tools/alumno-compare.py`.
 
 ## Visor e interacción
 
