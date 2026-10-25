@@ -1298,3 +1298,8 @@ html,body,body:has(.campus-layout){background:var(--canvas)}
 .cov-prog em{font-style:normal;font-size:13px;font-weight:650;color:var(--plum-dark);white-space:nowrap}
 .main-panel .cov-prog{max-width:none}
 @media(max-width:560px){.cov-top{grid-template-columns:1fr}.cov-prog{grid-template-columns:auto 1fr}.cov-prog em{grid-column:2}}
+
+/* encabezado compacto con el logo horizontal */
+.top-inner,body:has(.campus-layout) .top-inner{height:64px}
+.brand img,body:has(.campus-layout) .brand img{width:auto;height:38px}
+@media(max-width:650px){.top-inner{height:56px}.brand img,body:has(.campus-layout) .brand img{width:auto;height:30px}}

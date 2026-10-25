@@ -175,7 +175,7 @@ function resetAll() {
 }
 
 function updateHeader() {
-  document.querySelector('.top').innerHTML = `<div class="top-inner"><button class="brand" onclick="step(0)" aria-label="GuateGeeks, ir al inicio"><img src="../assets/brand/guategeeks-logo.png" alt="GuateGeeks" width="82" height="54"></button><div class="brand-caption">Experiencias STEAM<br>para instituciones educativas</div><div style="flex:1"></div><div class="top-right">${state.step >= 1 ? campusToggleButton() : ''}</div></div>`;
+  document.querySelector('.top').innerHTML = `<div class="top-inner"><button class="brand" onclick="step(0)" aria-label="GuateGeeks, ir al inicio"><img src="../assets/brand/guategeeks-logo-horizontal.png" alt="GuateGeeks" width="185" height="38"></button><div style="flex:1"></div><div class="top-right">${state.step >= 1 ? campusToggleButton() : ''}</div></div>`;
   const n = document.getElementById('notice');
   n.hidden = !ui.notice; n.querySelector('span').textContent = ui.notice;
 }
@@ -300,7 +300,7 @@ function loadLab(cb) {
   if (window.GGLab) { cb(); return; }
   if (loadLab.queue) { loadLab.queue.push(cb); return; }
   loadLab.queue = [cb];
-  const sc = document.createElement('script'); sc.src = 'vendor/lab-scene.min.js?v=117'; sc.async = true;
+  const sc = document.createElement('script'); sc.src = 'vendor/lab-scene.min.js?v=123'; sc.async = true;
   sc.onload = () => { const q = loadLab.queue || []; loadLab.queue = null; q.forEach(f => { try { f(); } catch (e) { console.error('No se pudo iniciar la vista 3D.', e); } }); };
   sc.onerror = () => { loadLab.queue = null; sc.remove(); campusUnavailable('No se pudo cargar la vista 3D. Tu configuración sigue disponible.'); };
   document.head.appendChild(sc);
@@ -679,22 +679,13 @@ function sectionRow(gid, s, count, last) {
   const gname = esc(gradeName(gid));
   return `<div class="gr-sec">${count > 1 ? `<span class="gr-sn" title="Sección ${esc(s.name)}">${esc(s.name)}</span>` : '<span></span>'}<div class="number"><button type="button" aria-label="Restar un estudiante en ${gname}, sección ${esc(s.name)}" onclick="stepQty('${gid}','${s.id}',-1)">−</button><input id="qty-${s.id}" aria-label="Estudiantes en ${gname}, sección ${esc(s.name)}" aria-describedby="err-qty-${s.id}" type="text" inputmode="numeric" autocomplete="off" placeholder="—" value="${s.students ?? ''}" oninput="writeQty('${gid}','${s.id}',this.value,this)"><button type="button" aria-label="Agregar un estudiante en ${gname}, sección ${esc(s.name)}" onclick="stepQty('${gid}','${s.id}',1)">+</button></div>${count > 1 ? `<button type="button" class="gr-x" aria-label="Quitar la sección ${esc(s.name)} de ${gname}" onclick="removeSection('${gid}','${s.id}')">×</button>` : '<span></span>'}${last ? `<button type="button" class="gr-add" onclick="addSection('${gid}')" aria-label="Añadir sección en ${esc(gradeName(gid))}">+ Sección</button>` : '<span></span>'}<p class="field-error" id="err-qty-${s.id}" hidden></p></div>`;
 }
-// Atajo: el mismo número de estudiantes en cada sección del nivel que se está llenando.
-function applyAllQty() {
-  const inp = document.getElementById('bulk-qty'), v = (inp.value || '').trim();
-  if (!/^\d+$/.test(v) || Number(v) > 1000) { setError(inp, 'Escribe un número entero entre 0 y 1000.'); return; }
-  setError(inp, '');
-  const l = activeLevels()[state.levelIndex];
-  l.grades.forEach(([gid]) => ensureGrade(gid).sections.forEach(s => { s.students = Number(v); }));
-  store(); render(); notify('Pusimos ' + v + ' estudiantes en cada sección de ' + l.name + '. Ajusta los grados que sean distintos.');
-}
 function renderEnrollment() {
   const levels = activeLevels(); if (!levels.length) { step(1); return; }
   state.levelIndex = Math.min(state.levelIndex, levels.length - 1);
   const l = levels[state.levelIndex];
   frame('¿Cuántos estudiantes tienes en ' + l.name.toLowerCase() + '?',
     l.free ? 'Agrega las secciones u opciones de tu oferta, por ejemplo carreras o especialidades. No imponemos una lista de grados.' : 'Indica los estudiantes por grado y sección. Usa «Añadir sección» cuando un grado tenga varios grupos. Deja vacío lo que aún no sepas; un 0 significa que confirmaste que no hay estudiantes.',
-    `<div class="level-tabs" aria-label="Niveles a completar">${levels.map((lv, i) => `<button class="level-tab ${i === state.levelIndex ? 'active' : ''}" aria-pressed="${i === state.levelIndex}" onclick="selectLevel(${i})">${i + 1}. ${esc(lv.name)}</button>`).join('')}</div>${l.free ? '' : `<div class="gr-tools"><label for="bulk-qty">¿Todos los grados tienen casi lo mismo? Pon un número y ajusta después.</label><div class="gr-bulk"><input id="bulk-qty" class="field" type="text" inputmode="numeric" autocomplete="off" placeholder="Ej. 30" aria-describedby="err-bulk-qty"><button type="button" class="btn btn-small btn-outline" onclick="applyAllQty()">Aplicar a todos</button></div><p class="field-error" id="err-bulk-qty" hidden></p></div>`}<div class="gr-list">${l.grades.map(([gid, name]) => {
+    `<div class="level-tabs" aria-label="Niveles a completar">${levels.map((lv, i) => `<button class="level-tab ${i === state.levelIndex ? 'active' : ''}" aria-pressed="${i === state.levelIndex}" onclick="selectLevel(${i})">${i + 1}. ${esc(lv.name)}</button>`).join('')}</div><div class="gr-list">${l.grades.map(([gid, name]) => {
       const secs = sectionsOf(gid);
       return `<div class="gr-row"><div class="gr-name"><strong>${esc(name)}</strong><small data-grade-total="${gid}">${gradeTotalText(gid)}</small></div><div class="gr-secs">${secs.map((s, k) => sectionRow(gid, s, secs.length, k === secs.length - 1)).join('')}</div></div>`;
     }).join('')}</div><div class="tip">Total ingresado para ${esc(l.name)}: <b data-level-total>${levelTotalText(l)}</b>. Los mismos equipos podrán utilizarse en distintos grupos si sus horarios lo permiten.</div><div class="foot"><button class="btn btn-outline" onclick="navEnrollment(-1)">← Atrás</button><button class="btn btn-primary" onclick="navEnrollment(1)">${state.levelIndex < levels.length - 1 ? 'Siguiente nivel' : 'Ver programas'} ${icon('arrow')}</button></div>`);
