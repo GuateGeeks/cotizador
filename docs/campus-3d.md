@@ -99,6 +99,11 @@ Resumen; las reglas completas están en la cabecera de `plan.js` y las pruebas e
     Contrato generado: [papercraft/personajes/ALUMNO-PRIMARIA.md](papercraft/personajes/ALUMNO-PRIMARIA.md)
     (`npm run docs:people`). Para sumar la sombra de contacto al límite de 280 se retiran 8 tapas ocultas
     (272 + 7 = 279); el resto de combinaciones conserva la receta v1.
+  - Recreaciones R3 ([papercraft/construction-r3](papercraft/construction-r3/README.md)): cabeza P01,
+    núcleo del cabello P06 y chaleco P08, rehechos desde los pliegues de sus láminas, reemplazan la
+    receta R2 del mismo id. El alumno de primaria con cabello corto suma 312 + 7 = 319 triángulos;
+    su límite es 320 (`PERSON_LIMIT.r3Student`), el resto de estudiantes sigue en 280 y los docentes
+    en 300. Comparación por pieza: `tools/alumno-piezas-r2.cjs` y `tools/alumno-piezas-r2.py`.
   - Inspector: `npm run build:inspector`, `npm run serve` y abrir `asesor/lab/inspector.html`; el panel
     «Alumno de primaria» elige pose y vista, aísla componentes y muestra aristas, hueso y triángulos.
     Capturas reproducibles: `npm run shot:alumno -- <carpeta-nueva>` y `tools/alumno-compare.py`.
@@ -181,13 +186,13 @@ vegetación, piezas a ras de suelo y decoraciones de muro usan sombras de contac
 
 **Movimiento reducido.** El resultado se muestra directo, sin animación.
 
-**Mediciones del 2026-10-24** (Chromium headless):
+**Mediciones del 2026-10-25** (Chromium headless; incluyen los personajes R3 y las correcciones r2):
 
 | Condición | Estado | Triángulos | Draw calls | Materiales | fps |
 |---|---|---|---|---|---|
-| GPU RTX 3060 Ti (WSL, ANGLE/D3D12), 1440 × 1000, calidad `full` | 1 | 6 637 | 34 | 10 | 60 |
-| Igual | 6 (construcción, actividad, rotación) | 37 809–38 049 | 75–82 | 10 | 56–60 |
-| SwiftShader (CPU), 1440 × 1000, baja a `eco` | 6 | 35 187 | 63 | 10 | No medido (CPU) |
+| GPU RTX 3060 Ti (WSL, ANGLE/D3D12), 1440 × 1000, calidad `full` | 1 | 6 764–8 096 | 34 | 10 | 60 |
+| Igual | 6 (actividad) | 36 952–38 808 | 75 | 10 | 60 |
+| SwiftShader (CPU), 1440 × 1000, baja a `eco` | 6 | 33 906 | 62 | 10 | No medido (CPU) |
 
 - Geeky aporta unos 2 100 triángulos en reposo y hasta unos 4 200 en `celebrate`, con 2
   materiales propios.
@@ -197,7 +202,7 @@ vegetación, piezas a ras de suelo y decoraciones de muro usan sombras de contac
 ## Verificación
 
 ```bash
-npm test                                   # Node: motor, planificador, PDF, experiencia (108)
+npm test                                   # Node: motor, planificador, PDF, experiencia, personajes (115)
 npm run check:paper -- artifacts/paper/<run>   # mallas: presupuesto, coplanares, suelo, determinismo
 npm run check:people -- artifacts/paper/<run>  # personajes: manifiesto plan/real, rig, capas, poses, proporciones
 node tools/people-shot.cjs artifacts/paper/<run> --piece person-prim --sizes 40,60,80,120,600 --dpr 1,2
