@@ -78,17 +78,25 @@ export function addPerson(b, spec) {
     if (hash(seed, 'glasses') < .18 && !teacher) b.box(0, hy + head * .02, head * .45, head * .7, head * .035, .008, PAL.ink);
   }
   const hairTop = hy + head * .5;
+  // Preprimaria caps replace the top of the hair, so no surfaces coincide.
+  const cap = level === 'pre' && !teacher && hash(seed, 'cap') < .35;
   b.shade(.86);
-  if (style === 'curly') { b.ball(0, hairTop - head * .05, -head * .04, head * .58, head * .42, head * .55, hair); }
+  if (cap) { /* the cap below covers the crown */ }
+  else if (style === 'curly') { b.ball(0, hairTop - head * .05, -head * .04, head * .58, head * .42, head * .55, hair); }
   else if (style === 'spiky') { b.push(0, hairTop - head * .28, -head * .06, Math.PI / 6).cyl(0, 0, 0, head * .56, head * .42, head * .3, hair, 6).pop(); b.cone(0, hairTop, -head * .05, head * .22, head * .22, hair, 4); }
   else b.push(0, hairTop - head * .3, -head * .07, Math.PI / 6).cyl(0, 0, 0, head * .56, head * .4, head * .34, hair, 6).pop();
   if (style !== 'curly' && style !== 'spiky') b.box(0, hy + head * .08, -head * .38, head * .92, head * .62, head * .14, hair);
   if (style === 'pony') b.ball(0, hy + head * .12, -head * .58, head * .16, head * .26, head * .16, hair);
-  if (style === 'bun') b.ball(0, hairTop + head * .06, -head * .12, head * .2, head * .17, head * .2, hair);
+  if (style === 'bun' && !cap) b.ball(0, hairTop + head * .06, -head * .12, head * .2, head * .17, head * .2, hair);
   if (style === 'braids') for (const side of [-1, 1]) b.cyl(side * head * .34, hy - head * .42, -head * .2, head * .08, head * .07, head * .5, hair, 4);
   if (style === 'bob' || style === 'long') for (const side of [-1, 1]) b.box(side * head * .45, hy - (style === 'long' ? head * .2 : 0), -head * .1, head * .1, head * (style === 'long' ? .9 : .6), head * .6, hair);
   if (style === 'long') b.box(0, hy - head * .25, -head * .42, head * .9, head * .8, head * .12, hair);
-  if (level === 'pre' && !teacher && hash(seed, 'cap') < .35) b.push(0, hairTop - head * .12, 0, Math.PI / 6).cyl(0, 0, 0, head * .56, head * .5, head * .16, LEVEL_COLOR.pre, 6).pop().block(0, hairTop - head * .1, head * .45, head * .5, head * .04, head * .3, LEVEL_COLOR.pre);
+  if (cap) {
+    // Crown wider than the head at every height; brim well above the eyes, in front of the forehead.
+    b.push(0, hairTop - head * .2, -head * .04, Math.PI / 8).cyl(0, 0, 0, head * .6, head * .5, head * .32, LEVEL_COLOR.pre, 8).pop();
+    b.cyl(0, hairTop + head * .12, -head * .04, head * .07, head * .05, head * .04, '#E9A93C', 6);
+    b.block(0, hairTop - head * .2, head * .6, head * .64, head * .045, head * .4, '#E9A93C');
+  }
 
   // Limbs: tapered prisms with hands; sleeves follow the jumper.
   b.shade(.84);

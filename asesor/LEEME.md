@@ -91,22 +91,11 @@ La tipografía Avenir Next / Inter es la de la marca GuateGeeks, por eso el avis
 - Las pruebas automatizadas del campus complementan la revisión visual. No constituyen una medición de FPS en dispositivos físicos ni una certificación de todas las rutas comerciales.
 - El inventario de equipos existentes y la ruta de formación previstos en la dirección visual no tienen campos propios en el catálogo actual. Este rework no inventa datos, tarifas ni pasos para ellos.
 
-## Portada: laboratorio 3D
+## Portada: el campus vivo
 
-La portada (`renderLanding()` en `asesor.js`) muestra una escena 3D a todo el ancho del hero: un robot de ruedas que se puede desarmar, bloques de programación y piezas de construcción. Se gira arrastrando (doble clic para volver), «Desarmar el robot» separa sus piezas y los puntos de la escena abren una ficha de cada parte (Esc la cierra). Es una escena conceptual: no reproduce Tale-Bot, Robot Master ni SPIKE Prime.
+La portada (`renderLanding()` en `asesor.js`) muestra el campus 3D como experiencia principal: el texto y las acciones a un lado y el campus vivo al otro. En pantallas pequeñas el campus va primero. Si la persona aún no ha empezado su propuesta, `showcaseData()` alimenta la escena con un colegio ilustrativo de cuatro niveles y seis tecnologías; ese ejemplo no toca la cotización ni el borrador guardado. Con avance guardado se ve su propio campus. Tocar un taller en la portada lo explora (la etiqueta dice «Explorar»). Al crear o continuar la propuesta, la misma instancia del campus pasa al panel del recorrido sin recargarse.
 
-- `lab/lab-scene.js`: código fuente de la escena (geometrías propias, sin modelos externos).
-- `vendor/lab-scene.min.js`: bundle local compartido por la portada, el campus y el pato del avance; incluye las partes utilizadas de Three.js y `RoomEnvironment`. Se carga de forma diferida cuando una de estas escenas lo necesita.
-- `vendor/THREE-LICENSE.txt`: licencia MIT de three.js 0.186.1 (https://github.com/mrdoob/three.js).
-- Si no hay WebGL, el script no carga o se pierde el contexto, queda la ilustración SVG incluida en la página. Con «reducir movimiento» activado la escena no se anima y la secuencia solo ilumina los bloques.
-
-Para recompilar tras editar cualquiera de los módulos de escena, desde la raíz del repositorio:
-
-```bash
-npm ci && npm run build
-```
-
-Al publicar una versión nueva, actualiza el identificador de caché `?v=` en `index.html` y el de `lab-scene.min.js` en `loadLab()` (actualmente `107`). El despliegue de Pages instala dependencias, corre `npm test` y compila el bundle antes de publicar; `checks.yml` hace lo mismo en cada pull request.
+`createLab()` (la escena anterior del robot desarmable) sigue en el bundle, pero la portada ya no la usa.
 
 ## Mini colegio 3D del recorrido
 

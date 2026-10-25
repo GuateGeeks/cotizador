@@ -329,7 +329,17 @@ function campusContext() {
   if ((state.step === 3 || state.step === 5) && state.selected.length) return { kind: 'program', programId: state.selected[0].programId };
   return { kind: 'overview' };
 }
+// Landing showcase: an illustrative school with every level and technology. It only
+// feeds the scene; the quotation and the saved draft are untouched.
+function showcaseData() {
+  const context = campusContext();
+  const sharing = { tale: 'separate', master: 'simultaneous', spike: 'separate', electronics: 'simultaneous', drones: 'separate', immersive: 'simultaneous' };
+  return { step: 0, levels: LEVELS.map(l => l.id), students: 720, focusedLevel: context.levelId, focusedProgram: context.programId, activeConfig: context, enrollment: [],
+    programs: PROGRAMS.map(p => p.id),
+    equipment: PROGRAMS.map(p => ({ id: p.id + '@vitrina', programId: p.id, units: 12, plan: 'INTEGRA', stations: false, sharing: sharing[p.id], groupIds: [], simIds: [], participants: null, capacity: null, rotations: [] })) };
+}
 function mascotData() {
+  if (state.step === 0 && !state.levels.length) return showcaseData();
   const context = campusContext();
   return {
     step: state.step, levels: state.levels.slice(), students: registered(),
@@ -380,13 +390,15 @@ function syncCampus() {
   if (changed) { campusFeedback = next; if (next.changed) campusInspection = null; }
   const focus = campusFeedback.focus;
   data.activeConfig = focus; data.focusedLevel = focus.levelId; data.focusedProgram = focus.programId;
-  const title = state.step === 1 ? 'Un aula. Mil posibilidades.' : state.step === 2 ? 'Aquí empieza la comunidad.' : state.step === 3 ? '¿Qué van a crear hoy?' : state.step === 4 ? 'Así se aprende en tu colegio.' : 'Tu colegio, en acción.';
+  const title = state.step === 0 ? 'Un colegio que aprende creando.' : state.step === 1 ? 'Un aula. Mil posibilidades.' : state.step === 2 ? 'Aquí empieza la comunidad.' : state.step === 3 ? '¿Qué van a crear hoy?' : state.step === 4 ? 'Así se aprende en tu colegio.' : 'Tu colegio, en acción.';
   mascotHost.querySelector('.campus-heading h2').textContent = title;
+  mascotHost.querySelector('.campus-message').textContent = state.step === 0 ? (state.levels.length ? 'Tu colegio · toca un taller para conocerlo' : 'Colegio ilustrativo · toca un taller para conocerlo') : 'Toca un taller o un aula para editarlo';
   mascotHost.querySelector('[data-campus-students]').textContent = data.students.toLocaleString('es-GT');
   mascotHost.querySelector('[data-campus-equipment]').textContent = units.toLocaleString('es-GT');
   mascotHost.querySelector('.campus-description').textContent = `${data.levels.length} niveles, ${data.students} estudiantes registrados, ${data.programs.length} programas y ${units} equipos. La maqueta agrupa las cantidades para facilitar su lectura.`;
   document.querySelectorAll('[data-campus-units]').forEach(el => { const u = data.equipment[Number(el.dataset.campusUnits)]?.units; el.textContent = u ? u + ' equipos' : 'por definir'; });
   if (changed) paintCampusFeedback(campusFeedback);
+  mascot?.setHoverVerb?.(state.step === 0 ? 'Explorar' : 'Editar');
   mascot?.update(data);
   if (changed) mascot?.setFocus?.(focus);
   campusPrevious = data; campusContextKey = contextKey;
@@ -523,12 +535,12 @@ function createCampusHost() {
 }
 function placeMascot() {
   const panel = document.getElementById('campus-slot');
-  if (state.step < 1 || !panel) { mascotHost?.remove(); return; }
+  if (!panel) { mascotHost?.remove(); return; }
   if (!mascotHost) mascotHost = createCampusHost();
   panel.appendChild(mascotHost); syncPauseBtn(); syncCampus();
   if (mascot) { mascot.resize(); return; }
   if (!webglOk()) { campusUnavailable('La vista 3D no está disponible en este navegador. Puedes seguir configurando tu propuesta.'); return; }
-  if (campusHidden) return; // Solo configuración: no se carga ni se renderiza la escena.
+  if (campusHidden && state.step >= 1) return; // Solo configuración: no se carga ni se renderiza la escena.
   loadLab(() => {
     if (mascot || !window.GGLab || !mascotHost || !mascotHost.isConnected) return;
     try {
@@ -554,13 +566,12 @@ document.addEventListener('focusout', () => requestAnimationFrame(compactCampusF
 window.visualViewport?.addEventListener('resize', compactCampusForInput);
 function renderLanding() {
   const cur = ui.labLevel || 'bas', saved = state.levels.length > 0;
-  html(`<section class="lab-hero" aria-labelledby="lab-title"><div class="lab-inner">
+  html(`<section class="lab-hero campus-hero" aria-labelledby="lab-title"><div class="lab-inner">
 <div class="lab-copy"><p class="lab-label">Experiencias STEAM para instituciones educativas</p><h1 id="lab-title">Transforma cómo enseñan tus docentes y <em>cómo aprenden tus estudiantes.</em></h1>
 <p class="lab-lead">Integramos robótica, electrónica, drones y realidad virtual en tu aula con equipos, formación docente y programas listos para usar. Arma tu propuesta en minutos.</p>
 <div class="hero-actions"><button class="btn btn-primary" onclick="start()">${saved ? 'Continuar mi propuesta' : 'Crear mi propuesta'} ${icon('arrow')}</button><button class="btn btn-ghost" onclick="previewExample()">Ver propuesta de ejemplo</button></div>
 <ul class="lab-chips"><li>${icon('check')} Sin registro para explorar</li><li>${icon('check')} Equipos que pueden compartir tus grupos</li></ul></div>
-<div class="lab-stage" id="lab-stage" data-level="${cur}" role="img" aria-label="Escena ilustrada: un robot con ruedas que se puede desarmar, bloques de programación y piezas para construir sobre una plataforma de trabajo.">${labSvg}<div class="lab-canvas-wrap"></div></div>
-<div class="lab-controls"><div class="lab-levels" role="radiogroup" aria-label="Nivel educativo de la escena">${labLevelButtons(cur)}</div><div class="lab-tools"><button type="button" class="lab-run" onclick="labRun()">${icon('play')} Probar la secuencia</button><button type="button" class="lab-run" id="lab-explode" aria-pressed="false" onclick="labExplode()">Desarmar el robot</button></div><p class="lab-hint">Arrastra para girar la escena y toca los puntos para ver cada parte.</p></div>
+<div class="campus-hero-stage" aria-label="Campus 3D: un colegio GuateGeeks en acción"><div id="campus-slot"></div></div>
 </div></section>
 <div class="landing-content"><section class="land-sec" aria-labelledby="lv-title"><h2 id="lv-title">Un colegio, muchas experiencias</h2><p class="land-lead">Cada nivel vive la tecnología de una forma distinta. Tú eliges qué combinar y nosotros te ayudamos a organizarlo.</p>
 <div class="level-grid">${LEVELS.map((l, i) => { const areas = [...new Set(PROGRAMS.filter(p => p.levels.includes(l.id)).map(p => AREA_LABEL[p.area] || p.area))]; const pid = { pre: 'tale', prim: 'master', bas: 'spike', bach: 'electronics' }[l.id], { ph } = photoState(pid, l.id); return `<article class="level-card lc-${i}"><div class="lc-photo">${ph ? `<img src="${ph.src}" alt="" loading="lazy">` : icon(l.icon)}</div><div class="lc-body"><h3>${esc(l.name)}</h3><p>${esc(l.hint)}</p><ul>${areas.map(a => `<li>${esc(a)}</li>`).join('')}</ul></div></article>`; }).join('')}</div>
@@ -568,7 +579,6 @@ function renderLanding() {
 <section class="land-sec" aria-labelledby="st-title"><h2 id="st-title">Así se construye tu propuesta</h2>
 <ol class="land-steps"><li><span>1</span><div><b>Cuéntanos de tus estudiantes</b><p>Ingresa los grados y secciones. No necesitas saber cuántos equipos elegir.</p></div></li><li><span>2</span><div><b>Elige qué aprenderán</b><p>Explora robótica, electrónica, drones y experiencias inmersivas.</p></div></li><li><span>3</span><div><b>Reúne todos tus programas</b><p>Revisa el equipamiento, las modalidades y la inversión de tu colegio.</p></div></li></ol></section>
 <section class="land-cta"><div><h2>El mismo recorrido. Una propuesta más clara.</h2><p>Los importes son estimaciones comerciales que GuateGeeks confirma.</p></div><button class="btn btn-primary" onclick="start()">${saved ? 'Continuar mi propuesta' : 'Crear mi propuesta'} ${icon('arrow')}</button></section></div></div>`);
-  initLab();
 }
 function example() {
   state = initial();

@@ -53,6 +53,10 @@ Cada actividad es un ciclo con intención y fases legibles. Ninguna se reduce a 
 | Drones | 14 s: los motores arrancan, el dron despega, cruza el aro, rodea el mapa, aterriza en otro helipuerto y los pilotos se ceden el control. |
 | Realidad virtual | 15 s: tres escenas de cinco segundos (planeta, Templo I de Tikal, molécula). Los estudiantes miran alrededor, alcanzan, señalan y manipulan, guiados por su docente. |
 
+## Portada
+
+El campus es la experiencia principal desde la portada, en lugar del banner del robot. Sin propuesta iniciada muestra un colegio ilustrativo completo (`showcaseData()`, solo para la escena); con avance guardado, el campus propio. En la portada tocar explora («Explorar»), mientras que dentro del recorrido tocar edita. La instancia 3D se crea una vez y acompaña a la persona de la portada al recorrido.
+
 ## Visor, barra lateral y modo solo configuración
 
 El canvas ocupa todo el panel del campus y sobre el modelo solo flotan unas pocas capas translúcidas:

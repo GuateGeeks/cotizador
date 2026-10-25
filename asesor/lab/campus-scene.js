@@ -80,6 +80,7 @@ export function createMascot(container, opts = {}) {
   // Offset on the view plane, set only by zooming toward the cursor; dragging always rotates.
   const pan = new Vector3(), panTarget = new Vector3(), axisX = new Vector3(), axisY = new Vector3();
   const touches = new Map();
+  let hoverVerb = 'Editar';
   function freeArea() {
     return { w: Math.max(size.w * .4, size.w - insets.left - insets.right), h: Math.max(size.h * .35, size.h - insets.top - insets.bottom) };
   }
@@ -245,7 +246,7 @@ export function createMascot(container, opts = {}) {
     if (!record || !ready) { tag.hidden = true; return; }
     const e = record.entity;
     const text = target.kind === 'program' ? PROGRAM_NAMES[target.id] + (e.participantLevels?.length ? ' · ' + e.participantLevels.map(id => LEVEL_NAMES[id]).join(', ') : '') : LEVEL_NAMES[target.id];
-    const label = target.hover ? (target.kind === 'program' ? PROGRAM_NAMES[target.id] : LEVEL_NAMES[target.id]) + ' · Editar' : text;
+    const label = target.hover ? (target.kind === 'program' ? PROGRAM_NAMES[target.id] : LEVEL_NAMES[target.id]) + ' · ' + hoverVerb : text;
     if (tag.textContent !== label || tag.hidden) { tag.textContent = label; tag.hidden = false; tag.dataset.width = tag.offsetWidth; }
     const top = e.kind === 'room' ? (layout.tiles.filter(t => t.levelId === e.levelId).length > 1 ? 3.7 : 2.05) : e.row === 'front' ? 1.95 : 1.85;
     const point = new Vector3(e.x, top, e.z).project(camera);
@@ -438,6 +439,8 @@ export function createMascot(container, opts = {}) {
     positionCamera();
     schedule();
   }
+  /** Verb shown on hover: what a click does here (e.g. 'Editar', 'Explorar'). */
+  function setHoverVerb(verb) { hoverVerb = String(verb || 'Editar').slice(0, 24); }
   /** Pixel insets covered by interface overlays: { top, right, bottom, left }. */
   function setInsets(next = {}) {
     if (disposed) return;
@@ -566,7 +569,7 @@ export function createMascot(container, opts = {}) {
   update({}); resize();
 
   return {
-    update, resize, rotate, zoom, resetView, setPaused, setFocus, setInsets,
+    update, resize, rotate, zoom, resetView, setPaused, setFocus, setInsets, setHoverVerb,
     getDiagnostics() {
       const list = [...records.values()].filter(record => !record.removing);
       const building = list.filter(record => record.staged.some(item => item.fresh && !item.done)).length;

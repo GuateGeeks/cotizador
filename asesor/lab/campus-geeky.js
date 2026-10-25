@@ -37,15 +37,25 @@ export function createGeeky(materials) {
     b.box(pr * .35, pr * .42, .01, pr * .5, pr * .5, .006, PAPER).box(-pr * .12, pr * .78, .01, pr * .2, pr * .2, .006, PAPER);
     eyes.push(eye); pupils.push({ bone: pupil, rest: [rx, ry], er });
   }
-  // Arched bridge between the rims (sags upward like the original art).
+  // Arched bridge between the rims. Its ends sit on each rim at the anchor
+  // angles of the original art (core.mjs BRIDGE_ENDS, SVG y flipped), so it
+  // stays attached at any scale; the middle rises like the source drawing.
   b.bone(body);
-  const a = [-.07, .13], c = [.06, .12], m = [0, .2];
+  const rimPoint = (i, angle) => {
+    const [cx, cy] = to3(BASE[i]), r = RIM_R * K * RIM_SCALE[i] * .97;
+    return [cx + Math.cos(angle) * r, cy + Math.sin(angle) * r];
+  };
+  const a = rimPoint(0, Math.atan2(4.65, 7.9)), c = rimPoint(1, Math.atan2(1.2, -9.05));
+  const span = Math.hypot(c[0] - a[0], c[1] - a[1]);
+  const m = [(a[0] + c[0]) / 2, (a[1] + c[1]) / 2 + span * .32];
   const bridge = [];
-  for (let s = 0; s <= 4; s++) { const t = s / 4, u = 1 - t; bridge.push([u * u * a[0] + 2 * u * t * m[0] + t * t * c[0], u * u * a[1] + 2 * u * t * m[1] + t * t * c[1]]); }
-  for (let s = 0; s < 4; s++) {
-    const [x1, y1] = bridge[s], [x2, y2] = bridge[s + 1];
-    b.push((x1 + x2) / 2, (y1 + y2) / 2, 0, 0, 0, Math.atan2(y2 - y1, x2 - x1)).box(0, 0, 0, Math.hypot(x2 - x1, y2 - y1) + .02, .03, .03, FRAME).pop();
+  for (let step = 0; step <= 6; step++) { const t = step / 6, u = 1 - t; bridge.push([u * u * a[0] + 2 * u * t * m[0] + t * t * c[0], u * u * a[1] + 2 * u * t * m[1] + t * t * c[1]]); }
+  for (let step = 0; step < 6; step++) {
+    const [x1, y1] = bridge[step], [x2, y2] = bridge[step + 1];
+    b.push((x1 + x2) / 2, (y1 + y2) / 2, 0, 0, 0, Math.atan2(y2 - y1, x2 - x1)).box(0, 0, 0, Math.hypot(x2 - x1, y2 - y1) + .012, .034, .034, FRAME).pop();
   }
+  // Rounded joints where the bridge meets each rim.
+  [a, c].forEach(([x, y]) => b.ball(x, y, 0, .024, .024, .024, FRAME, 0));
   // Temple-arms rest behind the frames and swing forward to point or wave.
   for (let i = 0; i < 2; i++) {
     const side = i ? 1 : -1, [cx, cy] = to3(BASE[i]), r = RIM_R * K * RIM_SCALE[i];
