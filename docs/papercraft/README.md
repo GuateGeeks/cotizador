@@ -9,6 +9,8 @@ Crece de una aula a un campus en U según el alcance de la cotización.
 | Contrato de piezas | [CONTRACT.md](CONTRACT.md) |
 | Integración con el cotizador | [INTEGRATION.md](INTEGRATION.md) |
 | Registro del trabajo | [ORCHESTRATION.md](ORCHESTRATION.md) |
+| Gestión visual (fuentes, recreación de piezas, composición, QA, despliegue) | [GESTION-VISUAL.md](GESTION-VISUAL.md) |
+| Actores de la escena (API para animación) | [ACTORES.md](ACTORES.md) |
 | Skills | `.claude/skills/cotizador-*` |
 
 ## Ejecutar y ver

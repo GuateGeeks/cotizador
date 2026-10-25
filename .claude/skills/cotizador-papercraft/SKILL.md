@@ -139,3 +139,18 @@ En un acercamiento de zoom ≥ 6 a un aula, una persona, un árbol y un equipo,
 deben verse el espesor, los cantos, al menos un pliegue y una pestaña, la capa
 del marco y una sombra de contacto. Registra por separado el dictamen técnico
 (presupuestos, errores) y el visual (lectura de papel, escala, paleta).
+
+## Personajes y piezas desde paquetes de referencia
+
+El alumno de primaria se arma con el paquete R2 (`docs/papercraft/construction-r2`).
+Las recreaciones R3 (`construction-r3/datos`) reemplazan la receta R2 del mismo id.
+Para recrear una pieza:
+
+1. Lee los pliegues de la lámina de siete vistas.
+2. Pon los vértices en los cruces de pliegues y las aristas sobre los pliegues.
+3. Conserva los sockets de las piezas vecinas.
+4. Compara a escala común contra la lámina.
+
+Los equipos se dibujan a escala de diorama (1.8–3.6×) en un hueso `.size`. Ver
+[GESTION-VISUAL](../../../docs/papercraft/GESTION-VISUAL.md) para el método,
+los presupuestos (`PERSON_LIMIT`) y las decisiones vigentes.
