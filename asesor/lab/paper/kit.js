@@ -29,6 +29,8 @@ export const SCALE = Object.freeze({
  */
 export const PAPER = Object.freeze({
   background: '#F4F1F6',
+  // Solid stage colour of the cotizador viewer (the inspector and its capture tools keep `background`).
+  stage: '#CDBFE8',
   violet: '#6C45AE', violetLight: '#8159C4', violetDark: '#4B2C86', violetDeep: '#3A2470', ink: '#321853',
   ivory: '#FFF8EC', cream: '#FBE8D0', creamShade: '#EFDCC2', white: '#FBFAF7',
   paving: '#F3EAE6', paving2: '#E9DEDB', joint: '#DCCFCC',

@@ -314,6 +314,13 @@ async function verifyLivingCampus(page, result, reducedMotion) {
     // Living campus: after a change the construction and camera transitions settle (render on demand
     // for them), but the ambient activities keep going while the campus is visible, at the ambient
     // frame rate, without adding geometry or materials. Pause, offscreen and reduced motion stop it (below).
+    // Warm-up cycle: the first focus uploads parts of the scene and of Geeky that were not drawn yet
+    // (renderer.info counts a geometry when it is first drawn). The measured cycle below must not grow.
+    await page.evaluate(() => { const id = state.selected[0]?.programId; if (id) inspectCampus('program', id); });
+    await settled(page);
+    await page.waitForTimeout(5000);
+    await page.evaluate(() => inspectCampus('overview'));
+    await settled(page);
     const before = await snapshot(page);
     await page.evaluate(() => { const id = state.selected[0]?.programId; if (id) inspectCampus('program', id); else inspectCampus('overview'); });
     await page.waitForFunction(ticks => mascot.getDiagnostics().activityTicks > ticks, before.scene.activityTicks, { timeout: 5000 });

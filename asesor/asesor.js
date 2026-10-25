@@ -303,7 +303,7 @@ function loadLab(cb) {
   if (window.GGLab) { cb(); return; }
   if (loadLab.queue) { loadLab.queue.push(cb); return; }
   loadLab.queue = [cb];
-  const sc = document.createElement('script'); sc.src = 'vendor/lab-scene.min.js?v=153'; sc.async = true;
+  const sc = document.createElement('script'); sc.src = 'vendor/lab-scene.min.js?v=155'; sc.async = true;
   sc.onload = () => { const q = loadLab.queue || []; loadLab.queue = null; q.forEach(f => { try { f(); } catch (e) { console.error('No se pudo iniciar la vista 3D.', e); } }); };
   sc.onerror = () => { loadLab.queue = null; sc.remove(); campusUnavailable('No se pudo cargar la vista 3D. Tu configuración sigue disponible.'); };
   document.head.appendChild(sc);

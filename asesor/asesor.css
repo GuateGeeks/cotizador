@@ -1183,15 +1183,15 @@ body:has(.campus-layout) .brand img{width:72px;height:auto}
 .mod-inc li.no{background:var(--cream);border-style:dashed}.mod-inc li.no .icon{stroke:var(--muted)}
 .grand strong em{font-style:normal;font-size:14px;font-weight:600;opacity:.8}
 
-/* ===== Visor claro (papercraft): fondo #F4F1F6, HUD de vidrio claro con tinta #321853 ===== */
-:root{--viewer-bg:#F4F1F6;--viewer-ink:#321853;--viewer-muted:#58446f;--viewer-glass:rgba(255,255,255,.8);--viewer-line:rgba(50,24,83,.18);--viewer-hover:rgba(105,66,161,.14);--viewer-focus:#ffc857}
+/* ===== Visor papercraft: fondo sólido lila #CDBFE8 (PAPER.stage), HUD de vidrio claro con tinta #321853 ===== */
+:root{--viewer-bg:#CDBFE8;--viewer-ink:#321853;--viewer-muted:#58446f;--viewer-glass:rgba(255,255,255,.8);--viewer-line:rgba(50,24,83,.18);--viewer-hover:rgba(105,66,161,.14);--viewer-focus:#ffc857}
 .campus-panel.side-panel,.campus-preview,.campus-hero-stage,.campus-stage,.campus-static{--scene:var(--viewer-bg);--scene-ink:var(--viewer-ink);--scene-muted:var(--viewer-muted);background:var(--viewer-bg);color:var(--viewer-ink)}
 .campus-hud{--glass:var(--viewer-glass);--glass-line:var(--viewer-line)}
 .campus-fallback{color:var(--viewer-ink)}
 /* Foco visible sobre claro: aro oscuro (contraste 3:1 o más) con el amarillo de marca por fuera. */
 .campus-preview :focus-visible,.campus-preview .campus-hud button:focus-visible,.campus-hud .campus-tools button:focus-visible,.campus-panel .campus-proposal>summary:focus-visible{outline:3px solid var(--viewer-focus);outline-offset:2px;box-shadow:0 0 0 2px var(--viewer-ink)}
 .campus-stage:focus-visible{outline-offset:-5px;box-shadow:inset 0 0 0 2px var(--viewer-ink)}
-.campus-hud-top{background:linear-gradient(180deg,rgba(244,241,246,.94),rgba(244,241,246,.62) 62%,rgba(244,241,246,0));padding-right:300px}
+.campus-hud-top{background:linear-gradient(180deg,rgba(205,191,232,.94),rgba(205,191,232,.62) 62%,rgba(205,191,232,0));padding-right:300px}
 .campus-hud .campus-heading h2{color:var(--viewer-ink);text-shadow:none}
 .campus-hud .campus-heading .campus-status{color:var(--viewer-muted)}
 .campus-heading>span:before{background:#1c7c6e}
@@ -1214,7 +1214,7 @@ body:has(.campus-layout) .brand img{width:72px;height:auto}
 .campus-panel .campus-proposal>summary span{color:var(--viewer-muted)}
 .campus-expand{display:none}
 /* Pie del visor: leyenda discreta a la izquierda, cuatro contadores del motor a la derecha. */
-.campus-hud .campus-hud-bottom{margin-top:auto;display:flex;flex-direction:row;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:8px 12px;padding:44px 16px 14px;background:linear-gradient(0deg,rgba(244,241,246,.94),rgba(244,241,246,.6) 58%,rgba(244,241,246,0))}
+.campus-hud .campus-hud-bottom{margin-top:auto;display:flex;flex-direction:row;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:8px 12px;padding:44px 16px 14px;background:linear-gradient(0deg,rgba(205,191,232,.94),rgba(205,191,232,.6) 58%,rgba(205,191,232,0))}
 .campus-note{margin:0;padding:8px 14px;border:1px solid var(--viewer-line);border-radius:12px;background:var(--viewer-glass);color:var(--viewer-ink);font-size:12px;line-height:1.3;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
 /* Leyenda desplegable desde la píldora: paleta de la maqueta y el mismo resumen que la vista sin 3D. */
 .campus-key{pointer-events:auto;position:relative;max-width:min(360px,100%)}
@@ -1255,16 +1255,15 @@ body:has(.campus-layout) .brand img{width:72px;height:auto}
 .preview-btn{min-height:44px;gap:8px;color:var(--viewer-ink)}
 .preview-btn .icon{width:18px;height:18px}
 .preview-btn[aria-pressed="true"]{background:#eee4fb;border-color:#6942a1}
-/* Portada: el campus claro conserva el texto legible sobre un velo violeta. */
-.campus-hero-stage{background:var(--viewer-bg)}
+/* Portada: el campus flota sobre el violeta sólido del banner (#2e1853); el canvas es transparente. */
+.campus-hero-stage{background:#2e1853}
+.campus-hero-stage .campus-stage,.campus-hero-stage .campus-preview{background:transparent}
 .campus-hero-stage .campus-hud-top,.campus-hero-stage .campus-note,.campus-hero-stage .campus-expand,.campus-hero-stage .campus-hud-bottom{display:none}
-.campus-hero::before{background:linear-gradient(90deg,rgba(46,24,83,.97) 0%,rgba(46,24,83,.95) 34%,rgba(46,24,83,.8) 42%,rgba(46,24,83,.36) 50%,rgba(46,24,83,.08) 56%,rgba(46,24,83,0) 62%)}
 .campus-hero .campus-hud .campus-tools{top:50%;right:20px;transform:translateY(-50%);flex-direction:column}
 .campus-hero .campus-hud .campus-tools .campus-close{margin:3px 0 0;border-left:0;border-top:1px solid var(--viewer-line);border-radius:0 0 10px 10px}
 .campus-hero .campus-hud .campus-tools [data-tip]:hover:after,.campus-hero .campus-hud .campus-tools [data-tip]:focus-visible:after{top:50%;right:calc(100% + 8px);transform:translateY(-50%)}
 @media(min-width:981px) and (max-width:1180px){.campus-hud-top{padding-right:290px}.campus-counts>div{min-width:84px;padding:6px 10px}}
 @media(max-width:980px){
-  .campus-hero::before{background:linear-gradient(180deg,rgba(43,20,78,0) 0%,rgba(43,20,78,0) calc(min(48svh,400px) - 120px),rgba(43,20,78,.94) calc(min(48svh,400px) + 10px),rgba(43,20,78,.98) 100%)}
   .campus-preview{transition:height .2s ease}
   .campus-preview.campus-expanded{height:calc(100svh - 132px);min-height:380px}
   .campus-expand{display:inline-flex;align-items:center;gap:6px;position:absolute;top:10px;left:10px;z-index:4;min-width:44px;min-height:44px;padding:0 14px 0 10px;border:1px solid var(--viewer-line);border-radius:22px;background:var(--viewer-glass);color:var(--viewer-ink);font-size:13px;font-weight:650;pointer-events:auto;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
@@ -1415,3 +1414,9 @@ html,body,body:has(.campus-layout){background:var(--canvas)}
 .top-inner,body:has(.campus-layout) .top-inner{height:64px}
 .brand img,body:has(.campus-layout) .brand img{width:auto;height:38px}
 @media(max-width:650px){.top-inner{height:56px}.brand img,body:has(.campus-layout) .brand img{width:auto;height:30px}}
+/* Banner: riel de vidrio oscuro con solo vista general y pausa, como la portada original. */
+.campus-hero .campus-hud .campus-tools{background:rgba(38,17,72,.56);border-color:rgba(255,255,255,.18);box-shadow:none}
+.campus-hero .campus-hud .campus-tools button{color:#eadcf7}
+.campus-hero .campus-hud .campus-tools button:hover:not(:disabled){background:rgba(255,255,255,.12)}
+.campus-hero .campus-hud .campus-tools [data-view="program"],.campus-hero .campus-hud .campus-tools [data-camera="reset"]{display:none}
+.campus-hero .campus-hud .campus-tools .campus-pause{border-top:1px solid rgba(255,255,255,.18);border-radius:0 0 10px 10px}

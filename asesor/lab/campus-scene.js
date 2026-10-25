@@ -33,8 +33,9 @@ export const VIEW_NAMES = Object.freeze(['overview', 'front', 'patio', 'people',
 
 export function createMascot(container, opts = {}) {
   const reduced = !!opts.reduceMotion;
-  const renderer = new WebGLRenderer({ antialias: true, powerPreference: 'low-power' });
-  renderer.setClearColor(PAPER.background, 1);
+  // Transparent canvas: each host paints the solid stage colour (lilac viewer, violet landing banner).
+  const renderer = new WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'low-power' });
+  renderer.setClearColor(PAPER.stage, 0);
   renderer.outputColorSpace = SRGBColorSpace;
   renderer.toneMapping = NeutralToneMapping;
   renderer.toneMappingExposure = 1;
@@ -51,7 +52,7 @@ export function createMascot(container, opts = {}) {
   container.appendChild(tag);
 
   const scene = new Scene(), camera = new OrthographicCamera(-8, 8, 6, -6, .1, 80);
-  scene.background = new Color(PAPER.background);
+  scene.background = null;
   // Light as in the papercraft inspector: bright sky, warm key with soft shadows, lilac fill.
   scene.add(new HemisphereLight(0xffffff, 0xd9cfe6, 1.55));
   const sun = new DirectionalLight(0xfff3e4, 2.1);
@@ -678,9 +679,11 @@ export function createMascot(container, opts = {}) {
     try {
       renderer.setPixelRatio(1); renderer.setSize(width, height, false);
       positionCamera();
+      scene.background = new Color(PAPER.stage); // a JPEG has no alpha: the figure keeps the solid viewer colour
       renderer.render(scene, camera);
       url = canvas.toDataURL('image/jpeg', .9);
     } catch (error) { url = null; }
+    scene.background = null;
     plan = saved.plan; size = saved.size; insets = saved.insets; yaw = saved.yaw; pitch = saved.pitch; zoomValue = saved.zoomValue; pan.copy(saved.pan); view = saved.view;
     hidden.forEach(([bone, scale]) => bone.scale.copy(scale));
     marker.visible = was.marker; geeky.group.visible = was.geeky;
@@ -858,7 +861,7 @@ export function createMascot(container, opts = {}) {
         breakdown: list.reduce((acc, record) => { const k = record.entity.kind; acc[k] = (acc[k] || 0) + sum(k, record); return acc; }, {}),
         errors: list.filter(record => record.error).map(record => record.entity.key),
         transitionParts: { ...transitionParts },
-        selectTargets: selectTargets(), geeky: { ...geeky.state.p, settled: geeky.settled },
+        selectTargets: selectTargets(), geeky: { ...geeky.state.p, settled: geeky.settled }, geekyCachedGeometries: geeky.cachedGeometries?.() || 0,
         xray: xray.key ? { room: xray.key.split(':').slice(0, -1 - records_().length).join(':'), meshes: xray.parts.length } : null,
         quality, frameInterval: Math.round(frameEma), yaw, pitch, zoom: zoomValue, framing: { half: view.half, target: { ...targetView }, size: { ...size }, insets: { ...insets } }, camera: 'orthographic', maxFps: maxFps(), limits: CAMPUS_BUDGET };
     },

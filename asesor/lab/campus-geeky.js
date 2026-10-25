@@ -118,6 +118,8 @@ export function createGeeky(materials, options = {}) {
   }
 
   function ownMaterials() { return embedded.materials(); }
+  /** Geometries Geeky caches lazily by shape (pupil sizes, glyphs): bounded, built once, reused. */
+  function cachedGeometries() { return embedded.renderer.geoCache?.size || 0; }
   function dispose() {
     if (disposed) return;
     disposed = true;
@@ -128,5 +130,5 @@ export function createGeeky(materials, options = {}) {
 
   embedded.step(0); // pose the meshes once so nothing is drawn at the origin before the first tick
   drawn = true;
-  return { group, tick, cue, ownMaterials, dispose, state, get settled() { return state.settled; } };
+  return { group, tick, cue, ownMaterials, cachedGeometries, dispose, state, get settled() { return state.settled; } };
 }
