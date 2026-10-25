@@ -51,6 +51,7 @@ export function alumnoContract() {
     'Las demás combinaciones conservan la receta v1 (geometría idéntica a `ec4d112`).', '');
   out.push('## Procedencia', '', `Paquete \`${R2_PROVENANCE.package}\` (${R2_PROVENANCE.manifest}), montaje \`${R2_PROVENANCE.assembly}\`, esquema ${R2_PROVENANCE.schema}.`,
     `${R2_FACTS.recipes} recetas, ${R2_FACTS.instances} instancias, ${R2_FACTS.packageTriangles} triángulos en el paquete. Los datos se **cargan** de los JSON (importados a un módulo generado), no se transcriben a mano.`, '',
+    ...(R2_FACTS.r3.length ? [`Recreaciones R3 activas (\`docs/papercraft/construction-r3/datos\`, mismo esquema): ${Object.entries(R2_PROVENANCE.r3).map(([id, o]) => `${id} (${o.replacedTriangles} → ${o.triangles} triángulos)`).join(', ')}. El paquete R2 sin ellas suma ${R2_FACTS.r2PackageTriangles}.`, ''] : []),
     '| Archivo | SHA256 |', '|---|---|');
   for (const [file, hash] of Object.entries(R2_PROVENANCE.sha256)) out.push(`| \`${file}\` | \`${hash}\` |`);
   out.push('', '## Configuración reproducible', '', '```json', JSON.stringify(PRIMARIA_BASE, null, 2), '```', '',
@@ -73,7 +74,7 @@ export function alumnoContract() {
   const removed = Object.entries(R2_REDISTRIBUTION).reduce((s, [r, x]) => s + x.faces.length * R2_INSTANCES.filter(i => i.recipe === r).length, 0);
   out.push('', '## Presupuesto', '',
     `- Paquete: ${R2_FACTS.packageTriangles} triángulos, sin reserva. El proyecto cuenta la sombra de contacto (${SHADOW_TRIANGLES}, capa \`blob\`, auxiliar) en el límite de 280, así que se **redistribuye** antes de añadirla: se retiran ${removed} tapas ocultas.`,
-    `- Emitido: **${m.geometry}** de geometría + ${SHADOW_TRIANGLES} de sombra = **${m.total}** ${m.total <= 280 ? '≤ 280' : '> 280: **excede** el límite del proyecto, que no cambia (recetas R3 de `construction-r3/datos` en experimento)'}. Reserva: 0 (no es geometría).`, '',
+    `- Emitido: **${m.geometry}** de geometría + ${SHADOW_TRIANGLES} de sombra = **${m.total}** ${m.total <= 280 ? '≤ 280' : '> 280: **excede** el límite (experimento R3 aceptado; el límite no cambia)'}. Reserva: 0 (no es geometría).`, '',
     '| Receta | Caras retiradas (índice en el JSON) | Motivo |', '|---|---|---|');
   for (const [r, x] of Object.entries(R2_REDISTRIBUTION)) out.push(`| ${r} | ${x.faces.join(', ')} | ${x.reason} |`);
   out.push('', '### Adaptaciones de integración (solo posiciones de vértices)', '', '| Receta | Vértices (local / H) | Motivo |', '|---|---|---|');

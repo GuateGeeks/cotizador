@@ -115,9 +115,16 @@ export function emitR2(ctx, ids) {
   return sockets;
 }
 
-/** Package facts reported by the manifest and the generated contract. */
+/**
+ * Package facts reported by the manifest and the generated contract. `r3Delta` is the triangle change of
+ * the active R3 recreations over the R2 recipes they replace (summed over instances), so the R2 package
+ * total stays checkable: r2PackageTriangles = packageTriangles − r3Delta.
+ */
+const r3Delta = INSTANCES.reduce((s, i) => { const o = PROVENANCE.r3?.[i.recipe]; return s + (o ? o.triangles - o.replacedTriangles : 0); }, 0);
 export const R2_FACTS = Object.freeze({
   H: R2_H, recipes: Object.keys(RECIPES).length, instances: INSTANCES.length,
   packageTriangles: INSTANCES.reduce((s, i) => s + RECIPES[i.recipe].faces.length, 0),
-  emittedTriangles: INSTANCES.reduce((s, i) => s + recipeFaces(i.recipe).length, 0)
+  emittedTriangles: INSTANCES.reduce((s, i) => s + recipeFaces(i.recipe).length, 0),
+  r3: Object.keys(PROVENANCE.r3 || {}), r3Delta,
+  r2PackageTriangles: INSTANCES.reduce((s, i) => s + RECIPES[i.recipe].faces.length, 0) - r3Delta
 });

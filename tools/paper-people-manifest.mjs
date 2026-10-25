@@ -223,21 +223,12 @@ for (const [level, role] of [['pre'], ['prim'], ['bas'], ['bach'], ['adult', 'te
       perBone: p.perBone[i.id], mirror: i.mirror, mount: i.parent ? { parent: i.parent, source: i.source, target: i.target, errorH: mountError == null ? null : +mountError.toExponential(2) } : null };
   });
   const auxiliaries = r.total - sum(p.parts);
-  // Expected package total from the JSON on disk: the active recipe of each id is the R3 recreation
-  // (docs/papercraft/construction-r3/datos) when present, else the R2 recipe (280 with R2 only).
-  const docs = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../docs/papercraft');
-  const jsons = dir => fs.existsSync(dir) ? fs.readdirSync(dir).filter(f => /^P\d\d-.*\.json$/.test(f)) : [];
-  const r3 = new Map(jsons(path.join(docs, 'construction-r3/datos')).map(f => [f.slice(0, 3), path.join(docs, 'construction-r3/datos', f)]));
-  const activeFaces = Object.fromEntries(jsons(path.join(docs, 'construction-r2/datos')).map(f => {
-    const d = JSON.parse(fs.readFileSync(r3.get(f.slice(0, 3)) || path.join(docs, 'construction-r2/datos', f), 'utf8'));
-    return [d.id, d.mesh.faces.length];
-  }));
-  const expectedPackage = JSON.parse(fs.readFileSync(path.join(docs, 'construction-r2/datos/assembly.json'), 'utf8')).instances.reduce((s_, i) => s_ + activeFaces[i.part_id], 0);
   report.r2 = { provenance: R2_PROVENANCE, facts: R2_FACTS, redistribution: R2_REDISTRIBUTION, instances, geometry: sum(p.parts), auxiliaries: { contactShadow: auxiliaries }, total: r.total,
     checks: {
       instances: status(instances.length === 33 && instances.every(x => x.emitted === x.package - x.removed && x.emitted === x.planned)),
-      packageTotal: status(instances.reduce((s_, x) => s_ + x.package, 0) === expectedPackage),
-      emittedTotal: status(sum(p.parts) === expectedPackage - instances.reduce((s_, x) => s_ + x.removed, 0)),
+      // Active recipe source: the R2 package (280) plus the declared change of the R3 recreations.
+      packageTotal: status(instances.reduce((s_, x) => s_ + x.package, 0) === 280 + R2_FACTS.r3Delta),
+      emittedTotal: status(sum(p.parts) === 280 + R2_FACTS.r3Delta - instances.reduce((s_, x) => s_ + x.removed, 0)),
       auxiliariesSeparated: status(auxiliaries === SHADOW_TRIANGLES),
       bones: status(instances.every(x => Object.keys(x.perBone).length === 1 && Object.keys(x.perBone)[0] === x.bone)),
       contiguousRanges: status(instances.every(x => x.ranges.length === 1)),
