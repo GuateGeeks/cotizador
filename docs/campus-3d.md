@@ -55,7 +55,7 @@ Cada actividad es un ciclo con intención y fases legibles. Ninguna se reduce a 
 
 ## Portada
 
-El campus es la experiencia principal desde la portada, en lugar del banner del robot. Sin propuesta iniciada muestra un colegio ilustrativo completo (`showcaseData()`, solo para la escena); con avance guardado, el campus propio. En la portada tocar explora («Explorar»), mientras que dentro del recorrido tocar edita. La instancia 3D se crea una vez y acompaña a la persona de la portada al recorrido.
+El campus es la experiencia principal desde la portada: ocupa todo el fondo del hero y el titular, la descripción y las acciones flotan sobre él, a la izquierda, con un velo morado gradual que asegura la lectura. La cámara encuadra el colegio en la zona libre (a la derecha en escritorio; arriba en móvil, sobre el titular). Sin propuesta iniciada muestra un colegio ilustrativo completo (`showcaseData()`, solo para la escena); con avance guardado, el campus propio. En la portada tocar explora («Explorar»), mientras que dentro del recorrido tocar edita. La instancia 3D se crea una vez y acompaña a la persona de la portada al recorrido.
 
 ## Visor, barra lateral y modo solo configuración
 

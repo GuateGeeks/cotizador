@@ -93,7 +93,7 @@ La tipografía Avenir Next / Inter es la de la marca GuateGeeks, por eso el avis
 
 ## Portada: el campus vivo
 
-La portada (`renderLanding()` en `asesor.js`) muestra el campus 3D como experiencia principal: el texto y las acciones a un lado y el campus vivo al otro. En pantallas pequeñas el campus va primero. Si la persona aún no ha empezado su propuesta, `showcaseData()` alimenta la escena con un colegio ilustrativo de cuatro niveles y seis tecnologías; ese ejemplo no toca la cotización ni el borrador guardado. Con avance guardado se ve su propio campus. Tocar un taller en la portada lo explora (la etiqueta dice «Explorar»). Al crear o continuar la propuesta, la misma instancia del campus pasa al panel del recorrido sin recargarse.
+La portada (`renderLanding()` en `asesor.js`) muestra el campus 3D como experiencia principal: ocupa todo el fondo del hero y el texto y las acciones flotan sobre él, a la izquierda. En pantallas pequeñas el colegio queda arriba y el texto sube sobre su borde inferior. Si la persona aún no ha empezado su propuesta, `showcaseData()` alimenta la escena con un colegio ilustrativo de cuatro niveles y seis tecnologías; ese ejemplo no toca la cotización ni el borrador guardado. Con avance guardado se ve su propio campus. Tocar un taller en la portada lo explora (la etiqueta dice «Explorar»). Al crear o continuar la propuesta, la misma instancia del campus pasa al panel del recorrido sin recargarse.
 
 `createLab()` (la escena anterior del robot desarmable) sigue en el bundle, pero la portada ya no la usa.
 

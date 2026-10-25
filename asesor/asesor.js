@@ -420,7 +420,18 @@ function syncCampusInsets() {
   const top = topItems.reduce((max, el) => Math.max(max, el.getBoundingClientRect().bottom - stage.top), 0);
   const bottom = bottomItems.reduce((max, el) => Math.max(max, stage.bottom - el.getBoundingClientRect().top), box && !vertical ? stage.bottom - box.top : 0);
   const right = vertical ? Math.max(0, stage.right - box.left) : 0;
-  mascot.setInsets({ top: Math.min(top, stage.height * .45), bottom: Math.min(bottom, stage.height * .45), right: Math.min(right, stage.width * .25), left: 0 });
+  let left = 0, heroBottom = 0;
+  const hero = mascotHost.closest('.campus-hero'), copy = hero?.querySelector('.lab-copy')?.getBoundingClientRect();
+  if (copy) {
+    // Beside the copy (desktop) the model takes the right side; under it (mobile) the top,
+    // measured from the headline because the copy box is padded to sit below the island.
+    const headline = hero.querySelector('.lab-copy h1')?.getBoundingClientRect() || copy;
+    if (copy.right < stage.left + stage.width * .6) left = Math.max(0, copy.right - stage.left + 32);
+    else heroBottom = Math.max(0, stage.bottom - headline.top + 16);
+    heroBottom = Math.max(heroBottom, 52); // the cream curve that closes the hero
+  }
+  const limit = hero ? .75 : .45;
+  mascot.setInsets({ top: Math.min(top, stage.height * .45), bottom: Math.min(Math.max(bottom, heroBottom), stage.height * limit), right: Math.min(right, stage.width * .25), left: Math.min(left, stage.width * .6) });
 }
 window.addEventListener('resize', queueCampusInsets);
 document.addEventListener('toggle', e => { if (e.target.matches?.('.campus-proposal')) queueCampusInsets(); }, true);
@@ -566,12 +577,11 @@ document.addEventListener('focusout', () => requestAnimationFrame(compactCampusF
 window.visualViewport?.addEventListener('resize', compactCampusForInput);
 function renderLanding() {
   const cur = ui.labLevel || 'bas', saved = state.levels.length > 0;
-  html(`<section class="lab-hero campus-hero" aria-labelledby="lab-title"><div class="lab-inner">
+  html(`<section class="lab-hero campus-hero" aria-labelledby="lab-title"><div class="campus-hero-stage" aria-label="Campus 3D: un colegio GuateGeeks en acción"><div id="campus-slot"></div></div><div class="lab-inner">
 <div class="lab-copy"><p class="lab-label">Experiencias STEAM para instituciones educativas</p><h1 id="lab-title">Transforma cómo enseñan tus docentes y <em>cómo aprenden tus estudiantes.</em></h1>
 <p class="lab-lead">Integramos robótica, electrónica, drones y realidad virtual en tu aula con equipos, formación docente y programas listos para usar. Arma tu propuesta en minutos.</p>
 <div class="hero-actions"><button class="btn btn-primary" onclick="start()">${saved ? 'Continuar mi propuesta' : 'Crear mi propuesta'} ${icon('arrow')}</button><button class="btn btn-ghost" onclick="previewExample()">Ver propuesta de ejemplo</button></div>
-<ul class="lab-chips"><li>${icon('check')} Sin registro para explorar</li><li>${icon('check')} Equipos que pueden compartir tus grupos</li></ul></div>
-<div class="campus-hero-stage" aria-label="Campus 3D: un colegio GuateGeeks en acción"><div id="campus-slot"></div></div>
+<ul class="lab-chips"><li>${icon('check')} Sin registro para explorar</li><li>${icon('check')} Equipos que pueden compartir tus grupos</li><li>${icon('cube')} Toca un taller del campus para conocerlo</li></ul></div>
 </div></section>
 <div class="landing-content"><section class="land-sec" aria-labelledby="lv-title"><h2 id="lv-title">Un colegio, muchas experiencias</h2><p class="land-lead">Cada nivel vive la tecnología de una forma distinta. Tú eliges qué combinar y nosotros te ayudamos a organizarlo.</p>
 <div class="level-grid">${LEVELS.map((l, i) => { const areas = [...new Set(PROGRAMS.filter(p => p.levels.includes(l.id)).map(p => AREA_LABEL[p.area] || p.area))]; const pid = { pre: 'tale', prim: 'master', bas: 'spike', bach: 'electronics' }[l.id], { ph } = photoState(pid, l.id); return `<article class="level-card lc-${i}"><div class="lc-photo">${ph ? `<img src="${ph.src}" alt="" loading="lazy">` : icon(l.icon)}</div><div class="lc-body"><h3>${esc(l.name)}</h3><p>${esc(l.hint)}</p><ul>${areas.map(a => `<li>${esc(a)}</li>`).join('')}</ul></div></article>`; }).join('')}</div>

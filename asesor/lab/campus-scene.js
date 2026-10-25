@@ -82,7 +82,7 @@ export function createMascot(container, opts = {}) {
   const touches = new Map();
   let hoverVerb = 'Editar';
   function freeArea() {
-    return { w: Math.max(size.w * .4, size.w - insets.left - insets.right), h: Math.max(size.h * .35, size.h - insets.top - insets.bottom) };
+    return { w: Math.max(size.w * .3, size.w - insets.left - insets.right), h: Math.max(size.h * .22, size.h - insets.top - insets.bottom) };
   }
   let view = { x: 0, y: .6, z: 0, half: 4 }, targetView = { ...view };
   let focus = { kind: 'overview' }, lastCue = null, cueSequence = 0, configurationKey = '', reactionAt = -10, cue = null;

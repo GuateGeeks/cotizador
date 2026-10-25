@@ -1084,22 +1084,24 @@ body:has(.campus-layout) .brand img{width:72px;height:auto}
 .campus-preview:not(.campus-ready) .campus-hud .campus-tools{pointer-events:auto}
 @media(max-width:980px){.campus-hud .campus-tools .campus-close{margin:0 0 2px;border-radius:9px 9px 0 0}}
 
-/* ===== Portada: el campus vivo es la experiencia principal ===== */
-.campus-hero .lab-inner{grid-template-columns:minmax(340px,40fr) 60fr;column-gap:36px}
-.campus-hero-stage{grid-column:2;grid-row:1/3;position:relative;z-index:2;display:flex;align-self:stretch;min-height:clamp(480px,calc(100svh - 190px),720px);margin:28px 0 12px;border-radius:24px;overflow:hidden;background:#2e1853;box-shadow:0 30px 80px rgba(12,2,32,.45),0 0 0 1px rgba(255,255,255,.08)}
+/* ===== Portada: el campus vivo ocupa todo el hero y el texto flota sobre él ===== */
+.campus-hero{isolation:isolate}
+.campus-hero-stage{position:absolute;inset:0;z-index:0;display:flex;background:#2e1853}
 .campus-hero-stage #campus-slot{flex:1;display:flex;min-height:0}
-.campus-hero-stage .campus-preview{flex:1;height:auto;min-height:0}
-.campus-hero-stage .campus-hud-top{padding-right:26px}
-.campus-hero-stage .campus-close,.campus-hero-stage .campus-counts{display:none}
+.campus-hero-stage .campus-preview{flex:1;height:auto;min-height:0;background:transparent}
+.campus-hero-stage .campus-hud-top,.campus-hero-stage .campus-close,.campus-hero-stage .campus-counts{display:none}
+/* A soft plum veil keeps the copy legible where it overlaps the island. */
+.campus-hero::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(90deg,rgba(46,24,83,.94) 0%,rgba(46,24,83,.86) 24%,rgba(46,24,83,.62) 36%,rgba(46,24,83,.34) 45%,rgba(46,24,83,.14) 53%,rgba(46,24,83,.04) 59%,rgba(46,24,83,0) 64%)}
+.campus-hero .lab-inner{position:relative;z-index:2;grid-template-columns:minmax(320px,44fr) 56fr;pointer-events:none}
+.campus-hero .lab-copy{pointer-events:auto;max-width:560px}
+.campus-hero .lab-copy h1,.campus-hero .lab-lead,.campus-hero .lab-label{text-shadow:0 2px 18px rgba(24,8,48,.55)}
+.campus-hero .campus-hud .campus-tools{right:20px}
+.campus-hero .lab-chips li:last-child .icon{stroke:var(--coral)}
 @media(max-width:1000px){
-  .campus-hero .lab-inner{grid-template-columns:1fr}
-  .campus-hero-stage{grid-column:1;grid-row:auto;min-height:0;margin:10px 0 22px;border-radius:18px}
-  .campus-hero-stage .campus-preview{flex:none;height:min(62svh,460px)}
+  /* On small screens the island sits on top and the copy rises over its lower edge. */
+  .campus-hero::before{background:linear-gradient(180deg,rgba(43,20,78,0) 0%,rgba(43,20,78,0) calc(min(48svh,400px) - 120px),rgba(43,20,78,.9) calc(min(48svh,400px) + 10px),rgba(43,20,78,.97) 100%)}
+  .campus-hero .lab-inner{display:block;min-height:0}
+  .campus-hero .lab-copy{padding-top:calc(min(48svh,400px) - 20px);max-width:none}
+  .campus-hero .campus-hud .campus-tools{top:calc(min(48svh,400px) / 2);right:12px}
 }
-@media(max-width:1000px){
-  /* The campus leads on small screens; the copy and actions follow. */
-  .campus-hero .campus-hero-stage{order:-1;margin:14px 0 4px}
-  .campus-hero .lab-inner{display:flex;flex-direction:column}
-  .campus-hero .lab-copy{padding-top:18px}
-}
-@media(max-width:650px){.campus-hero-stage{margin-inline:-6px;border-radius:16px}.campus-hero-stage .campus-preview{height:min(50svh,400px)}.campus-hero .lab-copy h1{font-size:30px}.campus-hero .lab-label{display:none}}
+@media(max-width:650px){.campus-hero .lab-copy h1{font-size:30px}.campus-hero .lab-label{display:none}}
