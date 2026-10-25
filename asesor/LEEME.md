@@ -1,20 +1,24 @@
-# Asesor de programas GuateGeeks (diseño 2.1)
+# Asesor de programas GuateGeeks
 
 Experiencia guiada en cinco pasos: niveles, estudiantes y secciones, programas, equipos y modalidad, y propuesta institucional.
-Es una página estática (HTML, CSS y JavaScript sin dependencias). No modifica `index.html` ni el flujo de despliegue de Colegio Costa Sur.
+Es una página estática de HTML, CSS y JavaScript. La escena 3D usa Three.js, compilado en un bundle local con esbuild. El workflow existente de GitHub Pages publica este asesor en la raíz del sitio; la propuesta original de Costa Sur se conserva en la raíz del repositorio.
 
 ## Probar en local
 
 ```bash
-cd ~/Desktop/cotizador
+npm ci && npm run build
+npm test
 python3 -m http.server 8000
 ```
 
 Abre `http://localhost:8000/asesor/index.html`. Con `#ejemplo` al final de la dirección se carga un colegio de demostración.
 
 ```bash
-node --test asesor/test/motor.test.js asesor/test/pdf.test.js
+PLAYWRIGHT_MODULE=playwright COTIZADOR_URL=http://127.0.0.1:8000/asesor/index.html BROWSER_CHANNEL=msedge node asesor/test/campus-browser.cjs
+# Sin GPU (WSL/CI): BROWSER_CHANNEL=chromium BROWSER_ARGS="--use-angle=swiftshader --enable-unsafe-swiftshader"
 ```
+
+La prueba de navegador requiere una instalación de Playwright y el navegador del canal indicado. `PLAYWRIGHT_MODULE` también admite una ruta absoluta al paquete o a su archivo de entrada; `BROWSER_CHANNEL` puede ser `msedge` o `chrome` según la instalación. Guarda capturas y un informe en `artifacts/campus/`. Consulta los [comandos y alcance de validación](../docs/campus-3d.md#compilar-y-comprobar) para PowerShell y los escenarios cubiertos.
 
 ## Archivos
 
@@ -23,10 +27,21 @@ node --test asesor/test/motor.test.js asesor/test/pdf.test.js
 | `asesor/config.js` | Datos editables: niveles, programas, compatibilidad, ratios, modalidades, tarifas, fiscalidad, acceso a Sócrates y fotos |
 | `asesor/motor.js` | Cálculo puro (equipos, capacidad, estudiantes únicos, importes, estados). Sin DOM |
 | `asesor/asesor.js` | Interfaz y borrador local (clave `gg_asesor_v1`, esquema versión 1) |
-| `asesor/asesor.css` | Diseño 2.1 más ajustes de integración al final |
+| `asesor/asesor.css` | Configuración lateral con jerarquía móvil y canvas adaptable |
+| `asesor/lab/campus-layout.js` | Normalización y reglas puras del campus, sin DOM ni WebGL |
+| `asesor/lab/campus-scene.js` | Renderer, construcción por etapas, cámara, selección, calidad adaptable y ciclo de render |
+| `asesor/lab/campus-kit.js` | Primitivas facetadas, huesos y capas unidas en una malla por entidad |
+| `asesor/lab/campus-people.js` | Personas articuladas por nivel y vocabulario de poses |
+| `asesor/lab/campus-architecture.js` | Aulas por nivel, talleres, balcón y escalera, isla facetada y entorno |
+| `asesor/lab/campus-actors.js` | Ciclos de actividad de las seis tecnologías, relevos, estaciones, modalidades y comunidad caminante |
+| `asesor/lab/campus-geeky.js` | Geeky facetado que guía la mirada (proporciones de GuateGeeks/geeky-animation) |
+| `asesor/campus-experience.js` | Respuesta contextual y diagramas de niveles, matrícula, grupos, horarios, equipos, estaciones y modalidades |
+| `asesor/lab/lab-scene.js` | Escena de portada, pato del avance y exportación de la API del campus |
+| `asesor/vendor/lab-scene.min.js` | Bundle generado por `npm run build`, usado en local y en Pages |
 | `asesor/pdf.js` | Escritor mínimo de PDF (texto, formas e imágenes JPEG), sin dependencias |
 | `asesor/propuesta-pdf.js` | Diseño del PDF de la cotización: hoja 1 con logo, cifras, inversión, forma de pago y programas; luego el detalle de cada programa con la foto del equipo, pagos mes a mes y condiciones |
-| `asesor/test/motor.test.js`, `asesor/test/pdf.test.js` | Pruebas del motor y de la estructura del PDF |
+| `asesor/test/*.test.js` | Pruebas del motor, precios, estructura del PDF y reglas del campus |
+| `asesor/test/campus-browser.cjs` | Prueba de integración 3D en escritorio, móvil, movimiento reducido y sin WebGL |
 | `assets/equipos/` | Fotos optimizadas (900 px) de Tale-Bot, Robot Master, SPIKE Prime, electrónica, drones y Meta Quest |
 
 ## Cómo editar
@@ -72,37 +87,31 @@ La tipografía Avenir Next / Inter es la de la marca GuateGeeks, por eso el avis
 - Los ratios de electrónica, drones y Meta Quest (3 estudiantes por equipo) y sus grados se definieron con GuateGeeks; sus tarifas (electrónica, drones y Meta Quest) fueron confirmadas con GuateGeeks.
 - El acceso a Sócrates por grado (`SOCRATES`) es un dato por confirmar.
 - La propuesta solo se descarga como PDF (`Descargar cotización en PDF`); no hay solicitud de revisión ni copiado de texto, y nada se envía a GuateGeeks. El PDF se genera en el navegador e incluye las fotos cuando la página se abre desde un servidor (con `file://` el navegador bloquea leerlas y el PDF sale sin fotos).
-- La página no se publica: `.github/workflows/pages.yml` solo copia `index.html`, `costa-sur.*` y `assets/`. Para publicarla habría que agregar `asesor/` a ese flujo.
-- No hay prueba automática del recorrido completo en el navegador (el repositorio no tiene herramientas para ello); el recorrido se verificó a mano.
+- `.github/workflows/pages.yml` publica el asesor en la raíz; el bundle 3D debe recompilarse antes de publicar cambios de escena.
+- Las pruebas automatizadas del campus complementan la revisión visual. No constituyen una medición de FPS en dispositivos físicos ni una certificación de todas las rutas comerciales.
+- El inventario de equipos existentes y la ruta de formación previstos en la dirección visual no tienen campos propios en el catálogo actual. Este rework no inventa datos, tarifas ni pasos para ellos.
 
-## Portada: laboratorio 3D
+## Portada: el campus vivo
 
-La portada (`renderLanding()` en `asesor.js`) muestra una escena 3D a todo el ancho del hero: un robot de ruedas que se puede desarmar, bloques de programación y piezas de construcción. Se gira arrastrando (doble clic para volver), «Desarmar el robot» separa sus piezas y los puntos de la escena abren una ficha de cada parte (Esc la cierra). Es una escena conceptual: no reproduce Tale-Bot, Robot Master ni SPIKE Prime.
+La portada (`renderLanding()` en `asesor.js`) muestra el campus 3D como experiencia principal: ocupa todo el fondo del hero y el texto y las acciones flotan sobre él, a la izquierda. En pantallas pequeñas el colegio queda arriba y el texto sube sobre su borde inferior. Si la persona aún no ha empezado su propuesta, `showcaseData()` alimenta la escena con un colegio ilustrativo de cuatro niveles y seis tecnologías; ese ejemplo no toca la cotización ni el borrador guardado. Con avance guardado se ve su propio campus. Tocar un taller en la portada lo explora (la etiqueta dice «Explorar»). Al crear o continuar la propuesta, la misma instancia del campus pasa al panel del recorrido sin recargarse.
 
-- `lab/lab-scene.js`: código fuente de la escena (geometrías propias, sin modelos externos).
-- `vendor/lab-scene.min.js`: la escena compilada junto con las partes usadas de three.js (613 KB; unos 158 KB comprimido, incluye el entorno de estudio `RoomEnvironment` de three.js). Se carga solo en la portada, después del texto y los botones, con un `<script>` normal, así que también funciona abriendo el archivo directamente.
-- `vendor/THREE-LICENSE.txt`: licencia MIT de three.js 0.186.1 (https://github.com/mrdoob/three.js).
-- Si no hay WebGL, el script no carga o se pierde el contexto, queda la ilustración SVG incluida en la página. Con «reducir movimiento» activado la escena no se anima y la secuencia solo ilumina los bloques.
-
-Para recompilar tras editar `lab/lab-scene.js` (necesita `three` instalado en `node_modules` junto al archivo de entrada):
-
-```bash
-npx esbuild lab/lab-scene.js --bundle --minify --format=iife --global-name=GGLab --target=es2019 --legal-comments=none --outfile=vendor/lab-scene.min.js
-```
-
-Después sube el `?v=` de `lab-scene.min.js` en `initLab()`.
+`createLab()` (la escena anterior del robot desarmable) sigue en el bundle, pero la portada ya no la usa.
 
 ## Mini colegio 3D del recorrido
 
-En los pasos 1 a 5 (solo escritorio, sin «reducir movimiento») arriba del resumen lateral hay una visualización 3D del colegio. Empieza como una escuela sencilla, sin tecnología, y evoluciona hacia algo más futurista conforme se avanza y se eligen niveles:
+El campus aparece durante los cinco pasos, tanto en escritorio como en móvil y con «reducir movimiento». En escritorio, el formulario usa una columna de 360–390 px y conserva la organización de una pantalla móvil; el campus ocupa el espacio restante. En móvil, la vista permanece encima del formulario, con 200–210 px de canvas. Al editar un campo se compacta temporalmente a 130 px y deja espacio para introducir datos; el foco del control se conserva al actualizar el mismo paso.
 
-1. **Niveles:** cada nivel elegido levanta su edificio (los demás quedan como lote con cartel «+ Nivel») y los colores pasan de apagados a los de la marca.
-2. **Estudiantes:** camino, farolas, árboles y estudiantes en el patio (según la matrícula).
-3. **Programas:** aparecen las estaciones (robótica, electrónica, drones, realidad virtual) con sus estudiantes, el dron y un robot que patrulla.
-4. **Personalizar:** paneles solares y árboles del fondo.
-5. **Resumen:** sube la bandera y salen destellos.
+La dirección visual es una maqueta low poly donde la arquitectura enmarca y las actividades protagonizan: pabellones abiertos con cubiertas moradas de corte, isla facetada violeta, accesos naranjas, circulación turquesa y vegetación. Crece desde un aula hasta un campus con sectores por nivel, comunidad, talleres de los programas elegidos y entorno. La construcción modular adapta muros, cubiertas, balcón y escalera según sus vecinos y arma cada pieza nueva por etapas; no utiliza assets de Townscaper.
 
-El «nivel de futuro» (`techGoal` en `update()`) sube con los niveles elegidos y los pasos; con él cambian materiales, suelo con cuadrícula, neón en los techos, anillo holográfico y luces. Se puede mover: arrastrar orbita, clic derecho o Mayús+arrastrar desplaza, la rueda del ratón acerca y aleja (en los límites deja pasar el scroll de la página) y doble clic restablece la vista. No hay juego. Código: `createMascot()` en `lab/lab-scene.js`; `placeMascot()` y `mascotData()` en `asesor.js` lo reubican y lo actualizan tras cada pantalla sin recrear el WebGL.
+Los niveles agregan sectores de aulas; la matrícula determina una densidad visual acotada de aulas y personas; los programas crean talleres y los equipos calculados por el motor ajustan su representación. Avanzar de paso o cambiar solo de modalidad comercial no añade edificios. Los equipos respetan el cálculo de grupos, horarios y selecciones del cotizador; no se multiplica la matrícula por programa. Los contadores muestran cantidades exactas y la escena las agrupa, como indica «Maqueta ilustrativa · cantidades agrupadas».
+
+La escuela tiene actividad continua mientras está visible. Tale-Bot ejecuta una secuencia de tarjetas sobre su tapete; se arma y programa un dinosaurio Robot Master; un robot SPIKE Prime sigue la línea y activa una misión; en electrónica se cierra un circuito y se mide; un dron despega, cruza un aro y aterriza mientras los pilotos se turnan; con visores se explora un planeta, el Templo I de Tikal y una molécula. Los estudiantes caminan desde la entrada hacia aulas y talleres. Son representaciones ilustrativas, no réplicas físicas de los equipos.
+
+Tocar un taller en el campus abre la configuración de ese programa, y tocar un aula abre la matrícula de su nivel; la cámara encuadra lo que se edita y Geeky vuela a observarlo. La rueda o el pellizco acercan hacia el punto señalado; arrastrar gira la maqueta. El botón × del visor o «Solo configuración» en el encabezado cierran el campus, y «Mostrar campus 3D» lo recupera. Una ficha explica la decisión activa, muestra grupos, turnos, capacidad o plazos según corresponda y permite abrir la configuración del programa. Modalidades y bimestres cambian sus diagramas y condiciones, sin añadir edificios ni prestaciones. `campus-experience.js` deriva estas respuestas de los datos del configurador.
+
+Arrastrar horizontalmente gira la cámara; los botones y el teclado permiten girar, acercar, alejar y restablecer. El desplazamiento vertical táctil sigue disponible. `placeMascot()` conserva la instancia y la cámara entre pantallas; `mascotData()` proporciona datos del estado y del motor. `createMascot()` incorpora `setFocus()` y el callback `onSelect`; la implementación está en `lab/campus-layout.js` (reglas), `lab/campus-kit.js` (primitivas y huesos), `lab/campus-people.js` (personas), `lab/campus-architecture.js` (aulas, isla y entorno), `lab/campus-actors.js` (actividades y comunidad), `lab/campus-geeky.js` (Geeky) y `lab/campus-scene.js` (render, cámara y selección).
+
+La geometría y paleta se basan en los principios Flat/Minimal del proyecto `3d-assets`, adaptados a esta dirección visual. No se importan GLB ni se ejecuta Blender en el navegador. El [documento del campus](../docs/campus-3d.md) detalla procedencia, API, límites y pruebas.
 
 ## Pato robot del avance
 
@@ -118,7 +127,9 @@ Además sigue el cursor con la cabeza y reacciona (saltito y cabeceo) cuando hac
 
 ## Pausar las animaciones
 
-El colegio 3D del flujo tiene un botón «Pausar / Reanudar» (arriba a la derecha del panel). Congela el colegio y también al robot de los pasos (se queda quieto en su caja); al cambiar de paso las piezas se acomodan y luego se detiene todo. La preferencia se guarda en este navegador (`gg_asesor_pause`). El robot corre sin rebotes: arranca, corre inclinado y frena derrapando.
+El campus tiene un botón «Pausar / Reanudar». Pausa actividades, transiciones, diagramas animados y al pato del avance, pero permite seguir configurando, seleccionando actividades y usando la cámara: cada cambio se presenta directamente en su estado final. La preferencia se guarda en este navegador (`gg_asesor_pause`). «Reducir movimiento» mantiene visible y actualizada la maqueta sin animación.
+
+La escena visible mantiene sus actividades con un máximo configurado de 30 FPS. Si un dispositivo no sostiene la animación, el modo `eco` desactiva el mapa de sombras y baja la relación de píxel; las mediciones están en `docs/campus-3d.md`. La pausa, el movimiento reducido, la salida de vista y la pestaña oculta detienen cuadros y temporizadores. Al volver a mostrarla reanuda cuando corresponde. Si WebGL no está disponible, aparece una explicación y el formulario sigue funcionando.
 
 ## Ojos de GuateGeeks en el PDF
 

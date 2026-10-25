@@ -27,10 +27,21 @@ jobs:
         uses: actions/checkout@v4
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Test and build the 3D campus bundle
+        # Nothing is published unless the quotation engine and campus rules pass.
+        run: |
+          npm ci
+          npm test
+          npm run build
       - name: Prepare the site (asesor de programas educativos)
         run: |
           mkdir -p _site
-          cp asesor/index.html asesor/asesor.css asesor/asesor.js asesor/config.js asesor/motor.js asesor/pdf.js asesor/propuesta-pdf.js _site/
+          cp asesor/index.html asesor/asesor.css asesor/asesor.js asesor/campus-experience.js asesor/config.js asesor/motor.js asesor/pdf.js asesor/propuesta-pdf.js _site/
           cp -R asesor/vendor _site/vendor
           cp -R assets _site/assets
           # el asesor vive en la raíz del sitio: sus rutas ../assets pasan a assets
