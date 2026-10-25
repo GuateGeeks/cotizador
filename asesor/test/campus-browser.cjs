@@ -11,7 +11,7 @@ const baseURL = process.env.COTIZADOR_URL || 'http://127.0.0.1:8087/asesor/index
 const channel = process.env.BROWSER_CHANNEL || 'msedge';
 // Optional extra flags, e.g. software WebGL on CI/WSL: --use-angle=swiftshader --enable-unsafe-swiftshader
 const browserArgs = (process.env.BROWSER_ARGS || '').split(/\s+/).filter(Boolean);
-const output = path.resolve(__dirname, '../../artifacts/campus');
+const output = path.resolve(process.env.CAMPUS_OUTPUT || path.resolve(__dirname, '../../artifacts/campus'));
 const exampleURL = new URL(baseURL);
 exampleURL.hash = 'ejemplo';
 const summary = { baseURL, channel, startedAt: new Date().toISOString(), scenarios: [], passed: false };
@@ -21,8 +21,17 @@ async function snapshot(page) {
     data: mascotData(),
     scene: mascot && typeof mascot.getDiagnostics === 'function' ? mascot.getDiagnostics() : null,
     canvasCount: document.querySelectorAll('.campus-stage canvas').length,
-    studentsLabel: document.querySelector('[data-campus-students]')?.textContent,
-    equipmentLabel: document.querySelector('[data-campus-equipment]')?.textContent,
+    // Four counters, all from the engine: labels in the HUD and an independent recomputation.
+    countLabels: Object.fromEntries([...document.querySelectorAll('[data-count]')].map(element => [element.dataset.count, element.textContent])),
+    expectedCounts: (() => {
+      const all = groups(), ids = [...new Set(state.selected.flatMap(entry => entry.groupIds))];
+      return {
+        attended: state.selected.length ? M.uniqueStudents(all, ids) : registered(),
+        participations: state.selected.reduce((total, entry) => total + participation(entry), 0),
+        simultaneous: state.selected.filter(entry => entry.sharing === 'simultaneous').reduce((total, entry) => total + all.filter(group => entry.simIds.includes(group.id)).reduce((sum, group) => sum + (group.students || 0), 0), 0),
+        teams: state.selected.reduce((total, entry) => total + (unitsOf(entry) || 0), 0)
+      };
+    })(),
     feedback: {
       kind: document.querySelector('[data-campus-feedback]')?.dataset.kind,
       diagram: document.querySelector('[data-campus-feedback]')?.dataset.diagram,
@@ -58,11 +67,13 @@ async function verifyCounts(page, students) {
   await page.waitForFunction(expected => mascotData().students === expected, students);
   const result = await snapshot(page);
   const equipment = result.data.equipment.reduce((total, item) => total + (item.units || 0), 0);
-  assert.equal(result.studentsLabel, students.toLocaleString('es-GT'), 'Visible enrollment follows the committed input');
-  assert.equal(result.equipmentLabel, equipment.toLocaleString('es-GT'), 'Visible equipment comes from the calculation engine');
+  assert.equal(result.data.students, students, 'Registered enrollment follows the committed input');
+  for (const [key, value] of Object.entries(result.expectedCounts)) assert.equal(result.countLabels[key], value.toLocaleString('es-GT'), `HUD counter ${key} comes from the engine`);
+  assert.equal(result.expectedCounts.teams, equipment, 'Equipment counter equals the engine units sent to the scene');
   if (result.scene) {
     assert.equal(result.scene.students, students, 'The scene receives live enrollment');
-    assert.equal(result.scene.equipmentUnits, equipment, 'The scene receives live equipment');
+    // The papercraft scene no longer reports equipment units: the HUD counter above is the engine's figure.
+    if ('equipmentUnits' in result.scene) assert.equal(result.scene.equipmentUnits, equipment, 'The scene receives live equipment');
   }
   return result;
 }
@@ -130,12 +141,63 @@ async function verifyStoryboardStart(page, result) {
   await verifyFeedback(page, 'enrollment', 'enrollment', '');
   await stageScreenshot(page, result, 'stage-2-enrollment');
   await page.locator('.foot').getByRole('button', { name: /Ver programas/ }).click();
+  await verifyPreview(page, result);
   await page.locator('.prog').filter({ has: page.getByRole('heading', { name: 'Robótica para pequeños', exact: true }) })
     .getByRole('button', { name: /Agregar a mi propuesta/ }).click();
   assert.deepEqual((await snapshot(page)).data.programs, ['tale']);
   await verifyFeedback(page, 'program', 'program');
   await stageScreenshot(page, result, 'stage-3-programs');
+  await verifyViewButtons(page, result);
   result.checks.push('Storyboard through real controls: empty classroom, enrollment, first program');
+}
+
+// Step 3 preview: shows a program without adding it; only «Agregar» changes the scope.
+async function verifyPreview(page, result) {
+  const quote = await sourceQuote(page);
+  const card = page.locator('.prog').filter({ has: page.getByRole('heading', { name: 'Robótica para pequeños', exact: true }) });
+  const button = card.locator('[data-preview="tale"]');
+  assert.equal(await button.getAttribute('aria-pressed'), 'false');
+  await button.click();
+  assert.equal(await page.evaluate(() => mascotData().preview?.programId), 'tale', 'The preview travels inside mascotData');
+  assert.match(await page.locator('[data-campus-feedback]').textContent(), /^Vista previa: Robótica para pequeños/, 'The live region announces the preview');
+  assert.equal(await button.getAttribute('aria-pressed'), 'true');
+  assert.deepEqual((await snapshot(page)).data.programs, [], 'A preview never adds the program');
+  assert.equal(await sourceQuote(page), quote, 'A preview never changes the quotation');
+  if ((await snapshot(page)).scene && 'preview' in (await snapshot(page)).scene) assert.ok((await snapshot(page)).scene.preview, 'The scene reports the preview');
+  await button.click();
+  assert.equal(await page.evaluate(() => mascotData().preview ?? null), null, 'Pressing again clears the preview');
+  await button.click();
+  await page.getByRole('button', { name: 'Paso 2: Estudiantes', exact: true }).click();
+  assert.equal(await page.evaluate(() => ui.preview), null, 'Leaving step 3 clears the preview');
+  await page.getByRole('button', { name: 'Paso 3: Programas', exact: true }).click();
+  await page.locator('.prog').first().waitFor();
+  result.checks.push('Step 3 preview: announced, not added, not quoted, cleared by toggle and by leaving the step');
+}
+
+async function verifyViewButtons(page, result) {
+  const scene = (await snapshot(page)).scene;
+  if (!scene) return;
+  const hasSetView = await page.evaluate(() => typeof mascot.setView === 'function');
+  for (const label of ['Vista general', 'Programa activo', 'Restablecer vista']) {
+    const box = await page.getByRole('button', { name: label, exact: true }).boundingBox();
+    assert.ok(box.width >= 44 && box.height >= 44, `${label} is at least 44 x 44 px`);
+  }
+  const programView = page.getByRole('button', { name: 'Programa activo', exact: true });
+  assert.equal(await programView.isDisabled(), !hasSetView, 'Active program view needs setView and a focused program');
+  if (hasSetView) { await programView.click(); await page.waitForFunction(() => mascot.getDiagnostics().view === 'program'); }
+  await page.getByRole('button', { name: 'Vista general', exact: true }).click();
+  if (hasSetView) {
+    await page.waitForFunction(() => mascot.getDiagnostics().view === 'overview');
+    assert.equal(await programView.isDisabled(), true, 'Without a focused program the active program view is disabled');
+  }
+  result.checks.push('HUD view buttons: overview, active program (guarded by setView) and reset, 44 px, keyboard operable');
+}
+
+async function verifyStaticSummary(page, result, fallback) {
+  const text = await page.evaluate(() => document.querySelector('[data-static-summary]').textContent);
+  for (const needle of ['Representación de tu configuración', 'Aulas por nivel', 'Talleres por programa', 'Pisos superiores', 'Servicios por modalidad']) assert.ok(text.includes(needle), `Static summary mentions ${needle}`);
+  if (fallback) assert.equal(await page.locator('.campus-static').isVisible(), true, 'The textual summary is visible without WebGL');
+  result.checks.push('Static textual summary of the composition');
 }
 
 async function verifyLiveEnrollment(page, result) {
@@ -249,8 +311,20 @@ async function verifyLivingCampus(page, result, reducedMotion) {
     assert.equal(moving.scene.activityTicks, initial.scene.activityTicks, 'Reduced motion does not run ambient animation');
     assert.equal(moving.scene.framePending, false, 'Reduced motion does not schedule idle frames');
   } else {
-    assert.ok(moving.scene.activityTicks > initial.scene.activityTicks, 'Visible campus keeps its characters and workshops moving');
-    assert.ok(moving.scene.animationTime > initial.scene.animationTime, 'Ambient animation time advances');
+    // Papercraft campus: activities run with a purpose after a change and then the scene rests
+    // (render on demand). Start a run by exploring a program and expect it to advance, then rest.
+    const before = await snapshot(page);
+    await page.evaluate(() => { const id = state.selected[0]?.programId; if (id) inspectCampus('program', id); else inspectCampus('overview'); });
+    await page.waitForFunction(ticks => mascot.getDiagnostics().activityTicks > ticks, before.scene.activityTicks, { timeout: 5000 });
+    const running = await snapshot(page);
+    assert.ok(running.scene.activityTicks > before.scene.activityTicks, 'A change starts a visible activity run');
+    // activityRun counts runs; rest means no frame is pending any more (on-demand rendering).
+    await page.waitForFunction(() => !mascot.getDiagnostics().framePending, null, { timeout: 45000 });
+    const rest = await snapshot(page);
+    await page.waitForTimeout(450);
+    const restAfter = await snapshot(page);
+    assert.equal(restAfter.scene.activityTicks, rest.scene.activityTicks, 'After its run the campus rests without idle frames');
+    await page.evaluate(() => inspectCampus('overview'));
   }
   await page.locator('.campus-pause').click();
   await settled(page);
@@ -480,8 +554,9 @@ async function verifyMaximumCampus(page, result) {
     assert.equal(maximum.scene.programs, 6);
     assert.equal(maximum.scene.levels, 4);
     const limits = expected.layoutLimits;
-    if (Number.isFinite(limits.roomsPerLevel) && Number.isFinite(maximum.scene.rooms)) {
-      assert.ok(maximum.scene.rooms <= expected.levels * limits.roomsPerLevel, 'Classrooms follow the declared layout limit');
+    if (Number.isFinite(maximum.scene.rooms)) {
+      // Papercraft planner (asesor/lab/paper/plan.js PLAN_LIMITS): 5 stacks × 2 floors, level and project rooms together.
+      assert.ok(maximum.scene.rooms <= 10, 'Classrooms follow the declared layout limit');
     }
     if (Number.isFinite(limits.workshopFloors) && Number.isFinite(maximum.scene.workshops)) {
       assert.ok(maximum.scene.workshops <= expected.programs.length * limits.workshopFloors, 'Workshops follow the declared layout limit');
@@ -559,6 +634,7 @@ async function runScenario(browser, config) {
       assert.equal(await page.locator('.campus-stage canvas').count(), 0, 'No canvas is created without WebGL');
       assert.equal(await page.getByRole('button', { name: 'Restablecer vista', exact: true }).isDisabled(), true);
       result.checks.push('Unavailable WebGL keeps an informative fallback and disables camera controls');
+      await verifyStaticSummary(page, result, true);
     } else {
       await page.locator('.campus-preview.campus-ready').waitFor({ state: 'visible' });
       await settled(page);
@@ -583,6 +659,13 @@ async function runScenario(browser, config) {
     if (!config.fallback) await verifyPersistentView(page, result, config.viewport);
     if (config.name === 'desktop') await verifyContextRecovery(page, result);
     if (config.name === 'desktop') await verifyMaximumCampus(page, result);
+    if (config.name === 'desktop') {
+      await page.locator('.campus-close').click();
+      await page.locator('.campus-static-summary').waitFor({ state: 'visible' });
+      await verifyStaticSummary(page, result, false);
+      assert.equal(await page.locator('.campus-panel').isVisible(), false, 'Closing the campus hides the 3D panel');
+      result.checks.push('Closed campus keeps the quotation and shows the textual summary');
+    }
     result.final = await snapshot(page);
     assert.deepEqual(result.errors, [], 'No uncaught browser errors');
     result.passed = true;
@@ -667,7 +750,7 @@ async function recordMotionDemo(browser) {
       { name: 'mobile', viewport: { width: 390, height: 844 } },
       { name: 'reduced', viewport: { width: 1440, height: 1000 }, reducedMotion: true },
       { name: 'fallback', viewport: { width: 390, height: 844 }, fallback: true }
-    ]) await runScenario(browser, config);
+    ].filter(config => !process.env.CAMPUS_ONLY || process.env.CAMPUS_ONLY.split(',').includes(config.name))) await runScenario(browser, config);
     summary.passed = summary.scenarios.every(result => result.passed);
     // Optional because Playwright video requires its separate FFmpeg runtime.
     if (summary.passed && process.env.CAMPUS_CAPTURE_MOTION === '1') await recordMotionDemo(browser);

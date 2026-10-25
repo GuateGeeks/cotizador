@@ -293,3 +293,33 @@ test('focus and enrollment identities reach the renderer without moving campus a
   assert.deepEqual(before.tiles.map(({ focused, ...tile }) => tile), after.tiles.map(({ focused, ...tile }) => tile));
   assert.deepEqual(after.bounds, before.bounds);
 });
+
+// ---- papercraft scene: entities come from the growth plan
+const sceneModules = Promise.all([
+  import(pathToFileURL(path.join(__dirname, '../lab/paper/plan.js')).href),
+  import(pathToFileURL(path.join(__dirname, '../lab/paper/scene-entities.js')).href),
+  import(pathToFileURL(path.join(__dirname, '../lab/paper/plan-fixtures.js')).href)
+]);
+
+test('scene entities group every module once, with stable keys and few entities', async () => {
+  const [{ planCampus }, { groupPlan }, { stateInput }] = await sceneModules;
+  for (const n of [1, 3, 6]) {
+    const plan = planCampus(stateInput(n)), groups = groupPlan(plan);
+    const modules = groups.flatMap(group => group.modules.map(m => m.key));
+    assert.equal(new Set(modules).size, modules.length, 'a module belongs to one entity');
+    assert.equal(modules.length, plan.modules.length, 'every module is in an entity');
+    assert.ok(groups.length <= 14, 'few entities keep draw calls bounded');
+    assert.deepEqual(groups.map(g => g.key), groupPlan(planCampus(structuredClone(stateInput(n)))).map(g => g.key));
+  }
+});
+
+test('scene entities: growing keeps existing entity signatures, so only the new ones rebuild', async () => {
+  const [{ planCampus }, { groupPlan, entitySignature }, { stateInput }] = await sceneModules;
+  const signatures = n => { const plan = planCampus(stateInput(n)); return new Map(groupPlan(plan).filter(g => g.kind === 'bay').map(g => [g.key, entitySignature(g, plan)])); };
+  const small = signatures(2), same = signatures(2);
+  for (const [key, sig] of small) assert.equal(same.get(key), sig);
+  const bigger = signatures(6);
+  assert.ok(bigger.size > small.size, 'a wider campus has more bays');
+  // Services are drawn inside existing rooms, never as extra entities.
+  assert.ok(groupPlan(planCampus(stateInput(6))).every(g => g.kind !== 'service'));
+});

@@ -1,0 +1,90 @@
+# Orquestación del campus papercraft
+
+Corte iniciado el 2026-10-24 en la rama `feat/campus-papercraft`.
+
+**Asignación de modelos.** Sigue la recomendación medida de los benchmarks
+Claude de `3d-assets/creation-lab`: el resumen de la escuela Flat/Minimal y el
+de la célula animal. Según esos benchmarks:
+
+- Con un contrato cerrado, un kit validado y autores en paralelo, Haiku sirve
+  para módulos acotados y Sonnet para piezas complejas o de integración.
+- Opus coordina y revisa en un contexto nuevo con las imágenes abiertas.
+- Haiku no completó por sí solo un asset entero. Por eso aquí solo recibe
+  piezas pequeñas con primitivas cerradas.
+
+El default Sol/Luna de `3d-assets` aplica a su laboratorio de creación con
+Codex. Este trabajo se hace en Claude Code sobre el cotizador.
+
+## Roles
+
+| Rol | Alcance | Modelo solicitado | Esfuerzo solicitado | Declarado |
+|---|---|---|---|---|
+| Coordinador | contrato, kit, material, inspector, compositor, integración y QA | Opus 5.5 (`claude-opus-5-5`) | por defecto de la sesión | modelo de la sesión; esfuerzo no expuesto |
+| Autor `rooms` | `pieces-rooms.js` | `sonnet` | `medium` | alias pedido; la herramienta no confirma el modelo efectivo |
+| Autor `links` | `pieces-links.js` | `sonnet` | `medium` | ídem |
+| Autor `nature` | `pieces-nature.js` | `haiku` | `medium` | ídem |
+| Autor `furniture` | `pieces-furniture.js` | `haiku` | `medium` | ídem |
+| Autor `tech` | `pieces-tech.js` | `sonnet` | `medium` | ídem |
+| Autor `people` | `pieces-people.js` (`addPaperPerson`) | `sonnet` | `medium` | ídem |
+| Autor `plan` | `plan.js` y `paper-plan.test.js` | `sonnet` | `medium` | ídem |
+| Revisor visual | revisión independiente con las imágenes abiertas | `opus` | `medium` | pendiente |
+
+## Reglas del corte
+
+- **Contrato:** [CONTRACT.md](CONTRACT.md). Cada autor es dueño de un solo
+  archivo.
+- **Rondas:** dos rondas de corrección por autor después de la primera
+  corrida.
+- **Renders:** un solo Chromium a la vez mediante el candado de
+  `tools/paper-shot.cjs`, porque la memoria del host se comparte con otras
+  sesiones. No se usa GPU.
+- **Orden pedido por la persona responsable:**
+  1. generar todas las piezas, el plan y la composición;
+  2. mostrarlos;
+  3. después, las pruebas de malla: presupuestos, solapamientos, coplanaridad,
+     normales, límites y fugas.
+
+## Registro
+
+- **2026-10-24.** Kit, material, inspector y script de capturas del
+  coordinador. La primera corrida del grupo `kit` no tuvo errores de
+  construcción; `kit-frame` excedió su presupuesto inicial y se ajustó a 130.
+- **2026-10-24.** Siete autores lanzados en paralelo.
+- **2026-10-24.** Corrección de contrato a `people`: las poses se aplican en
+  `meta.afterFinish`, porque el esqueleto se enlaza en `finish()`.
+- 2026-10-24 · `nature` (Haiku): 9 piezas, 0 errores, todas bajo presupuesto (`artifacts/paper/nature-r4`). Usó 3 correcciones (límite 2), registrado. Defectos para la ronda del coordinador: `tree-cards` sin cara posterior y cruce débil; `planter` con spikes altos tipo pino, fragmento que atraviesa la pared frontal y huella mayor a la declarada; flores pequeñas en estrella. Pide primitiva `vsheet` (tarjeta vertical a dos caras).
+- 2026-10-24 · `links` (Sonnet): 7 piezas, 0 errores, todas bajo presupuesto (`artifacts/paper/links-r2`, 1 corrección). Pendiente del coordinador: el marfil se lee beige con la luz del inspector (ajustar exposición/hemisférica); pilares de la pasarela altos (revisar al componer); ensamblaje de `stairs` no confirmado en imagen. Pide `p.stairs`, `p.extrude` (polígono en plano vertical), vidrio inclinado y bordes de color en cards macizos.
+- 2026-10-24 · `furniture` (Haiku): 10 piezas, 0 errores, todas bajo presupuesto (`artifacts/paper/furniture-r3`, 2 correcciones). Pendiente del coordinador: sillas que leen con dos patas; pie de la pantalla de aula leído como losa oscura; trazo «<» recortado en la tarjeta turquesa; `wall-screen` con su borde inferior en y=0 (la composición la eleva). Inspector: etiquetas que se superponen en la hoja (layout del coordinador).
+- 2026-10-24 · `people` (Sonnet): 10 piezas, 0 errores, todas bajo presupuesto (`artifacts/paper/people-r3`, 2 correcciones). Jerarquía de huesos y retorno compatibles con `addPerson` (verificado por el autor en Node). Visual por debajo de la lámina 07 (dictamen del coordinador con imágenes abiertas): cabello que se lee como casco, cabeza de caja y no facetada, boca roja en lugar de sonrisa oscura, cabello café en vez de violeta oscuro, cuerpos rígidos. Prioridad de corrección visual. `scale` devuelve la altura real (antes un factor): verificar `campus-actors.js` al integrar.
+- 2026-10-24 · `rooms` (Sonnet): 8 piezas, 0 errores, todas bajo presupuesto (`artifacts/paper/rooms-r3`, 2 correcciones). Dictamen del coordinador con imágenes abiertas: la losa superior sombrea todo el interior (en la vista 34 y frontal el aula se lee gris y vacía), contrario a la referencia (interior cálido visible). La pared de acento violeta ocupa todo el fondo y la pantalla queda diminuta en lo alto; la referencia usa pared naranja con pantalla violeta grande. `room-upper` declara `place.y = 1.7` (la composición la coloca con `y` del plan). Corrección del coordinador pendiente: losa/cubierta sin proyectar sombra al interior, luz interior cálida, pared de acento y pantalla según la lámina 02.
+- 2026-10-24 · `tech` (Sonnet): 9 piezas, 0 errores, todas bajo presupuesto (`artifacts/paper/tech-r2`, 1 corrección). Siluetas reconocibles (dino, dron de 4 aros, robot amarillo, protoboard). Defectos declarados: aros del dron sin canto, ruedas huecas, visor cúbico, dino de bloques. Inspector (coordinador): el espaciado fijo de la hoja deja diminutas las piezas pequeñas; ajustado a espaciado proporcional.
+- 2026-10-24 · Ronda del coordinador (aulas): pared de acento naranja con pantalla violeta (lámina 02); losa superior y cubierta en la capa `soft` (no proyectan sombra) para que el interior en corte quede iluminado (`artifacts/paper/rooms-c1`). Pendiente: con la cámara 34 la losa aún oculta el fondo del aula; se decide al componer (inclinación de cámara).
+- 2026-10-24 · Ronda del coordinador (personas): cabello violeta oscuro por defecto, coronilla facetada en pico, dos mechones sobre la frente, sonrisa oscura pequeña, anillo superior del cabello sobre la coronilla para que no asome la piel (`artifacts/paper/people-c1`…`c3`). El volumen del cabello sigue alto respecto a la lámina 07.
+- 2026-10-24 · `plan` (Sonnet): `plan.js` + 17 pruebas; suite completa 96/96. Huella estado 6 = 4× estado 1.
+- 2026-10-24 · Composición del coordinador (`compose.js`, modo `--states` de `paper-shot`): seis estados sin errores ni piezas faltantes; estado 6 = 31 408 triángulos (presupuesto 40 000). Ronda del coordinador sobre la composición: jardín trasero (fila A, solo vegetación, crece con las columnas), esquinas redondeadas del pedestal (adaptador booleano→nombre), pedestal de 0.55 de alto. Prueba de huella ajustada al área real de las celdas. Suite 96/96. Evidencia: `artifacts/paper/states-r2`, `sheets-r1`, hojas de contacto `review-r1`.
+- Pendiente antes de las pruebas de malla (dictamen del coordinador): el estado 6 es una franja ancha (20.8 × 8.2) y no la U compacta de la referencia; la vista «personajes y equipo» no se acerca lo suficiente; etiquetas superpuestas en la hoja de personajes. Revisión visual independiente (Opus) aún no ejecutada.
+- 2026-10-24 · La persona responsable pidió «proceder con todo lo pendiente» (autoriza rondas adicionales). Correcciones: `furniture` (sillas con 4 patas, pie de pantalla, glifo), `nature` (`tree-cards` a dos caras, flores redondeadas; los arbustos de la jardinera siguen puntiagudos), `tech` (aros del dron con canto superior, ruedas cerradas, visor facetado), `people` (cabello envolvente, pies sentados al suelo).
+- 2026-10-24 · Pruebas de malla (`tools/paper-mesh-check.mjs`, Node, sin WebGL): presupuesto, triángulos degenerados/NaN, tamaño real vs declarado (sin sombras), suelo, caras coplanares superpuestas de distinto color, huesos, etapas, determinismo, 60 variantes de persona y los 6 estados compuestos. `mesh-r1`: 17 piezas con z-fighting (uniones al ras) + tamaños. Corregidas por `rooms`, `links`, `furniture`, `people` y por el coordinador (`kit-valley`, medición sin sombras, amueblado de aulas sin sillas contra muros ni superpuestas, personas sobre el piso del aula y separación mínima entre caminantes). Todas las piezas y variantes PASS; los estados quedan a la espera de la composición en U (`bridge` apoyado en la losa del fondo).
+- 2026-10-24 · Fugas (`paper-shot --leak 10`, SwiftShader): geometrías 5, texturas 4, programas 5 estables en 10 ciclos 2↔6: PASS (`artifacts/paper/leak-r1`).
+- 2026-10-24 · Integración lanzada en paralelo: Parte A escena (Sonnet `medium`) y Parte B interfaz (Sonnet `medium`), contrato en `INTEGRATION.md`.
+- 2026-10-24 · `plan` (Sonnet), ronda U: pilas por columna (W, BL, BR, E1, E2), estado 6 = 13.0 × 10.5, 98/98 pruebas.
+- 2026-10-24 · Verificador de mallas: falso negativo corregido (agrupaba por normal redondeada); ahora agrupa por plano y reporta el hueso dueño. Reveló coplanares cabello/cráneo y rodilla muslo/espinilla en variantes de persona (corrección estructural pedida a `people`).
+- 2026-10-24 · Revisión visual independiente (Opus `medium`, contexto nuevo; modelo efectivo no confirmado por la herramienta): `artifacts/paper/review-opus-r1/REVIEW.md`. Paleta PASS, tecnologías PASS; FAIL en lectura de papel (personas, copas, robot), acercamientos, crecimiento (estado 1 con pedestal grande, entrada exenta, pilotes vacíos, patio vacío en el estado 6), composición (se lee lineal), personajes, ensamblaje (mobiliario y personas antes que los muros, reverso de cubierta gris). Vistas BLOCKED: `papercraft-reference.png` nunca se guardó en disco (la imagen original solo se compartió en la conversación).
+- 2026-10-24 · Ronda por la revisión: kit con líneas de pliegue (`crown`/`spike` `creases`, `p.crease`, `p.creaseTri`), azul marino más azul, vistas `front` 0.4 rad y `people` baja; encargos a `plan` (U marcada, sin pilotes, pedestal ajustado, entrada adosada, árboles en flancos, gente en patio), `nature` (pliegues), `rooms` (reverso violeta, pestañas visibles), Parte A (orden del ensamblaje, aula de proyecto legible, patio con gente, vista `people`).
+- 2026-10-24 · La persona responsable guardó `docs/papercraft/reference/papercraft-reference.png` (1536 × 1024, SHA256 cc0ae3c3…6a6d88). El criterio 9 de la revisión deja de estar BLOCKED en la próxima ronda.
+- 2026-10-24 · `rooms` (Sonnet), ronda por la revisión: cubierta con cara inferior violeta oscuro, pestañas exteriores muro–losa y pestañas en el borde del piso (visibles en la etapa de base), filete de pliegue en la losa. Malla PASS (`mesh-rooms-r4`), renders `rooms-r5`. `room-upper` 698/700.
+- 2026-10-24 · Circulación vertical (observación de la persona responsable: las escaleras no llevaban a ningún lugar): contrato en `INTEGRATION.md`; `plan` (galerías `walkway` delante de aulas superiores, descansos y pasarela a ras con lados `open`, prueba de grafo transitable, 108/108), `links` (aberturas de baranda en `stairs`, `bridge`, `corridor`), `rooms` (`room-upper` con `balcony: false`). Pendiente: límite de 2 pisos y galería del fondo sin `stairs:back`.
+- 2026-10-24 · Personas: domo facetado en la coronilla y flequillo sobre las cejas (`people-r10`, ajuste del coordinador `people-c4`); 216/216 variantes PASS. Vegetación: `p.crystal` del kit en arbustos y jardinera (`nature-r16`).
+- 2026-10-24 · Parte A (escena): `planCampus` + piezas papercraft, entidades por pila/conexiones/terreno con firmas, ensamblaje por etapas, actividades con fin y reposo, `setView`, `preview`, `capture`. Medido (SwiftShader, triángulos con sombra): estado 1 = 5 565 / 13 draw calls / 8 materiales; estado 6 ≈ 36 440 / 29 / 8; sin fuga en 12 ciclos (30 geometrías). Pendiente: servicios sin dibujar, transiciones lentas en SwiftShader, selección de aulas apiladas.
+- 2026-10-24 · Parte B (interfaz): visor claro AA, leyenda, 4 contadores del motor, vista previa en el paso 3, botones de vista, respaldo textual, captura en el PDF (+2 pruebas), móvil «Ampliar». Corrección del coordinador: márgenes del campus (la barra superior se contaba como franja inferior de 416 px) y retiro de `initLab`. `campus-browser.cjs` adaptado a actividad con fin (coordinador). Suite Node 108/108.
+- 2026-10-24 · `plan`: máximo 2 pisos con prioridad (aula de nivel + aula de proyecto por programa; pisos extra de niveles grandes solo si queda plaza), una escalera central al patio con galería central y pasarelas a las galerías de alas y fondo; prueba de grafo sin excepciones; 109/109; `paper-mesh-check` sin fallos (`mesh-plan-r3`). Render `plan-u-r5`.
+- 2026-10-24 · La persona responsable pidió reemplazar el Geeky low poly por el modelo 3D estilizado de GuateGeeks/geeky-animation (commit 0089c59, «Geeky Live», renderer Three.js). Decisión del coordinador: embeberlo en la escena del campus (un solo canvas) con su cerebro y geometría originales copiados sin modificar en `asesor/lab/geeky/` y un adaptador; misma API `createGeeky`. Autor Sonnet `medium`. El repositorio no declara licencia (misma organización; se registra la procedencia).
+- 2026-10-24 · Escalada a Opus `high` para personajes (varias rondas Sonnet sin cerrar la brecha): `pieces-people.js` rehecho (cabeza poliédrica, cabello en mechones, falda plisada azul marino, gorra con visera, docente con corbata); 216/216 variantes PASS (`mesh-people-o1`), comparativas `compare-people-o4`. Pendiente visual: coronilla algo plana, figuras algo más altas y delgadas, mangas en punta de frente.
+- 2026-10-24 · Geeky estilizado embebido (`asesor/lab/geeky/`, `campus-geeky.js`): un solo canvas; medición del coordinador en el cotizador real (`artifacts/campus/final-r1`): materiales 29–33 (presupuesto 10) y estado 6 = 40 393 triángulos (presupuesto 40 000) → corrección encargada (≤ 2 materiales propios, ≤ 3 000 triángulos en reposo). Escena: Geeky celebra cuando se agrega un programa y se posa delante y por encima de la entrada (coordinador).
+- 2026-10-24 · La persona responsable observó que los pasillos que conectan las escaleras están desfasados respecto a la referencia; confirmó que es la POSICIÓN. Encargado al planificador: balcón en U pegado a los frentes de los pisos superiores, pasarela al fondo uniendo las alas, una escalera exterior por el costado del ala derecha, patio libre.
+- Herramienta: `tools/paper-compare.py` (Pillow) genera comparaciones lámina de referencia vs modelos renderizados (`artifacts/paper/compare-r2`).
+- 2026-10-24 · Personajes congelados por decisión de la persona responsable (estado `people-o4`). Prompt de investigación para ChatGPT en `docs/papercraft/research/PROMPT-personajes.md`.
+- 2026-10-24 · `plan`: circulación como la referencia — balcón en U pegado a los frentes superiores (galerías de 0.7, tramos laterales por las caras interiores de las alas), galerías del fondo como pasarela, una escalera exterior junto al ala derecha, patio libre. 108/108; malla sin fallos (`mesh-plan-r4`); render `plan-u-r6`. Pendiente: tramos de galería en voladizo sin pilares; baranda frontal de las galerías del fondo abierta completa donde se une un tramo lateral.
+- 2026-10-24 · Geeky: 2 materiales propios, 2 144 triángulos en reposo y 4 232 en `celebrate` (`artifacts/campus/geeky-r1`). Coordinador: Geeky solo cuenta como transición mientras viaja; el detalle de aros/cúpulas baja ligeramente para el presupuesto.
+- 2026-10-24 · Verificación final (coordinador). Presupuesto con sombras completas en GPU: el ejemplo pasaba de 40 000 → solo la arquitectura proyecta al mapa de sombras (personas, mobiliario, equipos, vegetación, suelo y decoraciones de muro usan sombras de contacto); tope de 60 fps con puntero fino en calidad `full`. GPU RTX 3060 Ti: estado 6 = 37 809–38 049 triángulos, 75–82 draw calls, 10 materiales, 56–60 fps; estado 1 = 6 637 / 34 / 10 / 60 fps. Node 108/108; malla PASS (`mesh-final-r2`); navegador escritorio, móvil (emulación), movimiento reducido y sin WebGL PASS (`artifacts/campus/browser-final-r7`). Ajustes de la prueba de navegador: canal Chromium, reposo = sin cuadro pendiente, límite de aulas 10, lectura del resumen con `textContent`. Capturas finales `artifacts/campus/final-r3`, `final-r3-movil`; comparaciones `artifacts/paper/compare-r3`.
+- 2026-10-24 · Revisión visual independiente r2 (Opus `medium`, contexto nuevo; modelo efectivo no confirmado): `artifacts/paper/review-opus-r2/REVIEW.md`. PASS: paleta, crecimiento (con observaciones). FAIL: lectura papercraft general, acercamientos, composición (explanada frontal vacía, entrada bajo el balcón, árboles solo al fondo), personajes (congelados por decisión), tecnologías (visor VR irreconocible, robot recortado en el acercamiento), ensamblaje (una persona visible en los pasos 1–2), cuatro vistas, integración (Geeky delante de escalera y balcón; el revisor no reconoce la leyenda textual como «leyenda»). Corregido desde r1: referencia disponible, estado 1 ajustado, entrada adosada, sin pilotes, encuadre, pestaña, seis pasos de ensamblaje, azul marino.

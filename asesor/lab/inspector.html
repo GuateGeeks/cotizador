@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inspector papercraft</title>
+<meta name="robots" content="noindex">
+<style>
+  :root { --bg: #F4F1F6; --ink: #321853; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font-family: Inter, system-ui, sans-serif; }
+  #stage { position: fixed; inset: 0; }
+</style>
+</head>
+<body>
+<div id="stage" aria-label="Inspector de piezas papercraft del campus"></div>
+<script src="../vendor/paper-inspector.min.js"></script>
+<script>window.inspector = GGPaper.createInspector(document.getElementById('stage'), { ui: true });</script>
+</body>
+</html>
