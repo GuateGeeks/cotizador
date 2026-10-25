@@ -12,12 +12,16 @@ test('el módulo de datos R2 coincide con los JSON del paquete (node tools/r2-im
   assert.equal(fs.readFileSync(file, 'utf8'), r2DataModule(path.join(__dirname, '../../docs/papercraft/construction-r2')));
 });
 
-test('R2: 20 recetas, 33 instancias, 280 triángulos; montaje coherente con sus sockets', async () => {
-  const { R2_RECIPES, R2_INSTANCES, R2_FACTS, instancePoint } = await load('../lab/paper/r2/person-r2.js');
+test('R2: 20 recetas, 33 instancias, 280 triángulos (más el cambio declarado de las recetas R3); montaje coherente con sus sockets', async () => {
+  const { R2_RECIPES, R2_INSTANCES, R2_FACTS, R2_PROVENANCE, instancePoint } = await load('../lab/paper/r2/person-r2.js');
   assert.equal(Object.keys(R2_RECIPES).length, 20);
   assert.equal(R2_INSTANCES.length, 33);
-  assert.equal(R2_FACTS.packageTriangles, 280);
-  assert.equal(R2_FACTS.emittedTriangles, 272);
+  // Counts come from the active recipe source: an R3 override replaces its R2 recipe, and the R2
+  // package itself still sums 280 (272 emitted after the redistribution).
+  for (const [id, o] of Object.entries(R2_PROVENANCE.r3)) assert.equal(R2_RECIPES[id].faces.length, o.triangles, `${id} R3`);
+  assert.equal(R2_FACTS.r2PackageTriangles, 280);
+  assert.equal(R2_FACTS.packageTriangles, 280 + R2_FACTS.r3Delta);
+  assert.equal(R2_FACTS.emittedTriangles, 272 + R2_FACTS.r3Delta);
   const byId = Object.fromEntries(R2_INSTANCES.map(i => [i.id, i]));
   for (const i of R2_INSTANCES) {
     if (!i.parent || !i.target) continue;

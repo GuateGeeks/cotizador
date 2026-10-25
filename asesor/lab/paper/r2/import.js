@@ -24,7 +24,10 @@ export function readR2(dir, overridesDir = path.join(path.dirname(dir), 'constru
   for (const name of fs.readdirSync(datos).filter(f => /^P\d\d-.*\.json$/.test(f)).sort()) {
     const over = byId.get(name.slice(0, 3));
     const d = over ? read(over, r3, 'r3/datos') : read(name);
-    if (over) overrides[d.id] = { file: `construction-r3/datos/${over}`, replaces: `construction-r2/datos/${name}` };
+    if (over) {
+      const r2 = JSON.parse(fs.readFileSync(path.join(datos, name), 'utf8'));
+      overrides[d.id] = { file: `construction-r3/datos/${over}`, replaces: `construction-r2/datos/${name}`, triangles: d.mesh.faces.length, replacedTriangles: r2.mesh.faces.length };
+    }
     recipes[d.id] = {
       id: d.id, slug: d.slug, name: d.name, purpose: d.purpose, construction: d.construction, limitations: d.metadata.limitations || [],
       kind: d.metadata.surface_kind, base: d.material.base_color_srgb.toUpperCase(),

@@ -226,8 +226,9 @@ for (const [level, role] of [['pre'], ['prim'], ['bas'], ['bach'], ['adult', 'te
   report.r2 = { provenance: R2_PROVENANCE, facts: R2_FACTS, redistribution: R2_REDISTRIBUTION, instances, geometry: sum(p.parts), auxiliaries: { contactShadow: auxiliaries }, total: r.total,
     checks: {
       instances: status(instances.length === 33 && instances.every(x => x.emitted === x.package - x.removed && x.emitted === x.planned)),
-      packageTotal: status(instances.reduce((s_, x) => s_ + x.package, 0) === 280),
-      emittedTotal: status(sum(p.parts) === 280 - instances.reduce((s_, x) => s_ + x.removed, 0)),
+      // Active recipe source: the R2 package (280) plus the declared change of the R3 recreations.
+      packageTotal: status(instances.reduce((s_, x) => s_ + x.package, 0) === 280 + R2_FACTS.r3Delta),
+      emittedTotal: status(sum(p.parts) === 280 + R2_FACTS.r3Delta - instances.reduce((s_, x) => s_ + x.removed, 0)),
       auxiliariesSeparated: status(auxiliaries === SHADOW_TRIANGLES),
       bones: status(instances.every(x => Object.keys(x.perBone).length === 1 && Object.keys(x.perBone)[0] === x.bone)),
       contiguousRanges: status(instances.every(x => x.ranges.length === 1)),
