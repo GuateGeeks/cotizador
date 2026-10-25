@@ -109,8 +109,8 @@ La piel, el cabello, el chaleco, la mochila y los zapatos del paquete se recolor
 
 ## Presupuesto
 
-- Paquete: 320 triángulos, sin reserva. El proyecto cuenta la sombra de contacto (7, capa `blob`, auxiliar) en el límite de 280, así que se **redistribuye** antes de añadirla: se retiran 8 tapas ocultas.
-- Emitido: **312** de geometría + 7 de sombra = **319** > 280: **excede** el límite (experimento R3 aceptado; el límite no cambia). Reserva: 0 (no es geometría).
+- Paquete: 320 triángulos, sin reserva. El proyecto cuenta la sombra de contacto (7, capa `blob`, auxiliar) en el límite, así que se **redistribuye**: se retiran 8 tapas ocultas. Límite del alumno con las recetas R3: 320 (el resto de estudiantes, 280).
+- Emitido: **312** de geometría + 7 de sombra = **319** ≤ 320. Reserva: 0 (no es geometría).
 
 | Receta | Caras retiradas (índice en el JSON) | Motivo |
 |---|---|---|

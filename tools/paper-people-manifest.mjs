@@ -16,7 +16,7 @@ import { Matrix4, Vector3 } from 'three';
 import { createBuilder } from '../asesor/lab/campus-kit.js';
 import { POSES, applyPose, blendBody } from '../asesor/lab/campus-people.js';
 import { SCALE } from '../asesor/lab/paper/kit.js';
-import { addPaperPerson, HAIR_COST, GEOMETRY_CAP, RESERVE, SHADOW_TRIANGLES, COMPONENTS, PRIMARIA_BASE } from '../asesor/lab/paper/pieces-people.js';
+import { addPaperPerson, HAIR_COST, GEOMETRY_CAP, PERSON_LIMIT, personLimit, RESERVE, SHADOW_TRIANGLES, COMPONENTS, PRIMARIA_BASE } from '../asesor/lab/paper/pieces-people.js';
 import { R2_INSTANCES, R2_RECIPES, R2_REDISTRIBUTION, R2_FACTS, R2_PROVENANCE, instancePoint } from '../asesor/lab/paper/r2/person-r2.js';
 
 const out = process.argv[2];
@@ -132,7 +132,7 @@ for (const hair of ['short', 'long', 'bun']) for (const notebook of [false, true
 
 for (const spec of combos) {
   const r = build(spec), p = r.person, teacher = !!spec.role;
-  const real = p.parts, plan = p.plan, geometry = sum(real), budget = teacher ? 300 : 280, cap = p.profile.r2Body ? 280 - SHADOW_TRIANGLES : GEOMETRY_CAP[teacher ? 'teacher' : 'student'];
+  const real = p.parts, plan = p.plan, geometry = sum(real), budget = personLimit(p.profile), cap = p.profile.r2Head ? budget - SHADOW_TRIANGLES : GEOMETRY_CAP[teacher ? 'teacher' : 'student'];
   // Triangles per bone in the built geometry vs the emitter's per-component, per-bone tally.
   const perBone = {}; for (const t of r.tris) if (t.layer !== 'blob') { const k = t.owner.split('.').pop(); perBone[k] = (perBone[k] || 0) + 1; }
   const expected = {}; for (const bones of Object.values(p.perBone)) for (const [bone, n] of Object.entries(bones)) expected[bone] = (expected[bone] || 0) + n;
@@ -205,7 +205,7 @@ for (const [level, role] of [['pre'], ['prim'], ['bas'], ['bach'], ['adult', 'te
         && near(world('foreL').y, L.elbow) && near(world('legL').x, L.legX) && near(world('shinL').y, L.knee)),
       height: status(Math.abs(measured.H - .78) <= .78 * .005), head: status(Math.abs(measured.head / measured.H - .28) <= .01),
       shoulders: status(Math.abs(measured.shoulders / measured.H - .26) <= .01),
-      budget: status(r.total <= 280)
+      budget: status(r.total <= PERSON_LIMIT.r3Student)
     }
   };
 }
@@ -233,7 +233,7 @@ for (const [level, role] of [['pre'], ['prim'], ['bas'], ['bach'], ['adult', 'te
       bones: status(instances.every(x => Object.keys(x.perBone).length === 1 && Object.keys(x.perBone)[0] === x.bone)),
       contiguousRanges: status(instances.every(x => x.ranges.length === 1)),
       mounts: status(instances.every(x => !x.mount || x.mount.errorH == null || x.mount.errorH < 1e-6)),
-      budget: status(r.total <= 280)
+      budget: status(r.total <= PERSON_LIMIT.r3Student)
     } };
 }
 

@@ -6,7 +6,7 @@
  */
 import { SCALE, newMeta } from './kit.js';
 import { POSES, applyPose, blendBody } from '../campus-people.js';
-import { addPaperPerson, PRIMARIA_BASE } from './pieces-people.js';
+import { addPaperPerson, PRIMARIA_BASE, resolvePersonProfile, personLimit } from './pieces-people.js';
 
 /** Poses as the campus applies them (compose.js seats people at SCALE.seat + .02). */
 export const PERSON_POSES = Object.freeze({
@@ -29,7 +29,7 @@ export const PERSON_POSES = Object.freeze({
 export function personPiece({ spec = PRIMARIA_BASE, pose = 'rest', only = null } = {}) {
   const level = spec.role === 'teacher' ? 'adult' : (spec.level || 'prim');
   return {
-    id: spec.id || 'persona', label: spec.label || 'Persona', group: 'people', budget: spec.role === 'teacher' ? 300 : 280,
+    id: spec.id || 'persona', label: spec.label || 'Persona', group: 'people', budget: personLimit(resolvePersonProfile(spec)),
     size: { w: .5, d: .4, h: SCALE.person[level] },
     build(b, p, opts) {
       const person = addPaperPerson(b, { ...spec, id: opts.id, x: 0, y: 0, z: 0, ry: 0, only: only && only.length ? only : null });

@@ -15,7 +15,7 @@ import { CATALOG } from '../asesor/lab/paper/catalog.js';
 import { planCampus } from '../asesor/lab/paper/plan.js';
 import { composeCampus } from '../asesor/lab/paper/compose.js';
 import { stateInput } from '../asesor/lab/paper/plan-fixtures.js';
-import { addPaperPerson } from '../asesor/lab/paper/pieces-people.js';
+import { addPaperPerson, resolvePersonProfile, personLimit } from '../asesor/lab/paper/pieces-people.js';
 
 const CAMPUS_TRIANGLES = 40000;
 const out = process.argv[2];
@@ -128,9 +128,10 @@ report.people = [];
 for (const level of ['pre', 'prim', 'bas', 'bach']) for (const role of ['student', 'teacher']) for (let k = 0; k < 24; k++) for (const seated of [false, true]) {
   if (role === 'teacher' && (level !== 'bach' || seated)) continue;
   const id = `v.${level}.${role}.${k}.${seated ? 's' : 'w'}`;
-  const r = build({ id, build: (b) => { addPaperPerson(b, { id, level, role: role === 'teacher' ? 'teacher' : undefined, seed: id, seated, headset: k === 5 }); return newMeta(); } });
+  const spec = { id, level, role: role === 'teacher' ? 'teacher' : undefined, seed: id, seated, headset: k === 5 };
+  const r = build({ id, build: (b) => { addPaperPerson(b, spec); return newMeta(); } });
   const zf = zFighting(r.tris, 3);
-  report.people.push({ id, triangles: r.triangles, checks: { build: status(!r.error), budget: status(r.triangles <= (role === 'teacher' ? 300 : 280)), coplanar: status(zf.length === 0) }, zFighting: zf });
+  report.people.push({ id, triangles: r.triangles, checks: { build: status(!r.error), budget: status(r.triangles <= personLimit(resolvePersonProfile(spec))), coplanar: status(zf.length === 0) }, zFighting: zf });
 }
 
 for (let n = 1; n <= 6; n++) {

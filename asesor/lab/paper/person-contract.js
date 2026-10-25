@@ -5,7 +5,7 @@
  * (tools/people-contract.mjs and the sync test).
  */
 import { createBuilder } from '../campus-kit.js';
-import { addPaperPerson, PRIMARIA_BASE, SHADOW_TRIANGLES } from './pieces-people.js';
+import { addPaperPerson, PRIMARIA_BASE, SHADOW_TRIANGLES, PERSON_LIMIT } from './pieces-people.js';
 import { R2_RECIPES, R2_INSTANCES, R2_RIG_H, R2_LANDMARKS_H, R2_PROVENANCE, R2_REDISTRIBUTION, R2_ADAPTATIONS, R2_FACTS, r2Rig } from './r2/person-r2.js';
 
 const f = (x, d = 4) => (Math.round(x * 10 ** d) / 10 ** d).toString();
@@ -73,8 +73,8 @@ export function alumnoContract() {
   for (const [k, b] of Object.entries(R2_RIG_H)) if (k !== 'root') out.push(`| ${k} | ${b.parent} | ${vec(b.at, 3)} | ${vec(rel[k])} | ${vec(m.world[k])} |`);
   const removed = Object.entries(R2_REDISTRIBUTION).reduce((s, [r, x]) => s + x.faces.length * R2_INSTANCES.filter(i => i.recipe === r).length, 0);
   out.push('', '## Presupuesto', '',
-    `- Paquete: ${R2_FACTS.packageTriangles} triángulos, sin reserva. El proyecto cuenta la sombra de contacto (${SHADOW_TRIANGLES}, capa \`blob\`, auxiliar) en el límite de 280, así que se **redistribuye** antes de añadirla: se retiran ${removed} tapas ocultas.`,
-    `- Emitido: **${m.geometry}** de geometría + ${SHADOW_TRIANGLES} de sombra = **${m.total}** ${m.total <= 280 ? '≤ 280' : '> 280: **excede** el límite (experimento R3 aceptado; el límite no cambia)'}. Reserva: 0 (no es geometría).`, '',
+    `- Paquete: ${R2_FACTS.packageTriangles} triángulos, sin reserva. El proyecto cuenta la sombra de contacto (${SHADOW_TRIANGLES}, capa \`blob\`, auxiliar) en el límite, así que se **redistribuye**: se retiran ${removed} tapas ocultas. Límite del alumno con las recetas R3: ${PERSON_LIMIT.r3Student} (el resto de estudiantes, ${PERSON_LIMIT.student}).`,
+    `- Emitido: **${m.geometry}** de geometría + ${SHADOW_TRIANGLES} de sombra = **${m.total}** ${m.total <= PERSON_LIMIT.r3Student ? '≤ ' + PERSON_LIMIT.r3Student : '> ' + PERSON_LIMIT.r3Student + ': **excede** el límite'}. Reserva: 0 (no es geometría).`, '',
     '| Receta | Caras retiradas (índice en el JSON) | Motivo |', '|---|---|---|');
   for (const [r, x] of Object.entries(R2_REDISTRIBUTION)) out.push(`| ${r} | ${x.faces.join(', ')} | ${x.reason} |`);
   out.push('', '### Adaptaciones de integración (solo posiciones de vértices)', '', '| Receta | Vértices (local / H) | Motivo |', '|---|---|---|');

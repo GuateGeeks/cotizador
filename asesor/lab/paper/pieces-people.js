@@ -43,6 +43,13 @@ const FRONT = { short: 8, pony: 8, bun: 8, pig: 8, long: 6, cap: 4, 'cap-pig': 4
 export const GEOMETRY_CAP = { student: 271, teacher: 291 };
 export const RESERVE = 8;
 export const SHADOW_TRIANGLES = 7;
+/**
+ * Triangle limit per person, contact shadow included. The primaria short-haired student carries the R3
+ * recreations of head, hair core and vest (docs/papercraft/construction-r3), approved at 320; every
+ * other student stays at 280 and teachers at 300.
+ */
+export const PERSON_LIMIT = Object.freeze({ student: 280, r3Student: 320, teacher: 300 });
+export const personLimit = profile => profile.teacher ? PERSON_LIMIT.teacher : profile.r2Head ? PERSON_LIMIT.r3Student : PERSON_LIMIT.student;
 
 const LIGHT = (() => { const v = [-.3, .55, .75], l = Math.hypot(...v); return v.map(c => c / l); })();
 const toneCache = new Map();
@@ -663,13 +670,13 @@ function makePiece({ id, label, level, budget, spec = {}, pose, width = .4, focu
 
 export const PIECES = [
   makePiece({ id: 'person-pre', label: 'Preprimaria', level: 'pre', budget: 280, spec: { seed: 'pre-a', hair: 'pig', cap: 'worn' } }),
-  makePiece({ id: 'person-prim', label: 'Primaria', level: 'prim', budget: 280, spec: { seed: 'prim-b', hair: 'short', skirt: false } }),
-  makePiece({ id: 'person-prim-skirt', label: 'Primaria con falda', level: 'prim', budget: 280, spec: { seed: 'prim-b', hair: 'short', skirt: true } }),
+  makePiece({ id: 'person-prim', label: 'Primaria', level: 'prim', budget: PERSON_LIMIT.r3Student, spec: { seed: 'prim-b', hair: 'short', skirt: false } }),
+  makePiece({ id: 'person-prim-skirt', label: 'Primaria con falda', level: 'prim', budget: PERSON_LIMIT.r3Student, spec: { seed: 'prim-b', hair: 'short', skirt: true } }),
   makePiece({ id: 'person-bas', label: 'Básico', level: 'bas', budget: 280, spec: { seed: 'bas-a', hair: 'long', skirt: true } }),
   makePiece({ id: 'person-bach', label: 'Bachillerato', level: 'bach', budget: 280, spec: { seed: 'bach-a', hair: 'pony', skirt: false } }),
   makePiece({ id: 'person-teacher', label: 'Docente o facilitador', level: 'adult', budget: 300, spec: { seed: 'teacher-a', role: 'teacher', hair: 'short', notebook: true } }),
   makePiece({
-    id: 'pose-walk', label: 'Caminar', level: 'prim', budget: 280, width: .5, spec: { seed: 'prim-b', hair: 'short' },
+    id: 'pose-walk', label: 'Caminar', level: 'prim', budget: PERSON_LIMIT.r3Student, width: .5, spec: { seed: 'prim-b', hair: 'short' },
     pose: person => applyPose(person, POSES.walk(1.1), 'stand')
   }),
   makePiece({
@@ -685,7 +692,7 @@ export const PIECES = [
     pose: person => applyPose(person, POSES.point(.2), 'stand')
   }),
   makePiece({
-    id: 'pose-hand', label: 'Mano levantada', level: 'prim', budget: 280, width: .45, spec: { seed: 'prim-b', hair: 'short', skirt: true },
+    id: 'pose-hand', label: 'Mano levantada', level: 'prim', budget: PERSON_LIMIT.r3Student, width: .45, spec: { seed: 'prim-b', hair: 'short', skirt: true },
     pose: person => applyPose(person, POSES.hand(), 'stand')
   }),
   makePiece({

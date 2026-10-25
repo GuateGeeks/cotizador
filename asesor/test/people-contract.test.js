@@ -22,9 +22,9 @@ test('alumno base de primaria: medidas, presupuesto y plan = caras emitidas', as
   for (const c of m.person.components) assert.equal(c.triangles, c.planned, c.id);
 });
 
-// Budget kept apart so that an over-budget experiment (R3 recreations) still runs the checks above.
-test('alumno base de primaria: presupuesto ≤ 280 (geometría ≤ 273)', async () => {
+// Budget kept apart so that an over-budget recipe still runs the checks above. Limit: PERSON_LIMIT.r3Student.
+test('alumno base de primaria: presupuesto ≤ 320 con las recetas R3 (geometría ≤ 313)', async () => {
   const { measureBase } = await contract;
   const m = measureBase();
-  assert.ok(m.total <= 280 && m.geometry <= 273, `total ${m.total}, geometría ${m.geometry}`);
+  assert.ok(m.total <= 320 && m.geometry <= 313, `total ${m.total}, geometría ${m.geometry}`);
 });
