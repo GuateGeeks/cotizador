@@ -7,6 +7,10 @@ Imagen de referencia original entregada el 2026-10-24: `papercraft-reference.png
 (prompts en [PROMPTS.md](PROMPTS.md)). Son referencias de diseño, no capturas de la
 implementación.
 
+Las imágenes (`*.png`, ~47 MB) y los paquetes `.zip` **no se versionan** (`.gitignore`):
+se conservan en el equipo de diseño y se copian en esta carpeta para trabajar. Los
+hashes y los prompts sí quedan registrados aquí y en [PROMPTS.md](PROMPTS.md).
+
 ## Paneles
 
 1. **Vista general**: tres cuartos elevada desde el frente izquierdo, a unos 35–40°.

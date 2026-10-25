@@ -2,3 +2,7 @@ _site/
 node_modules/
 artifacts/
 before-desktop.png
+
+# Referencias de diseño papercraft: se guardan localmente (pesan ~47 MB); ver docs/papercraft/reference/README.md
+docs/papercraft/reference/*.png
+docs/papercraft/reference/*.zip

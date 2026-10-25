@@ -112,3 +112,13 @@ test('sin captura la propuesta sale igual y sin la figura', () => {
   const con = Buffer.from(P.build(modelo(2), { campus: jpegPrueba(1200, 760) })).toString('latin1');
   for (const texto of ['Lo que incluye tu propuesta', 'Q69,112', 'Pr\xf3ximos pasos', 'Condiciones y notas']) assert.ok(sin.includes(texto) && con.includes(texto), texto);
 });
+
+test('la tabla de grados considerados aparece solo con cobertura y avisa lo que falta', () => {
+  const m = modelo(2);
+  const sin = Buffer.from(P.build(m, {})).toString('latin1');
+  assert.ok(!sin.includes('Grados y estudiantes considerados'));
+  m.coverage = { summary: '189 de 319 estudiantes registrados están incluidos en esta cotización.', missing: 130, rows: [{ grade: '1.º Primaria', level: 'Primaria', students: 24, programs: 'Robótica para primaria', ok: true }, { grade: '4.º Bachillerato', level: 'Bachillerato', students: 40, programs: 'Sin programa', ok: false }] };
+  const con = Buffer.from(P.build(m, {})).toString('latin1');
+  assert.ok(con.includes('Grados y estudiantes considerados'));
+  assert.ok(con.includes('Sin programa'));
+});

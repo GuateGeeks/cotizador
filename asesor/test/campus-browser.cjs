@@ -412,14 +412,14 @@ async function verifyConfigurationReactions(page, result) {
 
   await page.evaluate(() => jumpTo('quantity'));
   const beforeUnits = (await snapshot(page)).data.equipment[0].units;
-  await page.getByRole('button', { name: 'Aumentar equipos', exact: true }).click();
+  await page.getByRole('button', { name: /^Aumentar / }).first().click();
   const equipment = await verifyFeedback(page, 'equipment', 'equipment');
   assert.equal(equipment.data.equipment[0].units, beforeUnits + 1);
   assert.match(equipment.feedback.title, new RegExp(String(beforeUnits + 1)));
   reactions.push(equipment.feedback);
   // Starting at recommended capacity, two decrements from +1 make stations useful.
-  await page.getByRole('button', { name: 'Reducir equipos', exact: true }).click();
-  await page.getByRole('button', { name: 'Reducir equipos', exact: true }).click();
+  await page.getByRole('button', { name: /^Reducir / }).first().click();
+  await page.getByRole('button', { name: /^Reducir / }).first().click();
   await page.getByRole('button', { name: /Trabajar por estaciones con/ }).click();
   const stations = await verifyFeedback(page, 'stations', 'stations');
   assert.equal(stations.data.equipment[0].stations, true);
@@ -720,7 +720,7 @@ async function recordMotionDemo(browser) {
     await page.locator('.radio').filter({ hasText: 'Sí, en horarios distintos' }).click();
     await page.waitForTimeout(3200);
     await page.evaluate(() => jumpTo('quantity'));
-    await page.getByRole('button', { name: 'Aumentar equipos', exact: true }).click();
+    await page.getByRole('button', { name: /^Aumentar / }).first().click();
     await page.waitForTimeout(2200);
     await page.evaluate(() => step(5));
     await page.locator('.mod-pick').last().getByRole('radio', { name: /Rentar/ }).click();

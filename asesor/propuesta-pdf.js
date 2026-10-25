@@ -113,8 +113,8 @@
     tilesRow(model.stats, { h: 64, vsize: 22 });
     if (model.levelsLine) para(model.levelsLine, { size: T.small, color: C.muted, gap: 10 });
 
-    // Lo que incluye la propuesta: una fila por programa, solo alcance y equipos (sin importes por programa)
-    heading('Lo que incluye tu propuesta', 'Los importes de la propuesta no se separan por nivel ni por programa: más abajo están unificados.', 90);
+    // Lo que incluye la propuesta: una fila por programa, solo alcance y equipos (sin precios por programa)
+    heading('Lo que incluye tu propuesta', 'Los precios de la propuesta no se separan por nivel ni por programa: más abajo están unificados.', 90);
     const cols = [{ w: 270, a: 'left', t: 'Programa' }, { w: 135, a: 'left', t: 'Equipos' }, { w: 110, a: 'right', t: 'Estudiantes' }];
     const tableHead = () => {
       ensure(26 + 60);
@@ -141,6 +141,25 @@
     pdf.line(M, y, M + CW, y, C.line);
     y += 16;
     if (model.invest.warning) { const h = calloutH(CW, '', model.invest.warning); ensure(h + 8); callout(M, CW, y, '', model.invest.warning, 'amber'); y += h + 14; }
+
+    // Grados y estudiantes considerados: deja claro quién está incluido en la cotización
+    if (model.coverage && model.coverage.rows.length) {
+      heading('Grados y estudiantes considerados', model.coverage.summary, 120);
+      const cc = [{ w: 190, a: 'left', t: 'Grados' }, { w: 90, a: 'right', t: 'Estudiantes' }, { w: CW - 280, a: 'left', t: 'Programa' }];
+      const head = () => { ensure(26 + 40); pdf.rect(M, y, CW, 26, { fill: C.plumDark, r: 6 }); let cx = M; cc.forEach(c => { pdf.text(c.a === 'right' ? cx + c.w - 10 : cx + 10 + (c === cc[2] ? 10 : 0), y + 17, c.t, { size: T.small, bold: true, color: C.white, align: c.a }); cx += c.w; }); y += 28; };
+      head();
+      model.coverage.rows.forEach((r, ri) => {
+        const pl = GGPdf.wrap(r.programs, T.small, false, cc[2].w - 24).slice(0, 2), h = Math.max(22, 8 + pl.length * 12 + 4);
+        if (y + h > BOTTOM) { newPage(); head(); }
+        pdf.rect(M, y, CW, h, { fill: r.ok ? (ri % 2 ? C.white : C.soft) : '#fff3e3', r: 4 });
+        pdf.text(M + 10, y + 15, r.grade, { size: T.small + 0.5, bold: true, color: C.ink });
+        pdf.text(M + cc[0].w + cc[1].w - 10, y + 15, String(r.students), { size: T.small + 0.5, color: C.ink, align: 'right' });
+        pl.forEach((ln, k) => pdf.text(M + cc[0].w + cc[1].w + 20, y + 15 + k * 12, ln, { size: T.small, bold: !r.ok, color: r.ok ? C.muted : C.amberDark }));
+        y += h;
+      });
+      y += 14;
+      if (model.coverage.missing) { const msg = model.coverage.missing + ' estudiantes registrados no entran en los precios de esta cotización; el resto sí está incluido.'; const h = calloutH(CW, '', msg); ensure(h + 8); callout(M, CW, y, '', msg, 'amber'); y += h + 14; }
+    }
 
     // Inversión agrupada por modalidad: cada monto reúne los programas que comparten modalidad
     if (model.options && model.options.length) {
@@ -340,7 +359,7 @@
     // ---------- Pagos mes a mes ----------
     if (model.pay && model.pay.table) {
       const t = model.pay.table;
-      heading('Pagos mes a mes', (model.pay && model.pay.note) || 'Importes en quetzales enteros.', 100);
+      heading('Pagos mes a mes', (model.pay && model.pay.note) || 'Precios en quetzales enteros.', 100);
       const n = t.head.length, firstW = n === 2 ? CW - 140 : 74, lastW = n === 2 ? 140 : 80, midW = (CW - firstW - lastW) / Math.max(1, n - 2);
       const widths = t.head.map((_, i) => i === 0 ? firstW : i === n - 1 ? lastW : midW);
       const headLines = t.head.map((h, i) => GGPdf.wrap(h, T.small, true, widths[i] - 12));
@@ -403,7 +422,7 @@
     return pdf.build(model.title, (n, total, p) => {
       p.rect(0, 836, p.W * 0.4, 6, { fill: C.plumDark }); p.rect(p.W * 0.4, 836, p.W * 0.3, 6, { fill: C.coral }); p.rect(p.W * 0.7, 836, p.W * 0.3, 6, { fill: C.sky });
       p.line(M, 806, M + CW, 806, C.line);
-      p.text(M, 821, 'GuateGeeks · Propuesta educativa · Importes estimados; la cotización final la confirma GuateGeeks', { size: 8.5, color: C.muted });
+      p.text(M, 821, 'GuateGeeks · Propuesta educativa · Precios estimados; la cotización final la confirma GuateGeeks', { size: 8.5, color: C.muted });
       p.text(M + CW, 821, `Página ${n} de ${total}`, { size: 8.5, color: C.muted, align: 'right' });
     }, opts);
   }

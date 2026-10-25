@@ -93,7 +93,7 @@ test('institución C: dos grupos de 13 simultáneos con ratio 2 → 14 equipos (
   assert.equal(t.rows[0].units, 14); assert.equal(t.net, 14 * 2000);
 });
 
-test('institución D: dos programas con modalidades distintas suman sus importes y el total es la suma exacta', () => {
+test('institución D: dos programas con modalidades distintas suman sus precios y el total es la suma exacta', () => {
   const g = gr('x', 30, 28, 30);
   const entries = [
     { programId: 'spike', plan: 'EV16' }, { programId: 'drones', plan: 'FLEX', flexBimestres: 4 }, { programId: 'immersive', plan: 'INTEGRA' }
@@ -113,7 +113,7 @@ test('un cambio de grupos invalida el precio: nunca se cobra un cálculo viejo',
   assert.equal(t.complete, false); assert.equal(t.rows[0].status, 'stale'); assert.equal(t.total, 0);
 });
 
-test('programa sin tarifa o sin modalidad no suma importes', () => {
+test('programa sin tarifa o sin modalidad no suma precios', () => {
   const g = gr('a', 20), t = colegio([{ programId: 'master', plan: 'UNDECIDED' }], g);
   assert.equal(t.complete, false); assert.equal(t.total, 0); assert.equal(t.rows[0].status, 'plan');
 });

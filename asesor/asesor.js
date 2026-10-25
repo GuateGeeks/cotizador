@@ -8,9 +8,9 @@ const M = window.GGMotor;
 const KEY = 'gg_asesor_v1';
 
 // ---------- Estado y borrador ----------
-const initial = () => ({ v: 1, step: 0, levels: [], enroll: {}, levelIndex: 0, selected: [], selectedIndex: 0, fee: null, useSuggested: true, iva: false });
+const initial = () => ({ v: 1, step: 0, levels: [], enroll: {}, levelIndex: 0, selected: [], selectedIndex: 0, fee: null, useSuggested: true, iva: false, skipped: [] });
 let state = initial();
-const ui = { review: false, single: false, lb: null, notice: '', photoIdx: {}, sub: 0, focusTitle: false, labLevel: 'bas', preview: null };
+const ui = { assign: false, assignSeen: '', assignSel: {}, review: false, single: false, lb: null, notice: '', photoIdx: {}, sub: 0, focusTitle: false, labLevel: 'bas', preview: null };
 try {
   const raw = localStorage.getItem(KEY);
   if (raw) {
@@ -151,6 +151,7 @@ function canStep(n) { return n === 1 || (n === 2 && state.levels.length > 0) || 
 function step(n) {
   n = Math.max(0, Math.min(5, n));
   if (n === 4 && state.step !== 4) pickConfigTarget();
+  if (n === 3) { const p = assignPending(), sig = p.map(g => g.id).join(); if (p.length && sig !== ui.assignSeen) { ui.assign = true; ui.assignSeen = sig; } else if (!p.length) ui.assign = false; }
   state.step = n; render();
 }
 function start() { step(1); }
@@ -177,7 +178,7 @@ function resetAll() {
 }
 
 function updateHeader() {
-  document.querySelector('.top').innerHTML = `<div class="top-inner"><button class="brand" onclick="step(0)" aria-label="GuateGeeks, ir al inicio"><img src="../assets/brand/guategeeks-logo.png" alt="GuateGeeks" width="82" height="54"></button><div class="brand-caption">Experiencias STEAM<br>para instituciones educativas</div><div style="flex:1"></div><div class="top-right">${state.step >= 1 ? campusToggleButton() : ''}</div></div>`;
+  document.querySelector('.top').innerHTML = `<div class="top-inner"><button class="brand" onclick="step(0)" aria-label="GuateGeeks, ir al inicio"><img src="../assets/brand/guategeeks-logo-horizontal.png" alt="GuateGeeks" width="185" height="38"></button><div style="flex:1"></div><div class="top-right">${state.step >= 1 ? campusToggleButton() : ''}</div></div>`;
   const n = document.getElementById('notice');
   n.hidden = !ui.notice; n.querySelector('span').textContent = ui.notice;
 }
@@ -246,7 +247,7 @@ function progressMarkup() {
 function summaryAside() {
   const t = M.proposalTotals(state.selected, PROGRAMS, groups(), TARIFFS, FISCAL);
   // Campus panel (3D view) with the proposal summary as a collapsible pill.
-  return `<aside class="side-panel campus-panel" aria-label="Tu colegio y propuesta en vivo"><div id="campus-slot"></div><details class="campus-proposal" ${ui.campusSummary ? 'open' : ''} ontoggle="ui.campusSummary=this.open"><summary>Mi propuesta <span>${state.selected.length} ${plural(state.selected.length, 'programa', 'programas')}</span></summary><div class="campus-proposal-body"><p class="side-summary">${state.selected.length} ${plural(state.selected.length, 'programa elegido', 'programas elegidos')}</p><div class="side-metrics"><div><b data-participants>${selectedParticipants()}</b><small>estudiantes únicos</small></div></div>${state.selected.map((s, i) => { const p = findP(s.programId), r = t.rows[i]; return `<div class="side-item">${miniature(s)}<div style="min-width:0"><b>${esc(p.name)}</b><small>${esc(levelsLabel(s))} · <span data-campus-units="${i}">${p.ratio && r.units ? r.units + ' equipos' : 'por definir'}</span></small><button class="text-btn" onclick="editProgram(${i})" style="font-size:12px;margin-top:3px">${s.plan && s.plan !== 'UNDECIDED' ? esc(planOf(s.plan).tag) + ' · ' : ''}Editar</button></div></div>`; }).join('') || '<p class="campus-empty">Tu propuesta empieza con tus estudiantes. Después podrás agregar los programas.</p>'}<div class="side-actions">${state.selected.length ? `<button class="btn btn-primary" onclick="step(5)">Revisar mi propuesta ${icon('arrow')}</button>` : ''}<button class="btn btn-outline" onclick="resetAll()">Empezar de nuevo</button></div><p class="side-note">${icon('info')} Tu avance se guarda en este navegador. Los importes se confirman con GuateGeeks.</p></div></details></aside>`;
+  return `<aside class="side-panel campus-panel" aria-label="Tu colegio y propuesta en vivo"><div id="campus-slot"></div><details class="campus-proposal" ${ui.campusSummary ? 'open' : ''} ontoggle="ui.campusSummary=this.open"><summary>Mi propuesta <span>${state.selected.length} ${plural(state.selected.length, 'programa', 'programas')}</span></summary><div class="campus-proposal-body"><p class="side-summary">${state.selected.length} ${plural(state.selected.length, 'programa elegido', 'programas elegidos')}</p><div class="side-metrics"><div><b data-participants>${selectedParticipants()}</b><small>estudiantes únicos</small></div></div>${state.selected.map((s, i) => { const p = findP(s.programId), r = t.rows[i]; return `<div class="side-item">${miniature(s)}<div style="min-width:0"><b>${esc(p.name)}</b><small>${esc(levelsLabel(s))} · <span data-campus-units="${i}">${p.ratio && r.units ? r.units + ' equipos' : 'por definir'}</span></small><button class="text-btn" onclick="editProgram(${i})" style="font-size:12px;margin-top:3px">${s.plan && s.plan !== 'UNDECIDED' ? esc(planOf(s.plan).tag) + ' · ' : ''}Editar</button></div></div>`; }).join('') || '<p class="campus-empty">Tu propuesta empieza con tus estudiantes. Después podrás agregar los programas.</p>'}<div class="side-actions">${state.selected.length ? `<button class="btn btn-primary" onclick="step(5)">Revisar mi propuesta ${icon('arrow')}</button>` : ''}<button class="btn btn-outline" onclick="resetAll()">Empezar de nuevo</button></div><p class="side-note">${icon('info')} Tu avance se guarda en este navegador. Los precios se confirman con GuateGeeks.</p></div></details></aside>`;
 }
 function frame(title, description, content) {
   html(`<div class="layout campus-layout"><section class="main-panel">${progressMarkup()}<h1 class="step-title">${title}</h1><p class="step-desc">${description}</p><details class="campus-static-summary"><summary>Resumen del campus en texto <span data-static-digest></span></summary><div data-static-summary></div></details>${content}</section><div class="config-resizer" role="separator" tabindex="0" aria-orientation="vertical" aria-label="Ancho de la configuración. Usa las flechas para ajustarlo; Inicio y Fin para el mínimo y el máximo; Enter restablece." title="Arrastra para ajustar el ancho · doble clic restablece"></div>${summaryAside()}</div>`);
@@ -254,6 +255,12 @@ function frame(title, description, content) {
 }
 
 // ---------- Paso 0: inicio ----------
+const LEVEL_LINE = {
+  pre: 'Aprenden jugando: guían un robot, siguen secuencias y descubren que programar es crear.',
+  prim: 'Construyen, programan y resuelven retos en equipo con robots que cobran vida en el salón.',
+  bas: 'Pasan de usar tecnología a crearla: sensores, mecánica y proyectos de ingeniería con propósito.',
+  bach: 'Investigan e innovan con electrónica, drones y realidad virtual rumbo a su futuro.'
+};
 const AREA_LABEL = { 'Experiencias inmersivas': 'Realidad virtual' };
 let lab = null;
 const labSvg = `<svg class="lab-fallback" viewBox="0 0 620 470" aria-hidden="true" focusable="false">
@@ -296,7 +303,7 @@ function loadLab(cb) {
   if (window.GGLab) { cb(); return; }
   if (loadLab.queue) { loadLab.queue.push(cb); return; }
   loadLab.queue = [cb];
-  const sc = document.createElement('script'); sc.src = 'vendor/lab-scene.min.js?v=119'; sc.async = true;
+  const sc = document.createElement('script'); sc.src = 'vendor/lab-scene.min.js?v=151'; sc.async = true;
   sc.onload = () => { const q = loadLab.queue || []; loadLab.queue = null; q.forEach(f => { try { f(); } catch (e) { console.error('No se pudo iniciar la vista 3D.', e); } }); };
   sc.onerror = () => { loadLab.queue = null; sc.remove(); campusUnavailable('No se pudo cargar la vista 3D. Tu configuración sigue disponible.'); };
   document.head.appendChild(sc);
@@ -674,12 +681,12 @@ function renderLanding() {
 <div class="hero-actions"><button class="btn btn-primary" onclick="start()">${saved ? 'Continuar mi propuesta' : 'Crear mi propuesta'} ${icon('arrow')}</button><button class="btn btn-ghost" onclick="previewExample()">Ver propuesta de ejemplo</button></div>
 <ul class="lab-chips"><li>${icon('check')} Sin registro para explorar</li><li>${icon('check')} Equipos que pueden compartir tus grupos</li><li>${icon('cube')} Toca un taller del campus para conocerlo</li></ul></div>
 </div></section>
-<div class="landing-content"><section class="land-sec" aria-labelledby="lv-title"><h2 id="lv-title">Un colegio, muchas experiencias</h2><p class="land-lead">Cada nivel vive la tecnología de una forma distinta. Tú eliges qué combinar y nosotros te ayudamos a organizarlo.</p>
-<div class="level-grid">${LEVELS.map((l, i) => { const areas = [...new Set(PROGRAMS.filter(p => p.levels.includes(l.id)).map(p => AREA_LABEL[p.area] || p.area))]; const pid = { pre: 'tale', prim: 'master', bas: 'spike', bach: 'electronics' }[l.id], { ph } = photoState(pid, l.id); return `<article class="level-card lc-${i}"><div class="lc-photo">${ph ? `<img src="${ph.src}" alt="" loading="lazy">` : icon(l.icon)}</div><div class="lc-body"><h3>${esc(l.name)}</h3><p>${esc(l.hint)}</p><ul>${areas.map(a => `<li>${esc(a)}</li>`).join('')}</ul></div></article>`; }).join('')}</div>
-<p class="land-note">${icon('clock')} Los equipos pueden atender varios grupos en horarios diferentes: se comparten, no se multiplican.</p></section>
+<div class="landing-content"><section class="land-sec" aria-labelledby="lv-title"><h2 id="lv-title">Que la tecnología sea parte de cada clase, en cada nivel</h2><p class="land-lead">Del primer robot en preprimaria a un proyecto de drones o realidad virtual en bachillerato: la tecnología se integra al aula y crece con tus estudiantes. Tú eliges qué sumar en cada nivel; nosotros te acompañamos para que se use en clase, no que se quede guardada.</p>
+<div class="level-grid">${LEVELS.map((l, i) => { const areas = [...new Set(PROGRAMS.filter(p => p.levels.includes(l.id)).map(p => AREA_LABEL[p.area] || p.area))]; const pid = { pre: 'tale', prim: 'master', bas: 'spike', bach: 'electronics' }[l.id], { ph } = photoState(pid, l.id); return `<article class="level-card lc-${i}"><div class="lc-photo">${ph ? `<img src="${ph.src}" alt="" loading="lazy">` : icon(l.icon)}</div><div class="lc-body"><h3>${esc(l.name)}</h3><p class="lc-line">${esc(LEVEL_LINE[l.id] || l.hint)}</p><small class="lc-hint">${esc(l.hint)}</small><ul>${areas.map(a => `<li>${esc(a)}</li>`).join('')}</ul></div></article>`; }).join('')}</div>
+<p class="land-note">${icon('clock')} Un mismo equipo sirve a varios grupos en horarios distintos: más estudiantes aprendiendo con la misma inversión.</p></section>
 <section class="land-sec" aria-labelledby="st-title"><h2 id="st-title">Así se construye tu propuesta</h2>
 <ol class="land-steps"><li><span>1</span><div><b>Cuéntanos de tus estudiantes</b><p>Ingresa los grados y secciones. No necesitas saber cuántos equipos elegir.</p></div></li><li><span>2</span><div><b>Elige qué aprenderán</b><p>Explora robótica, electrónica, drones y experiencias inmersivas.</p></div></li><li><span>3</span><div><b>Reúne todos tus programas</b><p>Revisa el equipamiento, las modalidades y la inversión de tu colegio.</p></div></li></ol></section>
-<section class="land-cta"><div><h2>El mismo recorrido. Una propuesta más clara.</h2><p>Los importes son estimaciones comerciales que GuateGeeks confirma.</p></div><button class="btn btn-primary" onclick="start()">${saved ? 'Continuar mi propuesta' : 'Crear mi propuesta'} ${icon('arrow')}</button></section></div></div>`);
+<section class="land-cta"><div><h2>El mismo recorrido. Una propuesta más clara.</h2><p>Los precios son estimaciones comerciales que GuateGeeks confirma.</p></div><button class="btn btn-primary" onclick="start()">${saved ? 'Continuar mi propuesta' : 'Crear mi propuesta'} ${icon('arrow')}</button></section></div></div>`);
 }
 function example() {
   state = initial();
@@ -758,9 +765,9 @@ function removeSection(gid, sid) {
   if (!g.sections.length) g.sections = [{ id: gid + '-' + uid(), name: 'A', students: null }];
   letterize(g); pruneEntries(); render();
 }
-function sectionRow(gid, s, count) {
+function sectionRow(gid, s, count, last) {
   const gname = esc(gradeName(gid));
-  return `<div class="section-row"><div class="sec-label"><span class="sec-name">Sección ${esc(s.name)}</span></div><div class="number"><button type="button" aria-label="Restar un estudiante en ${gname}, sección ${esc(s.name)}" onclick="stepQty('${gid}','${s.id}',-1)">−</button><input id="qty-${s.id}" aria-label="Estudiantes en ${gname}, sección ${esc(s.name)}" aria-describedby="err-qty-${s.id}" type="text" inputmode="numeric" autocomplete="off" placeholder="—" value="${s.students ?? ''}" oninput="writeQty('${gid}','${s.id}',this.value,this)"><button type="button" aria-label="Agregar un estudiante en ${gname}, sección ${esc(s.name)}" onclick="stepQty('${gid}','${s.id}',1)">+</button>${count > 1 ? `<button type="button" aria-label="Quitar la sección ${esc(s.name)} de ${gname}" onclick="removeSection('${gid}','${s.id}')">×</button>` : ''}</div><p class="field-error" id="err-qty-${s.id}" hidden></p></div>`;
+  return `<div class="gr-sec">${count > 1 ? `<span class="gr-sn" title="Sección ${esc(s.name)}">${esc(s.name)}</span>` : '<span></span>'}<div class="number"><button type="button" aria-label="Restar un estudiante en ${gname}, sección ${esc(s.name)}" onclick="stepQty('${gid}','${s.id}',-1)">−</button><input id="qty-${s.id}" aria-label="Estudiantes en ${gname}, sección ${esc(s.name)}" aria-describedby="err-qty-${s.id}" type="text" inputmode="numeric" autocomplete="off" placeholder="—" value="${s.students ?? ''}" oninput="writeQty('${gid}','${s.id}',this.value,this)"><button type="button" aria-label="Agregar un estudiante en ${gname}, sección ${esc(s.name)}" onclick="stepQty('${gid}','${s.id}',1)">+</button></div>${count > 1 ? `<button type="button" class="gr-x" aria-label="Quitar la sección ${esc(s.name)} de ${gname}" onclick="removeSection('${gid}','${s.id}')">×</button>` : '<span></span>'}${last ? `<button type="button" class="gr-add" onclick="addSection('${gid}')" aria-label="Añadir sección en ${esc(gradeName(gid))}">+ Sección</button>` : '<span></span>'}<p class="field-error" id="err-qty-${s.id}" hidden></p></div>`;
 }
 function renderEnrollment() {
   const levels = activeLevels(); if (!levels.length) { step(1); return; }
@@ -768,10 +775,87 @@ function renderEnrollment() {
   const l = levels[state.levelIndex];
   frame('¿Cuántos estudiantes tienes en ' + l.name.toLowerCase() + '?',
     l.free ? 'Agrega las secciones u opciones de tu oferta, por ejemplo carreras o especialidades. No imponemos una lista de grados.' : 'Indica los estudiantes por grado y sección. Usa «Añadir sección» cuando un grado tenga varios grupos. Deja vacío lo que aún no sepas; un 0 significa que confirmaste que no hay estudiantes.',
-    `<div class="level-tabs" aria-label="Niveles a completar">${levels.map((lv, i) => `<button class="level-tab ${i === state.levelIndex ? 'active' : ''}" aria-pressed="${i === state.levelIndex}" onclick="selectLevel(${i})">${i + 1}. ${esc(lv.name)}</button>`).join('')}</div>${l.grades.map(([gid, name]) => {
+    `<div class="level-tabs" aria-label="Niveles a completar">${levels.map((lv, i) => `<button class="level-tab ${i === state.levelIndex ? 'active' : ''}" aria-pressed="${i === state.levelIndex}" onclick="selectLevel(${i})">${i + 1}. ${esc(lv.name)}</button>`).join('')}</div><div class="gr-list">${l.grades.map(([gid, name]) => {
       const secs = sectionsOf(gid);
-      return `<div class="grade"><div class="grade-head"><strong>${esc(name)}</strong><span data-grade-total="${gid}">${gradeTotalText(gid)}</span></div>${secs.map(s => sectionRow(gid, s, secs.length)).join('')}<button class="mini" onclick="addSection('${gid}')">+ Añadir sección</button></div>`;
-    }).join('')}<div class="tip">Total ingresado para ${esc(l.name)}: <b data-level-total>${levelTotalText(l)}</b>. Los mismos equipos podrán utilizarse en distintos grupos si sus horarios lo permiten.</div><div class="foot"><button class="btn btn-outline" onclick="navEnrollment(-1)">← Atrás</button><button class="btn btn-primary" onclick="navEnrollment(1)">${state.levelIndex < levels.length - 1 ? 'Siguiente nivel' : 'Ver programas'} ${icon('arrow')}</button></div>`);
+      return `<div class="gr-row"><div class="gr-name"><strong>${esc(name)}</strong><small data-grade-total="${gid}">${gradeTotalText(gid)}</small></div><div class="gr-secs">${secs.map((s, k) => sectionRow(gid, s, secs.length, k === secs.length - 1)).join('')}</div></div>`;
+    }).join('')}</div><div class="tip">Total ingresado para ${esc(l.name)}: <b data-level-total>${levelTotalText(l)}</b>. Los mismos equipos podrán utilizarse en distintos grupos si sus horarios lo permiten.</div><div class="foot"><button class="btn btn-outline" onclick="navEnrollment(-1)">← Atrás</button><button class="btn btn-primary" onclick="navEnrollment(1)">${state.levelIndex < levels.length - 1 ? 'Siguiente nivel' : 'Ver programas'} ${icon('arrow')}</button></div>`);
+}
+
+// ---------- Cobertura: todos los grados con estudiantes deben quedar en un programa ----------
+// Un grupo sin programa se puede dejar «sin programa por ahora» (state.skipped); así queda a la vista y no se pierde de la cotización.
+const groupGrade = g => g.label.split(' · ')[0];
+function coverage() {
+  const covered = new Set(state.selected.flatMap(s => s.groupIds)), skipped = new Set(state.skipped || []);
+  const gs = groups().filter(g => g.students > 0), miss = gs.filter(g => !covered.has(g.id));
+  const open = miss.filter(g => !skipped.has(g.id)), hosted = g => hostsFor([g]).length > 0;
+  return { gs, covered, uncovered: open, pending: open.filter(hosted), outside: open.filter(g => !hosted(g)), skipped: miss.filter(g => skipped.has(g.id)), students: gs.filter(g => covered.has(g.id)).reduce((n, g) => n + g.students, 0), total: gs.reduce((n, g) => n + g.students, 0) };
+}
+const hostsFor = gs => state.selected.filter(s => gs.some(g => compatible(findP(s.programId), g)));
+const assignPending = () => coverage().pending;
+// Una fila por grado con su estado: incluido, pendiente (hay un programa elegido compatible), fuera (ningún programa elegido aplica) o descartado.
+function coverageRows() {
+  const cov = coverage(), skipped = new Set(state.skipped || []), rows = [];
+  groups().filter(g => g.students > 0).forEach(g => {
+    let r = rows.find(x => x.gradeId === g.gradeId);
+    if (!r) rows.push(r = { gradeId: g.gradeId, levelId: g.levelId, grade: groupGrade(g), students: 0, progs: [], status: 'outside' });
+    r.students += g.students;
+    state.selected.filter(s => s.groupIds.includes(g.id)).forEach(s => { const n = findP(s.programId).name; if (!r.progs.includes(n)) r.progs.push(n); });
+    const st = cov.covered.has(g.id) ? 'ok' : skipped.has(g.id) ? 'skipped' : hostsFor([g]).length ? 'pending' : 'outside';
+    if (r.status !== 'ok') r.status = st === 'ok' || r.status === 'outside' && st !== 'outside' ? st : r.status;
+  });
+  return rows;
+}
+// «1.º a 3.º Primaria», «Pre-Kínder, Kínder y Preparatoria»: los grados de un bloque sin repetir el nombre del nivel.
+function gradesText(grades) {
+  const suf = (grades[0].match(/ (Primaria|Básico|Bachillerato)$/) || [])[1];
+  if (!suf || !grades.every(g => g.endsWith(' ' + suf))) return joinY(grades);
+  const short = grades.map(g => g.slice(0, -suf.length - 1));
+  return (short.length >= 3 ? short[0] + ' a ' + short[short.length - 1] : joinY(short)) + ' ' + suf;
+}
+// Bloques por nivel: los grados que comparten programa y estado se muestran juntos, sin repetir una fila por grado.
+function coverageBlocks() {
+  const blocks = [];
+  coverageRows().forEach(r => {
+    const key = r.levelId + '|' + r.status + '|' + r.progs.join(',');
+    let b = blocks.find(x => x.key === key);
+    if (!b) blocks.push(b = { key, levelId: r.levelId, status: r.status, progs: r.progs, grades: [], students: 0 });
+    b.grades.push(r.grade); b.students += r.students;
+  });
+  blocks.forEach(b => { b.text = gradesText(b.grades); });
+  return blocks;
+}
+function openAssign() { const p = coverage().pending; ui.assign = p.length > 0; ui.assignSeen = p.map(g => g.id).join(); state.step = 3; store(); render(); }
+function toggleAssign(key, on) { ui.assignSel[key] = on; }
+function skipAssign() { state.skipped = [...new Set([...(state.skipped || []), ...coverage().pending.map(g => g.id)])]; ui.assign = false; store(); notify('Esos grados quedan sin programa por ahora. Se indican en el resumen y en el PDF.'); step(5); }
+function catalogFromAssign() { ui.assign = false; render(); }
+// Suma los grados nuevos a los programas elegidos y deja cada programa por configurar: la cantidad de equipos se vuelve a calcular.
+function applyAssign() {
+  const pend = coverage().uncovered, jobs = [];
+  state.selected.forEach(s => {
+    const add = pend.filter(g => ui.assignSel[s.id + '|' + g.levelId] !== false && compatible(findP(s.programId), g) && !s.groupIds.includes(g.id));
+    if (add.length) jobs.push([s, add]);
+  });
+  if (!jobs.length) { notify('Marca al menos un programa o elige otros programas para esos grados.'); return; }
+  jobs.forEach(([s, add]) => {
+    s.groupIds = [...s.groupIds, ...add.map(g => g.id)]; s.units = null; s.stations = false; s.simIds = []; s.sharing = s.groupIds.length > 1 ? null : 'separate'; s.confirmed = false; s.calc = null;
+    s.id = s.programId + '@' + entryLevels(s).map(l => l.id).join('+');
+  });
+  ui.assign = false; ui.assignSel = {}; store(); step(4);
+  notify('Agregamos los grados nuevos. Revisa los equipos de cada programa para actualizar la cotización.');
+}
+function renderAssign() {
+  const pend = coverage().pending, levels = activeLevels().filter(l => pend.some(g => g.levelId === l.id));
+  const cards = levels.map(l => {
+    const gs = pend.filter(g => g.levelId === l.id), n = gs.reduce((a, g) => a + g.students, 0), grades = [...new Set(gs.map(groupGrade))], hosts = hostsFor(gs);
+    const rows = hosts.map(s => {
+      const p = findP(s.programId), key = s.id + '|' + l.id, ok = gs.filter(g => compatible(p, g)), u = unitsOf(s);
+      return `<label class="assign-row"><input type="checkbox" ${ui.assignSel[key] !== false ? 'checked' : ''} onchange="toggleAssign('${key}', this.checked)"><span><b>${esc(progTitle(s))}</b><small>${esc(p.hardware)}${u ? ' · hoy ' + u + ' equipos' : ''} · sumaría ${esc(joinY([...new Set(ok.map(groupGrade))]))}</small></span></label>`;
+    }).join('');
+    return `<article class="assign-card"><div class="assign-head"><h2>${esc(l.name)}</h2><span class="status amber">${n} ${plural(n, 'estudiante', 'estudiantes')} sin programa</span></div><p class="assign-grades">${esc(joinY(grades))}</p>${rows ? `<p class="assign-ask">¿Quieres usar con este nivel alguno de los programas que ya elegiste?</p>${rows}` : '<p class="assign-ask">Ninguno de tus programas elegidos es compatible con estos grados. Elige un programa para este nivel en el catálogo.</p>'}</article>`;
+  }).join('');
+  const any = levels.some(l => hostsFor(pend.filter(g => g.levelId === l.id)).length);
+  frame('Configura los grados nuevos', 'Estos grados tienen estudiantes, pero todavía no están en ningún programa. Si no los incluyes, no entran en la cotización ni en el PDF.',
+    `${cards}<div class="assign-note">${icon('info')}<span>Al sumarlos, vamos a pedirte revisar los equipos de cada programa para que la cantidad y el precio se actualicen.</span></div><div class="foot">${any ? '<button class="btn btn-primary" onclick="applyAssign()">Sumar y configurar equipos ' + icon('arrow') + '</button>' : ''}<button class="btn btn-outline" onclick="catalogFromAssign()">Elegir otros programas</button><button class="text-btn" onclick="skipAssign()">Dejar estos grados sin programa por ahora</button></div>`);
 }
 
 // ---------- Paso 3: catálogo ----------
@@ -829,13 +913,15 @@ function togglePreview(programId) {
 }
 function nextFromPrograms() { if (!state.selected.length) { notify('Agrega al menos un programa a tu propuesta.'); return; } step(4); }
 function renderPrograms() {
+  if (ui.assign && coverage().pending.length) { renderAssign(); return; }
+  ui.assign = false;
   const active = activeLevels().filter(l => groups().some(g => g.levelId === l.id && g.students > 0));
   frame('¿Qué les gustaría aprender?', 'Descubre programas adecuados para los niveles con estudiantes. Agrega todos los que te interesan: luego podrás ajustar grados, equipos y modalidad de cada uno.',
     `${active.map(l => {
       const list = PROGRAMS.filter(p => p.levels.includes(l.id) && groups().some(g => g.levelId === l.id && g.students > 0 && compatible(p, g)));
       return `<div class="catalog-level"><h2>${esc(l.name)}</h2><small>${l.grades.reduce((n, g) => n + groups().filter(x => x.gradeId === g[0]).reduce((a, x) => a + (x.students || 0), 0), 0)} estudiantes registrados</small></div><div class="program-grid">${list.map(p => {
         const idx = entryAt(p.id, l.id), selected = idx !== -1, shared = selected && entryLevels(state.selected[idx]).length > 1;
-        return `<article class="prog ${selected ? 'chosen' : ''}">${media(p, l.id)}<div class="prog-body"><div class="eyebrow">${esc(p.area)}</div><h3>${esc(p.name)}</h3><p>${esc(p.short)}</p><details><summary>Ver qué incluye</summary><p>Equipo sugerido: ${esc(p.hardware)}. Los grados participantes y las condiciones se revisan en el siguiente paso. Lo que incluye cada modalidad (equipamiento, capacitación, recursos, Sócrates y soporte) se detalla al elegirla; no todas incluyen lo mismo.</p></details></div><footer><div class="equip-label"><strong>${esc(p.hardware)}</strong>${p.ratio ? 'Hasta ' + p.ratio + ' estudiantes por equipo' : 'Equipamiento por definir con GuateGeeks'}</div>${selected ? `<div class="status green" style="align-self:start">Agregado a tu propuesta</div>${shared ? `<p class="help-line" style="margin:0">Equipo compartido entre ${esc(levelsLabel(state.selected[idx]))}.</p>` : ''}<div class="prog-actions"><button class="btn btn-outline" onclick="editProgram(${idx})">Configurar este programa ${icon('arrow')}</button><button class="icon-btn" onclick="removeProgram(${idx})" aria-label="Quitar ${esc(p.name)}">${icon('trash')}</button></div>` : `<div class="prog-actions prog-actions-add"><button class="btn btn-primary" onclick="addProgram('${p.id}','${l.id}')">Agregar a mi propuesta ${icon('plus')}</button><button type="button" class="btn btn-outline preview-btn" data-preview="${p.id}" aria-pressed="${ui.preview?.programId === p.id}" aria-label="Ver ${esc(p.name)} en el campus, sin agregarlo" onclick="togglePreview('${p.id}')">${icon('eye')}<span>${ui.preview?.programId === p.id ? 'Quitar vista previa' : 'Ver en el campus'}</span></button></div>`}</footer></article>`;
+        return `<article class="prog ${selected ? 'chosen' : ''}">${media(p, l.id)}<div class="prog-body"><div class="eyebrow">${esc(p.area)}</div><h3>${esc(p.name)}</h3><p>${esc(p.short)}</p><details><summary>Ver qué incluye</summary><ul class="inc-bullets"><li><b>Equipo:</b> ${esc(p.hardware)}${p.ratio ? ', hasta ' + p.ratio + ' estudiantes por equipo' : ''}</li><li><b>Grados:</b> ${esc(joinY(l.grades.filter(g => p.grades.includes(g[0])).map(g => g[1])))}</li><li><b>Comprar (Integra):</b> equipo propio, orientación inicial y 1 hora de capacitación</li><li><b>Rentar (Flex):</b> equipo en renta, capacitación docente, seguimiento y soporte, Sócrates Aprende</li><li><b>Pagar en cuotas (Evoluciona):</b> el equipo pasa a ser del colegio, capacitación, recursos para el aula, seguimiento y soporte, Sócrates Aprende</li><li><b>Siguiente paso:</b> eliges los grupos, la cantidad de equipos y la modalidad</li></ul></details></div><footer><div class="equip-label"><strong>${esc(p.hardware)}</strong>${p.ratio ? 'Hasta ' + p.ratio + ' estudiantes por equipo' : 'Equipamiento por definir con GuateGeeks'}</div>${selected ? `<div class="status green" style="align-self:start">Agregado a tu propuesta</div>${shared ? `<p class="help-line" style="margin:0">Equipo compartido entre ${esc(levelsLabel(state.selected[idx]))}.</p>` : ''}<div class="prog-actions"><button class="btn btn-outline" onclick="editProgram(${idx})">Configurar este programa ${icon('arrow')}</button><button class="icon-btn" onclick="removeProgram(${idx})" aria-label="Quitar ${esc(p.name)}">${icon('trash')}</button></div>` : `<div class="prog-actions prog-actions-add"><button class="btn btn-primary" onclick="addProgram('${p.id}','${l.id}')">Agregar a mi propuesta ${icon('plus')}</button><button type="button" class="btn btn-outline preview-btn" data-preview="${p.id}" aria-pressed="${ui.preview?.programId === p.id}" aria-label="Ver ${esc(p.name)} en el campus, sin agregarlo" onclick="togglePreview('${p.id}')">${icon('eye')}<span>${ui.preview?.programId === p.id ? 'Quitar vista previa' : 'Ver en el campus'}</span></button></div>`}</footer></article>`;
       }).join('')}</div>`;
     }).join('') || '<div class="empty">Registra estudiantes para descubrir los programas compatibles.</div>'}<div class="foot"><button class="btn btn-outline" onclick="step(2)">← Editar estudiantes</button><button class="btn btn-primary" onclick="nextFromPrograms()" ${!state.selected.length ? 'disabled' : ''}>Configurar mis programas ${icon('arrow')}</button></div>`);
 }
@@ -843,10 +929,16 @@ function renderPrograms() {
 // ---------- Paso 4: configurar un programa (una decisión a la vez) ----------
 const cur = () => state.selected[state.selectedIndex];
 // Decisiones que aplican a este programa: sin ratio no hay equipos que calcular y con un solo grupo no hay nada que compartir.
+// «Grupos» solo se pregunta si hay algo que decidir: más de un grupo posible, varios niveles o el mismo programa en otro nivel.
+function groupsConfigurable(s) {
+  const p = findP(s.programId), taken = new Set(state.selected.filter(x => x !== s && x.programId === s.programId).flatMap(x => x.groupIds));
+  const opts = groups().filter(g => g.students > 0 && compatible(p, g) && !taken.has(g.id));
+  return opts.length > 1 || entryLevels(s).length > 1 || state.selected.some(x => x !== s && x.programId === s.programId);
+}
 function stepKeys(s) {
   const p = findP(s.programId);
   if (!p.ratio) return ['groups'];
-  return ['groups', ...(s.groupIds.length > 1 ? ['sharing'] : []), 'quantity'];
+  return [...(groupsConfigurable(s) ? ['groups'] : []), ...(s.groupIds.length > 1 ? ['sharing'] : []), 'quantity'];
 }
 function changeConfig(prop, val) {
   const s = cur(); if (!s) return; s[prop] = val;
@@ -864,7 +956,12 @@ function toggleGroup(gid) {
   s.units = null; s.stations = false; render();
 }
 function toggleSim(gid) { const s = cur(); s.simIds = s.simIds.includes(gid) ? s.simIds.filter(x => x !== gid) : [...s.simIds, gid]; s.units = null; s.stations = false; render(); }
-function adjustUnits(d) { const s = cur(); s.units = Math.max(1, Math.min(1000, (unitsOf(s) || 1) + d)); s.stations = false; render(); }
+function adjustUnits(d) {
+  const s = cur(), rec = analysis(s).rec, base = unitsOf(s) ?? (rec ? rec.teams : 1);
+  s.units = Math.max(1, Math.min(1000, base + d));
+  if (rec && rec.basis !== 'unknown' && s.units === rec.suggested) s.units = null; // vuelve a seguir la recomendación
+  s.stations = false; render();
+}
 function useRecommended() { const s = cur(); s.units = null; s.stations = false; render(); }
 function chooseStations() { cur().stations = true; render(); }
 function useTeams(n) { const s = cur(); s.units = n; s.stations = false; render(); }
@@ -928,7 +1025,7 @@ function cfgReview(s, p) {
   if (stepKeys(s).includes('sharing')) rows.push(['sharing', 'Horarios', sharingTxt]);
   if (p.ratio) rows.push(['quantity', 'Equipos', `${u ?? '—'} ${p.hardware}${an.state === 'limited' ? ' · trabajo por estaciones' : an.state === 'full' ? ' · cobertura completa' : ''}`]);
   const pend = nextPending(state.selectedIndex);
-  return `<div class="review-list">${rows.map(([k, t, v]) => `<div class="review-row"><div><span>${t}</span><b>${esc(v)}</b></div><button class="btn btn-small btn-outline" onclick="jumpTo('${k}')" aria-label="Cambiar ${t.toLowerCase()}">Cambiar</button></div>`).join('')}</div><div class="foot"><button class="btn btn-outline" onclick="step(5)">Volver a mi propuesta</button>${pend >= 0 ? `<button class="btn btn-primary" onclick="goNextPending()">Configurar el siguiente pendiente ${icon('arrow')}</button>` : `<button class="btn btn-primary" onclick="step(5)">Listo, ver mi propuesta ${icon('arrow')}</button>`}</div>`;
+  return `<div class="review-list">${rows.map(([k, t, v]) => `<div class="review-row"><div><span>${t}</span><b>${esc(v)}</b></div>${stepKeys(s).includes(k) ? `<button class="btn btn-small btn-outline" onclick="jumpTo('${k}')" aria-label="Cambiar ${t.toLowerCase()}">Cambiar</button>` : ''}</div>`).join('')}</div><div class="foot"><button class="btn btn-outline" onclick="step(5)">Volver a mi propuesta</button>${pend >= 0 ? `<button class="btn btn-primary" onclick="goNextPending()">Configurar el siguiente pendiente ${icon('arrow')}</button>` : `<button class="btn btn-primary" onclick="step(5)">Listo, ver mi propuesta ${icon('arrow')}</button>`}</div>`;
 }
 
 function explanation(s, p, an) {
@@ -964,11 +1061,17 @@ function cfgSharing(s, p) {
   return `<div class="radios">${opts.map(([v, t, d]) => `<label class="radio ${s.sharing === v ? 'selected' : ''}"><input type="radio" name="sharing" ${s.sharing === v ? 'checked' : ''} onchange="changeConfig('sharing','${v}')"><span><strong>${t}</strong><small>${d}</small></span></label>`).join('')}</div>${s.sharing === 'simultaneous' ? `<div class="sub-pick"><span class="label">¿Cuáles grupos coinciden en horario? Elige al menos dos.</span><div class="chips big">${s.groupIds.map(id => groups().find(g => g.id === id)).filter(Boolean).map(g => `<button class="chip ${s.simIds.includes(g.id) ? 'on' : ''}" onclick="toggleSim('${g.id}')" aria-pressed="${s.simIds.includes(g.id)}">${s.simIds.includes(g.id) ? '✓ ' : ''}${esc(g.label)}</button>`).join('')}</div></div>` : ''}`;
 }
 function cfgQuantity(s, p) {
+  const an0 = analysis(s), rec0 = an0.rec;
+  if (rec0 && rec0.basis === 'unknown' && s.units == null && rec0.suggested != null) s.units = rec0.suggested;
   const an = analysis(s), rec = an.rec, u = unitsOf(s);
   if (!rec) return '<div class="warning">Ingresa estudiantes en los grupos participantes para obtener una recomendación.</div>';
-  const unknown = rec.basis === 'unknown', num = unknown ? rec.scenarios[0].teams : rec.teams;
-  const applied = s.units == null || s.units === rec.suggested;
-  return `<div class="rec-card"><div class="rec-num"><b>${num}</b><span>${esc(p.hardware)}<br>${unknown ? 'como mínimo' : 'recomendados'}</span></div><div class="rec-body"><p>${explanation(s, p, an)}</p>${unknown ? `<ul>${rec.scenarios.map(x => `<li>${esc(x.label)}: <b>${x.teams}</b> equipos</li>`).join('')}</ul>` : ''}<button class="btn btn-primary" onclick="useRecommended()" ${applied ? 'aria-pressed="true"' : ''}>${applied ? '✓ Recomendación aplicada' : 'Usar recomendación (' + rec.suggested + ')'}</button></div></div><div class="adjust"><span>¿Prefieres otra cantidad?</span><div class="number-lg"><button onclick="adjustUnits(-1)" aria-label="Reducir equipos">−</button><strong aria-live="polite">${u ?? '—'}</strong><button onclick="adjustUnits(1)" aria-label="Aumentar equipos">+</button></div></div><div id="coverage">${coverageHTML(s, p, an)}</div>`;
+  const unknown = rec.basis === 'unknown', sug = rec.suggested, shown = u ?? rec.teams, isRec = !unknown && (s.units == null || s.units === sug);
+  const sized = entryGroups(s).filter(g => g.students > 0);
+  const big = rec.basis === 'separate' && sized.length ? sized.reduce((x, y) => M.teamsFor(y.students, p.ratio) > M.teamsFor(x.students, p.ratio) ? y : x) : null;
+  const facts = big
+    ? `<ul class="qty-facts"><li><span>Grupo más grande</span><b>${big.students} estudiantes</b><small>${esc(big.label)}</small></li><li><span>Por equipo</span><b>hasta ${p.ratio} estudiantes</b><small>${esc(p.hardware)}</small></li><li class="${isRec ? 'rec' : ''}"><span>Recomendamos</span><b>${sug} ${esc(p.hardware)}</b><small>${sized.length > 1 ? 'Los demás grupos los usan en otros horarios' : 'Para ese grupo'}</small></li></ul>`
+    : `<p class="qty-text">${explanation(s, p, an)}</p>${unknown ? `<ul class="qty-scen">${rec.scenarios.map(x => `<li>${esc(x.label)}: <b>${x.teams}</b> equipos</li>`).join('')}</ul>` : ''}`;
+  return `<div class="rec-card qty"><div class="qty-ctl"><span class="qty-label">${esc(p.hardware)}</span><div class="number-lg"><button onclick="adjustUnits(-1)" aria-label="Reducir ${esc(p.hardware)}">−</button><strong aria-live="polite">${shown}</strong><button onclick="adjustUnits(1)" aria-label="Aumentar ${esc(p.hardware)}">+</button></div><span class="qty-state ${isRec ? 'rec' : ''}">${unknown ? 'Mínimo sugerido: ' + rec.scenarios[0].teams : isRec ? '✓ Cantidad recomendada' : 'Recomendamos ' + sug}</span>${!isRec && !unknown ? `<button class="text-btn" onclick="useRecommended()">Volver a ${sug}</button>` : ''}</div><div class="rec-body">${facts}<p class="qty-hint">Ajusta con − y +: abajo ves cuántos estudiantes pueden trabajar a la vez.</p></div></div><div id="coverage">${coverageHTML(s, p, an)}</div>`;
 }
 const PLAN_CARDS = [
   { pick: 'INTEGRA', ids: ['INTEGRA'], title: 'Comprar el equipo', tag: 'Integra', sum: 'Compras el equipo y queda en tu colegio desde el primer día.',
@@ -997,7 +1100,7 @@ function renderConfig() {
 // ---------- Paso 5: propuesta ----------
 const STATUS = {
   draft: ['amber', 'Pendiente de configurar'], plan: ['amber', 'Modalidad por elegir'], quote: ['amber', 'Requiere cotización personalizada'],
-  stale: ['amber', 'Importe pendiente de actualizar'], priced: ['green', 'Importe calculado']
+  stale: ['amber', 'Precio pendiente de actualizar'], priced: ['green', 'Precio calculado']
 };
 const statusChip = st => `<span class="status ${STATUS[st][0]}">${STATUS[st][1]}</span>`;
 function noteFor(s, p, an) {
@@ -1060,13 +1163,13 @@ function paymentsHTML(t) {
   const label = m => m === 0 ? 'Inicio' : String(m);
   return `<div class="pay-block"><h3>Así quedan tus pagos</h3><p class="pay-lead">${lead}${pp.rows.length > 1 && pp.phases.length > 1 ? ' La cuota cambia cuando termina el plazo de un programa.' : ''}</p>
   <div class="pay-facts">${pp.phases.length ? `<div><span>Al iniciar</span><strong>${Q(pp.initial)}</strong></div>${pp.phases.map(f => `<div><span>${f.from === f.to ? 'Mes ' + f.from : 'Meses ' + f.from + ' a ' + f.to}</span><strong>${Q(f.amount)}<small> al mes</small></strong></div>`).join('')}<div class="sum"><span>Total ${ivaTxt()}</span><strong>${Q(pp.grand)}</strong></div>` : `<div class="sum"><span>Pago único · total ${ivaTxt()}</span><strong>${Q(pp.grand)}</strong></div>`}</div>
-  ${pp.len > 1 ? `<details><summary>Ver tabla de pagos mes a mes</summary><div class="pay-table-wrap"><table class="pay-table"><thead><tr><th scope="col">Mes</th><th scope="col">Pago ${ivaTxt()}</th></tr></thead><tbody>${pp.totals.map((v, m) => `<tr><th scope="row">${m === 0 ? 'Al iniciar' : 'Mes ' + m}</th><td><b>${Q(v)}</b></td></tr>`).join('')}</tbody></table></div><p class="fineprint">Importes ${ivaTxt()}, en quetzales enteros. Todas las cuotas son iguales.</p></details>` : ''}</div>`;
+  ${pp.len > 1 ? `<details><summary>Ver tabla de pagos mes a mes</summary><div class="pay-table-wrap"><table class="pay-table"><thead><tr><th scope="col">Mes</th><th scope="col">Pago ${ivaTxt()}</th></tr></thead><tbody>${pp.totals.map((v, m) => `<tr><th scope="row">${m === 0 ? 'Al iniciar' : 'Mes ' + m}</th><td><b>${Q(v)}</b></td></tr>`).join('')}</tbody></table></div><p class="fineprint">Precios ${ivaTxt()}, en quetzales enteros. Todas las cuotas son iguales.</p></details>` : ''}</div>`;
 }
 
 // ---- Modalidad: se elige y se compara dentro de la misma tarjeta del programa ----
 // Aviso destacado: solo Evoluciona deja el equipo en la institución al completar el plazo.
 const isEvo = plan => plan === 'EV8' || plan === 'EV16';
-// Las instituciones educativas están exentas de IVA: los importes se muestran sin IVA y, si lo desean, con IVA.
+// Las instituciones educativas están exentas de IVA: los precios se muestran sin IVA y, si lo desean, con IVA.
 const ivaOn = () => state.iva === true;
 const ivaTxt = () => ivaOn() ? 'con IVA' : 'sin IVA';
 const payView = q => ivaOn() ? { schedule: q.scheduleIva, initial: q.initialIva, total: q.total } : { schedule: q.schedule, initial: q.initial, total: q.net };
@@ -1079,8 +1182,8 @@ function proposalCard(s, i, row) {
   return `<article class="proposal-card"><div class="proposal-main">${media(p, levelKey(s), 'summary-media')}<div class="proposal-content"><div class="proposal-heading"><div><div class="eyebrow">${esc(p.area)}</div><h3>${esc(progTitle(s))}</h3></div><div class="proposal-tools"><button class="icon-btn" onclick="editProgram(${i})" aria-label="Editar ${esc(p.name)}">${icon('edit')}</button><button class="icon-btn" onclick="removeProgram(${i})" aria-label="Quitar ${esc(p.name)}">${icon('trash')}</button></div></div><p>${esc(p.hardware)}${row.status === 'draft' || row.status === 'quote' || row.status === 'plan' ? ' · ' + statusChip(row.status) : ''}</p><div class="groups-line">${entryGroups(s).map(g => `<span>${esc(g.label.replace(', Sección ', ' · ').replace(' · Sección ', ' · '))}</span>`).join('')}</div>${capacityTiles(s, p, u, an)}</div></div>${note.pending && row.status !== 'draft' ? `<div class="proposal-note pending">${icon('info')}<span>${note.text}</span></div>` : ''}${modalityPicker(s, i, u)}</article>`;
 }
 
-// ---- Modalidad por programa (sin importes) e inversión unificada agrupada por modalidad ----
-// Cada programa puede tener su modalidad (comprar, rentar o Evoluciona); los importes solo se muestran
+// ---- Modalidad por programa (sin precios) e inversión unificada agrupada por modalidad ----
+// Cada programa puede tener su modalidad (comprar, rentar o Evoluciona); los precios solo se muestran
 // agrupados por modalidad y en total, nunca por nivel ni por programa.
 const MODS = [
   { k: 'INTEGRA', label: 'Comprar', tag: 'Integra', note: 'Un solo pago; el equipo es del colegio desde la compra. No incluye Sócrates Aprende.' },
@@ -1165,9 +1268,9 @@ function investmentHTML(t) {
   <div class="inv-facts"><div><b>${n}</b><small>estudiantes atendidos</small></div><div><b>${equipment}</b><small>${plural(equipment, 'equipo', 'equipos')} en total</small><em>${equipSummary(t)}</em></div><div><b>${rowsPriced.length}</b><small>${plural(rowsPriced.length, 'programa', 'programas')} con modalidad</small></div></div>
   ${unchosen ? `<div class="warning">${unchosen} ${plural(unchosen, 'programa todavía no tiene', 'programas todavía no tienen')} modalidad. Elígela en la tarjeta de cada programa para incluirlo en el total.${state.selected.length > 1 ? ' <span class="quick">Atajo: la misma modalidad para todos: ' + MODS.map(m => `<button type="button" class="text-btn" onclick="setAllModality('${m.k}')">${m.label}</button>`).join(' · ') + '</span>' : ''}</div>` : ''}
   ${pending.length - unchosen > 0 ? `<div class="warning">${pending.length - unchosen} ${plural(pending.length - unchosen, 'programa está pendiente', 'programas están pendientes')} de configuración o de cotización personalizada y no suma${pending.length - unchosen === 1 ? '' : 'n'} al total.</div>` : ''}
-  <label class="suggested-toggle iva-toggle" for="iva-on"><input id="iva-on" type="checkbox" ${ivaOn() ? 'checked' : ''} onchange="setIva(this.checked)"> Mostrar los importes con IVA</label>
+  <label class="suggested-toggle iva-toggle" for="iva-on"><input id="iva-on" type="checkbox" ${ivaOn() ? 'checked' : ''} onchange="setIva(this.checked)"> Agregar IVA</label>
   ${cards ? `<div class="grp-grid">${cards}</div>` : ''}${totalBlock}${rowsPriced.length && !onlyBuy ? paymentsHTML(t) : ''}${rowsPriced.length && onlyBuy ? '<p class="fineprint">La compra se paga una sola vez: no hay formas de pago ni cuotas.</p>' : ''}${own}
-  <p class="fineprint" style="margin-top:12px">Los importes se muestran sin IVA, porque las instituciones educativas están exentas; el monto con IVA se indica como referencia. Son estimaciones comerciales y la cotización final se confirma con GuateGeeks.</p></section>`;
+  <p class="fineprint" style="margin-top:12px">Los precios se muestran sin IVA, porque las instituciones educativas están exentas; el monto con IVA se indica como referencia. Son estimaciones comerciales y la cotización final se confirma con GuateGeeks.</p></section>`;
 }
 
 // Simulador: una sola cuota por estudiante para toda la propuesta, sobre el total de estudiantes únicos
@@ -1194,13 +1297,13 @@ function simResults(m, fee) {
 }
 function simOut(t) {
   const m = simModel(t);
-  if (!m) return '<p class="fineprint">Disponible cuando haya programas en renta o cuotas con importe calculado y estudiantes participantes.</p>';
+  if (!m) return '<p class="fineprint">Disponible cuando haya programas en renta o cuotas con precio calculado y estudiantes participantes.</p>';
   const useSug = state.useSuggested !== false, evo = m.rows.filter(r => isEvo(r.entry.plan));
   const ctx = `${m.sim.months} meses · ${m.n} estudiantes · ${m.rows.length} ${plural(m.rows.length, 'programa', 'programas')}`;
   const list = m.rows.map(r => `<li><b>${esc(progTitle(r.entry))}</b> · ${esc(planOf(r.entry.plan).tag)} · ${r.quote.months} meses · ${Q(payView(r.quote).total)} ${ivaTxt()}</li>`).join('');
   const own = evo.length ? `<div class="own-callout">${icon('check')}<div><b>El equipo se queda en tu institución</b><span>Con Evoluciona, al completar los pagos ${evo.map(r => `${r.units} ${esc(findP(r.entry.programId).hardware)}`).join(' y ')} pasan a ser del colegio.</span></div></div>` : '';
   return `<div class="sim-card"><div class="sim-fee">${useSug
-    ? `<span>Cuota sugerida por GuateGeeks</span><strong>${Q(m.sug)} <em>al mes por estudiante</em></strong><small>${ctx}. Calculada sobre importes ${ivaTxt()}.</small>`
+    ? `<span>Cuota sugerida por GuateGeeks</span><strong>${Q(m.sug)} <em>al mes por estudiante</em></strong><small>${ctx}. Calculada sobre precios ${ivaTxt()}.</small>`
     : `<label for="fee-all">Tu cuota mensual por estudiante, en quetzales</label><input id="fee-all" class="field" type="text" inputmode="numeric" autocomplete="off" value="${m.fee}" oninput="setProjection(this.value,this)" aria-describedby="err-fee-all"><small>${ctx}. La sugerida por GuateGeeks es ${Q(m.sug)}.</small><p class="field-error" id="err-fee-all" hidden></p>`}</div><div id="sim-res">${simResults(m, m.fee)}</div>${own}<details class="sim-progs"><summary>Programas incluidos en el cálculo</summary><ul>${list}</ul></details><p class="fineprint">Estimación antes de los gastos, cobros e impuestos propios del colegio, incluida la morosidad.</p></div>`;
 }
 function setProjection(value, input) {
@@ -1228,7 +1331,7 @@ function pdfModel(includeSim = false) {
   const money = x => ivaOn() ? x.total : x.net, all = { net: t.net, total: t.total, tax: t.tax };
   const ps = perStudent(t);
   const levels = LEVELS.filter(l => state.selected.some(s => entryLevels(s).some(x => x.id === l.id))).map(l => l.name);
-  // Programas: solo alcance, equipos y modalidad; los importes van agrupados por modalidad y en total
+  // Programas: solo alcance, equipos y modalidad; los precios van agrupados por modalidad y en total
   const programs = t.rows.map(r => {
     const s = r.entry, p = findP(s.programId), an = analysis(s), note = noteFor(s, p, an), u = r.units, k = participation(s);
     const tiles = [{ v: String(k), l: 'estudiantes participan' }];
@@ -1245,12 +1348,12 @@ function pdfModel(includeSim = false) {
   const onlyBuy = priced.length && priced.every(r => r.entry.plan === 'INTEGRA');
   // Pagos (la compra no tiene formas de pago)
   let pay = null;
-  if (onlyBuy) pay = { lead: 'Se paga una sola vez, sin cuotas. Importes ' + ivaTxt() + '.', note: `Importes ${ivaTxt()}, en quetzales enteros.`, tiles: [], table: null };
+  if (onlyBuy) pay = { lead: 'Se paga una sola vez, sin cuotas. Precios ' + ivaTxt() + '.', note: `Precios ${ivaTxt()}, en quetzales enteros.`, tiles: [], table: null };
   else if (pp) {
     const phaseTxt = pp.phases.map(f => `${Q(f.amount)} al mes (${f.from === f.to ? 'mes ' + f.from : 'meses ' + f.from + ' a ' + f.to})`);
     pay = {
-      lead: (pp.phases.length ? `Pagarías ${Q(pp.initial)} al iniciar y después ${phaseTxt.join(', luego ')}.` : 'Es un pago único por todo lo seleccionado.') + ` Importes ${ivaTxt()}.`,
-      note: `Importes ${ivaTxt()}, en quetzales enteros.`,
+      lead: (pp.phases.length ? `Pagarías ${Q(pp.initial)} al iniciar y después ${phaseTxt.join(', luego ')}.` : 'Es un pago único por todo lo seleccionado.') + ` Precios ${ivaTxt()}.`,
+      note: `Precios ${ivaTxt()}, en quetzales enteros.`,
       tiles: pp.phases.length ? [{ l: 'Al iniciar', v: Q(pp.initial) }, ...pp.phases.map(f => ({ l: f.from === f.to ? 'Mes ' + f.from : 'Meses ' + f.from + ' a ' + f.to, v: Q(f.amount) + ' al mes' }))].slice(0, 3) : [{ l: 'Pago único', v: Q(pp.grand) }],
       table: pp.len > 1 ? { head: ['Mes', 'Pago'], rows: pp.totals.map((v, m) => [m === 0 ? 'Al iniciar' : 'Mes ' + m, Q(v)]) } : null
     };
@@ -1276,9 +1379,9 @@ function pdfModel(includeSim = false) {
     };
   })() : null;
   const notes = [
-    ivaOn() ? `Importes en quetzales enteros. Los pagos se muestran con IVA (${Math.round(FISCAL.iva * 100)} %) a solicitud de la institución; el importe sin IVA se indica como principal.` : `Importes en quetzales enteros y sin IVA: las instituciones educativas están exentas. El monto con IVA (${Math.round(FISCAL.iva * 100)} %) se indica solo como referencia.`,
-    'Los importes se agrupan por modalidad y en total; no se desglosan por nivel ni por programa.',
-    'Los importes son estimaciones comerciales. La cotización final y las condiciones las confirma GuateGeeks.',
+    ivaOn() ? `Precios en quetzales enteros. Los pagos se muestran con IVA (${Math.round(FISCAL.iva * 100)} %) a solicitud de la institución; el precio sin IVA se indica como principal.` : `Precios en quetzales enteros y sin IVA: las instituciones educativas están exentas. El monto con IVA (${Math.round(FISCAL.iva * 100)} %) se indica solo como referencia.`,
+    'Los precios se agrupan por modalidad y en total; no se desglosan por nivel ni por programa.',
+    'Los precios son estimaciones comerciales. La cotización final y las condiciones las confirma GuateGeeks.',
     'No todas las modalidades incluyen los mismos servicios (equipamiento, capacitación, recursos para el aula, Sócrates Aprende y soporte).',
     'Cuando los horarios de los grupos no están confirmados, la cantidad de equipos es una estimación y no una cobertura garantizada.'
   ];
@@ -1286,18 +1389,19 @@ function pdfModel(includeSim = false) {
   const overview = t.rows.map(r => { const s = r.entry, p = findP(s.programId), g = entryGroups(s); return { photo: s.id, title: progTitle(s), sub: g.length + ' ' + plural(g.length, 'grupo', 'grupos'), equip: p.ratio && r.units ? r.units + ' ' + p.hardware : 'Por definir', students: participation(s) + ' ' + plural(participation(s), 'estudiante', 'estudiantes') }; });
   const LEG = { INTEGRA: ['Integra', 'Compras el equipo y queda en propiedad del colegio desde el inicio. Se paga una sola vez.'], FLEX: ['Flex', 'Rentas el equipo por bimestres (de 2 en 2 meses). Se paga una sola vez y el equipo se devuelve al terminar.'], EVO: ['Evoluciona', 'Pagas un inicial del 20 % y cuotas mensuales iguales (8 o 16 meses). Al terminar, el equipo pasa a ser del colegio.'] };
   return {
-    title: 'Propuesta para tu colegio', subtitle: 'Programas de tecnología educativa elegidos con el asesor de GuateGeeks. Los importes son estimaciones que GuateGeeks confirma.',
+    title: 'Propuesta para tu colegio', subtitle: 'Programas de tecnología educativa elegidos con el asesor de GuateGeeks. Los precios son estimaciones que GuateGeeks confirma.',
     legend: gs.map(g => LEG[g.m.k]),
-    steps: [['Revisa', 'Comparte esta propuesta con tu equipo directivo y define qué programas empiezan primero.'], ['Confirma', 'GuateGeeks valida con tu colegio los grupos, los importes y las condiciones finales.'], ['Empieza', 'Se coordina la entrega de equipos y el acompañamiento a tus docentes.']],
+    steps: [['Revisa', 'Comparte esta propuesta con tu equipo directivo y define qué programas empiezan primero.'], ['Confirma', 'GuateGeeks valida con tu colegio los grupos, los precios y las condiciones finales.'], ['Empieza', 'Se coordina la entrega de equipos y el acompañamiento a tus docentes.']],
     date: new Date().toLocaleDateString('es-GT', { day: 'numeric', month: 'long', year: 'numeric' }),
     stats: [{ v: String(n), l: 'estudiantes únicos atendidos' }, { v: String(equipment), l: plural(equipment, 'equipo en total', 'equipos en total') }, { v: String(priced.length), l: plural(priced.length, 'programa seleccionado', 'programas seleccionados') }],
     levelsLine: 'Niveles: ' + joinY(levels) + '. Matrícula registrada en la institución: ' + registered() + ' estudiantes.',
     options, optionsNote: onlyBuy ? '' : '',
     invest: {
-      label: 'Total de la propuesta', net: priced.length ? Q(money(all)) : 'Sin importe disponible',
+      label: 'Total de la propuesta', net: priced.length ? Q(money(all)) : 'Sin precio disponible',
       parts: priced.length ? { main: Q(money(all)), mainLabel: ivaOn() ? 'Total con IVA' : 'Total sin IVA', perStudent: ps.monthly != null ? Q(ps.monthly) + ' al mes' : '', perLabel: ps.monthly != null ? 'Por estudiante, cada mes' : 'Compra: pago único', perTotal: ps.monthly != null ? Q(Math.round(ps.total)) + ' en ' + ps.months + ' meses' + (ps.buyAmt ? ', sin la compra' : '') : '', students: ps.students || n, net: Q(all.net), iva: Q(all.tax), total: Q(all.total), ivaPct: Math.round(FISCAL.iva * 100) + ' %' } : null,
-      warning: t.unpricedCount ? `${t.pricedCount ? 'Estos importes no incluyen todos los programas. ' : ''}${t.unpricedCount} ${plural(t.unpricedCount, 'programa está', 'programas están')} pendiente${t.unpricedCount === 1 ? '' : 's'} de modalidad, configuración o cotización personalizada.` : ''
+      warning: t.unpricedCount ? `${t.pricedCount ? 'Estos precios no incluyen todos los programas. ' : ''}${t.unpricedCount} ${plural(t.unpricedCount, 'programa está', 'programas están')} pendiente${t.unpricedCount === 1 ? '' : 's'} de modalidad, configuración o cotización personalizada.` : ''
     },
+    coverage: (() => { const c = coverage(), bl = coverageBlocks(), lab = { ok: null, pending: 'Sin programa todavía', outside: 'No disponible con los programas elegidos', skipped: 'Sin programa por ahora' }; return { summary: `${c.students} de ${c.total} estudiantes registrados están incluidos en esta cotización.`, missing: c.total - c.students, rows: bl.map(b => ({ grade: b.text, level: findL(b.levelId).name, students: b.students, programs: b.status === 'ok' ? joinY(b.progs) : lab[b.status], ok: b.status === 'ok' })) }; })(),
     pay, overview, programs, sim, notes
   };
 }
@@ -1321,6 +1425,11 @@ const pdfLogo = () => pdfImg('../assets/brand/guategeeks-logo.png', 360);
 const pdfEyes = () => pdfImg('../assets/brand/guategeeks-ojos.png', 420);
 // Antes de descargar se pregunta si se quiere incluir la proyección por estudiante (solo aplica a renta y cuotas).
 function downloadPdf() {
+  const cov = coverage(), pend = state.selected.filter(s => !s.confirmed).length, miss = cov.pending.reduce((n, g) => n + g.students, 0);
+  if (miss || pend) {
+    const why = [miss ? `${miss} ${plural(miss, 'estudiante no está', 'estudiantes no están')} en ningún programa` : '', pend ? `${pend} ${plural(pend, 'programa falta', 'programas faltan')} por configurar` : ''].filter(Boolean).join(' y ');
+    askChoice('Termina de configurar antes de descargar', why + '. Si descargas ahora, la cotización no tomaría en cuenta a todos tus estudiantes.', [{ label: 'Ahora no' }, { label: 'Configurar ahora', primary: true, fn: () => miss ? openAssign() : step(4) }]); return;
+  }
   const t = M.proposalTotals(state.selected, PROGRAMS, groups(), TARIFFS, FISCAL);
   if (!simRows(t).length) { makePdf(false); return; }
   askChoice('¿Quieres incluir la proyección por estudiante en el PDF?', 'Muestra cuánto recaudaría el colegio con la cuota por estudiante y cuánto le quedaría, para los programas en renta y en cuotas. Es opcional.', [{ label: 'No, solo la cotización', fn: () => makePdf(false) }, { label: 'Sí, incluir la proyección', primary: true, fn: () => makePdf(true) }]);
@@ -1351,6 +1460,29 @@ async function makePdf(includeSim) {
   } catch (e) { notify('No se pudo generar el PDF. Intenta de nuevo.'); }
 }
 
+function coveragePanel() {
+  const cov = coverage(); if (!cov.total) return '';
+  const bl = coverageBlocks(), sum = st => bl.filter(b => st.includes(b.status)).reduce((n, b) => n + b.students, 0);
+  const okN = sum(['ok']), pendN = sum(['pending']), allOk = okN === cov.total, pct = Math.round(okN / cov.total * 100);
+  const n = x => `${x} ${plural(x, 'estudiante', 'estudiantes')}`;
+  // Incluidos: una tarjeta por programa con los grados que lo cursan.
+  const progs = [];
+  bl.filter(b => b.status === 'ok').forEach(b => {
+    const key = b.progs.join(','); let g = progs.find(x => x.key === key);
+    if (!g) progs.push(g = { key, names: b.progs, parts: [], students: 0 });
+    g.parts.push(b.text); g.students += b.students;
+  });
+  const included = progs.map(g => `<li class="cov-prog"><span class="cov-ico">${icon('check')}</span><div><b>${esc(joinY(g.names))}</b><span>${esc(g.parts.join(' · '))}</span></div><em>${n(g.students)}</em></li>`).join('');
+  const rest = st => bl.filter(b => st.includes(b.status)).map(b => `<li class="cov-item ${st[0] === 'pending' ? 'miss' : 'out'}"><span class="cov-g">${esc(b.text)}</span><span class="cov-n">${n(b.students)}</span></li>`).join('');
+  const pending = rest(['pending']), outside = rest(['outside', 'skipped']);
+  const names = joinY([...new Set(state.selected.map(s => findP(s.programId).name))]);
+  const lead = allOk ? `Todos tus estudiantes registrados están en la propuesta.` : `${n(cov.total - okN)} de los ${cov.total} registrados todavía no tienen programa y no suman al precio.`;
+  return `<section class="coverage"><div class="section-heading" style="margin:0 0 12px"><h2>Quiénes participan</h2>${allOk ? '' : `<span class="status amber">${pendN ? 'Faltan grados' : 'Cobertura parcial'}</span>`}</div>
+  <div class="cov-top"><div class="cov-num"><b>${okN}</b><span>${allOk ? 'estudiantes participan' : 'de ' + cov.total + ' participan'}</span></div><div class="cov-bar"><div class="cov-meter" role="img" aria-label="${okN} de ${cov.total} estudiantes incluidos"><i style="width:${pct}%"></i></div><p>${lead}</p></div></div>
+  ${included ? `<ul class="cov-list cov-progs">${included}</ul>` : ''}
+  ${pending ? `<div class="cov-group warn"><h3>Pueden sumarse a un programa que ya elegiste</h3><ul class="cov-list">${pending}</ul><p class="cov-help">${n(pendN)} podrían usar ${esc(names)}. <button type="button" class="text-btn" onclick="openAssign()">Configurar ahora</button></p></div>` : ''}
+  ${outside ? `<div class="cov-group out"><h3>No disponibles con los programas elegidos</h3><ul class="cov-list">${outside}</ul><p class="cov-help">${esc(names)} no está disponible para estos grados. Puedes continuar y descargar tu cotización con los grados incluidos. Si quieres atenderlos, <button type="button" class="text-btn" onclick="state.skipped=[];step(3)">elige otro programa para ellos</button>.</p></div>` : ''}</section>`;
+}
 function renderSummary() {
   const list = state.selected;
   if (!list.length) { frame('Tu propuesta educativa', 'Aquí se reunirán los programas y equipos que elijas para tu institución.', `<div class="empty">Todavía no has agregado programas. Tus niveles y estudiantes registrados se conservan.</div><div class="foot"><button class="btn btn-primary" onclick="step(${hasStudents() ? 3 : state.levels.length ? 2 : 1})">${hasStudents() ? 'Elegir programas' : 'Continuar mi propuesta'} ${icon('arrow')}</button></div>`); return; }
@@ -1358,7 +1490,7 @@ function renderSummary() {
   const t = M.proposalTotals(list, PROGRAMS, groups(), TARIFFS, FISCAL), nlevels = new Set(list.flatMap(s => entryLevels(s).map(l => l.id))).size;
   const provisional = groups().some(g => list.some(s => s.groupIds.includes(g.id)) && !g.confirmed);
   frame('Tu propuesta educativa', 'Estos son los programas y equipos que seleccionaste para tu institución. Revisa el alcance, compara tus decisiones y ajusta lo que necesites.',
-    `<div class="summary-hero"><div class="summary-top"><h2>Resumen de tu propuesta</h2></div><p>Matrícula registrada: ${registered()} estudiantes.</p><div class="summary-num"><div><b>${selectedParticipants()}</b><small>estudiantes únicos<br>sin duplicarlos</small></div><div><b>${nlevels}</b><small>${plural(nlevels, 'nivel educativo', 'niveles educativos')}<br>en la propuesta</small></div><div><b>${list.length}</b><small>${plural(list.length, 'programa seleccionado', 'programas seleccionados')}<br>para tu institución</small></div></div></div>${provisional ? '<div class="warning">Algunos grupos están como total sin secciones. Las cantidades de equipos son provisionales hasta confirmar cómo se agrupan.</div>' : ''}<div class="section-heading"><h2>Programas que elegiste</h2><button class="text-btn" onclick="step(3)">+ Agregar programa</button></div>${list.map((s, i) => proposalCard(s, i, t.rows[i])).join('')}<div class="links"><button class="btn btn-outline" onclick="step(3)">+ Agregar otro programa</button><button class="btn btn-outline" onclick="step(1)">+ Agregar otro nivel</button></div>${investmentHTML(t)}${simRows(t).length ? `<details class="optional-block" id="sim-block"><summary><span class="sim-ico">${icon('chart')}</span><span class="sim-txt"><b>¿Quieres explorar cuánto representaría esta inversión por estudiante?</b><small>Una sola cuota para todo el colegio: cuánto cobrar a cada estudiante y qué ganancia le quedaría.</small></span><span class="sim-cta">Ver mi proyección</span></summary><div class="sim-body"><label class="suggested-toggle" for="use-sug"><input id="use-sug" type="checkbox" ${state.useSuggested !== false ? 'checked' : ''} onchange="toggleSuggested(this.checked)"> Usar la cuota sugerida por GuateGeeks (desmárcala para escribir la tuya)</label><div id="sim-out" style="margin-top:12px">${simOut(t)}</div></div></details>` : ''}<section class="next-panel"><h3>Tu cotización, lista para descargar.</h3><p>Descarga un PDF con el alcance, los programas, los equipos, los importes y la forma de pago de tu propuesta.</p><div class="links"><button class="btn btn-primary" onclick="downloadPdf()">Descargar cotización en PDF ${icon('download')}</button></div></section><div class="foot"><button class="btn btn-outline" onclick="step(1)">+ Agregar otro nivel</button><button class="btn btn-outline" onclick="resetAll()">Empezar de nuevo</button></div>`);
+    `<div class="summary-hero"><div class="summary-top"><h2>Resumen de tu propuesta</h2></div><p>Matrícula registrada: ${registered()} estudiantes.</p><div class="summary-num"><div><b>${selectedParticipants()}</b><small>estudiantes únicos<br>sin duplicarlos</small></div><div><b>${nlevels}</b><small>${plural(nlevels, 'nivel educativo', 'niveles educativos')}<br>en la propuesta</small></div><div><b>${list.length}</b><small>${plural(list.length, 'programa seleccionado', 'programas seleccionados')}<br>para tu institución</small></div></div></div>${provisional ? '<div class="warning">Algunos grupos están como total sin secciones. Las cantidades de equipos son provisionales hasta confirmar cómo se agrupan.</div>' : ''}<div class="section-heading"><h2>Programas que elegiste</h2><button class="text-btn" onclick="step(3)">+ Agregar programa</button></div>${list.map((s, i) => proposalCard(s, i, t.rows[i])).join('')}<div class="links"><button class="btn btn-outline" onclick="step(3)">+ Agregar otro programa</button><button class="btn btn-outline" onclick="step(1)">+ Agregar otro nivel</button></div>${coveragePanel()}${investmentHTML(t)}${simRows(t).length ? `<details class="optional-block" id="sim-block"><summary><span class="sim-ico">${icon('chart')}</span><span class="sim-txt"><b>¿Quieres explorar cuánto representaría esta inversión por estudiante?</b><small>Una sola cuota para todo el colegio: cuánto cobrar a cada estudiante y qué ganancia le quedaría.</small></span><span class="sim-cta">Ver mi proyección</span></summary><div class="sim-body"><label class="suggested-toggle" for="use-sug"><input id="use-sug" type="checkbox" ${state.useSuggested !== false ? 'checked' : ''} onchange="toggleSuggested(this.checked)"> Usar la cuota sugerida por GuateGeeks (desmárcala para escribir la tuya)</label><div id="sim-out" style="margin-top:12px">${simOut(t)}</div></div></details>` : ''}<section class="next-panel"><h3>Tu cotización, lista para descargar.</h3><p>Descarga un PDF con el alcance, los programas, los equipos, los precios y la forma de pago de tu propuesta.</p><div class="links"><button class="btn btn-primary" onclick="downloadPdf()">Descargar cotización en PDF ${icon('download')}</button></div></section><div class="foot"><button class="btn btn-outline" onclick="step(1)">+ Agregar otro nivel</button><button class="btn btn-outline" onclick="resetAll()">Empezar de nuevo</button></div>`);
 }
 
 function render() {
