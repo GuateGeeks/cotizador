@@ -675,9 +675,18 @@ function removeSection(gid, sid) {
   if (!g.sections.length) g.sections = [{ id: gid + '-' + uid(), name: 'A', students: null }];
   letterize(g); pruneEntries(); render();
 }
-function sectionRow(gid, s, count) {
+function sectionRow(gid, s, count, last) {
   const gname = esc(gradeName(gid));
-  return `<div class="section-row"><div class="sec-label"><span class="sec-name">Sección ${esc(s.name)}</span></div><div class="number"><button type="button" aria-label="Restar un estudiante en ${gname}, sección ${esc(s.name)}" onclick="stepQty('${gid}','${s.id}',-1)">−</button><input id="qty-${s.id}" aria-label="Estudiantes en ${gname}, sección ${esc(s.name)}" aria-describedby="err-qty-${s.id}" type="text" inputmode="numeric" autocomplete="off" placeholder="—" value="${s.students ?? ''}" oninput="writeQty('${gid}','${s.id}',this.value,this)"><button type="button" aria-label="Agregar un estudiante en ${gname}, sección ${esc(s.name)}" onclick="stepQty('${gid}','${s.id}',1)">+</button>${count > 1 ? `<button type="button" aria-label="Quitar la sección ${esc(s.name)} de ${gname}" onclick="removeSection('${gid}','${s.id}')">×</button>` : ''}</div><p class="field-error" id="err-qty-${s.id}" hidden></p></div>`;
+  return `<div class="gr-sec">${count > 1 ? `<span class="gr-sn" title="Sección ${esc(s.name)}">${esc(s.name)}</span>` : '<span></span>'}<div class="number"><button type="button" aria-label="Restar un estudiante en ${gname}, sección ${esc(s.name)}" onclick="stepQty('${gid}','${s.id}',-1)">−</button><input id="qty-${s.id}" aria-label="Estudiantes en ${gname}, sección ${esc(s.name)}" aria-describedby="err-qty-${s.id}" type="text" inputmode="numeric" autocomplete="off" placeholder="—" value="${s.students ?? ''}" oninput="writeQty('${gid}','${s.id}',this.value,this)"><button type="button" aria-label="Agregar un estudiante en ${gname}, sección ${esc(s.name)}" onclick="stepQty('${gid}','${s.id}',1)">+</button></div>${count > 1 ? `<button type="button" class="gr-x" aria-label="Quitar la sección ${esc(s.name)} de ${gname}" onclick="removeSection('${gid}','${s.id}')">×</button>` : '<span></span>'}${last ? `<button type="button" class="gr-add" onclick="addSection('${gid}')" aria-label="Añadir sección en ${esc(gradeName(gid))}">+ Sección</button>` : '<span></span>'}<p class="field-error" id="err-qty-${s.id}" hidden></p></div>`;
+}
+// Atajo: el mismo número de estudiantes en cada sección del nivel que se está llenando.
+function applyAllQty() {
+  const inp = document.getElementById('bulk-qty'), v = (inp.value || '').trim();
+  if (!/^\d+$/.test(v) || Number(v) > 1000) { setError(inp, 'Escribe un número entero entre 0 y 1000.'); return; }
+  setError(inp, '');
+  const l = activeLevels()[state.levelIndex];
+  l.grades.forEach(([gid]) => ensureGrade(gid).sections.forEach(s => { s.students = Number(v); }));
+  store(); render(); notify('Pusimos ' + v + ' estudiantes en cada sección de ' + l.name + '. Ajusta los grados que sean distintos.');
 }
 function renderEnrollment() {
   const levels = activeLevels(); if (!levels.length) { step(1); return; }
@@ -685,10 +694,10 @@ function renderEnrollment() {
   const l = levels[state.levelIndex];
   frame('¿Cuántos estudiantes tienes en ' + l.name.toLowerCase() + '?',
     l.free ? 'Agrega las secciones u opciones de tu oferta, por ejemplo carreras o especialidades. No imponemos una lista de grados.' : 'Indica los estudiantes por grado y sección. Usa «Añadir sección» cuando un grado tenga varios grupos. Deja vacío lo que aún no sepas; un 0 significa que confirmaste que no hay estudiantes.',
-    `<div class="level-tabs" aria-label="Niveles a completar">${levels.map((lv, i) => `<button class="level-tab ${i === state.levelIndex ? 'active' : ''}" aria-pressed="${i === state.levelIndex}" onclick="selectLevel(${i})">${i + 1}. ${esc(lv.name)}</button>`).join('')}</div>${l.grades.map(([gid, name]) => {
+    `<div class="level-tabs" aria-label="Niveles a completar">${levels.map((lv, i) => `<button class="level-tab ${i === state.levelIndex ? 'active' : ''}" aria-pressed="${i === state.levelIndex}" onclick="selectLevel(${i})">${i + 1}. ${esc(lv.name)}</button>`).join('')}</div>${l.free ? '' : `<div class="gr-tools"><label for="bulk-qty">¿Todos los grados tienen casi lo mismo? Pon un número y ajusta después.</label><div class="gr-bulk"><input id="bulk-qty" class="field" type="text" inputmode="numeric" autocomplete="off" placeholder="Ej. 30" aria-describedby="err-bulk-qty"><button type="button" class="btn btn-small btn-outline" onclick="applyAllQty()">Aplicar a todos</button></div><p class="field-error" id="err-bulk-qty" hidden></p></div>`}<div class="gr-list">${l.grades.map(([gid, name]) => {
       const secs = sectionsOf(gid);
-      return `<div class="grade"><div class="grade-head"><strong>${esc(name)}</strong><span data-grade-total="${gid}">${gradeTotalText(gid)}</span></div>${secs.map(s => sectionRow(gid, s, secs.length)).join('')}<button class="mini" onclick="addSection('${gid}')">+ Añadir sección</button></div>`;
-    }).join('')}<div class="tip">Total ingresado para ${esc(l.name)}: <b data-level-total>${levelTotalText(l)}</b>. Los mismos equipos podrán utilizarse en distintos grupos si sus horarios lo permiten.</div><div class="foot"><button class="btn btn-outline" onclick="navEnrollment(-1)">← Atrás</button><button class="btn btn-primary" onclick="navEnrollment(1)">${state.levelIndex < levels.length - 1 ? 'Siguiente nivel' : 'Ver programas'} ${icon('arrow')}</button></div>`);
+      return `<div class="gr-row"><div class="gr-name"><strong>${esc(name)}</strong><small data-grade-total="${gid}">${gradeTotalText(gid)}</small></div><div class="gr-secs">${secs.map((s, k) => sectionRow(gid, s, secs.length, k === secs.length - 1)).join('')}</div></div>`;
+    }).join('')}</div><div class="tip">Total ingresado para ${esc(l.name)}: <b data-level-total>${levelTotalText(l)}</b>. Los mismos equipos podrán utilizarse en distintos grupos si sus horarios lo permiten.</div><div class="foot"><button class="btn btn-outline" onclick="navEnrollment(-1)">← Atrás</button><button class="btn btn-primary" onclick="navEnrollment(1)">${state.levelIndex < levels.length - 1 ? 'Siguiente nivel' : 'Ver programas'} ${icon('arrow')}</button></div>`);
 }
 
 // ---------- Cobertura: todos los grados con estudiantes deben quedar en un programa ----------
@@ -959,7 +968,12 @@ function cfgQuantity(s, p) {
   const an = analysis(s), rec = an.rec, u = unitsOf(s);
   if (!rec) return '<div class="warning">Ingresa estudiantes en los grupos participantes para obtener una recomendación.</div>';
   const unknown = rec.basis === 'unknown', sug = rec.suggested, shown = u ?? rec.teams, isRec = !unknown && (s.units == null || s.units === sug);
-  return `<div class="rec-card qty"><div class="qty-ctl"><span class="qty-label">${esc(p.hardware)}</span><div class="number-lg"><button onclick="adjustUnits(-1)" aria-label="Reducir ${esc(p.hardware)}">−</button><strong aria-live="polite">${shown}</strong><button onclick="adjustUnits(1)" aria-label="Aumentar ${esc(p.hardware)}">+</button></div><span class="qty-state ${isRec ? 'rec' : ''}">${unknown ? 'Mínimo sugerido: ' + rec.scenarios[0].teams : isRec ? '✓ Cantidad recomendada' : 'Recomendamos ' + sug}</span></div><div class="rec-body"><p>${explanation(s, p, an)}</p>${unknown ? `<ul>${rec.scenarios.map(x => `<li>${esc(x.label)}: <b>${x.teams}</b> equipos</li>`).join('')}</ul>` : ''}${!isRec && !unknown ? `<button class="text-btn" onclick="useRecommended()">Volver a la recomendación (${sug})</button>` : ''}<p class="help-line" style="margin:10px 0 0">Sube o baja la cantidad con − y +: abajo se actualiza cuántos estudiantes pueden trabajar a la vez.</p></div></div><div id="coverage">${coverageHTML(s, p, an)}</div>`;
+  const sized = entryGroups(s).filter(g => g.students > 0);
+  const big = rec.basis === 'separate' && sized.length ? sized.reduce((x, y) => M.teamsFor(y.students, p.ratio) > M.teamsFor(x.students, p.ratio) ? y : x) : null;
+  const facts = big
+    ? `<ul class="qty-facts"><li><span>Grupo más grande</span><b>${big.students} estudiantes</b><small>${esc(big.label)}</small></li><li><span>Por equipo</span><b>hasta ${p.ratio} estudiantes</b><small>${esc(p.hardware)}</small></li><li class="${isRec ? 'rec' : ''}"><span>Recomendamos</span><b>${sug} ${esc(p.hardware)}</b><small>${sized.length > 1 ? 'Los demás grupos los usan en otros horarios' : 'Para ese grupo'}</small></li></ul>`
+    : `<p class="qty-text">${explanation(s, p, an)}</p>${unknown ? `<ul class="qty-scen">${rec.scenarios.map(x => `<li>${esc(x.label)}: <b>${x.teams}</b> equipos</li>`).join('')}</ul>` : ''}`;
+  return `<div class="rec-card qty"><div class="qty-ctl"><span class="qty-label">${esc(p.hardware)}</span><div class="number-lg"><button onclick="adjustUnits(-1)" aria-label="Reducir ${esc(p.hardware)}">−</button><strong aria-live="polite">${shown}</strong><button onclick="adjustUnits(1)" aria-label="Aumentar ${esc(p.hardware)}">+</button></div><span class="qty-state ${isRec ? 'rec' : ''}">${unknown ? 'Mínimo sugerido: ' + rec.scenarios[0].teams : isRec ? '✓ Cantidad recomendada' : 'Recomendamos ' + sug}</span>${!isRec && !unknown ? `<button class="text-btn" onclick="useRecommended()">Volver a ${sug}</button>` : ''}</div><div class="rec-body">${facts}<p class="qty-hint">Ajusta con − y +: abajo ves cuántos estudiantes pueden trabajar a la vez.</p></div></div><div id="coverage">${coverageHTML(s, p, an)}</div>`;
 }
 const PLAN_CARDS = [
   { pick: 'INTEGRA', ids: ['INTEGRA'], title: 'Comprar el equipo', tag: 'Integra', sum: 'Compras el equipo y queda en tu colegio desde el primer día.',
@@ -1344,15 +1358,23 @@ async function makePdf(includeSim) {
 function coveragePanel() {
   const cov = coverage(); if (!cov.total) return '';
   const bl = coverageBlocks(), sum = st => bl.filter(b => st.includes(b.status)).reduce((n, b) => n + b.students, 0);
-  const okN = sum(['ok']), pendN = sum(['pending']), outN = sum(['outside', 'skipped']), allOk = okN === cov.total;
-  const lvl = b => esc(b.text), n = x => `${x} ${plural(x, 'estudiante', 'estudiantes')}`;
-  const included = bl.filter(b => b.status === 'ok').map(b => `<li class="cov-item ok"><span class="cov-g">${lvl(b)}</span><span class="cov-p">${esc(joinY(b.progs))}</span><span class="cov-n">${n(b.students)}</span></li>`).join('');
-  const pending = bl.filter(b => b.status === 'pending').map(b => `<li class="cov-item miss"><span class="cov-g">${lvl(b)}</span><span class="cov-n">${n(b.students)}</span></li>`).join('');
-  const outside = bl.filter(b => b.status === 'outside' || b.status === 'skipped').map(b => `<li class="cov-item out"><span class="cov-g">${lvl(b)}</span><span class="cov-n">${n(b.students)}</span></li>`).join('');
+  const okN = sum(['ok']), pendN = sum(['pending']), allOk = okN === cov.total, pct = Math.round(okN / cov.total * 100);
+  const n = x => `${x} ${plural(x, 'estudiante', 'estudiantes')}`;
+  // Incluidos: una tarjeta por programa con los grados que lo cursan.
+  const progs = [];
+  bl.filter(b => b.status === 'ok').forEach(b => {
+    const key = b.progs.join(','); let g = progs.find(x => x.key === key);
+    if (!g) progs.push(g = { key, names: b.progs, parts: [], students: 0 });
+    g.parts.push(b.text); g.students += b.students;
+  });
+  const included = progs.map(g => `<li class="cov-prog"><span class="cov-ico">${icon('check')}</span><div><b>${esc(joinY(g.names))}</b><span>${esc(g.parts.join(' · '))}</span></div><em>${n(g.students)}</em></li>`).join('');
+  const rest = st => bl.filter(b => st.includes(b.status)).map(b => `<li class="cov-item ${st[0] === 'pending' ? 'miss' : 'out'}"><span class="cov-g">${esc(b.text)}</span><span class="cov-n">${n(b.students)}</span></li>`).join('');
+  const pending = rest(['pending']), outside = rest(['outside', 'skipped']);
   const names = joinY([...new Set(state.selected.map(s => findP(s.programId).name))]);
-  return `<section class="coverage"><div class="section-heading" style="margin:0 0 8px"><h2>Estudiantes de tu cotización</h2><span class="status ${allOk ? 'green' : 'amber'}">${allOk ? 'Todos incluidos' : pendN ? 'Faltan grados' : 'Cobertura parcial'}</span></div>
-  <p class="inv-lead"><b>${okN} de ${cov.total} estudiantes</b> registrados están incluidos. ${allOk ? '' : 'Los demás no suman al precio hasta que tengan un programa.'}</p>
-  ${included ? `<div class="cov-group"><h3>Incluidos en tu cotización</h3><ul class="cov-list">${included}</ul></div>` : ''}
+  const lead = allOk ? `Todos tus estudiantes registrados están en la propuesta.` : `${n(cov.total - okN)} de los ${cov.total} registrados todavía no tienen programa y no suman al precio.`;
+  return `<section class="coverage"><div class="section-heading" style="margin:0 0 12px"><h2>Quiénes participan</h2>${allOk ? '' : `<span class="status amber">${pendN ? 'Faltan grados' : 'Cobertura parcial'}</span>`}</div>
+  <div class="cov-top"><div class="cov-num"><b>${okN}</b><span>${allOk ? 'estudiantes participan' : 'de ' + cov.total + ' participan'}</span></div><div class="cov-bar"><div class="cov-meter" role="img" aria-label="${okN} de ${cov.total} estudiantes incluidos"><i style="width:${pct}%"></i></div><p>${lead}</p></div></div>
+  ${included ? `<ul class="cov-list cov-progs">${included}</ul>` : ''}
   ${pending ? `<div class="cov-group warn"><h3>Pueden sumarse a un programa que ya elegiste</h3><ul class="cov-list">${pending}</ul><p class="cov-help">${n(pendN)} podrían usar ${esc(names)}. <button type="button" class="text-btn" onclick="openAssign()">Configurar ahora</button></p></div>` : ''}
   ${outside ? `<div class="cov-group out"><h3>No disponibles con los programas elegidos</h3><ul class="cov-list">${outside}</ul><p class="cov-help">${esc(names)} no está disponible para estos grados. Puedes continuar y descargar tu cotización con los grados incluidos. Si quieres atenderlos, <button type="button" class="text-btn" onclick="state.skipped=[];step(3)">elige otro programa para ellos</button>.</p></div>` : ''}</section>`;
 }
