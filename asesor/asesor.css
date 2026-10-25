@@ -174,7 +174,7 @@ a{color:var(--plum)}
 .media-count{position:absolute;right:10px;bottom:10px;background:rgba(48,43,61,.78);color:#fff;border-radius:999px;padding:2px 10px;font-size:12px;font-variant-numeric:tabular-nums}
 .equipment-focus .media-nav,.proposal-main .media-nav{width:30px;height:30px;font-size:20px}
 .equipment-focus .media-count,.proposal-main .media-count{display:none}
-.prog .media-nav,.prog .media-open{width:auto}
+.prog .media-open{width:auto}
 .prog .media-open{width:100%}
 .lightbox{border:0;padding:0;background:transparent;max-width:min(1100px,96vw);width:96vw;max-height:94vh;overflow:visible;color:#fff}
 .lightbox::backdrop{background:rgba(48,43,61,.82);backdrop-filter:blur(3px)}
@@ -1213,3 +1213,8 @@ body:has(.campus-layout) .brand img{width:72px;height:auto}
 
 .lc-line{margin:6px 0 4px;font-size:14px;font-weight:600;color:var(--ink);line-height:1.45}
 .lc-hint{display:block;margin-bottom:8px;font-size:12px;color:var(--muted)}
+
+/* flechas de la galería: transparentes, con el trazo blanco legible sobre cualquier foto */
+.product-media .media-nav,.lightbox .media-nav{background:transparent;box-shadow:none;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.65),0 0 2px rgba(0,0,0,.5);width:40px;height:56px;border-radius:12px;padding:0}
+.product-media .media-nav:hover,.lightbox .media-nav:hover{background:rgba(0,0,0,.22);color:#fff}
+.product-media .media-nav:focus-visible,.lightbox .media-nav:focus-visible{outline:2px solid #fff;outline-offset:-2px}
