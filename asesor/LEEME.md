@@ -54,7 +54,7 @@ node --test asesor/test/motor.test.js asesor/test/pdf.test.js
 - Evoluciona 8 y 16 (los únicos con pago inicial y cuotas): precio de referencia por 5 equipos ÷ 5 × equipos × 1.06 (8 meses) o 1.10 (16 meses); 20 % de pago inicial y el resto en cuotas mensuales.
 - IVA 12 %. Importes en quetzales enteros. En Evoluciona todas las cuotas son iguales: el precio absorbe el ajuste de unos pocos quetzales para que no quede una cuota final distinta.
 - Aviso informativo cuando hay menos de 5 equipos (mínimo comercial).
-- Simulador: cuota sugerida = total con IVA ÷ estudiantes ÷ meses ÷ 0.75, redondeada hacia arriba a múltiplos de 5. El simulador solo aparece para renta por bimestre (Flex) y Evoluciona; no se muestra para la compra de equipos (Integra). La diferencia bruta no es utilidad neta.
+- Simulador (resumen y PDF): una sola cuota mensual por estudiante para toda la propuesta, calculada sobre el total de estudiantes únicos de los programas en renta (Flex) y en cuotas (Evoluciona), sin separar por nivel ni por programa. Cuota sugerida = total con IVA de esos programas ÷ estudiantes ÷ meses del programa más largo ÷ 0.75, redondeada hacia arriba a múltiplos de 5; el colegio puede quitar la sugerencia y escribir otra. Se muestra como «ganancia del colegio» (ingresos menos pago a GuateGeeks, antes de sus gastos propios). No aplica a Integra.
 
 ## Revisión de diseño con Impeccable
 
@@ -127,3 +127,9 @@ La franja de la primera hoja del PDF lleva los ojos de GuateGeeks (`assets/brand
 ## Validación de precios
 
 `node --test asesor/test/precios.test.js` recalcula de forma independiente (fórmula de `costa-sur.js`) las 6 tecnologías, de 1 a 150 equipos, en Integra, Flex (1 a 4 bimestres) y Evoluciona 8 y 16: neto, IVA del 12 %, total, pago inicial del 20 %, cuotas iguales y descuentos por bimestres; además prueba instituciones de ejemplo de punta a punta (equipos por grupo y horario, varias modalidades, cantidad elegida por el colegio y precios que se invalidan al cambiar la matrícula).
+
+## IVA: importes sin IVA por defecto
+
+Las instituciones educativas están exentas de IVA, así que todo se calcula y se muestra **sin IVA**: el importe de cada programa, el pago inicial, las cuotas, la cuota por estudiante del simulador y el PDF. El monto con IVA (12 %) se indica siempre como referencia, y quien lo necesite puede activar «Mostrar los pagos con IVA» en la sección de inversión (la preferencia se guarda y también la sigue el PDF).
+
+En `motor.js`, `quoteFor` devuelve `net`, `initial` y `schedule` (sin IVA, principales) y `total`, `initialIva`, `scheduleIva` y `tax` (con IVA, referencia). En Evoluciona las cuotas son iguales en ambas vistas; por eso el IVA de referencia puede diferir unos quetzales del 12 % exacto del neto.

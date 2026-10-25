@@ -106,34 +106,35 @@
 
   // tariff: precios por equipo (ver config.js). fiscal: {iva, initialRate, ...}
   // Devuelve null si no hay tarifa. Todos los importes son enteros (se redondean).
+  // Las instituciones educativas están exentas de IVA: el importe principal, el pago inicial y las cuotas se
+  // calculan SIN IVA (`net`, `initial`, `schedule`). El monto con IVA es solo referencia (`total`, `initialIva`,
+  // `scheduleIva`) para quien lo necesite; `tax` es la diferencia entre ambos.
   function quoteFor(plan, bimestres, units, tariff, fiscal) {
     if (!tariff || !units || units < 1) return null;
-    const finish = (net, extra) => {
+    const single = net => {
       net = Math.round(net);
-      const tax = Math.round(net * fiscal.iva);
-      return Object.assign({ net, tax, total: net + tax }, extra);
+      const tax = Math.round(net * fiscal.iva), total = net + tax;
+      return { net, tax, total, initial: net, initialIva: total, schedule: [net], scheduleIva: [total], kind: 'unico' };
     };
-    if (plan === 'INTEGRA') {
-      const q = finish(tariff.buy * units, {});
-      return Object.assign(q, { months: 0, initial: q.total, schedule: [q.total], kind: 'unico' });
-    }
+    if (plan === 'INTEGRA') return Object.assign(single(tariff.buy * units), { months: 0 });
     if (plan === 'FLEX') {
       const b = bimestres || 1;
       const disc = fiscal.rentDiscount[b] || 0;
-      const q = finish(tariff.rent * units * b * (1 - disc), {});
       // Renta: un solo monto por todo el periodo, sin pago inicial ni cuotas (como la compra).
-      return Object.assign(q, { months: b * fiscal.rentMonthsPerPeriod, initial: q.total, schedule: [q.total], kind: 'unico' });
+      return Object.assign(single(tariff.rent * units * b * (1 - disc)), { months: b * fiscal.rentMonthsPerPeriod });
     }
     if (plan === 'EV8' || plan === 'EV16') {
       const e = fiscal.evolucion[plan];
-      const base = finish((tariff[e.key] * units / fiscal.evolucionBaseUnits) * e.factor, {});
+      const base = Math.round((tariff[e.key] * units / fiscal.evolucionBaseUnits) * e.factor);
       // Todas las cuotas son iguales: el ajuste de unos pocos quetzales se incluye en el precio
       // (el total se redondea a un múltiplo exacto de la cuota), así no queda una cuota final distinta.
-      const initial = Math.round(base.total * fiscal.initialRate);
-      const cuota = Math.round((base.total - initial) / e.months);
-      const total = initial + cuota * e.months;
-      const net = Math.round(total / (1 + fiscal.iva));
-      return { net, tax: total - net, total, months: e.months, initial, schedule: [initial, ...Array(e.months).fill(cuota)], kind: 'cuotas' };
+      const initial = Math.round(base * fiscal.initialRate);
+      const cuota = Math.round((base - initial) / e.months);
+      const net = initial + cuota * e.months;
+      const initialIva = Math.round(initial * (1 + fiscal.iva)), cuotaIva = Math.round(cuota * (1 + fiscal.iva));
+      const total = initialIva + cuotaIva * e.months;
+      return { net, tax: total - net, total, months: e.months, initial, initialIva,
+        schedule: [initial, ...Array(e.months).fill(cuota)], scheduleIva: [initialIva, ...Array(e.months).fill(cuotaIva)], kind: 'cuotas' };
     }
     return null;
   }
@@ -145,12 +146,23 @@
     if (!students || !months) return 0;
     return Math.ceil((total / students / months / sim.coverage) / sim.roundTo) * sim.roundTo;
   }
-  // Estimación bruta: ingresos del colegio menos lo que paga a GuateGeeks. No es utilidad neta.
+  // Ganancia estimada del colegio: ingresos menos lo que paga a GuateGeeks, antes de sus gastos propios.
   function simulate(plan, quote, students, fee, fiscal) {
     const months = plan === 'INTEGRA' ? fiscal.sim.buyMonths : quote.months;
     const income = fee * students * months, diff = income - quote.total;
     return { months, suggested: suggestedFee(quote.total, students, months, fiscal.sim), income, diff,
       perStudent: students ? diff / students : 0, perStudentMonth: students && months ? diff / students / months : 0 };
+  }
+
+  // Proyección de toda la propuesta: una sola cuota por estudiante, sobre el total de estudiantes únicos
+  // (no por nivel ni por programa). El plazo es el del programa más largo. fee == null usa la sugerida.
+  // Por defecto el costo es sin IVA (instituciones educativas exentas); withIva usa el monto con IVA.
+  function simulateAll(quotes, students, fee, fiscal, withIva) {
+    const months = Math.max(...quotes.map(q => q.months)), cost = quotes.reduce((s, q) => s + (withIva ? q.total : q.net), 0);
+    const suggested = suggestedFee(cost, students, months, fiscal.sim), f = fee == null ? suggested : fee;
+    const income = f * students * months, gain = income - cost;
+    return { months, cost, suggested, fee: f, students, income, gain, contribution: f * months,
+      costPerStudent: students ? cost / students : 0, perStudent: students ? gain / students : 0, perStudentMonth: students && months ? gain / students / months : 0 };
   }
 
   // ---------- Estado de cada programa de la propuesta ----------
@@ -193,5 +205,5 @@
     return { rows, pricedCount: priced.length, unpricedCount: unpriced, net: sum('net'), tax: sum('tax'), total: sum('total'), complete: rows.length > 0 && unpriced === 0 };
   }
 
-  return { teamsFor, recommend, analyze, uniqueStudents, gradeData, groupsOf, splitEven, quoteFor, suggestedFee, simulate, entrySignature, effectiveUnits, entryStatus, proposalTotals };
+  return { teamsFor, recommend, analyze, uniqueStudents, gradeData, groupsOf, splitEven, quoteFor, suggestedFee, simulate, simulateAll, entrySignature, effectiveUnits, entryStatus, proposalTotals };
 });

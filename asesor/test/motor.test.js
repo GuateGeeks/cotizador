@@ -73,34 +73,39 @@ test('matrícula: vacío (null) y cero confirmado se distinguen', () => {
   assert.ok(dos.filter(x => x.gradeId === 'p1').every(x => x.confirmed));
 });
 
-test('caso 8 (quetzales enteros): Robot Master, 5 equipos, Evoluciona 8 con cuotas iguales', () => {
+test('caso 8 (sin IVA, quetzales enteros): Robot Master, 5 equipos, Evoluciona 8 con cuotas iguales', () => {
   const q = M.quoteFor('EV8', 1, 5, C.TARIFFS.master, C.FISCAL);
-  assert.equal(q.initial, 4250);
+  // referencia sin IVA: 17,900 x 5 / 5 x 1.06 = 18,974; inicial 20 % = 3,795; cuotas iguales de 1,897
+  assert.equal(q.initial, 3795);
   assert.equal(q.schedule.length, 9); // inicial + 8 cuotas
-  assert.ok(q.schedule.slice(1).every(c => c === 2125)); // todas iguales, sin cuota final distinta
-  assert.equal(q.total, 4250 + 8 * 2125); // el precio absorbe el ajuste de redondeo
-  assert.equal(q.net + q.tax, q.total);
-  assert.equal(q.schedule.reduce((s, x) => s + x, 0), q.total);
-  assert.ok(Math.abs(q.total - 21251) <= 4); // muy cerca del cálculo sin ajustar
+  assert.ok(q.schedule.slice(1).every(c => c === 1897)); // todas iguales, sin cuota final distinta
+  assert.equal(q.net, 3795 + 8 * 1897); // el precio absorbe el ajuste de redondeo
+  assert.equal(q.schedule.reduce((s, x) => s + x, 0), q.net);
+  assert.ok(Math.abs(q.net - 18974) <= 4);
+  // monto con IVA (solo referencia): cada pago x 1.12
+  assert.equal(q.initialIva, 4250); assert.ok(q.scheduleIva.slice(1).every(c => c === 2125));
+  assert.equal(q.total, 4250 + 8 * 2125); assert.equal(q.net + q.tax, q.total);
 });
 
-test('Evoluciona: todas las cuotas son iguales y suman con el inicial exactamente el total', () => {
+test('Evoluciona: cuotas iguales; sin IVA suman el neto y con IVA suman el total', () => {
   for (const plan of ['EV8', 'EV16']) for (const units of [1, 2, 3, 5, 7, 12, 17, 33]) for (const id of Object.keys(C.TARIFFS)) {
-    const q = M.quoteFor(plan, 1, units, C.TARIFFS[id], C.FISCAL), cuotas = q.schedule.slice(1);
-    assert.ok(cuotas.every(c => c === cuotas[0]), plan + ' ' + id + ' ' + units);
-    assert.equal(q.initial + cuotas.reduce((s, x) => s + x, 0), q.total);
+    const q = M.quoteFor(plan, 1, units, C.TARIFFS[id], C.FISCAL), cuotas = q.schedule.slice(1), cIva = q.scheduleIva.slice(1);
+    assert.ok(cuotas.every(c => c === cuotas[0]) && cIva.every(c => c === cIva[0]), plan + ' ' + id + ' ' + units);
+    assert.equal(q.initial + cuotas.reduce((s, x) => s + x, 0), q.net);
+    assert.equal(q.initialIva + cIva.reduce((s, x) => s + x, 0), q.total);
     assert.equal(q.net + q.tax, q.total);
   }
 });
 
-test('cuotas e inicial suman exactamente el total en todas las modalidades', () => {
+test('cuotas e inicial suman exactamente el neto (sin IVA) y el total (con IVA) en todas las modalidades', () => {
   for (const plan of ['INTEGRA', 'FLEX', 'EV8', 'EV16']) {
     for (const units of [1, 3, 7, 14, 20, 33]) {
       for (const b of [1, 2, 3, 4]) {
         const q = M.quoteFor(plan, b, units, C.TARIFFS.spike, C.FISCAL);
-        assert.equal(q.schedule.reduce((s, x) => s + x, 0), q.total, `${plan} ${units} ${b}`);
+        assert.equal(q.schedule.reduce((s, x) => s + x, 0), q.net, `${plan} ${units} ${b}`);
+        assert.equal(q.scheduleIva.reduce((s, x) => s + x, 0), q.total, `${plan} ${units} ${b}`);
         assert.equal(q.net + q.tax, q.total);
-        assert.ok(Number.isInteger(q.total) && q.schedule.every(Number.isInteger));
+        assert.ok(Number.isInteger(q.total) && q.schedule.every(Number.isInteger) && q.scheduleIva.every(Number.isInteger));
       }
     }
   }
@@ -197,16 +202,16 @@ test('INTEGRA se simula a 8 meses y FLEX a bimestres x 2 meses', () => {
   assert.equal(M.simulate('FLEX', qf, 30, 100, C.FISCAL).months, 6);
 });
 
-test('compra y renta se pagan en un solo monto; Evoluciona lleva 20 % inicial y cuotas', () => {
+test('compra y renta se pagan en un solo monto; Evoluciona lleva 20 % inicial y cuotas (sin IVA)', () => {
   const qi = M.quoteFor('INTEGRA', 1, 5, C.TARIFFS.master, C.FISCAL);
-  assert.equal(qi.initial, qi.total);
+  assert.equal(qi.initial, qi.net); assert.equal(qi.initialIva, qi.total);
   const qf = M.quoteFor('FLEX', 2, 5, C.TARIFFS.master, C.FISCAL);
-  assert.equal(qf.initial, qf.total);
-  assert.deepEqual(qf.schedule, [qf.total]); // sin pago inicial ni cuotas
+  assert.equal(qf.initial, qf.net);
+  assert.deepEqual(qf.schedule, [qf.net]); assert.deepEqual(qf.scheduleIva, [qf.total]); // sin pago inicial ni cuotas
   assert.equal(qf.months, 4); // plazo de la renta, solo para el simulador
   for (const plan of ['EV8', 'EV16']) {
     const q = M.quoteFor(plan, 2, 5, C.TARIFFS.master, C.FISCAL);
-    assert.equal(q.initial, Math.round(q.total * 0.2));
+    assert.ok(Math.abs(q.initial - q.net * 0.2) <= 3);
     assert.ok(q.schedule.length > 2);
   }
 });
