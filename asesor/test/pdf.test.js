@@ -85,6 +85,34 @@ test('la proyección por estudiante solo aparece cuando el modelo la trae', () =
   assert.ok(s.includes('Proyección por estudiante'));
 });
 
+// JPEG mínimo: SOI, SOF0 con dimensiones y EOI. El PDF no decodifica la imagen, solo la incrusta.
+const jpegPrueba = (w, h) => Uint8Array.from([0xFF, 0xD8, 0xFF, 0xC0, 0x00, 0x11, 0x08, h >> 8, h & 255, w >> 8, w & 255, 0x03, 1, 0x22, 0, 2, 0x11, 1, 3, 0x11, 1, 0xFF, 0xD9]);
+const xrefCoherente = s => {
+  const start = Number(s.match(/startxref\n(\d+)\n/)[1]);
+  [...s.slice(start).matchAll(/(\d{10}) 00000 n /g)].forEach((m, i) => assert.ok(s.slice(Number(m[1])).startsWith(`${i + 1} 0 obj`), `objeto ${i + 1}`));
+};
+
+test('con la captura del campus añade la figura ilustrativa y la imagen JPEG', () => {
+  const s = Buffer.from(P.build(modelo(2), { campus: jpegPrueba(1200, 760) })).toString('latin1');
+  assert.ok(s.includes('Representaci\xf3n de tu configuraci\xf3n \\(ilustrativa\\)'));
+  assert.ok(s.includes('/Filter /DCTDecode'));
+  assert.ok(s.includes('/Width 1200') && s.includes('/Height 760'));
+  xrefCoherente(s);
+});
+
+test('sin captura la propuesta sale igual y sin la figura', () => {
+  const sin = Buffer.from(P.build(modelo(2), {})).toString('latin1');
+  assert.ok(!sin.includes('Representaci\xf3n de tu configuraci\xf3n'));
+  assert.ok(!sin.includes('/DCTDecode'));
+  // una captura inválida tampoco rompe la propuesta
+  const rota = Buffer.from(P.build(modelo(2), { campus: Uint8Array.from([1, 2, 3]) })).toString('latin1');
+  assert.ok(!rota.includes('Representaci\xf3n de tu configuraci\xf3n'));
+  xrefCoherente(rota);
+  // los textos comerciales no cambian con la figura
+  const con = Buffer.from(P.build(modelo(2), { campus: jpegPrueba(1200, 760) })).toString('latin1');
+  for (const texto of ['Lo que incluye tu propuesta', 'Q69,112', 'Pr\xf3ximos pasos', 'Condiciones y notas']) assert.ok(sin.includes(texto) && con.includes(texto), texto);
+});
+
 test('la tabla de grados considerados aparece solo con cobertura y avisa lo que falta', () => {
   const m = modelo(2);
   const sin = Buffer.from(P.build(m, {})).toString('latin1');

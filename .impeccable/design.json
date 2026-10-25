@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-24T20:09:19Z",
+  "generatedAt": "2026-10-24T21:00:00Z",
   "title": "Campus vivo del asesor",
   "extensions": {
     "typographyMeta": {
@@ -75,7 +75,7 @@
       "refersTo": "camera-control",
       "description": "Gira el campus; área operable mínima de 44 × 44 px.",
       "html": "<div class=\"ds-camera-surface\"><button class=\"ds-camera\" aria-label=\"Girar a la izquierda\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 10a8 8 0 1 1 2 9M4 4v6h6\"/></svg></button></div>",
-      "css": ".ds-camera-surface{display:inline-block;background:var(--scene,#2e1853);padding:8px}.ds-camera{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;padding:8px;border:0;border-radius:9px;background:transparent;color:#eadcf7;cursor:pointer;transition:background .16s}.ds-camera:hover{background:#503075}.ds-camera:focus-visible{outline:3px solid #ffc857;outline-offset:2px}.ds-camera:disabled{opacity:.45;cursor:default}@media(prefers-reduced-motion:reduce){.ds-camera{transition:none}}"
+      "css": ".ds-camera-surface{display:inline-block;background:var(--scene,#F4F1F6);padding:8px}.ds-camera{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;padding:8px;border:0;border-radius:9px;background:transparent;color:#321853;cursor:pointer;transition:background .16s}.ds-camera:hover{background:rgba(105,66,161,.14)}.ds-camera:focus-visible{outline:3px solid #ffc857;outline-offset:2px;box-shadow:0 0 0 2px #321853}.ds-camera:disabled{opacity:.45;cursor:default}@media(prefers-reduced-motion:reduce){.ds-camera{transition:none}}"
     },
     {
       "name": "Matrícula",
@@ -107,7 +107,7 @@
       "refersTo": "activity-tab",
       "description": "Explora una tecnología sin abandonar el paso de configuración.",
       "html": "<div class=\"ds-activity-surface\"><button class=\"ds-activity-tab\" aria-pressed=\"true\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" aria-hidden=\"true\"><rect x=\"5\" y=\"7\" width=\"14\" height=\"12\" rx=\"4\"/><path d=\"M12 3v4M2 11v5M22 11v5M9 22v-3M15 22v-3\"/><circle cx=\"9\" cy=\"12\" r=\"1\"/><circle cx=\"15\" cy=\"12\" r=\"1\"/><path d=\"M9 16h6\"/></svg>Tale-Bot</button></div>",
-      "css": ".ds-activity-surface{display:inline-block;background:#2e1853;padding:12px}.ds-activity-tab{display:flex;align-items:center;gap:7px;min-height:40px;padding:7px 12px;border:1px solid #70528c;border-radius:9px;background:transparent;color:#f5eafe;font-family:\"Avenir Next\",Avenir,Inter,\"Segoe UI\",system-ui,sans-serif;font-size:12px;cursor:pointer;transition:background .15s,transform .15s}.ds-activity-tab:hover{background:#4d2d70;transform:translateY(-2px)}.ds-activity-tab[aria-pressed=\"true\"]{background:#ffc857;border-color:#ffc857;color:#2e1853;font-weight:700}.ds-activity-tab:focus-visible{outline:3px solid #ffc857;outline-offset:2px}@media(prefers-reduced-motion:reduce){.ds-activity-tab{transition:none}.ds-activity-tab:hover{transform:none}}"
+      "css": ".ds-activity-surface{display:inline-block;background:#F4F1F6;padding:12px}.ds-activity-tab{display:flex;align-items:center;gap:7px;min-height:40px;padding:7px 12px;border:1px solid rgba(50,24,83,.18);border-radius:9px;background:rgba(255,255,255,.8);color:#321853;font-family:\"Avenir Next\",Avenir,Inter,\"Segoe UI\",system-ui,sans-serif;font-size:12px;cursor:pointer;transition:background .15s,transform .15s}.ds-activity-tab:hover{background:rgba(105,66,161,.14);transform:translateY(-2px)}.ds-activity-tab[aria-pressed=\"true\"]{background:#ffc857;border-color:#ffc857;color:#321853;font-weight:700}.ds-activity-tab:focus-visible{outline:3px solid #ffc857;outline-offset:2px;box-shadow:0 0 0 2px #321853}@media(prefers-reduced-motion:reduce){.ds-activity-tab{transition:none}.ds-activity-tab:hover{transform:none}}"
     },
     {
       "name": "Respuesta de una decisión",
@@ -115,16 +115,32 @@
       "refersTo": "activity-feedback",
       "description": "Explicación contextual de la decisión y de su efecto en la actividad.",
       "html": "<section class=\"ds-feedback\" role=\"status\"><strong>Un taller, distintos turnos</strong><p>Los grupos se relevan usando el mismo conjunto de equipos.</p></section>",
-      "css": ".ds-feedback{background:#2e1853;color:#fff4e8;border-top:1px solid #644280;padding:18px 16px;font-family:\"Avenir Next\",Avenir,Inter,\"Segoe UI\",system-ui,sans-serif}.ds-feedback strong{display:block;font-size:18px;font-weight:700;line-height:1.25}.ds-feedback p{margin:6px 0 0;max-width:60ch;color:#dccbe9;font-size:12px;line-height:1.5}"
+      "css": ".ds-feedback{background:#F4F1F6;color:#321853;border-top:1px solid rgba(50,24,83,.18);padding:18px 16px;font-family:\"Avenir Next\",Avenir,Inter,\"Segoe UI\",system-ui,sans-serif}.ds-feedback strong{display:block;font-size:18px;font-weight:700;line-height:1.25}.ds-feedback p{margin:6px 0 0;max-width:60ch;color:#58446f;font-size:12px;line-height:1.5}"
+    },
+    {
+      "name": "Contador del visor",
+      "kind": "custom",
+      "refersTo": "viewer-counter",
+      "description": "Cifra calculada por el motor sobre vidrio claro; en móvil usa el rótulo corto.",
+      "html": "<dl class=\"ds-counts\"><div><dt>Estudiantes atendidos</dt><dd>142</dd></div><div><dt>Equipos necesarios</dt><dd>24</dd></div></dl>",
+      "css": ".ds-counts{display:flex;gap:8px;margin:0;padding:12px;background:#F4F1F6;font-family:\"Avenir Next\",Avenir,Inter,\"Segoe UI\",system-ui,sans-serif}.ds-counts div{display:flex;flex-direction:column-reverse;min-width:92px;padding:8px 12px;border:1px solid rgba(50,24,83,.18);border-radius:12px;background:rgba(255,255,255,.8)}.ds-counts dt{font-size:11px;color:#58446f}.ds-counts dd{margin:0;font-size:20px;font-weight:750;color:#321853;font-variant-numeric:tabular-nums}"
+    },
+    {
+      "name": "Leyenda del visor",
+      "kind": "custom",
+      "refersTo": "viewer-glass",
+      "description": "Leyenda discreta: la maqueta es una representación, no un plano.",
+      "html": "<p class=\"ds-note\">Representación de tu configuración</p>",
+      "css": ".ds-note{display:inline-block;margin:12px;padding:8px 14px;border:1px solid rgba(50,24,83,.18);border-radius:12px;background:rgba(255,255,255,.8);color:#321853;font-family:\"Avenir Next\",Avenir,Inter,\"Segoe UI\",system-ui,sans-serif;font-size:12px}"
     }
   ],
   "narrative": {
     "northStar": "Campus vivo del asesor",
     "overview": "La configuración educativa conserva una columna compacta y una escuela animada muestra actividades que se pueden explorar. Cada decisión produce una explicación contextual con las cantidades y condiciones reales del configurador.",
     "keyCharacteristics": [
-      "Configuración lateral de 360–390 px; campus en el espacio restante.",
+      "Configuración lateral de 360–420 px; campus claro (#F4F1F6) en el espacio restante.",
       "Actividades seleccionables mediante canvas y tira de tecnologías; foco destacado en primer plano.",
-      "Móvil fijo de 200–210 px, compacto a 130 px al editar campos.",
+      "Móvil compacto (260–380 px) con «Ampliar»; 130–140 px al editar campos.",
       "Actividad visible con máximo configurado de 30 FPS; sin afirmar rendimiento medido.",
       "Modalidades explicadas mediante diagramas, sin edificios ni servicios añadidos."
     ],
@@ -143,7 +159,7 @@
     "dos": [
       "Relacionar la respuesta visual y la explicación con la decisión editada.",
       "Mantener cantidades exactas del motor junto a representaciones agrupadas.",
-      "Usar #2e1853 como fondo del visor, #fff4e8 para titulares y #dccbe9 para explicación.",
+      "Usar #F4F1F6 como fondo del visor, vidrio claro para el HUD, #321853 para titulares y #58446f para explicación.",
       "Preservar el espacio de edición móvil compactando temporalmente el campus."
     ],
     "donts": [

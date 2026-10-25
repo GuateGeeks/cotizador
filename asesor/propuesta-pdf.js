@@ -247,6 +247,16 @@
       y += sh + 18;
     }
 
+    // Figura ilustrativa del campus confirmado. Es opcional: sin captura la propuesta no cambia.
+    function campusFigure() {
+      const id = photoId('campus'); if (!id) return;
+      const info = GGPdf.jpegInfo(photos.campus), maxH = 170, w = Math.min(CW, maxH * info.w / info.h), h = w * info.h / info.w;
+      ensure(h + 44);
+      pdf.rect(M + (CW - w) / 2 - 1, y - 1, w + 2, h + 2, { stroke: C.line, lw: 0.7, r: 6 });
+      pdf.image(id, M + (CW - w) / 2, y, w, h);
+      pdf.text(M + CW / 2, y + h + 15, 'Representación de tu configuración (ilustrativa)', { size: T.tiny, color: C.muted, align: 'center' });
+      y += h + 30;
+    }
     // Condiciones y notas
     function notes() {
       heading('Condiciones y notas', null, 70);
@@ -257,6 +267,7 @@
     // ---------- Detalle de cada programa ----------
     if (model.programs.length) { pdf.addPage(); y = nextHeader(); }
     heading('Detalle de cada programa', 'Qué recibe tu institución en cada programa, cuántos equipos y cómo se paga.', 200);
+    campusFigure();
     model.programs.forEach(p => card(p));
 
     function card(p) {

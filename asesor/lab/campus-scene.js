@@ -1,35 +1,40 @@
 /**
- * Living campus: an original adjacency-driven miniature (not Townscaper assets).
- * Each layout entity becomes one skinned, vertex-coloured group built with the
- * faceted kit (campus-kit.js). New parts assemble in sequence, existing parts
- * keep their place, roofs lift to reveal the explored activity and Geeky guides
- * the eye. All GPU resources are disposed on replacement or on dispose().
+ * Living papercraft campus. The scene is fed by the growth plan (paper/plan.js):
+ * its modules are grouped into a few entities (paper/scene-entities.js), each one
+ * a single skinned group built from the paper catalog. New pieces assemble from
+ * their `stage` declarations (paper/scene-assembly.js), activities end at rest
+ * (paper/scene-activity.js) and rendering is on demand. All GPU resources are
+ * disposed on replacement or on dispose(); the shared materials are kept.
  */
 import {
-  WebGLRenderer, Scene, OrthographicCamera, Mesh, MeshStandardMaterial, MeshBasicMaterial,
-  HemisphereLight, DirectionalLight, BoxGeometry, MeshDepthMaterial, RingGeometry, SRGBColorSpace, NeutralToneMapping,
-  PCFShadowMap, Vector3, Vector2, Raycaster, DoubleSide
+  WebGLRenderer, Scene, OrthographicCamera, Mesh, MeshBasicMaterial, HemisphereLight, DirectionalLight, BoxGeometry,
+  RingGeometry, PlaneGeometry, ShadowMaterial, Color, SRGBColorSpace, NeutralToneMapping, PCFShadowMap, Vector3, Vector2, Raycaster, DoubleSide
 } from 'three';
-import { deriveCampus, PROGRAM_NAMES, LEVEL_NAMES } from './campus-layout.js';
-import { createBuilder, releaseEntityGroup, rigidSkinning, clamp, lerp, backOut, smooth } from './campus-kit.js';
-import { buildRoom, buildCirculation, buildEnvironment } from './campus-architecture.js';
-import { buildWorkshop, buildPopulation } from './campus-actors.js';
+import { PROGRAM_NAMES, LEVEL_NAMES } from './campus-layout.js';
+import { releaseEntityGroup, clamp, lerp, backOut } from './campus-kit.js';
 import { createGeeky } from './campus-geeky.js';
+import { paperMaterials } from './paper/material.js';
+import { PAPER } from './paper/kit.js';
+import { planCampus } from './paper/plan.js';
+import { groupPlan, entitySignature, buildEntityGroup, selectionOf } from './paper/scene-entities.js';
+import { bindStaged, planAssembly, applyAssembly, pendingOf } from './paper/scene-assembly.js';
+import { RUN, tickActors, walkerWorld } from './paper/scene-activity.js';
 
 // Measured budget (see docs/campus-3d.md): triangles include the shadow pass.
 export const CAMPUS_BUDGET = Object.freeze({ triangles: 40000, drawCalls: 150, materials: 10 });
 const DEFAULT_YAW = -.55, YAW_LIMIT = 1.35, PITCH = .6, DISTANCE = 30;
+const PITCH_MIN = .2, PITCH_MAX = 1.15;
 // Up close the camera frames roughly one student; zoom is multiplicative.
 const ZOOM_MIN = .7, ZOOM_MAX = 9;
-const BUILDERS = { room: buildRoom, workshop: buildWorkshop, circulation: buildCirculation, environment: buildEnvironment, population: buildPopulation };
+export const VIEW_NAMES = Object.freeze(['overview', 'front', 'patio', 'people', 'program']);
 
 export function createMascot(container, opts = {}) {
   const reduced = !!opts.reduceMotion;
-  const renderer = new WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'low-power' });
-  renderer.setClearColor(0x000000, 0);
+  const renderer = new WebGLRenderer({ antialias: true, powerPreference: 'low-power' });
+  renderer.setClearColor(PAPER.background, 1);
   renderer.outputColorSpace = SRGBColorSpace;
   renderer.toneMapping = NeutralToneMapping;
-  renderer.toneMappingExposure = 1.05;
+  renderer.toneMappingExposure = 1;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = PCFShadowMap;
   const canvas = renderer.domElement;
@@ -43,25 +48,22 @@ export function createMascot(container, opts = {}) {
   container.appendChild(tag);
 
   const scene = new Scene(), camera = new OrthographicCamera(-8, 8, 6, -6, .1, 80);
-  // Warm key light with soft shadows, lavender sky fill and a cool rim.
-  scene.add(new HemisphereLight(0xfff3e4, 0x5b3f96, 1.55));
-  const sun = new DirectionalLight(0xffe0b6, 2.5);
+  scene.background = new Color(PAPER.background);
+  // Light as in the papercraft inspector: bright sky, warm key with soft shadows, lilac fill.
+  scene.add(new HemisphereLight(0xffffff, 0xd9cfe6, 1.55));
+  const sun = new DirectionalLight(0xfff3e4, 2.1);
   sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048);
-  sun.shadow.bias = -.0004; sun.shadow.normalBias = .03; sun.shadow.radius = 3;
+  sun.shadow.bias = -.0004; sun.shadow.normalBias = .02; sun.shadow.radius = 4;
   scene.add(sun, sun.target);
-  const rim = new DirectionalLight(0xb9a8ff, .55);
-  rim.position.set(8, 5, -9); scene.add(rim);
+  const fill = new DirectionalLight(0xe6dcff, .45);
+  fill.position.set(8, 5, -9); scene.add(fill);
+  const groundMaterial = new ShadowMaterial({ color: 0x3a2470, opacity: .16 });
+  const groundGeometry = new PlaneGeometry(240, 240);
+  const ground = new Mesh(groundGeometry, groundMaterial);
+  ground.rotation.x = -Math.PI / 2; ground.position.y = -.552; ground.receiveShadow = true; scene.add(ground);
 
-  const solid = new MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: .86, metalness: 0 });
-  const materials = {
-    solid, soft: solid,
-    glow: new MeshBasicMaterial({ vertexColors: true, toneMapped: false }),
-    glass: new MeshStandardMaterial({ vertexColors: true, transparent: true, opacity: .32, roughness: .15, depthWrite: false }),
-    blob: new MeshBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false }),
-    depth: new MeshDepthMaterial()
-  };
-  new Set(Object.values(materials)).forEach(rigidSkinning);
+  const materials = paperMaterials();
   const markerMaterial = new MeshBasicMaterial({ color: 0xffc857, transparent: true, opacity: .85, side: DoubleSide, depthWrite: false, toneMapped: false });
   const hitMaterial = new MeshBasicMaterial({ visible: false });
   const hitGeometry = new BoxGeometry(1, 1, 1), markerGeometry = new RingGeometry(.92, 1, 40);
@@ -71,31 +73,61 @@ export function createMascot(container, opts = {}) {
   const geeky = createGeeky(materials);
   scene.add(geeky.group);
 
-  const records = new Map(), memory = new Map();
-  let layout = deriveCampus({}), lastData = {}, disposed = false, lost = false, ready = false;
+  // ---- state
+  const records = new Map();
+  let confirmed = planCampus({}), plan = confirmed, previewState = null, lastData = {}, world = walkerWorld(plan);
+  let disposed = false, lost = false, ready = false;
   let paused = false, visible = true, pendingFrame = 0, pendingTimer = 0, lastTime = 0, animationTime = 0, activityTicks = 0;
-  let yaw = DEFAULT_YAW, targetYaw = DEFAULT_YAW, zoomValue = 1, targetZoom = 1, pointer = null, hovered = null;
-  // Interface overlays float over the canvas; the model frames itself in the free area.
+  // Activity runs: `run` counts them, `runStart` is when the current one began (animation clock).
+  let run = 0, runStart = -1e9;
+  let yaw = DEFAULT_YAW, targetYaw = DEFAULT_YAW, pitch = PITCH, targetPitch = PITCH, zoomValue = 1, targetZoom = 1, pointer = null, hovered = null;
   let size = { w: 800, h: 500 }, insets = { top: 0, right: 0, bottom: 0, left: 0 };
-  // Offset on the view plane, set only by zooming toward the cursor; dragging always rotates.
   const pan = new Vector3(), panTarget = new Vector3(), axisX = new Vector3(), axisY = new Vector3();
   const touches = new Map();
   let hoverVerb = 'Editar';
-  function freeArea() {
-    return { w: Math.max(size.w * .3, size.w - insets.left - insets.right), h: Math.max(size.h * .22, size.h - insets.top - insets.bottom) };
-  }
+  let viewMode = 'overview';
+  let frameBox = null; // retained framing: kept while the campus fits
   let view = { x: 0, y: .6, z: 0, half: 4 }, targetView = { ...view };
-  let focus = { kind: 'overview' }, lastCue = null, cueSequence = 0, configurationKey = '', reactionAt = -10, cue = null;
+  let focus = { kind: 'overview' }, lastCue = null, cueSequence = 0, configurationKey = '';
   const raycaster = new Raycaster(), mouse = new Vector2();
   const moving = () => !reduced && !paused;
+  const runTime = () => moving() ? clamp(animationTime - runStart, 0, RUN) : RUN;
+  const freeArea = () => ({ w: Math.max(size.w * .3, size.w - insets.left - insets.right), h: Math.max(size.h * .22, size.h - insets.top - insets.bottom) });
+
+  // ---------------------------------------------------------------- plan helpers
+  const centerOf = p => ({ x: (p.bounds.x0 + p.bounds.x1) / 2, z: (p.bounds.z0 + p.bounds.z1) / 2 });
+  const moduleFor = (p, select) => {
+    if (!select) return null;
+    const rooms = p.modules.filter(m => m.type.startsWith('room-'));
+    if (select.kind === 'program') return rooms.find(m => m.programId === select.id) || p.modules.find(m => m.type === 'patio' && m.programId === select.id) || null;
+    if (select.kind === 'level') return rooms.filter(m => m.levelId === select.id).sort((a, b) => a.y - b.y)[0] || null;
+    return null;
+  };
+  const programLevels = id => {
+    const eq = plan.normalized.equipment[id];
+    return eq ? [...new Set(eq.groupIds.map(gid => plan.normalized.enrollment.find(row => row.id === gid)?.levelId).filter(Boolean))] : [];
+  };
+  const records_ = () => [...records.values()].filter(record => !record.removing);
 
   // ---------------------------------------------------------------- camera
-  function fitHalf(bounds, angle) {
-    const c = Math.abs(Math.cos(angle)), s = Math.abs(Math.sin(angle));
-    const screenW = bounds.width * c + bounds.depth * s;
-    const screenH = (bounds.width * s + bounds.depth * c) * Math.sin(PITCH) + bounds.height * Math.cos(PITCH);
-    const free = freeArea();
-    return Math.max(screenH / 2, screenW / 2 / (free.w / free.h)) * 1.02;
+  function axes(y, p) {
+    const right = new Vector3(Math.cos(y), 0, -Math.sin(y)), dir = new Vector3(Math.sin(y) * Math.cos(p), Math.sin(p), Math.cos(y) * Math.cos(p));
+    return { right, up: new Vector3().crossVectors(dir, right).normalize() };
+  }
+  /** Largest screen offsets of the campus box around a centre, in world units. */
+  function extent(p, center, y, pt) {
+    const { right, up } = axes(y, pt), b = p.bounds, v = new Vector3();
+    let sx = 0, sy = 0;
+    for (const x of [b.x0, b.x1]) for (const h of [-.55, b.height]) for (const z of [b.z0, b.z1]) {
+      v.set(x - center.x, h - center.y, z - center.z);
+      sx = Math.max(sx, Math.abs(v.dot(right))); sy = Math.max(sy, Math.abs(v.dot(up)));
+    }
+    return { sx, sy };
+  }
+  function fitBox(p, y, pt, free) {
+    const c = centerOf(p), center = { x: c.x, y: p.bounds.height * .3, z: c.z };
+    const e = extent(p, center, y, pt);
+    return { ...center, half: Math.max(e.sy, e.sx / (free.w / free.h)) * 1.05 };
   }
   function positionCamera() {
     // Pixels per world unit come from the free area; the look-at point lands at its centre.
@@ -104,158 +136,204 @@ export function createMascot(container, opts = {}) {
     camera.left = (-size.w / 2 - cx) / ppu; camera.right = (size.w / 2 - cx) / ppu;
     camera.top = (size.h / 2 - cy) / ppu; camera.bottom = (-size.h / 2 - cy) / ppu;
     const cx0 = view.x + pan.x, cy0 = view.y + pan.y, cz0 = view.z + pan.z;
-    camera.position.set(cx0 + Math.sin(yaw) * Math.cos(PITCH) * DISTANCE, cy0 + Math.sin(PITCH) * DISTANCE, cz0 + Math.cos(yaw) * Math.cos(PITCH) * DISTANCE);
+    camera.position.set(cx0 + Math.sin(yaw) * Math.cos(pitch) * DISTANCE, cy0 + Math.sin(pitch) * DISTANCE, cz0 + Math.cos(yaw) * Math.cos(pitch) * DISTANCE);
     camera.lookAt(cx0, cy0, cz0);
     camera.updateProjectionMatrix();
   }
-  function focusIds() {
+  /** World-space focus for the camera, stable (not following moving things). */
+  function focusSelect() {
     const programId = focus.programId || (focus.kind === 'program' ? focus.id : null);
     const levelId = focus.levelId || (focus.kind === 'level' ? focus.id : null);
-    return { programId: records.has('workshop:' + programId) ? programId : null, levelId: layout.tiles.some(tile => tile.levelId === levelId) ? levelId : null };
+    return programId && moduleFor(plan, { kind: 'program', id: programId }) ? { kind: 'program', id: programId }
+      : levelId && moduleFor(plan, { kind: 'level', id: levelId }) ? { kind: 'level', id: levelId } : null;
   }
-  /** World-space focus for the camera, stable (not following moving robots). */
   function focusTarget() {
-    const { programId, levelId } = focusIds();
-    if (programId) {
-      const w = layout.workshops.find(item => item.programId === programId);
-      return { x: w.x, y: w.row === 'front' ? .75 : .55, z: w.z, half: w.programId === 'drones' ? 2.1 : w.programId === 'immersive' ? 1.75 : 1.55, kind: 'program', id: programId };
+    const select = focusSelect() || (previewState?.active ? { kind: 'program', id: previewState.programId } : null);
+    const m = moduleFor(plan, select);
+    if (!m) return null;
+    const patio = m.type === 'patio';
+    return { x: m.x, y: m.y + (patio ? .45 : .85), z: m.z + (patio ? 0 : .3), base: m.y, half: patio ? 2.8 : 2.6, kind: select.kind, id: select.id, module: m, radius: patio ? 1.5 : 1.7 };
+  }
+  const explicit = () => ['explore', 'edit'].includes(focus.emphasis) || (!focus.emphasis && ['groups', 'sharing', 'stations', 'equipment', 'plan'].includes(focus.kind));
+  /** Fixed framings for setView(); null = follow the camera rules below. */
+  function viewTarget() {
+    const c = centerOf(plan), b = plan.bounds;
+    if (viewMode === 'patio') {
+      const patio = plan.modules.find(m => m.type === 'patio');
+      const at = patio ? { x: patio.x, z: patio.z } : { x: c.x, z: b.z1 - 3 };
+      return { x: at.x, y: .5, z: at.z - .4, half: 3.1 };
     }
-    if (levelId) {
-      const rooms = layout.tiles.filter(tile => tile.levelId === levelId);
-      const top = Math.max(...rooms.map(room => room.floor));
-      return { x: rooms[0].x, y: .9 + top * .85, z: rooms[0].z + .5, half: 1.75 + top * .55, kind: 'level', id: levelId };
+    if (viewMode === 'people') {
+      // Low, close view of a table; a ground-floor room whose front is not hidden by a stair.
+      const stairs = plan.modules.filter(m => m.type === 'stairs');
+      const ground = plan.modules.filter(m => m.type.startsWith('room-') && (m.y || 0) < .5);
+      const clear = ground.filter(m => stairs.every(st => Math.abs(st.x - m.x) > 2.2 || st.z + 1 < m.z));
+      const room = [...(clear.length ? clear : ground)].sort((a, c) => (c.programId ? 1 : 0) - (a.programId ? 1 : 0))[0];
+      return room ? { x: room.x - .35, y: .55, z: room.z + .05, half: 1.45 } : null;
+    }
+    if (viewMode === 'program') {
+      const t = focusTarget();
+      if (t) return { x: t.x, y: t.y, z: t.z, half: t.half };
+      const room = plan.modules.find(m => m.type.startsWith('room-') && m.programId) || plan.modules.find(m => m.type.startsWith('room-'));
+      return room ? { x: room.x, y: room.y + .85, z: room.z + .3, half: 2.6 } : null;
     }
     return null;
   }
   function applyView() {
-    const b = layout.bounds;
-    const base = { x: b.centerX, y: b.height > 3 ? 1.0 : .55, z: b.centerZ, half: fitHalf(b, targetYaw) };
+    const free = freeArea(), fixed = viewTarget();
+    if (fixed) { targetView = fixed; return; }
+    // Keep the framing while the whole campus fits; widen it only to avoid clipping.
+    const base = fitBox(plan, targetYaw, targetPitch, free);
+    if (!frameBox) frameBox = base;
+    else {
+      const e = extent(plan, frameBox, targetYaw, targetPitch);
+      if (e.sy > frameBox.half * .985 || e.sx > frameBox.half * (free.w / free.h) * .985) frameBox = { ...base };
+    }
     const target = focusTarget();
-    if (!target) { targetView = base; return; }
+    if (!target) { targetView = { ...frameBox }; return; }
     // Wizard context is a gentle emphasis; an explicit exploration frames the activity.
-    // Ambient context only nudges the centre; explicit exploration frames the target.
     const k = explicit() ? 1 : .2;
-    targetView = { x: lerp(base.x, target.x, k), y: lerp(base.y, target.y, k), z: lerp(base.z, target.z, k), half: explicit() ? lerp(base.half, Math.min(base.half, target.half), k) : base.half * 1.03 };
+    targetView = { x: lerp(frameBox.x, target.x, k), y: lerp(frameBox.y, target.y, k), z: lerp(frameBox.z, target.z, k),
+      half: explicit() ? lerp(frameBox.half, Math.min(frameBox.half, target.half), k) : frameBox.half * 1.03 };
+  }
+  /** Geeky steps out of close-up framings (people view, tight zoom) so it never covers the work. */
+  const geekyHidden = () => viewMode === 'people' || view.half / zoomValue < 1.6;
+  function lighting() {
+    const c = centerOf(plan), b = plan.bounds, s = Math.max(b.width, b.depth) / 2 + 2.2;
+    sun.position.set(c.x - 3, 14, c.z + 4); sun.target.position.set(c.x, 0, c.z);
+    Object.assign(sun.shadow.camera, { left: -s, right: s, top: s, bottom: -s, near: 1, far: 40 });
+    sun.shadow.camera.updateProjectionMatrix();
+  }
+
+  // ---------------------------------------------------------------- activity
+  /** Start an activity run unless one is still going (never interrupts or snaps). */
+  function triggerActivity() {
+    if (disposed || !moving()) return;
+    if (runTime() >= RUN) { run++; runStart = animationTime; }
+  }
+  function tickAll() {
+    const u = runTime(), drones = [];
+    for (const record of records.values()) if (!record.removing && record.meta.actors) tickActors(record.meta.actors, run, u, world, drones);
   }
 
   // ---------------------------------------------------------------- entities
-  function buildEntity(entity, previous) {
-    const b = createBuilder();
-    const meta = BUILDERS[entity.kind](b, entity);
-    const group = b.finish(materials);
-    group.position.set(entity.x, entity.y || 0, entity.z);
+  function makeRecord(entity, previous, assembleOpts) {
+    const built = buildEntityGroup(entity, plan, materials);
+    const { group } = built;
     group.userData.entityKey = entity.key;
-    const select = entity.kind === 'workshop' ? { kind: 'program', id: entity.programId } : entity.kind === 'room' && entity.levelId ? { kind: 'level', id: entity.levelId } : null;
-    if (meta.proxy && select) {
+    const staged = bindStaged(built.meta, built.rig);
+    planAssembly(staged, { before: previous?.names, pending: previous ? pendingOf(previous.staged) : null, moduleKeys: entity.moduleKeys.size ? entity.moduleKeys : new Set([entity.key]), ...assembleOpts });
+    const selects = [];
+    for (const m of entity.modules) {
+      const select = selectionOf(m);
+      if (!select) continue;
       const proxy = new Mesh(hitGeometry, hitMaterial);
-      proxy.position.set(meta.proxy.x, meta.proxy.y, meta.proxy.z); proxy.scale.set(meta.proxy.w, meta.proxy.h, meta.proxy.d);
+      proxy.position.set(m.x, m.y + .85, m.z); proxy.scale.set(2.5, 1.7, 2.2);
       proxy.userData.select = select;
       group.add(proxy);
+      selects.push({ ...select, module: m, proxy });
     }
-    group.userData.select = select;
-    const rig = group.userData.rig;
-    const before = previous?.names || new Set();
-    const staged = meta.staged.map(item => ({ ...item, bone: rig.get(item.name), fresh: !before.has(item.name) })).filter(item => item.bone);
-    for (const item of staged) item.rest = { y: item.bone.position.y, scale: item.bone.scale.clone() };
-    return { entity, group, meta, staged, names: new Set(rig.bones.map(bone => bone.name)), select,
-      people: rig.bones.filter(bone => bone.name.endsWith('.hips')).length };
-  }
-  function stagedAmount(item, age) {
-    const p = clamp((age - item.order * .13) / .5);
-    return p;
-  }
-  /** Apply the construction sequence; returns true while anything is still assembling. */
-  function animateConstruction(record, settleNow) {
-    let active = false;
-    const age = settleNow ? 99 : animationTime - record.born;
-    for (const item of record.staged) {
-      if (!item.fresh || item.done) continue;
-      const p = settleNow ? 1 : stagedAmount(item, age), bone = item.bone, s = Math.max(.001, p > 0 ? backOut(p) : 0);
-      if (item.style === 'rise') bone.scale.set(1, Math.max(.001, smooth(p)), 1);
-      else if (item.style === 'drop') { bone.userData.stageScale = p > 0 ? 1 : .001; bone.userData.drop = (1 - smooth(p)) * 1.1; }
-      else if (item.style === 'tile') bone.scale.set(Math.max(.001, smooth(p)), Math.max(.001, smooth(p)), Math.max(.001, smooth(p)));
-      else bone.scale.setScalar(s);
-      if (p >= 1) { item.done = true; if (item.style !== 'drop') bone.scale.copy(item.rest.scale); bone.userData.drop = 0; bone.userData.stageScale = 1; } else active = true;
-    }
-    return active;
-  }
-  function liftTarget(record) {
-    const { programId, levelId } = focusIds(), e = record.entity;
-    if (hovered && hovered === record) return .25;
-    if (!programId && !levelId) return 0;
-    if (e.kind === 'workshop' && e.programId === programId) return 1;
-    if (e.kind === 'room' && e.levelId === levelId) return 1;
-    // Clear the line of sight to a focused classroom.
-    if (levelId && e.kind === 'workshop' && e.row === 'mid') { const room = layout.tiles.find(tile => tile.levelId === levelId); return room && room.column === e.column ? 1 : 0; }
-    return 0;
-  }
-  const explicit = () => ['explore', 'edit'].includes(focus.emphasis) || (!focus.emphasis && ['groups', 'sharing', 'stations', 'equipment', 'plan'].includes(focus.kind));
-  function animateRoofs(record, rate) {
-    const target = !explicit() && hovered !== record ? liftTarget(record) * .35 : liftTarget(record);
-    record.lift = rate >= 1 ? target : (record.lift || 0) + (target - (record.lift || 0)) * rate;
-    if (Math.abs(target - record.lift) < .002) record.lift = target;
-    for (const roof of record.meta.roofs) {
-      // Revealed roofs rise and shrink away instead of floating in the frame.
-      roof.position.y = roof.userData.rest.position.y + (roof.userData.drop || 0) + record.lift * .9;
-      roof.scale.setScalar(Math.max(.001, (roof.userData.stageScale ?? 1) * (1 - record.lift * .999)));
-    }
-    return Math.abs(target - record.lift) > .002;
+    return { entity, group, meta: built.meta, error: built.error, staged, names: new Set(built.rig.bones.map(bone => bone.name)),
+      selects, people: built.rig.bones.filter(bone => bone.name.endsWith('.hips')).length, triangles: built.triangles };
   }
 
-  function context(record, time, live) {
-    const relevantKinds = ['enrollment', 'groups', 'level', 'sharing', 'stations'];
-    const { programId, levelId } = focusIds();
-    const relevant = record.entity.kind === 'population' || (record.entity.levelId && record.entity.levelId === levelId) || (record.entity.programId && record.entity.programId === programId);
-    if (!memory.has(record.entity.key)) memory.set(record.entity.key, new Map());
-    return { moving: live, time, reaction: live && relevantKinds.includes(focus.kind) && relevant && time - reactionAt < 1.6,
-      cue, memory: memory.get(record.entity.key), fresh: record.fresh, center: { x: layout.bounds.centerX } };
-  }
-  function tickActors(live) {
-    for (const record of records.values()) if (!record.removing) record.meta.tick?.(animationTime, context(record, animationTime, live));
-  }
-  function geekyGoal() {
-    const env = records.get('environment')?.meta;
-    const target = focusTarget(), right = { x: Math.cos(yaw), z: -Math.sin(yaw) };
-    if (target && explicit()) {
-      const record = target.kind === 'program' ? records.get('workshop:' + target.id) : null;
-      const f = record ? record.meta.focus : null;
-      const look = f ? [record.group.position.x + f[0], f[1], record.group.position.z + f[2]] : [target.x, target.y, target.z];
-      // Hover behind and above the activity (as seen from the camera) so Geeky
-      // watches it without ever covering it.
-      const away = { x: -Math.sin(yaw), z: -Math.cos(yaw) }, side = .7, back = target.kind === 'level' ? .2 : .55;
-      return { goal: { x: target.x + right.x * side + away.x * back, y: Math.max(1.8, target.y + 1.3), z: target.z + right.z * side + away.z * back }, look, perched: false,
-        celebrate: !!record?.meta.celebrate, ground: 0 };
+  function update(data) {
+    if (disposed) return;
+    lastData = data || {};
+    const { preview, ...rest } = lastData;
+    const before = new Set(confirmed.normalized.programs);
+    confirmed = planCampus(rest);
+    // Geeky celebrates a program that joins the proposal (never a preview, never on first load).
+    if (ready && confirmed.normalized.programs.some(id => !before.has(id))) geeky.cue?.('celebrate');
+    const programId = preview && typeof preview === 'object' ? preview.programId : null;
+    const previewActive = !!programId && Object.keys(confirmed.normalized.equipment).length >= 0 && !confirmed.normalized.programs.includes(programId)
+      && ['tale', 'master', 'spike', 'electronics', 'drones', 'immersive'].includes(programId);
+    const confirmedKeys = new Set(confirmed.modules.map(m => m.key));
+    plan = previewActive ? planCampus({ ...rest, programs: [...(rest.programs || []), programId] }) : confirmed;
+    previewState = programId ? { programId, active: previewActive, keys: previewActive ? plan.modules.filter(m => !confirmedKeys.has(m.key)).map(m => m.key) : [] } : null;
+    world = walkerWorld(plan);
+
+    const groups = groupPlan(plan);
+    const wanted = new Set(groups.map(group => group.key));
+    for (const [key, record] of records) if (!wanted.has(key)) record.removing = true;
+    // Fresh modules assemble in plan order, overlapping, never queued behind older work.
+    const known = new Set([...records.values()].filter(record => !record.removing).flatMap(record => [...record.entity.moduleKeys, record.entity.key]));
+    const freshModules = groups.flatMap(group => (group.modules.length ? group.modules : [{ key: group.key, order: 0 }]).filter(m => !known.has(m.key)))
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || (a.key < b.key ? -1 : 1));
+    const moduleIndex = new Map(freshModules.map((m, i) => [m.key, i]));
+    const stagger = Math.min(.14, 1.6 / Math.max(1, freshModules.length));
+    const animate = ready && moving();
+    let changed = false;
+    for (const group of groups) {
+      const signature = entitySignature(group, plan);
+      const previous = records.get(group.key);
+      if (previous && previous.signature === signature && !previous.removing) { previous.entity = group; previous.selects.forEach(s => { s.module = group.modules.find(m => m.key === s.module.key) || s.module; }); continue; }
+      const live = previous && !previous.removing ? previous : null;
+      const record = makeRecord(group, live, { moduleIndex, stagger, now: animationTime, animate });
+      if (record.error) console.error('campus entity', group.key, record.error);
+      record.signature = signature;
+      if (previous) { releaseEntityGroup(previous.group); }
+      scene.add(record.group);
+      records.set(group.key, record);
+      changed = true;
+      applyAssembly(record.staged, animationTime, !animate);
     }
-    const gate = env?.gate || [0, 1.47, 3];
-    const look = target ? [target.x, target.y, target.z] : [layout.bounds.centerX, .5, layout.bounds.centerZ - 1];
-    return { goal: { x: gate[0], y: gate[1] + .26, z: gate[2] }, look, perched: true, celebrate: false, ground: gate[1] };
+    if (changed && animate) assemblyDeadline = performance.now() + 3500;
+    lighting();
+    const nextKey = JSON.stringify({ normalized: confirmed.normalized, activeConfig: lastData.activeConfig, preview: programId });
+    if (nextKey !== configurationKey) {
+      configurationKey = nextKey;
+      const requested = lastData.activeConfig || (lastData.focusedProgram ? { kind: 'program', programId: lastData.focusedProgram } : lastData.focusedLevel ? { kind: 'level', levelId: lastData.focusedLevel } : focus);
+      setFocus(requested, true);
+    } else applyView();
+    if (changed) triggerActivity();
+    tickAll();
+    if (!moving() || !canRender()) settle();
+    schedule();
   }
+
+  // ---------------------------------------------------------------- overlays
   function updateMarker(time) {
     const target = focusTarget();
-    marker.visible = !!target && explicit();
+    marker.visible = !!target && (explicit() || !!previewState?.active && target.id === previewState.programId);
     if (!marker.visible) return;
-    const w = target.kind === 'program' ? layout.workshops.find(item => item.programId === target.id) : null;
-    const radius = w ? Math.max(w.w, w.d) * .62 : 1.55;
-    marker.position.set(target.x, (target.kind === 'level' ? layout.tiles.find(t => t.levelId === target.id && t.floor === 0)?.y || 0 : 0) + .03, target.kind === 'level' ? target.z - .5 : target.z);
-    marker.scale.setScalar(radius * (moving() ? 1 + Math.sin(time * 3) * .015 : 1));
+    const isPreview = previewState?.active && target.id === previewState.programId && !focusSelect();
+    markerMaterial.color.set(isPreview ? 0x25c2c6 : 0xffc857);
+    marker.position.set(target.module.x, target.base + .03 + (target.module.type === 'patio' ? 0 : .12), target.module.z);
+    marker.scale.setScalar(target.radius * (moving() ? 1 + Math.sin(time * 3) * .015 : 1));
   }
   function updateTag() {
     // Hover wins: it previews what a click will open for editing.
-    const target = hovered?.select ? { kind: hovered.select.kind, id: hovered.select.id, hover: true } : focusTarget();
-    const record = target && (target.kind === 'program' ? records.get('workshop:' + target.id) : [...records.values()].find(r => r.entity.kind === 'room' && r.entity.levelId === target.id && r.entity.floor === 0));
-    if (!record || !ready) { tag.hidden = true; return; }
-    const e = record.entity;
-    const text = target.kind === 'program' ? PROGRAM_NAMES[target.id] + (e.participantLevels?.length ? ' · ' + e.participantLevels.map(id => LEVEL_NAMES[id]).join(', ') : '') : LEVEL_NAMES[target.id];
-    const label = target.hover ? (target.kind === 'program' ? PROGRAM_NAMES[target.id] : LEVEL_NAMES[target.id]) + ' · ' + hoverVerb : text;
+    const target = hovered ? { kind: hovered.kind, id: hovered.id, hover: true } : focusTarget();
+    const m = target && moduleFor(plan, target);
+    if (!m || !ready) { tag.hidden = true; return; }
+    const name = target.kind === 'program' ? PROGRAM_NAMES[target.id] : LEVEL_NAMES[target.id];
+    const levels = target.kind === 'program' ? programLevels(target.id) : [];
+    const isPreview = target.kind === 'program' && previewState?.active && previewState.programId === target.id;
+    const text = (isPreview ? 'Vista previa · ' : '') + name + (levels.length ? ' · ' + levels.map(id => LEVEL_NAMES[id]).join(', ') : '');
+    const label = target.hover ? name + ' · ' + hoverVerb : text;
     if (tag.textContent !== label || tag.hidden) { tag.textContent = label; tag.hidden = false; tag.dataset.width = tag.offsetWidth; }
-    const top = e.kind === 'room' ? (layout.tiles.filter(t => t.levelId === e.levelId).length > 1 ? 3.7 : 2.05) : e.row === 'front' ? 1.95 : 1.85;
-    const point = new Vector3(e.x, top, e.z).project(camera);
+    const point = new Vector3(m.x, m.y + (m.type === 'patio' ? 1.3 : 2.05), m.z).project(camera);
     const width = container.clientWidth, height = container.clientHeight;
     const half = Math.min(width / 2 - 8, (Number(tag.dataset.width) || 120) / 2 + 8);
     const x = clamp((point.x * .5 + .5) * width, insets.left + half, width - insets.right - half);
     const y = clamp((.5 - point.y * .5) * height, insets.top + 34, Math.max(insets.top + 34, height - insets.bottom - 8));
     tag.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px) translate(-50%, -100%)`;
     tag.hidden = false;
+  }
+  function geekyGoal() {
+    const gate = plan.modules.find(m => m.type === 'entrance'), c = centerOf(plan);
+    const target = focusTarget(), right = { x: Math.cos(yaw), z: -Math.sin(yaw) };
+    if (target && explicit()) {
+      const look = [target.x, target.y, target.z];
+      // Hover behind and above the activity (as seen from the camera) so Geeky watches it without covering it.
+      const away = { x: -Math.sin(yaw), z: -Math.cos(yaw) }, side = .9, back = .6;
+      return { goal: { x: target.x + right.x * side + away.x * back, y: Math.max(1.8, target.y + 1.3), z: target.z + right.z * side + away.z * back }, look, perched: false, celebrate: false, ground: 0 };
+    }
+    const top = gate ? [gate.x, 1.5 + (gate.y || 0), gate.z] : [c.x, 1.5, c.z + 3];
+    const look = target ? [target.x, target.y, target.z] : [c.x, .5, c.z - 1];
+    // Perched in front of and above the entrance, clear of the floor-1 gallery that may pass over it.
+    return { goal: { x: top[0], y: Math.max(top[1] + .26, 2.35), z: top[2] + .85 }, look, perched: true, celebrate: false, ground: top[1] };
   }
 
   // ---------------------------------------------------------------- loop
@@ -268,29 +346,34 @@ export function createMascot(container, opts = {}) {
   function settle() {
     for (const [key, record] of records) {
       if (record.removing) { releaseEntityGroup(record.group); records.delete(key); continue; }
-      animateConstruction(record, true); animateRoofs(record, 1);
+      applyAssembly(record.staged, animationTime, true);
     }
-    yaw = targetYaw; zoomValue = targetZoom; view = { ...targetView }; pan.copy(panTarget);
-    tickActors(!reduced);
+    yaw = targetYaw; pitch = targetPitch; zoomValue = targetZoom; view = { ...targetView }; pan.copy(panTarget);
+    tickAll();
     const g = geekyGoal();
     geeky.tick(animationTime, 0, { ...g, cameraYaw: yaw, moving: false });
+    geeky.group.visible = !geekyHidden();
   }
-  let transitions = 0, transitionParts = {};
+  let transitions = 0, transitionParts = {}, assemblyDeadline = 0;
   // Adaptive quality: slow devices drop the shadow map (contact blobs remain)
   // and render at pixel ratio 1. Decided once from sustained frame intervals.
   let quality = 'full', slowFrames = 0, frameEma = 33;
+  // 60 fps on desktops at full quality; 30 fps on touch devices and in eco quality (battery, heat).
+  const finePointer = typeof matchMedia === 'function' && matchMedia('(pointer: fine)').matches;
+  const maxFps = () => quality === 'full' && finePointer ? 60 : 30;
+  const frameBudget = () => 1000 / maxFps();
   function degrade() {
     if (quality === 'eco') return;
     quality = 'eco';
     renderer.shadowMap.enabled = false;
-    new Set([...Object.values(materials)]).forEach(material => { material.needsUpdate = true; });
+    new Set(Object.values(materials)).forEach(material => { material.needsUpdate = true; });
     resize();
   }
   function frame(time) {
     pendingFrame = 0;
     if (!canRender()) return;
     const interval = lastTime ? time - lastTime : 33;
-    const dt = lastTime ? clamp(interval / 1000, .001, .1) : .033;
+    const dt = lastTime ? clamp(interval / 1000, .001, .5) : .033;
     lastTime = time;
     if (moving() && interval < 400) {
       frameEma += (interval - frameEma) * .1;
@@ -300,6 +383,7 @@ export function createMascot(container, opts = {}) {
     const live = moving();
     let active = 0;
     const parts = {};
+    let geekyBusy = false;
     if (live) { animationTime += dt; activityTicks++; }
     if (!live) settle();
     else {
@@ -307,15 +391,16 @@ export function createMascot(container, opts = {}) {
       for (const [key, record] of records) {
         if (record.removing) {
           record.fade = Math.max(0, (record.fade ?? 1) - dt * 3.5);
-          record.group.scale.setScalar(Math.max(.001, backOut(record.fade) * record.fade));
+          record.group.scale.y = Math.max(.001, backOut(record.fade) * record.fade);
           if (record.fade === 0) { releaseEntityGroup(record.group); records.delete(key); } else active++;
           continue;
         }
-        if (animateConstruction(record, false)) { active++; parts['build:' + key] = 1; }
-        if (animateRoofs(record, rate)) { active++; parts['roof:' + key] = 1; }
+        // A slow device never hangs mid-assembly: past the deadline the final state is shown.
+        if (applyAssembly(record.staged, animationTime, performance.now() > assemblyDeadline)) { active++; parts['build:' + key] = 1; }
       }
-      yaw += (targetYaw - yaw) * rate; zoomValue += (targetZoom - zoomValue) * rate;
+      yaw += (targetYaw - yaw) * rate; pitch += (targetPitch - pitch) * rate; zoomValue += (targetZoom - zoomValue) * rate;
       if (Math.abs(targetYaw - yaw) < .0005) yaw = targetYaw; else { active++; parts.yaw = 1; }
+      if (Math.abs(targetPitch - pitch) < .0005) pitch = targetPitch; else { active++; parts.pitch = 1; }
       if (Math.abs(targetZoom - zoomValue) < .0005 * targetZoom) zoomValue = targetZoom; else { active++; parts.zoom = 1; }
       pan.lerp(panTarget, rate);
       if (pan.distanceToSquared(panTarget) < 1e-6) pan.copy(panTarget); else { active++; parts.pan = 1; }
@@ -323,50 +408,83 @@ export function createMascot(container, opts = {}) {
         view[key] += (targetView[key] - view[key]) * rate;
         if (Math.abs(targetView[key] - view[key]) < .002) view[key] = targetView[key]; else { active++; parts['view:' + key] = 1; }
       }
-      tickActors(true);
+      tickAll();
       const g = geekyGoal();
-      geeky.tick(animationTime, dt, { ...g, cameraYaw: yaw, moving: true });
-      if (!geeky.settled) { active++; parts.geeky = 1; }
+      geeky.tick(animationTime, Math.min(dt, .1), { ...g, cameraYaw: yaw, moving: true }); // slow devices: travel keeps its pace
+      geeky.group.visible = !geekyHidden();
+      // Geeky's travel is a transition; its gaze, blinks and gestures only keep frames coming.
+      if (!geeky.settled) { if (geeky.state.gliding) { active++; parts.geeky = 1; } else geekyBusy = true; }
     }
     transitions = active; transitionParts = parts;
     updateMarker(animationTime);
     positionCamera();
-    const b = layout.bounds, size = Math.max(b.width, b.depth) / 2 + 2.2;
-    sun.position.set(b.centerX - 7, 13, b.centerZ + 8); sun.target.position.set(b.centerX, 0, b.centerZ);
-    Object.assign(sun.shadow.camera, { left: -size, right: size, top: size, bottom: -size, near: 1, far: 40 });
-    sun.shadow.camera.updateProjectionMatrix();
     try {
       renderer.render(scene, camera);
       if (!ready) { ready = true; opts.onReady?.(); }
     } catch (error) { lost = true; opts.onLost?.(error); return; }
     updateTag();
-    if (live && canRender()) pendingTimer = setTimeout(() => { pendingTimer = 0; schedule(); }, Math.max(0, 33.34 - (performance.now() - time)));
+    // Render on demand: keep going only while something is still moving.
+    // Activities keep frames coming but are not 'transitions': those settle quickly and report 0.
+    const running = live && runTime() < RUN;
+    if (live && (active || running || geekyBusy) && canRender()) pendingTimer = setTimeout(() => { pendingTimer = 0; schedule(); }, Math.max(0, frameBudget() - (performance.now() - time)));
     else if (active) schedule();
     else lastTime = 0;
   }
 
-  // ---------------------------------------------------------------- focus & selection
-  function setFocus(next = {}) {
+  // ---------------------------------------------------------------- focus, views & selection
+  function setFocus(next = {}, keepView = false) {
     if (disposed) return;
     focus = typeof next === 'object' && next ? { ...next, kind: next.kind || 'overview' } : { kind: 'overview' };
-    reactionAt = animationTime;
-    if (focus.kind === 'plan') cue = { kind: 'plan', programId: focus.programId, at: animationTime };
-    // Exploring something centres it again; the user's zoom level is kept.
-    if (['explore', 'edit'].includes(focus.emphasis) || focus.kind === 'overview') panTarget.set(0, 0, 0);
+    if (focus.kind === 'plan') lastCue = { kind: 'plan', programId: focus.programId };
+    if (!keepView && (['explore', 'edit'].includes(focus.emphasis) || focus.kind === 'overview')) viewMode = 'overview';
+    if (viewMode === 'overview' && (['explore', 'edit'].includes(focus.emphasis) || focus.kind === 'overview')) panTarget.set(0, 0, 0);
     lastCue = { kind: focus.kind, type: focus.kind, id: focus.programId || focus.levelId || focus.id || null, at: ++cueSequence };
+    applyView();
+    triggerActivity();
+    if (!moving()) settle();
+    schedule();
+  }
+  /** Named framings: overview, front, patio, people, program (the active focus). Bounded, always above the ground. */
+  function setView(name) {
+    if (disposed || !VIEW_NAMES.includes(name)) return;
+    viewMode = name;
+    targetZoom = 1; panTarget.set(0, 0, 0);
+    frameBox = name === 'overview' ? null : frameBox;
+    if (name === 'overview') { targetYaw = DEFAULT_YAW; targetPitch = PITCH; focus = { kind: 'overview' }; }
+    else if (name === 'front') { targetYaw = 0; targetPitch = .38; }
+    else if (name === 'patio') { targetYaw = -.3; targetPitch = .52; }
+    else if (name === 'people') { targetYaw = -.4; targetPitch = .22; }
+    else { targetYaw = DEFAULT_YAW; targetPitch = .5; }
+    targetPitch = clamp(targetPitch, PITCH_MIN, PITCH_MAX);
     applyView();
     if (!moving()) settle();
     schedule();
   }
+  /** A screen point that really lands on this room's proxy (stacked rooms occlude each other). */
+  function visiblePoint(select, proxies) {
+    const m = select.module, patio = m.type === 'patio', probe = new Vector3();
+    const offsets = patio ? [[0, .45, 0]] : [[0, .75, .35], [-.5, .75, .35], [.5, .75, .35], [0, .5, .6], [0, 1.1, .2], [-.6, .5, .3], [.6, .5, .3], [0, .75, -.2], [0, .3, .5], [0, 1.3, 0],
+      ...[1.45, .15, -.15].flatMap(dy => [-1, -.55, .55, 1, 0].flatMap(dx => [.8, 0, -.8].map(dz => [dx, dy + .1, dz]))), ...[1.5, 1.2].flatMap(dy => [-1, 0, 1].map(dx => [dx, dy, .9]))];
+    let fallback = null;
+    for (const [dx, dy, dz] of offsets) {
+      probe.set(m.x + dx, m.y + dy, m.z + dz).project(camera);
+      if (Math.abs(probe.x) > 1 || Math.abs(probe.y) > 1) { fallback ||= { x: probe.x, y: probe.y }; continue; }
+      raycaster.setFromCamera(new Vector2(probe.x, probe.y), camera);
+      if (raycaster.intersectObjects(proxies, false)[0]?.object === select.proxy) return { x: probe.x, y: probe.y };
+      fallback ||= { x: probe.x, y: probe.y };
+    }
+    return fallback;
+  }
   function selectTargets() {
-    scene.updateMatrixWorld(true);
-    const rect = canvas.getBoundingClientRect(), out = [];
+    scene.updateMatrixWorld(true); camera.updateMatrixWorld();
+    const rect = canvas.getBoundingClientRect(), out = [], proxies = [];
+    for (const record of records.values()) if (!record.removing) for (const select of record.selects) proxies.push(select.proxy);
     for (const record of records.values()) {
-      if (record.removing || !record.select) continue;
-      if (record.entity.kind === 'room' && record.entity.floor !== 0) continue;
-      const e = record.entity, f = record.meta.focus || [0, .5, 0];
-      const point = new Vector3(e.x + (e.kind === 'workshop' ? 0 : f[0]), (e.y || 0) + (e.kind === 'workshop' ? .45 : 1.3), e.z + (e.kind === 'workshop' ? .1 : f[2])).project(camera);
-      out.push({ kind: record.select.kind, id: record.select.id, x: rect.left + (point.x * .5 + .5) * rect.width, y: rect.top + (.5 - point.y * .5) * rect.height });
+      if (record.removing) continue;
+      for (const select of record.selects) {
+        const point = visiblePoint(select, proxies);
+        out.push({ kind: select.kind, id: select.id, x: rect.left + (point.x * .5 + .5) * rect.width, y: rect.top + (.5 - point.y * .5) * rect.height });
+      }
     }
     return out;
   }
@@ -389,45 +507,45 @@ export function createMascot(container, opts = {}) {
     if (selected) { setFocus({ kind: selected.kind, id: selected.id, emphasis: 'explore' }); opts.onSelect?.({ ...selected }); }
   }
 
-  // ---------------------------------------------------------------- data
-  function update(data) {
-    if (disposed) return;
-    lastData = data || {};
-    layout = deriveCampus(lastData);
-    const wanted = new Set(layout.entities.map(entity => entity.key));
-    for (const [key, record] of records) if (!wanted.has(key)) record.removing = true;
-    for (const entity of layout.entities) {
-      const signature = JSON.stringify(entity);
-      const previous = records.get(entity.key);
-      if (previous && previous.signature === signature && !previous.removing) continue;
-      const record = buildEntity(entity, previous && !previous.removing ? previous : null);
-      record.signature = signature;
-      record.born = animationTime;
-      record.fresh = ready && moving();
-      record.lift = previous?.lift || 0;
-      if (!ready || !moving()) record.staged.forEach(item => { item.fresh = false; });
-      if (previous) releaseEntityGroup(previous.group);
-      scene.add(record.group);
-      records.set(entity.key, record);
-      // Pose before the first frame so nothing renders in bind pose.
-      record.meta.tick?.(animationTime, context(record, animationTime, !reduced));
-      if (!moving()) animateConstruction(record, true);
-      else animateConstruction(record, false);
+  // ---------------------------------------------------------------- capture
+  /** JPEG of the confirmed campus in the overview, for the proposal. Works while paused or hidden. */
+  function capture({ width = 1200, height = 800 } = {}) {
+    if (disposed || lost) return null;
+    width = Math.round(clamp(Number(width) || 1200, 64, 4096)); height = Math.round(clamp(Number(height) || 800, 64, 4096));
+    settle();
+    const saved = { size, insets, view: { ...view }, yaw, pitch, zoomValue, pan: pan.clone(), ratio: renderer.getPixelRatio(), plan };
+    // Preview modules are not part of the confirmed state: hide them for this frame only.
+    const hidden = [];
+    if (previewState?.active) for (const key of previewState.keys) for (const record of records.values()) {
+      const bone = record.group.userData.rig?.get(key);
+      if (bone) { hidden.push([bone, bone.scale.clone()]); bone.scale.setScalar(.001); }
     }
-    const nextKey = JSON.stringify({ normalized: layout.normalized, activeConfig: lastData.activeConfig });
-    if (nextKey !== configurationKey) {
-      configurationKey = nextKey;
-      const requested = lastData.activeConfig || (lastData.focusedProgram ? { kind: 'program', programId: lastData.focusedProgram } : lastData.focusedLevel ? { kind: 'level', levelId: lastData.focusedLevel } : focus);
-      setFocus(requested);
-    } else applyView();
-    if (!moving() || !canRender()) settle();
-    schedule();
+    const was = { marker: marker.visible, tag: tag.hidden, geeky: geeky.group.visible };
+    marker.visible = false; geeky.group.visible = false;
+    size = { w: width, h: height }; insets = { top: 0, right: 0, bottom: 0, left: 0 };
+    yaw = DEFAULT_YAW; pitch = PITCH; zoomValue = 1; pan.set(0, 0, 0);
+    plan = confirmed;
+    view = fitBox(confirmed, DEFAULT_YAW, PITCH, { w: width, h: height });
+    let url = null;
+    try {
+      renderer.setPixelRatio(1); renderer.setSize(width, height, false);
+      positionCamera();
+      renderer.render(scene, camera);
+      url = canvas.toDataURL('image/jpeg', .9);
+    } catch (error) { url = null; }
+    plan = saved.plan; size = saved.size; insets = saved.insets; yaw = saved.yaw; pitch = saved.pitch; zoomValue = saved.zoomValue; pan.copy(saved.pan); view = saved.view;
+    hidden.forEach(([bone, scale]) => bone.scale.copy(scale));
+    marker.visible = was.marker; geeky.group.visible = was.geeky;
+    renderer.setPixelRatio(saved.ratio);
+    resize();
+    return url;
   }
 
   function resize() {
     if (disposed || lost) return;
     const rect = container.getBoundingClientRect();
     if (!rect.width || !rect.height) return;
+    if (Math.abs(size.w - rect.width) > 2 || Math.abs(size.h - rect.height) > 2) frameBox = null; // a new viewport frames the campus afresh
     size = { w: rect.width, h: rect.height };
     renderer.setPixelRatio(quality === 'eco' ? 1 : Math.min(window.devicePixelRatio || 1, 1.75));
     renderer.setSize(rect.width, rect.height, false);
@@ -446,7 +564,7 @@ export function createMascot(container, opts = {}) {
     if (disposed) return;
     const clean = Object.fromEntries(['top', 'right', 'bottom', 'left'].map(key => [key, Math.max(0, Math.round(Number(next[key]) || 0))]));
     if (['top', 'right', 'bottom', 'left'].every(key => clean[key] === insets[key])) return;
-    insets = clean;
+    insets = clean; frameBox = null;
     applyView();
     if (!moving()) view = { ...targetView };
     positionCamera();
@@ -458,7 +576,7 @@ export function createMascot(container, opts = {}) {
     axisX.setFromMatrixColumn(camera.matrixWorld, 0); axisY.setFromMatrixColumn(camera.matrixWorld, 1);
   }
   function clampPan() {
-    const limit = Math.max(layout.bounds.width, layout.bounds.depth) * .6;
+    const limit = Math.max(plan.bounds.width, plan.bounds.depth) * .6;
     if (panTarget.length() > limit) panTarget.setLength(limit);
   }
   /** Zoom by a factor, keeping the world point under (clientX, clientY) in place. */
@@ -482,7 +600,7 @@ export function createMascot(container, opts = {}) {
     schedule();
   }
   function zoom(delta) { if (!disposed && Number.isFinite(delta)) zoomAt(Math.exp(delta * 2)); }
-  function resetView() { targetYaw = DEFAULT_YAW; targetZoom = 1; panTarget.set(0, 0, 0); setFocus({ kind: 'overview' }); schedule(); }
+  function resetView() { targetYaw = DEFAULT_YAW; targetPitch = PITCH; targetZoom = 1; panTarget.set(0, 0, 0); viewMode = 'overview'; frameBox = null; setFocus({ kind: 'overview' }); schedule(); }
   function setPaused(value) { paused = !!value; if (paused) settle(); schedule(); }
   function wheel(event) {
     if (disposed) return;
@@ -516,8 +634,8 @@ export function createMascot(container, opts = {}) {
     if (!pointer) {
       if (event.pointerType !== 'mouse') return;
       const select = pick(event);
-      const record = select ? [...records.values()].find(r => r.select && r.select.kind === select.kind && r.select.id === select.id && !r.removing) : null;
-      if (record !== hovered) { hovered = record; canvas.style.cursor = record ? 'pointer' : 'grab'; schedule(); }
+      const next = select ? { kind: select.kind, id: select.id } : null;
+      if ((next?.kind + next?.id) !== (hovered?.kind + hovered?.id)) { hovered = next; canvas.style.cursor = next ? 'pointer' : 'grab'; schedule(); }
       return;
     }
     if (pointer.id !== event.pointerId) return;
@@ -569,23 +687,30 @@ export function createMascot(container, opts = {}) {
   update({}); resize();
 
   return {
-    update, resize, rotate, zoom, resetView, setPaused, setFocus, setInsets, setHoverVerb,
+    update, resize, rotate, zoom, resetView, setPaused, setFocus: next => setFocus(next), setInsets, setHoverVerb, setView, capture,
     getDiagnostics() {
-      const list = [...records.values()].filter(record => !record.removing);
+      const list = records_();
       const building = list.filter(record => record.staged.some(item => item.fresh && !item.done)).length;
-      const uniqueMaterials = new Set([...Object.values(materials), markerMaterial, hitMaterial]).size;
-      return { ...layout.stats, actorCount: list.length, animatedPeople: list.reduce((sum, record) => sum + record.people, 0),
-        animatedPrograms: list.filter(record => record.entity.kind === 'workshop').map(record => record.entity.programId),
-        activityTicks, animationTime, reactionCount: cueSequence, actorTransitions: reduced || paused ? 0 : building,
-        entities: records.size, materials: uniqueMaterials, geometries: renderer.info.memory.geometries,
+      const uniqueMaterials = new Set([...Object.values(materials), markerMaterial, hitMaterial, groundMaterial, ...(geeky.ownMaterials?.() || [])]).size;
+      const stats = confirmed.stats, services = confirmed.services;
+      const sum = (kind, record) => record.group.children.reduce((n, mesh) => n + (mesh.isMesh && mesh.geometry.attributes.position ? mesh.geometry.attributes.position.count / 3 * (mesh.castShadow ? 2 : 1) : 0), 0);
+      return { levels: confirmed.normalized.levels.length, programs: confirmed.normalized.programs.length, students: confirmed.normalized.students,
+        rooms: stats.rooms, workshops: stats.projectRooms + (confirmed.modules.some(m => m.type === 'patio') ? 1 : 0), people: stats.people,
+        equipmentUnits: Object.values(confirmed.normalized.equipment).reduce((n, e) => n + e.units, 0), modules: confirmed.modules.length, plan: { ...stats, services: { ...services } }, preview: previewState ? { programId: previewState.programId, active: previewState.active, modules: previewState.keys.length } : null,
+        services: list.flatMap(record => (record.meta.actors?.rooms || []).filter(room => room.service).map(room => ({ kind: room.service.kind, room: room.key, programId: room.programId, levelId: room.levelId }))),
+        view: viewMode, actorCount: list.length, animatedPeople: list.reduce((n, record) => n + record.people, 0),
+        animatedPrograms: [...new Set(list.flatMap(record => (record.meta.actors?.rooms || []).filter(room => room.programId).map(room => room.programId).concat((record.meta.actors?.drones || []).map(() => 'drones'))))],
+        activityTicks, animationTime, activityRun: run, activityTime: runTime(), reactionCount: cueSequence, actorTransitions: reduced || paused ? 0 : building,
+        entities: records.size, entityKeys: list.map(record => record.entity.key), materials: uniqueMaterials, geometries: renderer.info.memory.geometries,
         triangles: renderer.info.render.triangles, drawCalls: renderer.info.render.calls,
         framePending: !!pendingFrame || !!pendingTimer, paused, visible, contextLost: lost,
         focus: { ...focus }, focusedProgram: focus.programId || (focus.kind === 'program' ? focus.id : null), lastCue,
         transitionsActive: reduced || paused ? 0 : transitions + (records.size !== list.length ? 1 : 0),
-        breakdown: list.reduce((acc, record) => { const k = record.entity.kind; acc[k] = (acc[k] || 0) + record.group.children.reduce((n, mesh) => n + (mesh.isMesh && mesh.geometry.attributes.position ? mesh.geometry.attributes.position.count / 3 * (mesh.castShadow ? 2 : 1) : 0), 0); return acc; }, {}),
+        breakdown: list.reduce((acc, record) => { const k = record.entity.kind; acc[k] = (acc[k] || 0) + sum(k, record); return acc; }, {}),
+        errors: list.filter(record => record.error).map(record => record.entity.key),
         transitionParts: { ...transitionParts },
         selectTargets: selectTargets(), geeky: { ...geeky.state.p, settled: geeky.settled },
-        quality, frameInterval: Math.round(frameEma), yaw, zoom: zoomValue, camera: 'orthographic', maxFps: 30, limits: CAMPUS_BUDGET };
+        quality, frameInterval: Math.round(frameEma), yaw, pitch, zoom: zoomValue, framing: { half: view.half, target: { ...targetView }, size: { ...size }, insets: { ...insets } }, camera: 'orthographic', maxFps: maxFps(), limits: CAMPUS_BUDGET };
     },
     dispose() {
       if (disposed) return;
@@ -596,8 +721,8 @@ export function createMascot(container, opts = {}) {
       document.removeEventListener('visibilitychange', visibility); window.removeEventListener('resize', resize);
       for (const record of records.values()) releaseEntityGroup(record.group);
       records.clear(); releaseEntityGroup(geeky.group);
-      [hitGeometry, markerGeometry].forEach(geometry => geometry.dispose());
-      new Set([...Object.values(materials), markerMaterial, hitMaterial]).forEach(material => material.dispose());
+      [hitGeometry, markerGeometry, groundGeometry].forEach(geometry => geometry.dispose());
+      new Set([...Object.values(materials), markerMaterial, hitMaterial, groundMaterial]).forEach(material => material.dispose());
       sun.shadow.map?.dispose(); renderer.dispose(); canvas.remove(); tag.remove();
     }
   };

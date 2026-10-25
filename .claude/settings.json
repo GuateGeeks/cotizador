@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm test)",
+      "Bash(npm run build)",
+      "Bash(npm run test:browser)",
+      "Bash(npm run capture:*)",
+      "Bash(node tools/campus-capture.cjs:*)",
+      "Bash(node asesor/test/campus-browser.cjs)"
+    ],
+    "deny": [
+      "Bash(git push origin main:*)",
+      "Bash(git push origin HEAD:main:*)"
+    ]
+  }
+}

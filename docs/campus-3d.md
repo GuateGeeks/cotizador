@@ -1,233 +1,167 @@
-# Campus 3D reactivo
+# Campus 3D papercraft
 
-El campus acompaña al configurador con una maqueta low poly viva: un colegio que crece desde un aula, se llena de comunidad y muestra cada tecnología del catálogo en acción. Cada decisión del configurador tiene una consecuencia visible relacionada con lo que se configura. La configuración ocupa una columna de 360–390 px en escritorio, con la misma jerarquía que en móvil; el campus aprovecha el resto del ancho. En móvil la vista permanece arriba mientras se recorre el formulario.
+El asesor muestra una escuela de cartulina cortada, plegada y ensamblada que crece con el
+alcance de la cotización. Empieza con una sola aula y llega a un campus en U de dos pisos, con
+patio, balcón, escalera, jardines, equipos en uso y personas trabajando.
 
-## Dirección artística
+Es una **representación de la configuración**: no genera partidas de construcción ni de
+mobiliario, y nunca calcula precios.
 
-**Una maqueta de juguete donde la arquitectura enmarca y las actividades protagonizan.** La isla violeta facetada, los marcos claros, los techos morados, los accesos naranjas, las circulaciones turquesa y la vegetación se conservan del storyboard «Del aula al campus». Los seis cuadros guían el crecimiento: un aula, la comunidad que llega, la robótica que abre un taller, las alas conectadas, el entorno que crece y el campus completo en acción.
+Documentos relacionados:
 
-- **Arquitectura como marco.** Las aulas son pabellones abiertos al frente, con un antepecho bajo y una puerta naranja. Las cubiertas son de corte: losa morada sobre la mitad posterior y celosía sobre la delantera, para leer el interior desde la cámara. Los talleres son plataformas abiertas con una sombra solo sobre el almacenamiento. Las paredes reciben sombra, pero solo cubiertas, postes y árboles la proyectan.
-- **Sectores educativos.** Cada nivel ocupa una columna fija con su color: Preprimaria `#F9C36A`, Primaria `#19BCCD`, Básico `#FF8B22` y Bachillerato `#8DB442`. El color aparece en la franja de la fachada, las sillas, los banderines y los suéteres de sus estudiantes. Los interiores cambian por nivel: alfombra redonda y bloques en Preprimaria, pizarra y globo en Primaria, proyección en Básico y laptops en Bachillerato.
-- **Personajes.** Las personas están articuladas en caderas, rodillas, hombros, codos y cabeza. Las proporciones cambian con la edad: en Preprimaria son pequeñas con cabeza grande y en Bachillerato tienen casi la altura adulta. Tienen ojos con brillo, mejillas, varios peinados, lentes, mochilas, tonos de piel diversos y uniforme. Las docentes llevan una franja tejida inspirada en el huipil y un gafete GuateGeeks.
-- **Tecnologías reconocibles** según las fotos del catálogo:
-  - **Tale-Bot**: cubo blanco con ojos grandes, botones de colores y accesorio de pico o brazos.
-  - **Robot Master**: dinosaurio de piezas lima, gris y celeste.
-  - **SPIKE Prime**: base con hub amarillo y matriz de luces, vigas magenta y ruedas turquesa.
-  - **Electrónica**: placa azul de circuitos a presión con LED, ventilador y multímetro.
-  - **Drones**: cuadricóptero blanco con protectores, sobre un mapa con volcán, lagos y helipuertos.
-  - **Realidad virtual**: visores blancos y un holograma con un planeta, el Templo I de Tikal y una molécula.
-- **Terreno realmente facetado.** La isla se compone de baldosas de 1,3 unidades con alturas deterministas compartidas en las esquinas. Los acantilados tienen estratos violetas y el borde es orgánico.
-- **Vegetación variada.** Hay árboles redondos, pinos, árboles florecidos, arbustos y macizos de flores. Los árboles altos enmarcan el campus por los lados y el fondo; cerca de las actividades y en el borde frontal solo hay vegetación baja, para no tapar la acción.
-- **Luz.** Una luz principal cálida con sombras suaves, cielo lavanda, contraluz fría y tone mapping neutral. Hay sombras de contacto bajo personas, robots y árboles.
-- **Geeky como guía.** El personaje de GuateGeeks espera sobre el portal naranja de la entrada, sigue con la mirada lo que se explora, parpadea y vuela para observar la actividad elegida sin taparla: se coloca detrás y encima de ella desde la cámara. Señala con una patilla, como el gesto `gg-mentor` de Geeky Live.
+- Guía para ejecutar, ajustar y ampliar: [papercraft/README.md](papercraft/README.md).
+- Referencias visuales y su análisis: [papercraft/reference/](papercraft/reference/README.md).
+- Contratos: [piezas](papercraft/CONTRACT.md) e [integración](papercraft/INTEGRATION.md).
+- Registro de trabajo, roles y evidencia: [papercraft/ORCHESTRATION.md](papercraft/ORCHESTRATION.md).
 
-## Matriz configuración → consecuencia visual
+## Arquitectura
 
-| Decisión | Consecuencia en la maqueta |
-| --- | --- |
-| Niveles | Se abre o se retira el sector del nivel: aula con su color, interior por edad y estudiantes de su tamaño. Se crean la circulación turquesa que une las alas y las baldosas de isla necesarias. |
-| Matrícula | El aula se ocupa con hasta tres estudiantes sentados, más docente; cero deja el aula vacía con su docente. La comunidad caminante crece hasta ocho estudiantes, que entran por el portal y caminan a una puerta real de aula o taller, se detienen y regresan. Con una matrícula alta aparece un segundo piso, con escalera y balcón turquesa. |
-| Secciones | Un banderín por sección registrada o pendiente, hasta seis. Las secciones confirmadas en cero no cuentan. Cuatro secciones también abren un segundo piso. |
-| Programas | Cada tecnología construye su taller en un lugar fijo y empieza su ciclo de actividad (ver abajo). Quitarla lo desmonta sin mover los demás. |
-| Grupos participantes | Los estudiantes del taller usan el tamaño y el color de los niveles de los grupos elegidos. La etiqueta flotante nombra esos niveles. |
-| Horarios distintos (`separate`) | Hay un banco de espera con reloj. Al final de cada ciclo el grupo activo y el que espera se relevan caminando. |
-| Simultaneidad (`simultaneous`) | Un segundo equipo y una segunda tripulación de otro grupo trabajan a la vez: dos robots, dos dinosaurios, dos placas o dos drones. |
-| Horarios por definir (`unknown`) | Un reloj de arena turquesa gira junto al taller; trabaja un solo grupo. |
-| Equipos | El estante del taller muestra cajas del kit, una cada tres equipos y hasta ocho. Cambiar la cantidad agrega o retira cajas con su animación. |
-| Estaciones | Aparecen almohadillas numeradas 1–3 y la tripulación rota de rol cada ciclo: quien programaba prueba y quien probaba construye. |
-| Modalidad (se elige por programa en el resumen, paso 5) | Al cambiarla, la cámara encuadra el taller de ese programa y se muestra su representación: |
-| Compra (Integra) | Insignia del colegio en el kit y en el tablero, desde el primer día. Al elegirla llega un carrito de entrega. |
-| Renta (Flex) y bimestres | Etiqueta turquesa de devolución en las cajas y un calendario con uno a cuatro bimestres que se encienden. Un carrito entrega y luego se lleva el equipo. |
-| Evoluciona 8/16 | Tablero de 8 o 16 cuotas que se llena. La insignia de propiedad aparece al completar el plazo. |
-| Avanzar de paso o solo cambiar modalidad | No construye edificios ni agrega capacidad. Las cantidades exactas siguen en los contadores. |
+| Responsabilidad | Dónde |
+|---|---|
+| Estado y cálculo comercial (fuente de verdad) | `asesor/asesor.js`, `motor.js`, `config.js` |
+| Adaptador cotización → escena | `mascotData()`, `campusContext()` y `campusCounts()` en `asesor.js` |
+| Planificador de crecimiento (puro, probado en Node) | `asesor/lab/paper/plan.js` (`planCampus`), sobre `normalizeCampusData` de `campus-layout.js` |
+| Biblioteca papercraft (geometría y material) | `asesor/lab/paper/kit.js`, `material.js`, `pieces-*.js`, `catalog.js` |
+| Composición (amueblado, personas, servicios) | `asesor/lab/paper/compose.js` |
+| Escena: entidades, ensamblaje, actividades, cámara, selección y calidad | `asesor/lab/campus-scene.js`, `paper/scene-entities.js`, `scene-assembly.js`, `scene-activity.js` |
+| Geeky (modelo 3D estilizado de GuateGeeks/geeky-animation, embebido) | `asesor/lab/campus-geeky.js` y `asesor/lab/geeky/` ([procedencia](../asesor/lab/geeky/PROVENANCE.md)) |
+| Vista alternativa sin 3D | Resumen textual en `asesor.js` (`data-static-summary`) |
+| Inspector de desarrollo | `asesor/lab/inspector.html` (`npm run build:inspector`) |
 
-### Ciclos de actividad
+Hay un solo canvas WebGL. La escena consume `planCampus(data)` y agrupa los módulos en
+entidades: una por pila de aulas, una de conexiones y una de terreno. Cada entidad tiene clave
+estable y firma por contenido, así que solo se reconstruye lo que cambió y se libera lo que sale.
 
-Cada actividad es un ciclo con intención y fases legibles. Ninguna se reduce a oscilar.
+El render es bajo demanda. La escena se construye, corre su actividad durante unos 13 s y luego
+reposa sin pedir cuadros.
 
-| Tecnología | Ciclo (segundos) |
-| --- | --- |
-| Tale-Bot | 12 s: una niña coloca cinco tarjetas de flechas, presiona el botón, el robot ejecuta la secuencia celda por celda mientras se ilumina cada tarjeta, celebra y vuelve al inicio. |
-| Robot Master | 13 s: un estudiante arma patas, cuello y cola del dinosaurio pieza por pieza; otro lo programa en la tableta; el robot camina, ruge, da la vuelta y regresa. |
-| SPIKE Prime | 12 s: se escribe el programa en la laptop, se presiona el hub, el robot sigue la línea, levanta la palanca de la misión, celebran y vuelve. |
-| Electrónica | 10 s: se coloca la pieza que falta, se activa el interruptor, los LED se encienden en secuencia y gira el ventilador; luego se mide con el multímetro. |
-| Drones | 14 s: los motores arrancan, el dron despega, cruza el aro, rodea el mapa, aterriza en otro helipuerto y los pilotos se ceden el control. |
-| Realidad virtual | 15 s: tres escenas de cinco segundos (planeta, Templo I de Tikal, molécula). Los estudiantes miran alrededor, alcanzan, señalan y manipulan, guiados por su docente. |
+## Crecimiento
 
-## Portada
+Resumen; las reglas completas están en la cabecera de `plan.js` y las pruebas en
+`asesor/test/paper-plan.test.js`.
 
-El campus es la experiencia principal desde la portada: ocupa todo el fondo del hero y el titular, la descripción y las acciones flotan sobre él, a la izquierda, con un velo morado gradual que asegura la lectura. La cámara encuadra el colegio en la zona libre (a la derecha en escritorio; arriba en móvil, sobre el titular). Sin propuesta iniciada muestra un colegio ilustrativo completo (`showcaseData()`, solo para la escena); con avance guardado, el campus propio. En la portada tocar explora («Explorar»), mientras que dentro del recorrido tocar edita. La instancia 3D se crea una vez y acompaña a la persona de la portada al recorrido.
+**Composición**
 
-## Visor, barra lateral y modo solo configuración
+- Cinco pilas fijas alrededor de un patio abierto al frente: el ala izquierda, dos al fondo y dos
+  a la derecha. Máximo dos pisos.
+- Prioridad de plazas:
+  1. un aula por nivel;
+  2. un aula de proyecto por programa;
+  3. piso superior para un nivel grande (≥ 90 estudiantes o ≥ 4 secciones), si queda plaza.
+- Drones usa un patio de vuelo en lugar de aula.
 
-El canvas ocupa todo el panel del campus y sobre el modelo solo flotan unas pocas capas translúcidas:
+**Circulación**
 
-- arriba a la izquierda, el título con el aviso «Toca un taller o un aula para editarlo»;
-- arriba a la derecha, la píldora «Mi propuesta»;
-- a la derecha, «Cerrar campus 3D» (×), «Restablecer vista» y «Pausar»;
-- abajo a la derecha, los totales de estudiantes y equipos.
+- Todos los pisos superiores son alcanzables: un balcón en U pegado a los frentes, la galería del
+  fondo como pasarela entre las alas y una escalera exterior junto al ala derecha.
+- Una prueba de grafo transitable lo comprueba.
 
-En móvil desaparece la capa superior y el modelo usa todo el visor. `asesor.js` mide las capas (`syncCampusInsets()`) y la escena encuadra el modelo en el área libre mediante `mascot.setInsets({ top, right, bottom, left })`.
+**Terreno y vegetación**
 
-**Tocar es editar.** Al pasar el puntero, la etiqueta muestra «· Editar». Un clic o toque en un taller abre la configuración de ese programa (paso 4); en un aula abre la matrícula de su nivel (paso 2). La cámara encuadra lo que se edita. Gana la superficie visible más cercana bajo el puntero. Con el teclado, las flechas arriba y abajo recorren talleres y aulas, y Enter abre su edición. La explicación de cada decisión ya no se muestra como tarjeta: se anuncia a lectores de pantalla en una región `aria-live`.
+- El pedestal se ajusta a lo construido.
+- Hay jardín trasero y árboles en los flancos; nada alto delante de los interiores.
 
-En escritorio, el borde entre la configuración y el campus se arrastra para ajustar el ancho, de 320 px hasta dejar al menos 420 px al campus. Con el foco en el asa, las flechas lo ajustan, Inicio y Fin van al mínimo y al máximo, y Enter o doble clic restablecen el ancho. El valor se guarda en este navegador (`gg_asesor_config_w`). El contenido de la configuración se reacomoda por su propio ancho con *container queries*: dos columnas desde 560 px, ficha de propuesta en dos columnas desde 720 px y niveles en cuatro columnas desde 900 px.
+**Garantías**
 
-El botón × del visor o «Solo configuración» en el encabezado ocultan el campus. El × sigue activo aunque la vista 3D falle, y al usarlo se avisa cómo volver a abrirlo. El modo solo configuración y deja el formulario con un ancho de lectura cómodo. En ese modo la escena no se carga; si ya existía, deja de renderizar. «Mostrar campus 3D» la recupera con su cámara. La preferencia se guarda en `gg_asesor_campus`.
+- Es determinista y reversible: reducir el alcance da lo mismo que construir directo.
+- No hay solapes ni piezas flotantes.
 
-## Exploración y cámara
+**Personajes**
 
-Al pasar el puntero se resalta un taller o un aula y aparece su nombre con «· Editar»; el clic abre su edición. Editar o recorrer con el teclado centra la cámara en la actividad, levanta su techo o pérgola y la de un taller que tape un aula enfocada, dibuja un anillo bajo la actividad, muestra una etiqueta flotante y hace volar a Geeky hasta ella. El contexto automático del recorrido (pasos 2, 3 y 5) solo desplaza suavemente el centro, para que el campus completo siga visible; la exploración explícita y la edición del paso 4 encuadran la actividad.
+- Son representativos, con un tope de `CAMPUS_LIMITS.people` (40).
+- Los contadores muestran las cifras reales del motor.
 
-Las transiciones se interrumpen sin saltos. Arrastrar, girar o acercar durante un vuelo de cámara conserva la orientación y el zoom del usuario; el foco solo cambia el centro y el encuadre base. El giro se limita a ±1,35 rad, porque la maqueta tiene un frente. El zoom va de 0,7× a 9×, suficiente para ver a un estudiante o un robot de cerca. La rueda del mouse (y Ctrl+rueda o el pellizco del trackpad) acerca hacia el punto bajo el cursor; en pantallas táctiles se usa el pellizco con dos dedos. El arrastre solo gira la maqueta: para recorrerla de cerca, la rueda acerca hacia donde apunta el cursor y, al alejar, la vista vuelve gradualmente al encuadre general. Explorar una actividad la vuelve a centrar sin perder el zoom, y «Restablecer vista» vuelve al encuadre general.
+## Visor e interacción
 
-Teclado sobre el canvas:
+**HUD**
 
-- Flechas izquierda y derecha: girar.
-- `+` y `-`: zoom (×1,27 por paso).
-- Flechas arriba y abajo: recorrer actividades y niveles.
-- `Inicio` o `Esc`: volver a la vista general.
+- Visor claro (`#F4F1F6`) con HUD de vidrio.
+- Contiene el título, «Mi propuesta», las herramientas y la leyenda «Representación de tu
+  configuración». Las herramientas son vista general, programa activo, restablecer, pausa y
+  cerrar.
 
-Pausa y movimiento reducido congelan las actividades y presentan cada cambio en su estado final. Con movimiento reducido cada actividad muestra una pose representativa, no la pose de reposo. Fuera de vista o con la pestaña oculta se suspenden cuadros y temporizadores.
+**Contadores**
 
-## Datos y reglas
+- Cuatro contadores del motor: estudiantes atendidos, participaciones por programa, estudiantes
+  simultáneos y equipos necesarios.
+- «Equipos existentes» y «por incorporar» no se muestran, porque el motor no tiene inventario
+  (brecha documentada).
 
-`mascotData()` en `asesor/asesor.js` adapta el estado del configurador. El motor comercial sigue siendo la fuente de verdad de equipos, capacidad e precios.
+**Selección**
 
-| Campo | Uso |
-| --- | --- |
-| `levels` | IDs de niveles; cada uno ocupa su columna fija. |
-| `students` | Matrícula total, usada como respaldo si no hay filas de matrícula. |
-| `enrollment` | Filas con `id`, `levelId`, `label`, `sectionName` y `students`. Las cantidades explícitas, incluido cero, tienen prioridad. Determinan ocupación, banderines y segundo piso. |
-| `programs` | IDs de programas; cada taller tiene un lugar fijo. |
-| `equipment` | Entradas con `units`, `stations`, `sharing`, `groupIds`, `simIds`, `plan` y `flexBimestres`. Conservan `participants`, `capacity` y `rotations` del motor. |
-| `activeConfig` | Decisión o exploración activa: `kind`, `programId`, `levelId`, `entryId` y `emphasis`. `emphasis` vale `explore` (clic o lista), `edit` (paso 4) o queda ausente (contexto automático, encuadre suave). |
+- Tocar un aula de nivel abre la matrícula de ese nivel; tocar un aula de proyecto abre su
+  programa.
+- Cada aula de una pila tiene su propia selección.
+- Teclado: las flechas recorren, Enter edita, Escape e Inicio restablecen.
 
-La normalización elimina IDs desconocidos y repeticiones, ordena de forma canónica y acota los valores. Seleccionar varios programas no multiplica estudiantes. Cuando hay varias entradas por tecnología, no se suman participantes ni capacidades que podrían solaparse. Los horarios desconocidos conservan su incertidumbre.
+**Vista previa**
 
-Límites de densidad ilustrativa (`CAMPUS_LIMITS`):
+En el paso 3, «Ver en el campus» muestra la actividad de un programa no agregado, marcada como
+vista previa. No cambia la cotización ni el PDF.
 
-- 8 aulas, dos por nivel;
-- 3 estudiantes por aula en planta baja y 2 arriba;
-- 8 caminantes y 40 personas de comunidad;
-- 8 cajas por estante;
-- 2 equipos concurrentes por taller.
+**Layout**
 
-Estos límites no definen aforo ni cambian la recomendación comercial.
+- El panel de configuración mide 360–420 px y se puede redimensionar.
+- En móvil, la escena compacta va arriba, con el botón «Ampliar».
+- «Solo configuración» o × cierran el campus. La cotización sigue completa, con un resumen textual
+  de la composición.
 
-### Construcción modular
+**PDF**
 
-La gramática aplica reglas de vecindad inspiradas en Townscaper; no usa código ni contenido de Townscaper. Las paredes laterales solo aparecen en bordes libres, y los vanos compartidos quedan abiertos. Solo hay cubierta donde no hay aula encima. El balcón y la escalera aparecen cuando existe un segundo piso, en el extremo visible del edificio. La isla solo crece: agregar opciones nunca retira baldosas, y una prueba lo verifica. Cada pieza nueva se arma por etapas: piso, muros que suben, mobiliario, cubierta que cae con rebote y personas que aparecen. Una pieza reconstruida por un cambio de vecindad o de cantidad conserva sus partes existentes, que tienen huesos con el mismo nombre; solo se animan las nuevas.
+Si la escena está lista, la propuesta incluye la figura «Representación de tu configuración
+(ilustrativa)» desde `mascot.capture()`. Si no, el PDF sale idéntico.
 
-## Módulos y API
+## Calidad, presupuesto y mediciones
 
-| Archivo | Responsabilidad |
-| --- | --- |
-| `asesor/lab/campus-layout.js` | Gramática pura y determinista: `normalizeCampusData()`, `getAdjacency()` y `deriveCampus()`. Sectores, talleres, isla, vegetación, comunidad y límites. Sin DOM ni WebGL. |
-| `asesor/lab/campus-kit.js` | Kit facetado: primitivas (`block`, `soft`, `cyl`, `ball`, `ring`, `tile`, `slab`, `blob`), huesos (`Rig`) y capas. `finish()` une cada capa en una malla con esqueleto, colores por vértice y vértices compartidos. Incluye `rigidSkinning()`. |
-| `asesor/lab/campus-people.js` | Personas articuladas por nivel, vocabulario de poses (caminar, arrodillarse, sentarse, alcanzar, escribir, tableta, señalar, aplaudir, celebrar, realidad virtual) y trayectorias. |
-| `asesor/lab/campus-architecture.js` | Aulas por nivel, cubierta de corte, carcasa y estante de talleres, balcón y escalera, isla, caminos, portal, bandera, vegetación y aves. |
-| `asesor/lab/campus-actors.js` | Los seis ciclos de actividad, el motor de tripulaciones (relevo, simultaneidad y estaciones), los indicadores de horario y modalidad y la comunidad caminante. |
-| `asesor/lab/campus-geeky.js` | Geeky facetado: gafas desfasadas, pupilas con mirada, parpadeo, patillas, vuelo y sombra. |
-| `asesor/lab/campus-scene.js` | Renderer, luces, ciclo de vida de entidades, construcción por etapas, techos que se levantan, cámara, selección, etiqueta, calidad adaptable y diagnósticos. |
-| `asesor/campus-experience.js` | `GGCampusExperience.describe()`: título, explicación y diagrama de cada decisión, sin WebGL. |
-| `asesor/asesor.js` / `asesor.css` | Montaje persistente, `mascotData()`, énfasis de foco, recorrido por teclado y etiqueta flotante. |
+**Presupuesto** (`CAMPUS_BUDGET`):
 
-`window.GGLab.createMascot(container, options)` mantiene su contrato: `update(data)`, `resize()`, `rotate(delta)`, `zoom(delta)`, `resetView()`, `setPaused(value)`, `setFocus(context)`, `getDiagnostics()` y `dispose()`. Las opciones son `reduceMotion`, `onReady`, `onLost` y `onSelect({ kind, id })`.
+- 40 000 triángulos, contando la pasada de sombras;
+- 150 draw calls;
+- 10 materiales.
 
-`getDiagnostics()` agrega `breakdown` (triángulos por tipo de entidad, con la pasada de sombra), `transitionParts`, `quality` (`full` o `eco`), `frameInterval` y `geeky`.
+**Sombras.** Solo la arquitectura proyecta sombra al mapa. Personas, mobiliario, equipos,
+vegetación, piezas a ras de suelo y decoraciones de muro usan sombras de contacto.
 
-Cada entidad es un `Group` con una malla por capa:
+**Calidad adaptativa**
 
-- `solid`: proyecta sombra;
-- `soft`: no proyecta sombra;
-- `glow`: pantallas y LED sin iluminación;
-- `glass`: transparente;
-- `blob`: sombras de contacto.
+- `full`: sombras y hasta 60 fps con puntero fino.
+- `eco`: sin sombras, píxel 1× y 30 fps. Se activa cuando los cuadros superan 75 ms de forma
+  sostenida.
 
-Todas las capas comparten un esqueleto. Las entidades se reconstruyen solo si cambia su firma, y al retirarlas se liberan geometrías y esqueletos. `dispose()` libera además los materiales, el mapa de sombra, el renderer, el canvas y la etiqueta.
+**Movimiento reducido.** El resultado se muestra directo, sin animación.
 
-## Presupuesto de render medido
+**Mediciones del 2026-10-24** (Chromium headless):
 
-El presupuesto anterior era de 30.000 triángulos, 300 llamadas de dibujo y 22 materiales. Se revisó con mediciones en la configuración máxima válida de la prueba de navegador: cuatro niveles, seis programas y una sección de 1000 estudiantes por grado. Los triángulos incluyen la pasada de sombra.
+| Condición | Estado | Triángulos | Draw calls | Materiales | fps |
+|---|---|---|---|---|---|
+| GPU RTX 3060 Ti (WSL, ANGLE/D3D12), 1440 × 1000, calidad `full` | 1 | 6 637 | 34 | 10 | 60 |
+| Igual | 6 (construcción, actividad, rotación) | 37 809–38 049 | 75–82 | 10 | 56–60 |
+| SwiftShader (CPU), 1440 × 1000, baja a `eco` | 6 | 35 187 | 63 | 10 | No medido (CPU) |
 
-| Medición (configuración máxima) | Anterior | Nuevo |
-| --- | --- | --- |
-| Triángulos (con sombra) | 9.780 | 38.053 (eco: 33.831) |
-| Llamadas de dibujo | 224 | 72 |
-| Materiales | 22 | 7 |
-| Geometrías en memoria | 213 | 63 |
-| Personas articuladas | 4 animadas de 16 | 36 de comunidad + tripulaciones, todas animadas |
-| FPS con GPU (RTX 3060 Ti vía D3D12/ANGLE, escritorio y móvil) | 29,7 | 29,7 / 29,4 (tope de 30) |
-| Hilo principal con GPU | 18,9 % | 23,8 % |
-| FPS con rasterizador por software (SwiftShader), escritorio | 8,5–10,1 | 5,7–6,6 completo; 7,2 eco |
-| FPS con SwiftShader, canvas móvil | 16,0 | 8,7–9,7 |
+- Geeky aporta unos 2 100 triángulos en reposo y hasta unos 4 200 en `celebrate`, con 2
+  materiales propios.
+- No hay fuga de memoria en ciclos entre los estados 2 y 6, ni en el inspector ni en la escena.
+- No se probó en un teléfono físico: las pruebas móviles son emulación de viewport (390 × 844).
 
-**Nuevo presupuesto: 40.000 triángulos, 150 llamadas y 10 materiales** (`CAMPUS_BUDGET` en `campus-scene.js`, verificado por `campus-browser.cjs`). Se aceptan más triángulos porque las llamadas bajaron un 68 % y los materiales un 68 %, y la escena incorpora 36 personas articuladas, seis actividades completas e isla facetada.
+## Verificación
 
-En hardware gráfico real el campus alcanza el tope configurado de 30 FPS. En un rasterizador por software, el peor caso, es más lento que la versión anterior. Por eso existe el modo `eco`: si el intervalo medio entre cuadros supera unos 75 ms de forma sostenida, se desactiva el mapa de sombras (quedan las sombras de contacto) y la escena pasa a relación de píxel 1.
-
-Optimizaciones medidas:
-
-- Solo cubiertas, postes y árboles proyectan sombra, lo que bajó de 60,4k a 41,6k triángulos.
-- Calcomanías planas de dos triángulos y bloques sin cara inferior.
-- Piel rígida de un hueso (`rigidSkinning`, sin cambio medible en SwiftShader).
-- Vértices compartidos, sin cambio medible en FPS.
-
-Estas mediciones se tomaron en Chromium headless 1.64 con WSL2. No son FPS de dispositivos físicos ni una promesa de rendimiento en todos los equipos.
+```bash
+npm test                                   # Node: motor, planificador, PDF, experiencia (108)
+npm run check:paper -- artifacts/paper/<run>   # mallas: presupuesto, coplanares, suelo, determinismo
+PLAYWRIGHT_MODULE=… BROWSER_CHANNEL=chromium BROWSER_ARGS="--use-angle=swiftshader --enable-unsafe-swiftshader" \
+  node asesor/test/campus-browser.cjs      # escritorio, móvil, movimiento reducido y sin WebGL
+npm run capture -- artifacts/campus/<run>  # seis estados y cuatro vistas del cotizador real
+python3 tools/paper-compare.py <out> --sheets <paper-shot run> --states <paper-shot --states run>
+```
 
 ## Procedencia
 
-- **3d-assets** (`creation-lab/benchmarks/school-flat-20261023/spec/`, commit `4dcd902`). Se adaptan a Three.js las primitivas cerradas y facetadas (`box`, `frustum`, `cone`, `blob`, `merge`), la unión por material y parte, el determinismo y la prevención de coplanaridad. Se cambian el sistema de coordenadas (Y arriba), las proporciones, la paleta y la escala; la geometría es procedural original, sin GLB ni Blender.
-
-  | Fuente | SHA-256 |
-  | --- | --- |
-  | `spec/kit.py` | `71daf74de2a59493dd0c484f5e452a459dbd878c32606ce7ceb287fae98867ab` |
-  | `spec/brief.json` | `5b686ae5525d9a929c391e1c55c91cad4fd675d97984043bc96d35f547a1aa28` |
-  | `spec/CONTRACT.md` | `3a7179218fa062a59b9733f4aa4583de4076f347723335f9e07d67adffab473a` |
-
-- **Geeky** ([GuateGeeks/geeky-animation](https://github.com/GuateGeeks/geeky-animation)). Se usa con permiso del titular. El repositorio no declara licencia y no contiene modelos 3D en archivo; su Geeky 3D es procedural, en `src/live/three-renderer.mjs`. El campus no incluye código del renderer de Geeky: reconstruye el personaje con las constantes canónicas de `src/live/core.mjs` (centros `BASE`, radios de aro, ojo y pupila, mirada `REST`, puente arqueado, patillas y marco `#34314f`). `core.mjs` es idéntico en `33f5920` y en `main` `0089c59`, con SHA-256 `e857eb8d5995a2ed1ef44cb4345f260e52d57d050556eae34ee3b19b470c339e`.
-- **Referencias de producto.** Las formas de Tale-Bot, Robot Master, SPIKE Prime, electrónica, drones y realidad virtual se interpretan a partir de las fotos del catálogo en `assets/equipos/` y `assets/projects/`. Son representaciones ilustrativas, no réplicas técnicas ni simulaciones de sus capacidades.
-- **Storyboard.** La imagen «Del aula al campus» no estaba disponible en esta sesión. Se siguieron su descripción de seis cuadros, la paleta y las reglas registradas en `DESIGN.md`.
-- **Three.js** `0.186.1` conserva su licencia MIT en `asesor/vendor/THREE-LICENSE.txt`.
-
-## Compilar y comprobar
-
-```bash
-npm ci && npm run build
-npm test
-python3 -m http.server 8000
-```
-
-`npm run build` genera `asesor/vendor/lab-scene.min.js`. Al publicar, actualiza el identificador `?v=` (actualmente `117`) en `index.html` y en `loadLab()` de `asesor.js`.
-
-En GitHub, `checks.yml` corre pruebas y compilación en cada pull request y en cada rama, y comprueba que el bundle versionado coincida con las fuentes. El despliegue `pages.yml` (push a `main`) ejecuta `npm ci`, `npm test` y `npm run build` antes de preparar el sitio, así que una prueba fallida bloquea la publicación.
-
-La integración de navegador se ejecuta aparte, con Playwright accesible y un servidor activo. `BROWSER_ARGS` (opcional) añade flags de Chromium, por ejemplo WebGL por software en WSL o CI:
-
-```bash
-PLAYWRIGHT_MODULE=playwright COTIZADOR_URL=http://127.0.0.1:8000/asesor/index.html BROWSER_CHANNEL=chromium BROWSER_ARGS="--use-angle=swiftshader --enable-unsafe-swiftshader --ignore-gpu-blocklist" node asesor/test/campus-browser.cjs
-```
-
-`CAMPUS_CAPTURE_MOTION=1` graba además el recorrido de demostración. En PowerShell, define las mismas variables con `$env:NOMBRE = 'valor'`.
-
-## Verificación del rediseño (24 de octubre de 2026)
-
-- **Unitarias.** `npm test` dio 76 pruebas aprobadas. Incluyen nuevas reglas de crecimiento monotónico de la isla, secciones y pisos, participantes, simultaneidad y estaciones, y vegetación que no tapa actividades.
-- **Navegador.** `campus-browser.cjs` se ejecutó con Chromium y SwiftShader, y aprobó los cuatro escenarios: escritorio, móvil, movimiento reducido y sin WebGL. El informe `artifacts/campus/summary.json` registra `passed: true`. En ese entorno por software la escena máxima pasó a calidad `eco`, como está diseñado.
-- **Revisión visual.** Se abrieron las imágenes de cada iteración en escritorio y móvil. Las correcciones aplicadas tras revisarlas fueron:
-  - cubiertas de corte y pérgolas reducidas;
-  - escalera trasladada al extremo visible;
-  - malla del campo de drones sustituida por postes bajos;
-  - bancos de espera reubicados;
-  - Tale-Bot a escala de juguete;
-  - Geeky detrás de la actividad;
-  - árboles altos fuera de las líneas de visión.
-
-Evidencia local regenerable, no publicada (`artifacts/` está en `.gitignore`):
-
-- `artifacts/campus/after/`: capturas con GPU de la vista general, las seis actividades y el nivel, en escritorio y móvil; `storyboard/1–6`; y `campus-interaction.webm`, de 54 s, que muestra construcción desde un aula, matrícula, talleres, cambios de horarios, equipos y renta, exploración y vista general.
-- `artifacts/campus/comparison/`: hojas antes/después.
-- `artifacts/campus/before/`: capturas e informe de la versión anterior y `source/`, con sus fuentes (`campus-scene.js`, `campus-layout.js`, `campus-actors.js`), que no estaban versionadas.
-
-La prueba de navegador y las mediciones no sustituyen el ensayo en teléfonos físicos ni miden FPS de dispositivos reales.
+- **Geometría papercraft:** procedural original en `asesor/lab/paper/`, sin GLB ni Blender.
+- **Referencias de diseño:** `docs/papercraft/reference/`. Son imágenes de dirección de arte; no
+  se copian al producto.
+- **Geeky:** GuateGeeks/geeky-animation, commit `0089c59`.
+  - Los módulos se copiaron sin modificar en `asesor/lab/geeky/live/`, con sus SHA256 en
+    `PROVENANCE.md`.
+  - El repositorio no declara licencia. Es de la misma organización y la persona responsable
+    pidió su integración.
+- **Three.js** `0.186.1`, con licencia MIT (`asesor/vendor/THREE-LICENSE.txt`).
