@@ -114,7 +114,7 @@
     if (model.levelsLine) para(model.levelsLine, { size: T.small, color: C.muted, gap: 10 });
 
     // Detalle de la cotización: una fila por programa, como una cotización de líneas
-    heading('Detalle de la cotización', 'Cada fila es un programa. El importe es sin IVA; el total con IVA se muestra al final.', 90);
+    heading('Detalle de la cotización', 'Cada fila es un programa. Los importes son sin IVA (instituciones educativas exentas); el monto con IVA se indica como referencia.', 90);
     const cols = [{ w: 224, a: 'left', t: 'Programa' }, { w: 96, a: 'left', t: 'Equipos' }, { w: 96, a: 'left', t: 'Modalidad' }, { w: 99, a: 'right', t: 'Importe sin IVA' }];
     const tableHead = () => {
       ensure(26 + 60);
@@ -148,7 +148,7 @@
     const inv = model.invest, P = inv.parts, totW = 236, leftW = CW - totW - 16;
     const payTitle = 'Así se paga', payText = model.pay ? model.pay.lead : 'Los importes se confirman con GuateGeeks.';
     const payH = 40 + pdf.measure(payText, { size: T.body, w: leftW - 32, lh: 15 });
-    const totH = P ? 150 : 96;
+    const totH = P ? 136 : 96;
     ensure(Math.max(payH, totH) + 10);
     pdf.rect(M, y, leftW, Math.max(payH, totH), { fill: C.plumWash, r: 10 });
     pdf.text(M + 16, y + 26, payTitle, { size: 12, bold: true, color: C.plumDark });
@@ -169,17 +169,16 @@
       pdf.text(tx0 + 18, y + 26, inv.label, { size: T.small, color: C.light });
       pdf.text(tx0 + 18, y + 62, P.net, { size: 30, bold: true, color: C.white });
       pdf.line(tx0 + 18, y + 80, tx0 + totW - 18, y + 80, '#6b5a8e');
-      pdf.text(tx0 + 18, y + 100, 'IVA (' + P.ivaPct + ')', { size: T.small, color: C.light });
-      pdf.text(tx0 + totW - 18, y + 100, P.iva, { size: T.body, color: C.white, align: 'right' });
-      pdf.rect(tx0 + 12, y + 110, totW - 24, 30, { fill: C.coral, r: 7 });
-      pdf.text(tx0 + 22, y + 129, 'Total con IVA', { size: T.body, bold: true, color: C.ink });
-      pdf.text(tx0 + totW - 22, y + 129, P.total, { size: 13, bold: true, color: C.ink, align: 'right' });
+      pdf.text(tx0 + 18, y + 100, 'Con IVA, solo referencia', { size: T.small, color: C.light });
+      pdf.text(tx0 + totW - 18, y + 100, P.total, { size: T.body, bold: true, color: C.white, align: 'right' });
+      pdf.text(tx0 + 18, y + 120, 'IVA de ' + P.ivaPct, { size: T.tiny, color: C.light });
+      pdf.text(tx0 + totW - 18, y + 120, P.iva, { size: T.small, color: C.light, align: 'right' });
     } else pdf.text(tx0 + 18, y + 54, inv.net, { size: 16, bold: true, color: C.white });
     y += Math.max(payH, totH) + 20;
 
     // Cómo leer esta cotización: las modalidades usadas, en lenguaje sencillo
     if (model.legend && model.legend.length) {
-      heading('Cómo leer esta cotización', 'Las modalidades que aparecen en tu propuesta, explicadas sencillo.', 40);
+      heading('Cómo leer esta cotización', 'Las modalidades que aparecen en tu propuesta, explicadas sencillo.', 96);
       model.legend.forEach(([name, text]) => {
         const h = Math.max(30, pdf.measure(text, { size: T.small, w: CW - 130, lh: 14 }) + 14);
         ensure(h + 6);
@@ -308,7 +307,7 @@
     // ---------- Pagos mes a mes ----------
     if (model.pay && model.pay.table) {
       const t = model.pay.table;
-      heading('Pagos mes a mes', 'Importes con IVA incluido, en quetzales enteros.', 100);
+      heading('Pagos mes a mes', (model.pay && model.pay.note) || 'Importes en quetzales enteros.', 100);
       const n = t.head.length, firstW = 74, lastW = 80, midW = (CW - firstW - lastW) / Math.max(1, n - 2);
       const widths = t.head.map((_, i) => i === 0 ? firstW : i === n - 1 ? lastW : midW);
       const headLines = t.head.map((h, i) => GGPdf.wrap(h, T.small, true, widths[i] - 12));
@@ -346,15 +345,19 @@
         const pad = 14, innerW = CW - pad * 2;
         const ownH = it.own ? calloutH(innerW, it.own.title, it.own.text) + 10 : 0;
         const headLines = GGPdf.wrap(it.head, T.body, false, innerW);
-        const h = pad + 22 + ownH + headLines.length * 15 + 10 + it.rows.length * 21 + 8 + pad;
+        const listLines = (it.list || []).flatMap(l => GGPdf.wrap('•  ' + l, T.small, false, innerW - 6)), listH = listLines.length ? listLines.length * 13.5 + 10 : 0;
+        const h = pad + 22 + listH + ownH + headLines.length * 15 + 10 + it.rows.length * 21 + 8 + pad;
         ensure(h + 8);
         pdf.rect(M, y, CW, h, { fill: C.white, stroke: C.line, lw: 0.8, r: 10 });
         let yy = y + pad;
         pdf.text(M + pad, yy + 13, it.title, { size: 12, bold: true, color: C.plumDark }); yy += 22;
-        if (it.own) { const oh = callout(M + pad, innerW, yy, it.own.title, it.own.text, 'mint'); yy += oh + 10; }
+        listLines.forEach((ln, k) => pdf.text(M + pad + 4, yy + 10 + k * 13.5, ln, { size: T.small, color: C.muted })); if (listLines.length) yy += listH;
         headLines.forEach((ln, k) => pdf.text(M + pad, yy + 11 + k * 15, ln, { size: T.body, color: C.ink })); yy += headLines.length * 15 + 10;
-        it.rows.forEach((r, i) => {
-          if (i % 2 === 0) pdf.rect(M + pad, yy - 2, innerW, 21, { fill: C.soft, r: 4 });
+        if (it.own) { const oh = callout(M + pad, innerW, yy, it.own.title, it.own.text, 'mint'); yy += oh + 10; }
+        let zi = 0;
+        it.rows.forEach(r => {
+          if (r[1] === null) { pdf.text(M + pad + 4, yy + 12, r[0], { size: T.small, bold: true, color: C.plumDark }); yy += 21; zi = 0; return; }
+          if (zi++ % 2 === 0) pdf.rect(M + pad, yy - 2, innerW, 21, { fill: C.soft, r: 4 });
           pdf.text(M + pad + 10, yy + 12, r[0], { size: T.small, color: C.muted });
           pdf.text(M + pad + innerW - 10, yy + 12, r[1], { size: T.body, bold: true, color: r[2] ? C.mintDark : C.plumDark, align: 'right' });
           yy += 21;

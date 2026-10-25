@@ -1052,3 +1052,28 @@ body:has(.campus-layout) .brand img{width:72px;height:auto}
   .campus-hud .campus-counts b{font-size:14px}
   .campus-editing .campus-counts{display:none}
 }
+/* simulador único: alcance y programas incluidos */
+.sim-scope{margin:0 0 8px;font-size:14px;color:var(--ink)}
+.sim-list{margin:0 0 10px;padding:0;list-style:none;display:grid;gap:6px}
+.sim-list li{font-size:13px;line-height:1.45;color:var(--muted);background:var(--plum-wash);border-radius:8px;padding:7px 10px}
+.sim-list b{color:var(--plum-dark)}
+
+/* simulador: lectura en orden, sin repetir cifras */
+.sim-fee strong em{font-size:14px;font-weight:600;font-style:normal;color:var(--muted);margin-left:4px}
+.sim-eq{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:8px;align-items:stretch;margin-top:14px}
+.sim-eq>div{background:var(--cream);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.sim-eq>div.hl{background:var(--mint)}.sim-eq>div.hl.neg{background:#fff3e3}
+.sim-eq i{align-self:center;font-style:normal;font-size:20px;font-weight:700;color:var(--muted)}
+.sim-eq span{font-size:12px;color:var(--muted);line-height:1.4}
+.sim-eq strong{font-size:20px;font-variant-numeric:tabular-nums;color:var(--plum-dark)}
+.sim-eq small{font-size:12px;color:var(--muted)}
+.sim-sub{margin:16px 0 8px;font-size:13px;color:var(--ink)}
+.sim-warn{margin:8px 0 0;font-size:13px;color:#865514;background:#fff3e3;border-radius:10px;padding:9px 12px}
+.sim-progs{margin:14px 0 0}.sim-progs summary{font-size:12.5px;font-weight:650;color:var(--plum-dark);cursor:pointer}
+.sim-progs ul{margin:8px 0 0;padding:0;list-style:none;display:grid;gap:6px}
+.sim-progs li{font-size:12.5px;color:var(--muted);background:var(--plum-wash);border-radius:8px;padding:7px 10px}
+.sim-progs b{color:var(--plum-dark)}
+.sim-card .own-callout{margin-top:12px}
+@media(max-width:650px){.sim-eq{grid-template-columns:1fr}.sim-eq i{display:none}}
+
+.iva-toggle{margin:10px 0 4px}

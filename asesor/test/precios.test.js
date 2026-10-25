@@ -23,27 +23,28 @@ test('INTEGRA y FLEX: neto, IVA y total coinciden con la fórmula para 1 a 150 e
       const f = M.quoteFor('FLEX', b, u, TARIFFS[id], FISCAL), nf = ref.FLEX(TARIFFS[id], u, b);
       assert.equal(f.net, Math.round(nf), `${id} flex ${u} x${b}`); assert.equal(f.total, f.net + f.tax);
       assert.ok(Math.abs(f.tax - nf * 0.12) <= 1, 'IVA del 12 % con diferencia máxima de Q1 por redondeo');
-      assert.equal(f.months, b * 2); assert.deepEqual(f.schedule, [f.total]); // pago único
+      assert.equal(f.months, b * 2); assert.deepEqual(f.schedule, [f.net]); assert.deepEqual(f.scheduleIva, [f.total]); // pago único
     }
   }
 });
 
-test('Evoluciona 8 y 16: total dentro del ajuste de redondeo, 20 % inicial y cuotas iguales', () => {
+test('Evoluciona 8 y 16 (sin IVA): neto dentro del ajuste de redondeo, 20 % inicial y cuotas iguales', () => {
   for (const id of ids) for (let u = 1; u <= 150; u++) for (const plan of ['EV8', 'EV16']) {
-    const e = FISCAL.evolucion[plan], q = M.quoteFor(plan, 1, u, TARIFFS[id], FISCAL), net = ref[plan](TARIFFS[id], u), gross = net * 1.12;
-    assert.ok(Math.abs(q.total - gross) <= e.months / 2 + 1.5, `${id} ${plan} ${u}: ${q.total} vs ${gross.toFixed(2)}`);
-    assert.equal(q.total, q.net + q.tax);
-    assert.ok(Math.abs(q.initial - gross * 0.2) <= e.months / 2 + 1.5, 'inicial ≈ 20 %');
+    const e = FISCAL.evolucion[plan], q = M.quoteFor(plan, 1, u, TARIFFS[id], FISCAL), net = ref[plan](TARIFFS[id], u);
+    assert.ok(Math.abs(q.net - net) <= e.months / 2 + 1.5, `${id} ${plan} ${u}: ${q.net} vs ${net.toFixed(2)}`);
+    assert.ok(Math.abs(q.initial - net * 0.2) <= 2, 'inicial ≈ 20 %');
     const cuotas = q.schedule.slice(1); assert.equal(cuotas.length, e.months);
     assert.ok(cuotas.every(c => c === cuotas[0]), 'todas las cuotas iguales');
-    assert.equal(q.schedule.reduce((s, x) => s + x, 0), q.total, 'inicial + cuotas = total');
-    assert.ok(Math.abs(q.net - net) <= e.months / 2 + 1.5);
+    assert.equal(q.schedule.reduce((s, x) => s + x, 0), q.net, 'inicial + cuotas = neto');
+    assert.equal(q.scheduleIva.reduce((s, x) => s + x, 0), q.total, 'con IVA: inicial + cuotas = total');
+    assert.equal(q.net + q.tax, q.total);
+    assert.ok(Math.abs(q.total - net * 1.12) <= e.months + 3, 'con IVA queda a pocos quetzales de neto x 1.12');
   }
 });
 
-test('el IVA del total nunca difiere del 12 % del neto en más de Q2', () => {
+test('el IVA de referencia nunca difiere del 12 % del neto en más de Q9 (ajuste de cuotas iguales)', () => {
   for (const id of ids) for (let u = 1; u <= 60; u++) for (const plan of ['INTEGRA', 'FLEX', 'EV8', 'EV16']) {
-    const q = M.quoteFor(plan, 3, u, TARIFFS[id], FISCAL); assert.ok(Math.abs(q.tax - q.net * 0.12) <= 2, `${id} ${plan} ${u}`);
+    const q = M.quoteFor(plan, 3, u, TARIFFS[id], FISCAL); assert.ok(Math.abs(q.tax - q.net * 0.12) <= 9, `${id} ${plan} ${u}`);
   }
 });
 
@@ -53,9 +54,10 @@ test('ejemplos calculados a mano: Tale-Bot, 10 equipos (62 estudiantes, uso sepa
   assert.deepEqual(['net', 'tax', 'total'].map(k => M.quoteFor('FLEX', 1, 10, t, FISCAL)[k]), [5750, 690, 6440]);              // 575 x 10 x 1 bimestre
   assert.deepEqual(['net', 'tax', 'total'].map(k => M.quoteFor('FLEX', 4, 10, t, FISCAL)[k]), [21850, 2622, 24472]);           // 575 x 10 x 4 x 0.95
   const e8 = M.quoteFor('EV8', 1, 10, t, FISCAL);                                                                               // 14,700 x 10 / 5 x 1.06 = 31,164 sin IVA
-  assert.equal(e8.initial, 6981); assert.equal(e8.schedule[1], 3490); assert.equal(e8.total, 34901); assert.equal(e8.net, 31162);
+  assert.equal(e8.initial, 6233); assert.equal(e8.schedule[1], 3116); assert.equal(e8.net, 31161);                               // el pago sin IVA es el principal
+  assert.equal(e8.initialIva, 6981); assert.equal(e8.scheduleIva[1], 3490); assert.equal(e8.total, 34901);                       // con IVA: referencia
   const e16 = M.quoteFor('EV16', 1, 10, t, FISCAL);                                                                             // 17,000 x 10 / 5 x 1.10 = 37,400 sin IVA
-  assert.equal(e16.total + 0 >= 41887 - 9 && e16.total <= 41888 + 9, true); assert.equal(e16.schedule.length, 17);
+  assert.ok(Math.abs(e16.net - 37400) <= 9); assert.equal(e16.schedule.length, 17);
 });
 
 test('descuento por bimestres: 2 % a 2, 4 % a 3 y 5 % a 4 bimestres', () => {
@@ -121,4 +123,22 @@ test('si el colegio indica otra cantidad de equipos, el precio usa esa cantidad 
   e.calc = M.entrySignature(e, g);
   const t = M.proposalTotals([e], PROGRAMS, g, TARIFFS, FISCAL);
   assert.equal(t.rows[0].units, 7); assert.equal(t.net, 7 * TARIFFS.master.buy);
+});
+
+test('proyección por estudiante: una sola cuota sobre el total de estudiantes únicos y el plazo más largo', () => {
+  const q1 = M.quoteFor('FLEX', 2, 10, TARIFFS.tale, FISCAL), q2 = M.quoteFor('EV8', 1, 10, TARIFFS.master, FISCAL), q3 = M.quoteFor('EV16', 1, 6, TARIFFS.drones, FISCAL);
+  const s = M.simulateAll([q1, q2, q3], 120, null, FISCAL);
+  assert.equal(s.months, 16); assert.equal(s.cost, q1.net + q2.net + q3.net); // sin IVA por defecto
+  assert.equal(M.simulateAll([q1, q2, q3], 120, null, FISCAL, true).cost, q1.total + q2.total + q3.total); // con IVA si se pide assert.equal(s.students, 120);
+  assert.equal(s.suggested, Math.ceil((s.cost / 120 / 16 / FISCAL.sim.coverage) / 5) * 5);
+  assert.equal(s.fee, s.suggested); assert.equal(s.income, s.fee * 120 * 16); assert.equal(s.gain, s.income - s.cost);
+  assert.ok(s.gain > 0, 'con la cuota sugerida el colegio tiene ganancia');
+  assert.equal(s.perStudent, s.gain / 120); assert.equal(s.contribution, s.fee * 16);
+  const c = M.simulateAll([q1, q2, q3], 120, 10, FISCAL);                 // cuota propia, más baja: no cubre la inversión
+  assert.equal(c.fee, 10); assert.ok(c.gain < 0);
+});
+
+test('con un solo programa la proyección única coincide con la de ese programa', () => {
+  const q = M.quoteFor('EV8', 1, 10, TARIFFS.tale, FISCAL), a = M.simulateAll([q], 62, null, FISCAL), b = M.simulateAll([q], 62, a.suggested, FISCAL, true);
+  assert.equal(a.cost, q.net); assert.equal(b.cost, q.total); assert.equal(a.income, a.fee * 62 * 8); assert.ok(a.suggested <= b.suggested);
 });
