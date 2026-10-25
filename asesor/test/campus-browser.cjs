@@ -353,19 +353,21 @@ async function verifyConfigurationReactions(page, result) {
   reactions.push(stations.feedback);
   await stageScreenshot(page, result, 'stage-stations');
 
-  await page.evaluate(() => jumpTo('plan'));
-  await page.locator('.plan-card').filter({ hasText: 'Comprar el equipo' }).click();
+  // The modality is chosen per program in the summary (step 5).
+  await page.evaluate(() => step(5));
+  const picker = () => page.locator('.mod-pick').first();
+  await picker().getByRole('radio', { name: /Comprar/ }).click();
   let plan = await verifyFeedback(page, 'plan', 'plan');
   assert.match(plan.feedback.title, /es de tu colegio/);
   reactions.push(plan.feedback);
-  await page.locator('.plan-card').filter({ hasText: 'Rentar por bimestres' }).click();
-  await page.locator('#flexb').selectOption('4');
+  await picker().getByRole('radio', { name: /Rentar/ }).click();
+  await picker().getByRole('radio', { name: /^4 bimestres/ }).click();
   plan = await verifyFeedback(page, 'plan', 'plan');
   assert.equal(plan.feedback.title, '4 bimestres de exploración');
   assert.equal(plan.feedback.items, 4, 'Four rental bimesters are described');
   reactions.push(plan.feedback);
-  await page.locator('.plan-card').filter({ hasText: 'Pagar en cuotas para adquirir' }).click();
-  await page.getByRole('radio', { name: /Evoluciona 16/ }).click();
+  await picker().getByRole('radio', { name: /Pagar en cuotas/ }).click();
+  await picker().getByRole('radio', { name: /^16 meses/ }).click();
   plan = await verifyFeedback(page, 'plan', 'plan');
   assert.match(plan.feedback.title, /16 meses/);
   assert.equal(plan.feedback.items, 16, 'Sixteen instalments are described');
@@ -637,9 +639,9 @@ async function recordMotionDemo(browser) {
     await page.evaluate(() => jumpTo('quantity'));
     await page.getByRole('button', { name: 'Aumentar equipos', exact: true }).click();
     await page.waitForTimeout(2200);
-    await page.evaluate(() => jumpTo('plan'));
-    await page.locator('.plan-card').filter({ hasText: 'Rentar por bimestres' }).click();
-    await page.locator('#flexb').selectOption('4');
+    await page.evaluate(() => step(5));
+    await page.locator('.mod-pick').last().getByRole('radio', { name: /Rentar/ }).click();
+    await page.locator('.mod-pick').last().getByRole('radio', { name: /^4 bimestres/ }).click();
     await page.waitForTimeout(3600);
     await page.screenshot({ path: path.join(output, 'live-plan.png'), fullPage: false });
     await page.evaluate(() => inspectCampus('program', 'master'));

@@ -35,6 +35,7 @@ El campus acompaña al configurador con una maqueta low poly viva: un colegio qu
 | Horarios por definir (`unknown`) | Un reloj de arena turquesa gira junto al taller; trabaja un solo grupo. |
 | Equipos | El estante del taller muestra cajas del kit, una cada tres equipos y hasta ocho. Cambiar la cantidad agrega o retira cajas con su animación. |
 | Estaciones | Aparecen almohadillas numeradas 1–3 y la tripulación rota de rol cada ciclo: quien programaba prueba y quien probaba construye. |
+| Modalidad (se elige por programa en el resumen, paso 5) | Al cambiarla, la cámara encuadra el taller de ese programa y se muestra su representación: |
 | Compra (Integra) | Insignia del colegio en el kit y en el tablero, desde el primer día. Al elegirla llega un carrito de entrega. |
 | Renta (Flex) y bimestres | Etiqueta turquesa de devolución en las cajas y un calendario con uno a cuatro bimestres que se encienden. Un carrito entrega y luego se lleva el equipo. |
 | Evoluciona 8/16 | Tablero de 8 o 16 cuotas que se llena. La insignia de propiedad aparece al completar el plazo. |
@@ -198,7 +199,7 @@ npm test
 python3 -m http.server 8000
 ```
 
-`npm run build` genera `asesor/vendor/lab-scene.min.js`. Al publicar, actualiza el identificador `?v=` (actualmente `107`) en `index.html` y en `loadLab()` de `asesor.js`.
+`npm run build` genera `asesor/vendor/lab-scene.min.js`. Al publicar, actualiza el identificador `?v=` (actualmente `117`) en `index.html` y en `loadLab()` de `asesor.js`.
 
 En GitHub, `checks.yml` corre pruebas y compilación en cada pull request y en cada rama, y comprueba que el bundle versionado coincida con las fuentes. El despliegue `pages.yml` (push a `main`) ejecuta `npm ci`, `npm test` y `npm run build` antes de preparar el sitio, así que una prueba fallida bloquea la publicación.
 

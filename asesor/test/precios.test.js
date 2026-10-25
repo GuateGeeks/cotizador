@@ -142,3 +142,20 @@ test('con un solo programa la proyección única coincide con la de ese programa
   const q = M.quoteFor('EV8', 1, 10, TARIFFS.tale, FISCAL), a = M.simulateAll([q], 62, null, FISCAL), b = M.simulateAll([q], 62, a.suggested, FISCAL, true);
   assert.equal(a.cost, q.net); assert.equal(b.cost, q.total); assert.equal(a.income, a.fee * 62 * 8); assert.ok(a.suggested <= b.suggested);
 });
+
+test('inversión unificada: suma los equipos de todos los programas y niveles bajo cada modalidad, sin desglose', () => {
+  const g = [...gr('pre', 18, 12, 12, 20), ...gr('p', 25, 24, 25, 25, 25, 25)];                      // 62 + 149 = 211 estudiantes
+  const mk = (programId, ids, i) => { const e = { id: 'e' + i, programId, groupIds: ids, sharing: 'separate', simIds: [], units: null, flexBimestres: 2, confirmed: true, plan: 'UNDECIDED' }; return e; };
+  const entries = [mk('tale', ['pre0', 'pre1', 'pre2', 'pre3'], 1), mk('master', ['p0', 'p1', 'p2', 'p3', 'p4', 'p5'], 2)];
+  const r = M.proposalOptions(entries, PROGRAMS, g, TARIFFS, FISCAL, 2);
+  assert.equal(r.students, 211); assert.equal(r.equipment, 10 + 9); assert.ok(r.complete);
+  const unit = (plan, id, u) => M.quoteFor(plan, 2, u, TARIFFS[id], FISCAL);
+  assert.equal(r.options.INTEGRA.net, unit('INTEGRA', 'tale', 10).net + unit('INTEGRA', 'master', 9).net);
+  assert.equal(r.options.FLEX.net, unit('FLEX', 'tale', 10).net + unit('FLEX', 'master', 9).net);
+  assert.equal(r.options.FLEX.months, 4);
+  const e8 = r.options.EV8; assert.equal(e8.schedule.length, 9); assert.equal(e8.schedule.reduce((s, x) => s + x, 0), e8.net);
+  assert.equal(e8.scheduleIva.reduce((s, x) => s + x, 0), e8.total); assert.equal(e8.net + e8.tax, e8.total);
+  assert.equal(r.options.INTEGRA.schedule.length, 1);                                                // la compra no tiene formas de pago
+  const sin = M.proposalOptions([mk('tale', ['pre0'], 3), Object.assign(mk('spike', ['p0'], 4), { confirmed: false })], PROGRAMS, g, TARIFFS, FISCAL, 2);
+  assert.equal(sin.complete, false); assert.equal(sin.unpricedCount, 1);                             // lo pendiente no se presenta como total completo
+});

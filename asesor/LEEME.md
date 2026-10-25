@@ -144,3 +144,15 @@ La franja de la primera hoja del PDF lleva los ojos de GuateGeeks (`assets/brand
 Las instituciones educativas están exentas de IVA, así que todo se calcula y se muestra **sin IVA**: el importe de cada programa, el pago inicial, las cuotas, la cuota por estudiante del simulador y el PDF. El monto con IVA (12 %) se indica siempre como referencia, y quien lo necesite puede activar «Mostrar los pagos con IVA» en la sección de inversión (la preferencia se guarda y también la sigue el PDF).
 
 En `motor.js`, `quoteFor` devuelve `net`, `initial` y `schedule` (sin IVA, principales) y `total`, `initialIva`, `scheduleIva` y `tax` (con IVA, referencia). En Evoluciona las cuotas son iguales en ambas vistas; por eso el IVA de referencia puede diferir unos quetzales del 12 % exacto del neto.
+
+## Modalidad por programa, importes unificados
+
+Cada programa elige su propia modalidad en su tarjeta (Comprar/Integra, Rentar/Flex con 1 a 4 bimestres, o Evoluciona 8/16 meses), así una institución puede, por ejemplo, rentar electrónica un bimestre y llevar robótica a largo plazo con Evoluciona, o comprar el equipo de un nivel y usar Evoluciona en otros. Las tarjetas no muestran importes.
+
+- La inversión se muestra **agrupada por modalidad** (un total por cada modalidad usada) y **un total general** con estudiantes atendidos, equipos y costo por estudiante. Nunca por nivel ni por programa.
+- La compra no muestra formas de pago; si hay renta o cuotas, "Así quedan tus pagos" suma todo mes a mes (el plazo más largo manda). Evoluciona avisa que el equipo queda en la institución.
+- Cada tarjeta explica **qué incluye** la modalidad elegida para ese programa (con su cantidad de equipos y el plazo), y el mismo texto va en el detalle de cada programa del PDF. Plazos (bimestres de renta, 8 o 16 meses) se eligen con botones que explican la diferencia. El texto vive en `includesFor()` de `asesor.js`.
+- Atajo "misma modalidad para todos" mientras haya programas sin modalidad.
+- El simulador usa una sola cuota para los programas en renta o cuotas, explicada en frases sencillas: "Cobras a cada estudiante / Pagas a GuateGeeks por cada estudiante / Te queda por estudiante".
+- El PDF sigue el mismo criterio: tabla de inversión por modalidad, total, "Así se paga" y proyección opcional.
+

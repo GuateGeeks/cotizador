@@ -8,7 +8,7 @@ const G = require('../pdf.js');
 const modelo = (programas = 2) => ({
   title: 'Propuesta institucional de programas educativos', subtitle: 'Prueba', date: '24 de octubre de 2026',
   stats: [{ v: '211', l: 'estudiantes únicos' }, { v: '2', l: 'niveles' }, { v: String(programas), l: 'programas' }], levelsLine: 'Niveles: Preprimaria y Primaria.',
-  invest: { label: 'Total sin IVA', net: 'Q69,112', withIva: 'Con IVA: Q77,406 (IVA de Q8,294)', parts: { net: 'Q69,112', iva: 'Q8,294', total: 'Q77,406', ivaPct: '12 %' }, warning: '' },
+  invest: { label: 'Total sin IVA', net: 'Q69,112', withIva: 'Con IVA: Q77,406 (IVA de Q8,294)', parts: { main: 'Q69,112', mainLabel: 'Total sin IVA', perStudent: 'Q1,115', students: 62, net: 'Q69,112', iva: 'Q8,294', total: 'Q77,406', ivaPct: '12 %' }, warning: '' },
   legend: [['Evoluciona', 'Pagas un inicial y cuotas; al final el equipo es del colegio.']], steps: [['Revisa', 'Texto uno.'], ['Confirma', 'Texto dos.'], ['Empieza', 'Texto tres.']],
   pay: { lead: 'Pagarías Q15,481 al iniciar.', tiles: [{ l: 'Al iniciar', v: 'Q15,481' }], table: null },
   programs: Array.from({ length: programas }, (_, i) => ({
@@ -16,7 +16,8 @@ const modelo = (programas = 2) => ({
     tiles: [{ v: '62', l: 'estudiantes participan' }], explain: 'Texto de ejemplo con acentos: niño, año, ñandú, ¿cuántos?', note: '',
     price: { planName: 'Evoluciona 8', net: 'Q31,164', withIva: 'Q34,904', pay: 'Pago inicial de Q6,981 y 8 cuotas.', own: { title: 'El equipo se queda en tu institución', text: 'Pasa a ser propiedad del colegio.' }, minNote: '', includes: [['Equipamiento', 'Incluido.']] }, pending: ''
   })),
-  overview: Array.from({ length: programas }, (_, i) => ({ photo: 'x', title: 'Robótica para pequeños · Preprimaria ' + i, sub: '4 grupos · 62 estudiantes', equip: '10 Tale-Bot', plan: 'Evoluciona 8', net: 'Q31,164', withIva: 'Con IVA Q34,904' })),
+  overview: Array.from({ length: programas }, (_, i) => ({ photo: 'x', title: 'Robótica para pequeños · Preprimaria ' + i, sub: '4 grupos', equip: '10 Tale-Bot', students: '62 estudiantes' })),
+  options: [{ label: 'Compra de equipos', tag: 'Integra · un solo pago', programs: 'Robótica, Electrónica', total: 'Q20,000' }, { label: 'Pago en cuotas', tag: 'Evoluciona · 8 meses', programs: 'Drones', total: 'Q31,161' }],
   sim: null, notes: ['Nota uno.', 'Nota dos.']
 });
 
@@ -71,7 +72,7 @@ test('acepta el logo como imagen con transparencia (color + máscara) y la dibuj
 
 test('la primera hoja trae la lista de programas y el detalle empieza en otra página', () => {
   const s = Buffer.from(P.build(modelo(2), {})).toString('latin1');
-  assert.ok(s.includes('Detalle de la cotizaci'));
+  assert.ok(s.includes('Lo que incluye tu propuesta'));
   assert.ok(s.includes('Pr\xf3ximos pasos'));
   assert.ok(s.includes('Detalle de cada programa'));
   assert.ok(!s.includes('Proyección por estudiante')); // solo se incluye si la institución la pide
