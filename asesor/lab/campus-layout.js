@@ -15,7 +15,7 @@ export const PROGRAM_IDS = Object.freeze(['tale', 'master', 'spike', 'electronic
 export const LEVEL_NAMES = Object.freeze({ pre: 'Preprimaria', prim: 'Primaria', bas: 'Básico', bach: 'Bachillerato' });
 export const PROGRAM_NAMES = Object.freeze({ tale: 'Tale-Bot', master: 'Robot Master', spike: 'SPIKE Prime', electronics: 'Electrónica', drones: 'Drones', immersive: 'Realidad virtual' });
 // Catalog compatibility, used only to colour participants when no groups are chosen yet.
-export const PROGRAM_LEVELS = Object.freeze({ tale: ['pre'], master: ['prim'], spike: ['prim', 'bas', 'bach'], electronics: ['prim', 'bas', 'bach'], drones: ['prim', 'bas', 'bach'], immersive: ['bas', 'bach'] });
+export const PROGRAM_LEVELS = Object.freeze({ tale: ['pre'], master: ['prim', 'bas', 'bach'], spike: ['prim', 'bas', 'bach'], electronics: ['prim', 'bas', 'bach'], drones: ['prim', 'bas', 'bach'], immersive: ['bas', 'bach'] });
 export const CAMPUS_LIMITS = Object.freeze({ rooms: 8, roomsPerLevel: 2, workshopFloors: 1, people: 40, seatsPerRoom: 3, walkers: 8, shelf: 8, students: 100000, units: 10000 });
 export const CELL = 2.6;
 export const FLOOR_HEIGHT = 1.7;

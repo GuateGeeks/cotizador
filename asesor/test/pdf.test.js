@@ -117,7 +117,7 @@ test('la tabla de grados considerados aparece solo con cobertura y avisa lo que 
   const m = modelo(2);
   const sin = Buffer.from(P.build(m, {})).toString('latin1');
   assert.ok(!sin.includes('Grados y estudiantes considerados'));
-  m.coverage = { summary: '189 de 319 estudiantes registrados están incluidos en esta cotización.', missing: 130, rows: [{ grade: '1.º Primaria', level: 'Primaria', students: 24, programs: 'Robótica para primaria', ok: true }, { grade: '4.º Bachillerato', level: 'Bachillerato', students: 40, programs: 'Sin programa', ok: false }] };
+  m.coverage = { summary: '189 de 319 estudiantes registrados están incluidos en esta cotización.', missing: 130, rows: [{ grade: '1.º Primaria', level: 'Primaria', students: 24, programs: 'Robótica con Robot Master', ok: true }, { grade: '4.º Bachillerato', level: 'Bachillerato', students: 40, programs: 'Sin programa', ok: false }] };
   const con = Buffer.from(P.build(m, {})).toString('latin1');
   assert.ok(con.includes('Grados y estudiantes considerados'));
   assert.ok(con.includes('Sin programa'));
