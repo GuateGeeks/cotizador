@@ -78,7 +78,6 @@
     initialRate: 0.2,                       // pago inicial solo en Evoluciona (compra y renta son un solo pago)
     rentDiscount: { 1: 0, 2: 0.02, 3: 0.04, 4: 0.05 }, // descuento por bimestres rentados
     rentMonthsPerPeriod: 2,
-    minUnits: 5,                            // mínimo comercial informativo (equipos)
     // Simulador: cuota sugerida = ceil(total con IVA / estudiantes / meses / cobertura, al múltiplo de redondeo)
     sim: { coverage: 0.75, roundTo: 5, buyMonths: 8 },
     evolucionBaseUnits: 5,                  // las tarifas evo8/evo16 están expresadas por 5 equipos

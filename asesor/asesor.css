@@ -1415,3 +1415,16 @@ html,body,body:has(.campus-layout){background:var(--canvas)}
 .top-inner,body:has(.campus-layout) .top-inner{height:64px}
 .brand img,body:has(.campus-layout) .brand img{width:auto;height:38px}
 @media(max-width:650px){.top-inner{height:56px}.brand img,body:has(.campus-layout) .brand img{width:auto;height:30px}}
+
+/* precio por equipo: solo en la compra */
+.unit-price{display:grid;grid-template-columns:auto 1fr;gap:2px 14px;align-items:baseline;margin-top:12px;padding:12px 14px;border-radius:12px;background:var(--plum-wash);border:1px dashed var(--plum)}
+.unit-price span{grid-column:1/-1;font-size:12px;color:var(--muted);font-weight:650}
+.unit-price strong{font-size:26px;color:var(--plum-dark);letter-spacing:-.5px;font-variant-numeric:tabular-nums}
+.unit-price small{font-size:13px;color:var(--ink)}
+.grp-units{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.grp-units li{display:flex;justify-content:space-between;gap:10px;align-items:baseline;font-size:13px;line-height:1.4}
+.grp-units li span{color:var(--ink)}.grp-units li b{color:var(--plum-dark);white-space:nowrap;font-variant-numeric:tabular-nums}
+@media(max-width:560px){.grp-units li{flex-direction:column;gap:1px}}
+
+.img-failed img{visibility:hidden}
+.img-failed.product-media,.img-failed.small-photo,.img-failed.lc-photo{background:var(--plum-wash)}

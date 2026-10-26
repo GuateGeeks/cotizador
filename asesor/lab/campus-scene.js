@@ -652,7 +652,7 @@ export function createMascot(container, opts = {}) {
     if (!rect.width || !rect.height) return;
     if (Math.abs(size.w - rect.width) > 2 || Math.abs(size.h - rect.height) > 2) frameBox = null; // a new viewport frames the campus afresh
     size = { w: rect.width, h: rect.height };
-    renderer.setPixelRatio(quality === 'eco' ? 1 : Math.min(window.devicePixelRatio || 1, 1.75));
+    renderer.setPixelRatio(quality === 'eco' ? 1 : Math.min(window.devicePixelRatio || 1, typeof matchMedia === 'function' && matchMedia('(pointer: fine)').matches ? 1.75 : 1.5));
     renderer.setSize(rect.width, rect.height, false);
     // Smaller canvases do not need a 2K shadow map.
     const shadowSize = rect.width * Math.min(window.devicePixelRatio || 1, 1.75) > 900 ? 2048 : 1024;
