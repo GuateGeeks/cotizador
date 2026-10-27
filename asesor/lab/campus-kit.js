@@ -239,6 +239,23 @@ export function createBuilder(rig = new Rig()) {
       }
       return api;
     },
+    /**
+     * Triangle whose corners follow different bones (a stretched seam at a joint of a skinned
+     * model): each corner is local to its own bone. Still one influence per vertex.
+     */
+    skinTri(a, b, c, hex, bones) {
+      const target = data[layer], color = col(hex);
+      [a, b, c].forEach((p, k) => {
+        const own = bones[k];
+        own.updateWorldMatrix(true, false);
+        work.multiplyMatrices(own.matrixWorld, stack[stack.length - 1]);
+        v.set(p[0], p[1], p[2]).applyMatrix4(work);
+        target.pos.push(v.x, v.y, v.z);
+        if (layer === 'blob') target.col.push(color.r, color.g, color.b, 1); else target.col.push(color.r, color.g, color.b);
+        target.bone.push(own.userData.index);
+      });
+      return api;
+    },
     quad(a, b, c, d, hex) { api.tri(a, b, c, hex); return api.tri(a, c, d, hex); },
     /** Triangle oriented so its normal points along `toward` ([x,y,z]). */
     face(a, b, c, hex, toward) {

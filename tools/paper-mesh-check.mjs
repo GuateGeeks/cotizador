@@ -78,7 +78,11 @@ function zFighting(tris, limit = 25) {
   for (const t of opaque) {
     const dk = Math.round(t.g.d / 2e-4);
     for (const dd of [-1, 0, 1]) for (const u of buckets.get(String(dk + dd)) || []) {
-      if (u === t || u.color === t.color || dot(u.g.n, t.g.n) < .9995 || Math.abs(u.g.d - t.g.d) > 1e-4) continue;
+      if (u === t || u.color === t.color || dot(u.g.n, t.g.n) < .9995) continue;
+      // Separation measured where the triangles are (centroids), not at the origin: far from it,
+      // nearly parallel planes report a plane-offset difference unrelated to their distance.
+      const ct = t.v.reduce((s, p) => s.map((x, k) => x + p[k] / 3), [0, 0, 0]), cu = u.v.reduce((s, p) => s.map((x, k) => x + p[k] / 3), [0, 0, 0]);
+      if (Math.min(Math.abs(dot(t.g.n, cu) - t.g.d), Math.abs(dot(u.g.n, ct) - u.g.d)) > 1e-4) continue;
       // Project both onto the plane's two dominant axes.
       const n = t.g.n, drop = Math.abs(n[0]) > Math.abs(n[1]) ? (Math.abs(n[0]) > Math.abs(n[2]) ? 0 : 2) : (Math.abs(n[1]) > Math.abs(n[2]) ? 1 : 2);
       const proj = tri => tri.v.map(p => p.filter((_, i) => i !== drop));

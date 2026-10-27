@@ -5,6 +5,7 @@
  * heads, bachillerato students are almost adult height.
  */
 import { PAL, LEVEL_COLOR, TAU, hash, pick, lerp, clamp } from './campus-kit.js';
+import { CLIPS } from './paper/pose-clips-data.js';
 
 export const PERSON_SCALE = { pre: .74, prim: .86, bas: .97, bach: 1.04, adult: 1.18 };
 const SKIN = ['#F3CBA5', '#E2AF86', '#C98D62', '#A06A45', '#7E5236'];
@@ -184,6 +185,39 @@ export const POSES = {
   /** Both hands lifting the visor off the eyes (VR), the head turned to someone. */
   visor: (turn = 0) => pose({ armL: [-2.45, 0, .55], armR: [-2.45, 0, -.55], foreL: [-1.85, 0, 0], foreR: [-1.85, 0, 0], head: [-.25, turn, 0], torso: [0, turn * .3, 0] })
 };
+/**
+ * Keyframed clips retouched in Blender (3d-assets procedural-web, `pw.py import`) replace a pose
+ * for the arguments they were sampled with. A clip is { args, time?, offset?, duration, frames }:
+ * `time.arg` is the argument that drives it (seconds × `time.scale` = that argument), `offset.arg`
+ * an argument added to its time (the per-person desync `k`); any other argument must equal the
+ * sampled one (a missing argument takes the sampled default), or the function keeps the pose.
+ * Frames are whole poses, interpolated linearly and looped over `duration`.
+ */
+const KEYS = Object.keys(ZERO);
+/** The pose functions before any clip replaces them (the Blender bridge compares edits against these). */
+export const POSE_FUNCTIONS = Object.freeze({ ...POSES });
+function clipPose(clip, args) {
+  const n = clip.frames.length;
+  if (!clip.time || n === 1) return pose(clip.frames[0]);
+  let t = (args[clip.time.arg] ?? 0) / clip.time.scale + (clip.offset ? args[clip.offset.arg] ?? 0 : 0);
+  t = ((t % clip.duration) + clip.duration) % clip.duration;
+  const f = t / clip.duration * n, i = Math.floor(f) % n, j = (i + 1) % n, u = f - Math.floor(f), a = clip.frames[i], b = clip.frames[j];
+  const out = {};
+  for (const key of KEYS) out[key] = Array.isArray(ZERO[key]) ? a[key].map((v, k) => lerp(v, b[key][k], u)) : lerp(a[key], b[key], u);
+  return out;
+}
+const sampled = (clip, args) => clip.args.every((v, i) => v === '$t' || i === clip.offset?.arg || (args[i] ?? v) === v);
+/** The pose table with `clips` ({ name: [clip] }) over `functions`. */
+export function withClips(functions, clips) {
+  const out = { ...functions };
+  for (const [name, list] of Object.entries(clips)) {
+    const fn = functions[name];
+    if (fn) out[name] = (...args) => { const clip = list.find(c => sampled(c, args)); return clip ? clipPose(clip, args) : fn(...args); };
+  }
+  return out;
+}
+Object.assign(POSES, withClips(POSE_FUNCTIONS, CLIPS));
+
 /** Additive head look: yaw/pitch blended over the pose's own head by `w` (0..1). Mutates `p`. */
 export function look(p, yaw, pitch, w = 1) {
   p.head[0] = lerp(p.head[0], pitch, w); p.head[1] = lerp(p.head[1], yaw, w);
@@ -204,7 +238,8 @@ export function blendBody(lower, upper) {
   return out;
 }
 
-const KNEEL_DROP = p => -(p.shin - .03 * p.scale);
+/** Kneeling lowers the hips by the shin (or `kneel`, a shorter drop for a long shoe whose toe points down). */
+const KNEEL_DROP = p => -((p.kneel ?? p.shin) - .03 * p.scale);
 /** Apply a pose; `base` is 'stand' | 'kneel' | 'sit' to place the hips. */
 export function applyPose(person, p, base = 'stand', seat) {
   const j = person.joints;

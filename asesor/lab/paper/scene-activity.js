@@ -111,7 +111,17 @@ function walkAlong(ctrl, pts, k, floor, ry0, ry1, upper = INDOOR, armsW = upper 
   // The walk cycle follows the distance travelled, so the feet do not slide.
   const moving = Math.min(1, Math.min(k, 1 - k) * 12), stride = .5 * (ctrl.scale || .8);
   const p = POSES.walk(e * pos.length / stride * Math.PI, moving);
-  applyPose(ctrl, upper ? mixArms(p, upper, armsW) : p);
+  applyPose(ctrl, upper ? liftLowHands(ctrl, mixArms(p, upper, armsW)) : p);
+}
+/**
+ * Long arms (an elbow below 0.54 H, as the Meshy student's) carry the forearms higher while
+ * walking indoors, so the hands pass over the table tops instead of through their edge.
+ */
+function liftLowHands(ctrl, p) {
+  const elbow = ctrl.landmarks?.elbow, H = ctrl.scale || .8;
+  if (!elbow || elbow / H >= .54) return p;
+  for (const key of ['foreL', 'foreR']) p[key] = [p[key][0] - .35, p[key][1], p[key][2]];
+  return p;
 }
 /** Arms (by `w`) and head of `upper` over a walking body. */
 function mixArms(walk, upper, w) {
@@ -123,8 +133,17 @@ function mixArms(walk, upper, w) {
 const seatPose = (ctrl, upper, seat = SIT) => applyPose(ctrl, blendBody(SIT_POSE, upper), 'sit', seat);
 /** Seated at a table seat `s`: the same, with both hands kept above the table top. */
 function seatAt(ctrl, upper, s, L) {
-  const top = L.topOf(s), edge = top && edgeAlong(s, top);
-  if (edge != null) guardTable(ctrl, upper, edge, top.h);
+  // The hands hang beside the seat axis: a seat facing the gap between two tops still has
+  // them over a top, so the edge is the nearest one of any top along the centre and both shoulder lines.
+  const side = Math.abs(ctrl.joints.armR.position.x), rx = Math.cos(s.ry), rz = -Math.sin(s.ry), top = L.topOf(s);
+  const edges = [];
+  for (const t of L.tops) for (const o of [0, side, -side]) {
+    const q = { ...s, x: s.x + rx * o, z: s.z + rz * o }, over = q.x > t.x0 && q.x < t.x1 && q.z > t.z0 && q.z < t.z1; // a shoulder already over the top
+    const d = over ? 0 : edgeAlong(q, t); if (d != null) edges.push([d, t]);
+  }
+  edges.sort((a, b) => a[0] - b[0]);
+  const edge = edges.length ? edges[0][0] : null, height = edges.length ? edges[0][1].h : top?.h;
+  if (edge != null) guardTable(ctrl, upper, edge, height);
   seatPose(ctrl, upper);
 }
 /** Distance from a seat to a table top along the sitter's facing (null when it faces away). */

@@ -14,10 +14,13 @@
     "shot:people": "node tools/people-shot.cjs",
     "docs:people": "node tools/people-contract.mjs",
     "shot:alumno": "node tools/alumno-shot.cjs",
-    "import:r2": "node tools/r2-import.mjs"
+    "import:r2": "node tools/r2-import.mjs",
+    "import:meshy": "node tools/meshy-import.mjs"
   },
   "devDependencies": {
     "esbuild": "0.25.12",
+    "jpeg-js": "0.4.4",
+    "meshoptimizer": "1.0.1",
     "three": "0.186.1"
   }
 }

@@ -49,5 +49,7 @@ Están en `.claude/skills/` (`.agents/skills` apunta al mismo lugar):
 
 Documentación del campus: [docs/campus-3d.md](docs/campus-3d.md). Gestión visual (fuentes de verdad,
 recreación de piezas, composición, presupuestos, verificación y despliegue):
-[docs/papercraft/GESTION-VISUAL.md](docs/papercraft/GESTION-VISUAL.md). Plan vigente:
+[docs/papercraft/GESTION-VISUAL.md](docs/papercraft/GESTION-VISUAL.md). Los alumnos de primaria y las
+poses se retocan en Blender con el puente de `3d-assets` (`procedural-web/pw.py`, skill `gg3d-blender-web`);
+los módulos que escribe llevan su procedencia y no se editan a mano. Plan vigente:
 [papercraft](docs/superpowers/plans/2026-10-24-campus-papercraft.md).

@@ -16,8 +16,9 @@ import { Matrix4, Vector3 } from 'three';
 import { createBuilder } from '../asesor/lab/campus-kit.js';
 import { POSES, applyPose, blendBody } from '../asesor/lab/campus-people.js';
 import { SCALE } from '../asesor/lab/paper/kit.js';
-import { addPaperPerson, HAIR_COST, GEOMETRY_CAP, PERSON_LIMIT, personLimit, RESERVE, SHADOW_TRIANGLES, COMPONENTS, PRIMARIA_BASE } from '../asesor/lab/paper/pieces-people.js';
+import { addPaperPerson, HAIR_COST, GEOMETRY_CAP, PERSON_LIMIT, personLimit, RESERVE, SHADOW_TRIANGLES, COMPONENTS, PRIMARIA_BASE, PRIMARIA_R2 } from '../asesor/lab/paper/pieces-people.js';
 import { R2_INSTANCES, R2_RECIPES, R2_REDISTRIBUTION, R2_FACTS, R2_PROVENANCE, instancePoint } from '../asesor/lab/paper/r2/person-r2.js';
+import { MESHY_MODELS } from '../asesor/lab/paper/meshy/person-meshy.js';
 
 const out = process.argv[2];
 if (!out) { console.error('Uso: node tools/paper-people-manifest.mjs <carpeta-nueva>'); process.exit(2); }
@@ -27,7 +28,10 @@ fs.mkdirSync(out, { recursive: true });
 const MIN_GAP = .004;
 const BONES = { hips: 'root', torso: 'hips', head: 'torso', armL: 'torso', armR: 'torso', foreL: 'armL', foreR: 'armR', legL: 'hips', legR: 'hips', shinL: 'legL', shinR: 'legR' };
 /** Component → bones it may live on (fichas §9), from the component registry. */
-const OWNER = Object.fromEntries([...COMPONENTS.map(c => [c.id, c.bones]), ...R2_INSTANCES.map(i => [i.id, [i.bone]])]);
+/** Parts whose triangles may span two bones: the per-vertex bones of a skinned Meshy model (their stretched skin folds at the joints). */
+const SEAMED = new Set(Object.values(MESHY_MODELS).flatMap(m => Object.values(m.VARIANTS)).flatMap(v => v.parts.filter(p => p.vertexBones).map(p => 'M-' + p.id)));
+const OWNER = Object.fromEntries([...COMPONENTS.map(c => [c.id, c.bones]), ...R2_INSTANCES.map(i => [i.id, [i.bone]]),
+  ...Object.values(MESHY_MODELS).flatMap(m => Object.values(m.VARIANTS)).flatMap(v => v.parts.map(part => ['M-' + part.id, [part.bone]]))]);
 const status = ok => ok ? 'PASS' : 'FAIL';
 const sum = o => Object.values(o).reduce((s, v) => s + v, 0);
 const sub = (a, c) => [a[0] - c[0], a[1] - c[1], a[2] - c[2]];
@@ -50,7 +54,9 @@ function overlap2d(a, b, eps = 1e-5) {
  */
 const JOINT_PAIRS = [['P16', 'P17'], ['P13', 'P14']];
 const recipeOf = part => (part || '').split('-')[0];
-const isJoint = (a, c) => JOINT_PAIRS.some(([x, y]) => (recipeOf(a) === x && recipeOf(c) === y) || (recipeOf(a) === y && recipeOf(c) === x)) && a.split('-')[1] === c.split('-')[1];
+/** Meshy joints: both sides meet at a seam of the cut mesh and overlap as the joint turns (neck, waist, the girl's skirt on the thighs, elbows, knees, hips). */
+const MESHY_JOINTS = [['M-head', 'M-torso'], ['M-torso', 'M-hips'], ['M-torso', 'M-legL'], ['M-torso', 'M-legR'], ['M-armL', 'M-foreL'], ['M-armR', 'M-foreR'], ['M-legL', 'M-shinL'], ['M-legR', 'M-shinR'], ['M-hips', 'M-legL'], ['M-hips', 'M-legR'], ['M-torso', 'M-armL'], ['M-torso', 'M-armR']];
+const isJoint = (a, c) => (SEAMED.has(a) && SEAMED.has(c)) || MESHY_JOINTS.some(([x, y]) => (a === x && c === y) || (a === y && c === x)) || JOINT_PAIRS.some(([x, y]) => (recipeOf(a) === x && recipeOf(c) === y) || (recipeOf(a) === y && recipeOf(c) === x)) && a.split('-')[1] === c.split('-')[1];
 let joints = [];
 /** Overlapping parallel opaque triangles of different colour closer than MIN_GAP along their normal. */
 function layerGaps(tris, limit = 5) {
@@ -99,7 +105,8 @@ function build(spec, pose) {
     const n = idx ? idx.count : pos.count;
     for (let i = 0; i < n; i += 3) {
       const ids = [0, 1, 2].map(k => idx ? idx.getX(i + k) : i + k), bones = ids.map(j => skin.getX(j));
-      if (bones[1] !== bones[0] || bones[2] !== bones[0]) mixed++;
+      // a skinned model's seams (parts with per-vertex bones) stretch across a joint by design
+      if ((bones[1] !== bones[0] || bones[2] !== bones[0]) && !SEAMED.has(person.trace?.[i / 3])) mixed++;
       const pts = ids.map(j => { v.fromBufferAttribute(pos, j).applyMatrix4(posed[skin.getX(j)]); return [v.x, v.y, v.z]; });
       if (pts.flat().some(x => !Number.isFinite(x))) nonFinite++;
       tris.push({ v: pts, layer: mesh.name, owner: rig.bones[bones[0]].name, part: mesh.name === 'blob' ? 'shadow' : person.trace[i / 3], color: [col.getX(ids[0]), col.getY(ids[0]), col.getZ(ids[0])].map(x => Math.round(x * 255)).join(',') });
@@ -143,9 +150,10 @@ for (const hair of ['short', 'long', 'bun']) for (const notebook of [false, true
 
 for (const spec of combos) {
   const r = build(spec), p = r.person, teacher = !!spec.role;
-  const real = p.parts, plan = p.plan, geometry = sum(real), budget = personLimit(p.profile), cap = p.profile.r2Head ? budget - SHADOW_TRIANGLES : GEOMETRY_CAP[teacher ? 'teacher' : 'student'];
+  const real = p.parts, plan = p.plan, geometry = sum(real), budget = personLimit(p.profile), cap = p.profile.r2Head || p.profile.meshy ? budget - SHADOW_TRIANGLES : GEOMETRY_CAP[teacher ? 'teacher' : 'student'];
   // Triangles per bone in the built geometry vs the emitter's per-component, per-bone tally.
-  const perBone = {}; for (const t of r.tris) if (t.layer !== 'blob') { const k = t.owner.split('.').pop(); perBone[k] = (perBone[k] || 0) + 1; }
+  // a seam triangle's owner is its first corner's bone; it is tallied under its part's bone like the emitter does
+  const perBone = {}; for (const t of r.tris) if (t.layer !== 'blob') { const k = SEAMED.has(t.part) ? OWNER[t.part][0] : t.owner.split('.').pop(); perBone[k] = (perBone[k] || 0) + 1; }
   const expected = {}; for (const bones of Object.values(p.perBone)) for (const [bone, n] of Object.entries(bones)) expected[bone] = (expected[bone] || 0) + n;
   const owners = Object.entries(p.perBone).every(([part, bones]) => Object.keys(bones).every(bone => OWNER[part]?.includes(bone)));
   const boneNames = r.bones.map(b => b.name);
@@ -173,7 +181,8 @@ for (const spec of combos) {
 for (const spec of [
   { ...PRIMARIA_BASE, id: 'q.base' }, { ...PRIMARIA_BASE, id: 'q.base-seated', seated: true },
   { id: 'q.prim', level: 'prim', seed: 'prim-b', hair: 'short', skirt: false },
-  { id: 'q.prim-skirt', level: 'prim', seed: 'prim-b', hair: 'long', skirt: true, seated: true },
+  { ...PRIMARIA_R2, id: 'q.base-r2' }, { id: 'q.nina', level: 'prim', seed: 'prim-g', skirt: true }, { id: 'q.nina-seated', level: 'prim', seed: 'prim-g', skirt: true, seated: true },
+  { id: 'q.prim-skirt', level: 'prim', seed: 'prim-b', hair: 'long', skirt: true, seated: true, model: 'r2' },
   { id: 'q.pre', level: 'pre', seed: 'pre-a', hair: 'pig', cap: 'worn', skirt: true },
   { id: 'q.teacher', role: 'teacher', level: 'adult', seed: 'teacher-a', hair: 'long', notebook: true }
 ]) for (const [name, pose] of Object.entries(POSE_SET)) {
@@ -186,9 +195,10 @@ for (const spec of [
     checks: { layers: status(gaps.length === 0), rigid: status(r.mixed === 0), ground: status(seated || Math.min(...ys) >= -.012) }, gaps, joints: jointSummary });
 }
 
-// Proportions of the reference profiles, measured on the built geometry in rest pose.
+// Proportions of the reference profiles (fichas R1), measured on the built geometry in rest pose.
+// The primaria row is the R2 body; the Meshy student keeps its own proportions (report.meshy).
 for (const [level, role] of [['pre'], ['prim'], ['bas'], ['bach'], ['adult', 'teacher']]) {
-  const spec = { id: `r.${level}`, level, role, seed: `r-${level}`, hair: 'short', skirt: false, backpack: false };
+  const spec = { id: `r.${level}`, level, role, seed: `r-${level}`, hair: 'short', skirt: false, backpack: false, model: 'r2' };
   const r = build(spec), p = r.person, pr = p.profile, body = r.tris.filter(t => t.layer !== 'blob');
   const ys = body.flatMap(t => t.v.map(q => q[1])), H = Math.max(...ys) - Math.min(...ys);
   const chin = p.hipY + pr.torso + pr.neck, head = Math.max(...ys) - chin;
@@ -199,16 +209,26 @@ for (const [level, role] of [['pre'], ['prim'], ['bas'], ['bach'], ['adult', 'te
     checks: { height: status(Math.abs(H - SCALE.person[level]) <= SCALE.person[level] * .005), head: status(Math.abs(head / H - target[0]) <= .01), shoulders: status(Math.abs(shoulders / H - target[1]) <= .01) } });
 }
 
-// Primaria base student: landmarks vs bones, measured contract, components.
+// Meshy students (boy and girl): height in the level scale; head and shoulders reported as the models have them.
+report.meshy = {};
+for (const [model, skirt] of [['nino', false], ['nina', true]]) {
+  const r = build({ id: 'y', level: 'prim', seed: 'y', skirt, backpack: false }), L = r.person.landmarks, body = r.tris.filter(t => t.layer !== 'blob');
+  const ys = body.flatMap(t => t.v.map(q => q[1])), H = Math.max(...ys) - Math.min(...ys);
+  const torsoX = body.filter(t => t.owner === 'y.torso').flatMap(t => t.v.filter(q => q[1] > L.hip + .1 * H).map(q => q[0]));
+  report.meshy[model] = { H: +H.toFixed(4), headRatio: +((Math.max(...ys) - L.chin) / H).toFixed(4), shouldersRatio: +((Math.max(...torsoX) - Math.min(...torsoX)) / H).toFixed(4),
+    checks: { height: status(Math.abs(H - SCALE.person.prim) <= SCALE.person.prim * .005), model: status(r.person.profile.meshy === model) } };
+}
+
+// Primaria R2 student (construction sheet 01): landmarks vs bones, measured contract, components.
 {
-  const r = build({ ...PRIMARIA_BASE, id: 'b' }), p = r.person, L = p.landmarks, body = r.tris.filter(t => t.layer !== 'blob');
+  const r = build({ ...PRIMARIA_R2, id: 'b' }), p = r.person, L = p.landmarks, body = r.tris.filter(t => t.layer !== 'blob');
   const world = name => { const bone = r.bones.find(x => x.name === `b.${name}`); const v = new Vector3(); bone.getWorldPosition(v); return v; };
   const near = (a, c) => Math.abs(a - c) < 1e-6;
   const ys = body.flatMap(t => t.v.map(q => q[1]));
   const torsoX = body.filter(t => t.owner === 'b.torso').flatMap(t => t.v.map(q => q[0]));
   const measured = { H: Math.max(...ys) - Math.min(...ys), head: Math.max(...ys) - L.chin, shoulders: Math.max(...torsoX) - Math.min(...torsoX) };
   report.base = {
-    spec: PRIMARIA_BASE, landmarks: L, measured: Object.fromEntries(Object.entries(measured).map(([k, x]) => [k, +x.toFixed(4)])),
+    spec: PRIMARIA_R2, landmarks: L, measured: Object.fromEntries(Object.entries(measured).map(([k, x]) => [k, +x.toFixed(4)])),
     ratios: { head: +(measured.head / measured.H).toFixed(4), shoulders: +(measured.shoulders / measured.H).toFixed(4) },
     components: p.components, geometry: sum(p.parts), total: r.total,
     checks: {
@@ -223,7 +243,7 @@ for (const [level, role] of [['pre'], ['prim'], ['bas'], ['bach'], ['adult', 'te
 
 // Package R2: per-instance counts vs the package, redistribution, mount sockets.
 {
-  const r = build({ ...PRIMARIA_BASE, id: 'b' }), p = r.person;
+  const r = build({ ...PRIMARIA_R2, id: 'b' }), p = r.person;
   const byId = Object.fromEntries(R2_INSTANCES.map(i => [i.id, i]));
   const socketRoot = (inst, name) => { const s_ = R2_RECIPES[inst.recipe].sockets[name]; return s_ ? instancePoint(inst, s_.at) : null; };
   const instances = R2_INSTANCES.map(i => {
@@ -250,7 +270,9 @@ for (const [level, role] of [['pre'], ['prim'], ['bas'], ['bach'], ['adult', 'te
 
 // Determinism and independence of options (fichas §10).
 {
-  const base = { id: 'd', level: 'prim', seed: 'prim-b', hair: 'short', skirt: false };
+  // The R2 rule (clothing never changes the head) is checked on the R2 body; the Meshy student
+  // replaces head and body together and has no skirt, so skirt students keep the R2 head.
+  const base = { id: 'd', level: 'prim', seed: 'prim-b', hair: 'short', skirt: false, model: 'r2' };
   const a = build(base), b = build(base), c = build({ ...base, backpack: '#FF0000' }), d = build({ ...base, skirt: true });
   // Head geometry relative to the head bone (clothing may move the neck pivot, never the head's shape).
   const headOf = r => { const bone = r.bones.find(x => x.name === 'd.head'), o = new Vector3(); bone.getWorldPosition(o);
@@ -266,6 +288,7 @@ const fails = [
   ...report.combos.flatMap(c => Object.entries(c.checks).filter(([, s]) => s === 'FAIL').map(([k]) => `${c.id}:${k}`)),
   ...report.poses.flatMap(c => Object.entries(c.checks).filter(([, s]) => s === 'FAIL').map(([k]) => `${c.id}/${c.pose}:${k}`)),
   ...report.proportions.flatMap(c => Object.entries(c.checks).filter(([, s]) => s === 'FAIL').map(([k]) => `${c.level}:${k}`)),
+  ...Object.entries(report.meshy).flatMap(([m, r]) => Object.entries(r.checks).filter(([, s]) => s === 'FAIL').map(([k]) => `meshy.${m}:${k}`)),
   ...Object.entries(report.determinism).filter(([, s]) => s === 'FAIL').map(([k]) => `determinism:${k}`),
   ...Object.entries(report.base.checks).filter(([, s]) => s === 'FAIL').map(([k]) => `base:${k}`),
   ...Object.entries(report.r2.checks).filter(([, s]) => s === 'FAIL').map(([k]) => `r2:${k}`)

@@ -22,6 +22,7 @@ import { PAPER as C, SCALE, newMeta, shadeTone } from './kit.js';
 import { hash, pick, lerp } from '../campus-kit.js';
 import { POSES, applyPose, blendBody } from '../campus-people.js';
 import { r2Instances, r2Rig, r2Landmarks, emitR2, R2_HEAD, R2_INSTANCES, R2_RECIPES, R2_LANDMARKS_H } from './r2/person-r2.js';
+import { meshyParts, meshyRig, meshyLandmarks, emitMeshy, meshyGoggles } from './meshy/person-meshy.js';
 
 /** Level profiles (fichas §3): head = chin to top of hair, sw = shoulder width, both / H. */
 const PROFILE = {
@@ -44,12 +45,13 @@ export const GEOMETRY_CAP = { student: 271, teacher: 291 };
 export const RESERVE = 8;
 export const SHADOW_TRIANGLES = 7;
 /**
- * Triangle limit per person, contact shadow included. The primaria short-haired student carries the R3
- * recreations of head, hair core and vest (docs/papercraft/construction-r3), approved at 320; every
- * other student stays at 280 and teachers at 300.
+ * Triangle limit per person, contact shadow included. The primaria student (the Meshy model, or the
+ * short-haired R2 student with the R3 recreations of head, hair core and vest) was approved at 320;
+ * every other student stays at 280 and teachers at 300.
  */
-export const PERSON_LIMIT = Object.freeze({ student: 280, r3Student: 320, teacher: 300 });
-export const personLimit = profile => profile.teacher ? PERSON_LIMIT.teacher : profile.r2Head ? PERSON_LIMIT.r3Student : PERSON_LIMIT.student;
+export const PERSON_LIMIT = Object.freeze({ student: 280, r3Student: 320, teacher: 300, nina: 960 });
+/** The girl is the user's own Blender model (2026-10-25), kept with all its 940 triangles at their request. */
+export const personLimit = profile => profile.teacher ? PERSON_LIMIT.teacher : profile.meshy === 'nina' ? PERSON_LIMIT.nina : profile.r2Head || profile.meshy ? PERSON_LIMIT.r3Student : PERSON_LIMIT.student;
 
 const LIGHT = (() => { const v = [-.3, .55, .75], l = Math.hypot(...v); return v.map(c => c / l); })();
 const toneCache = new Map();
@@ -83,9 +85,11 @@ function onPlane(a, c, d, x, y, lift = 0) {
  * Inspector, capture tools and the generated contract all build this exact spec.
  */
 export const PRIMARIA_BASE = Object.freeze({
-  id: 'alumno-primaria', label: 'Alumno de primaria (base)', level: 'prim', seed: 'prim-base',
+  id: 'alumno-primaria', label: 'Alumno de primaria (Meshy)', level: 'prim', seed: 'prim-base',
   hair: 'short', cap: false, skirt: false, headset: false, skin: C.skin[0], hairColor: C.hair[1], shoe: C.dark
 });
+/** The same student built from package R2 (construction sheet 01), kept for its contract and comparison. */
+export const PRIMARIA_R2 = Object.freeze({ ...PRIMARIA_BASE, id: 'alumno-primaria-r2', label: 'Alumno de primaria (paquete R2)', model: 'r2' });
 
 /** Resolve level proportions, clothing, hair variant and colours from a person spec. */
 export function resolvePersonProfile(spec) {
@@ -100,14 +104,21 @@ export function resolvePersonProfile(spec) {
   if (!HAIR_COST[style]) style = 'short';
   const capMode = spec.cap ?? (pre && !teacher && hash(seed, 'cap') < .4 ? 'worn' : null);
   if (capMode === 'worn' || capMode === true) style = style === 'pig' ? 'cap-pig' : 'cap';
-  const skirt = !teacher && (spec.skirt ?? hash(seed, 'skirt') < .42);
+  // The Meshy models (docs/papercraft/reference/meshy) are every primaria student: the boy
+  // (short hair, trousers) and the girl (pigtails, skirt), chosen by `skirt` or else by the seed,
+  // varied by skin, hair, vest, backpack and shoe colours. `model: 'r2'` keeps the package R2
+  // (and the hair and skirt variants of recipe v1).
+  const meshy = level === 'prim' && !teacher && spec.model !== 'r2' ? ((spec.skirt ?? girl) ? 'nina' : 'nino') : null;
+  if (meshy) style = meshy === 'nina' ? 'pig' : 'short';
+  const skirt = meshy ? meshy === 'nina' : !teacher && (spec.skirt ?? hash(seed, 'skirt') < .42);
   const bag = !teacher && !spec.seated && spec.backpack !== false ? (typeof spec.backpack === 'string' ? spec.backpack : C.level[level]) : null;
   return {
     seed, level, teacher, pre, H, style, skirt, bag, headset: !!spec.headset, notebook: !!(teacher && spec.notebook),
     // Package R2 (docs/papercraft/construction-r2): the head of every short-haired primaria
     // student (clothing never changes the head) and the whole body with trousers. Every
     // other combination keeps recipe v1 (geometry of ec4d112).
-    r2Head: level === 'prim' && !teacher && style === 'short', r2Body: level === 'prim' && !teacher && style === 'short' && !skirt,
+    r2Head: !meshy && level === 'prim' && !teacher && style === 'short', r2Body: level === 'prim' && !teacher && style === 'short' && !skirt && spec.model === 'r2',
+    meshy,
     hc: P.head * H, sw: P.sw * H / 2, td: P.sw / .26 * .145 * H / 2,
     neck: BODY.neck * k * H, torso: BODY.torso * k * H, thigh: BODY.thigh * k * H, shin: BODY.shin * k * H, shoe: SHOE * H,
     skin: spec.skin || pick(C.skin, seed, 'skin'),
@@ -126,6 +137,11 @@ export function resolvePersonProfile(spec) {
  */
 export function planPerson(pr) {
   const plan = {};
+  if (pr.meshy) {
+    for (const [id, n] of meshyParts({ model: pr.meshy, bag: !!pr.bag, headset: pr.headset })) plan['M-' + id] = n;
+    if (pr.headset) plan.goggles = 10;
+    return plan;
+  }
   const r2 = r2Instances({ body: pr.r2Body, head: pr.r2Head, bag: !!pr.bag, headset: pr.headset });
   for (const [iid, n] of r2) plan[iid] = n;
   if (pr.r2Body) { if (pr.headset) plan.goggles = 10; return plan; }
@@ -258,7 +274,9 @@ export function addPaperPerson(b, spec) {
   const e = {
     face(a, c, d, hex, toward) { if (!shown()) return e; count(); b.face(a, c, d, hex, toward); return e; },
     /** Raw triangle in the given winding (R2 data is counter-clockwise seen from outside). */
-    tri(a, c, d, hex) { if (!shown()) return e; count(); b.tri(a, c, d, hex); return e; }
+    tri(a, c, d, hex) { if (!shown()) return e; count(); b.tri(a, c, d, hex); return e; },
+    /** Triangle stretched across a joint: corners local to their own bones (counted under the current one). */
+    skinTri(a, c, d, hex, bones) { if (!shown()) return e; count(); b.skinTri(a, c, d, hex, bones); return e; }
   };
   /** One flat facet facing away from `ctr`, tinted by its own normal. */
   const facet = (a, c, d, hex, ctr, amp = 1) => {
@@ -319,6 +337,23 @@ export function addPaperPerson(b, spec) {
     const { root: r0, ...rest } = joints;
     return { id, root: r0, joints: rest, scale: H, level: pr.level, teacher, head: hc, parts, plan, profile: pr, trace, components, perBone, ranges, ...extra };
   };
+
+  if (pr.meshy) { // ---- the primaria Meshy student: rig measured on the model, simplified body by bone
+    const R = meshyRig(pr.meshy, H), root = rig.add(id, spec.parent || rig.root, spec.x || 0, spec.y || 0, spec.z || 0);
+    root.rotation.y = spec.ry || 0;
+    root.userData.rest.quaternion.copy(root.quaternion);
+    const j = { root };
+    for (const [name, parent] of [['hips', 'root'], ['torso', 'hips'], ['head', 'torso'], ['armL', 'torso'], ['armR', 'torso'], ['foreL', 'armL'], ['foreR', 'armR'], ['legL', 'hips'], ['legR', 'hips'], ['shinL', 'legL'], ['shinR', 'legR']])
+      j[name] = rig.add(`${id}.${name}`, j[parent], ...R[name]);
+    const ids = Object.keys(plan).filter(k => k.startsWith('M-')).map(k => k.slice(2));
+    emitMeshy({ at, bone, e, bones: j, pr, H, tone }, ids, pr.meshy, !!pr.bag);
+    if (plan.goggles) { bone(j.head); at('goggles'); meshyGoggles(pr.meshy, e, H, C, shadeTone, GAP); }
+    const L = meshyLandmarks(pr.meshy, H);
+    // applyPose and seats read hipY, thigh and shin (knee to SHOE · H above the sole, as v1 and R2).
+    // The long Meshy shoe points its toe down when kneeling: the hips drop to 0.065 H above the sole
+    // (a model may set its own `kneelLift`).
+    return finish(j, { hipY: L.hip, thigh: L.hip - L.knee, shin: L.knee - SHOE * H, kneel: L.knee - (L.kneelLift ?? .065 * H), landmarks: L, sockets: [] });
+  }
 
   if (pr.r2Body) { // ---- the primaria R2 student: rig and every piece from the package
     const R = r2Rig(H), root = rig.add(id, spec.parent || rig.root, spec.x || 0, spec.y || 0, spec.z || 0);
@@ -671,7 +706,9 @@ function makePiece({ id, label, level, budget, spec = {}, pose, width = .4, focu
 export const PIECES = [
   makePiece({ id: 'person-pre', label: 'Preprimaria', level: 'pre', budget: 280, spec: { seed: 'pre-a', hair: 'pig', cap: 'worn' } }),
   makePiece({ id: 'person-prim', label: 'Primaria', level: 'prim', budget: PERSON_LIMIT.r3Student, spec: { seed: 'prim-b', hair: 'short', skirt: false } }),
-  makePiece({ id: 'person-prim-skirt', label: 'Primaria con falda', level: 'prim', budget: PERSON_LIMIT.r3Student, spec: { seed: 'prim-b', hair: 'short', skirt: true } }),
+  makePiece({ id: 'person-prim-nina', label: 'Primaria (niña)', level: 'prim', budget: PERSON_LIMIT.nina, spec: { seed: 'prim-g', skirt: true } }),
+  makePiece({ id: 'person-prim-r2', label: 'Primaria (paquete R2)', level: 'prim', budget: PERSON_LIMIT.r3Student, spec: { seed: 'prim-b', hair: 'short', skirt: false, model: 'r2' } }),
+  makePiece({ id: 'person-prim-skirt', label: 'Primaria con falda (R2 y v1)', level: 'prim', budget: PERSON_LIMIT.r3Student, spec: { seed: 'prim-b', hair: 'short', skirt: true, model: 'r2' } }),
   makePiece({ id: 'person-bas', label: 'Básico', level: 'bas', budget: 280, spec: { seed: 'bas-a', hair: 'long', skirt: true } }),
   makePiece({ id: 'person-bach', label: 'Bachillerato', level: 'bach', budget: 280, spec: { seed: 'bach-a', hair: 'pony', skirt: false } }),
   makePiece({ id: 'person-teacher', label: 'Docente o facilitador', level: 'adult', budget: 300, spec: { seed: 'teacher-a', role: 'teacher', hair: 'short', notebook: true } }),
@@ -684,6 +721,22 @@ export const PIECES = [
     pose: person => applyPose(person, POSES.sit(), 'sit', seatFor(person))
   }),
   makePiece({
+    id: 'pose-work-prim', label: 'Primaria en la mesa', level: 'prim', budget: PERSON_LIMIT.r3Student, width: .45, focus: .66, spec: { seed: 'prim-b', hair: 'short', seated: true },
+    pose: person => applyPose(person, workPose(), 'sit', seatFor(person))
+  }),
+  makePiece({
+    id: 'pose-work-nina', label: 'Niña de primaria en la mesa', level: 'prim', budget: PERSON_LIMIT.nina, width: .45, focus: .66, spec: { seed: 'prim-g', skirt: true, seated: true },
+    pose: person => applyPose(person, workPose(), 'sit', seatFor(person))
+  }),
+  makePiece({
+    id: 'pose-walk-nina', label: 'Niña de primaria caminando', level: 'prim', budget: PERSON_LIMIT.nina, width: .5, spec: { seed: 'prim-g', skirt: true },
+    pose: person => applyPose(person, POSES.walk(1.1), 'stand')
+  }),
+  makePiece({
+    id: 'pose-wave-nina', label: 'Niña de primaria saludando', level: 'prim', budget: PERSON_LIMIT.nina, width: .5, spec: { seed: 'prim-g', skirt: true },
+    pose: person => applyPose(person, POSES.wave(.3), 'stand')
+  }),
+  makePiece({
     id: 'pose-work', label: 'Trabajar en mesa', level: 'bas', budget: 280, width: .45, focus: .66, spec: { seed: 'bas-a', hair: 'long', skirt: true, seated: true },
     pose: person => applyPose(person, workPose(), 'sit', seatFor(person))
   }),
@@ -692,7 +745,7 @@ export const PIECES = [
     pose: person => applyPose(person, POSES.point(.2), 'stand')
   }),
   makePiece({
-    id: 'pose-hand', label: 'Mano levantada', level: 'prim', budget: PERSON_LIMIT.r3Student, width: .45, spec: { seed: 'prim-b', hair: 'short', skirt: true },
+    id: 'pose-hand', label: 'Mano levantada', level: 'prim', budget: PERSON_LIMIT.r3Student, width: .45, spec: { seed: 'prim-b', hair: 'short' },
     pose: person => applyPose(person, POSES.hand(), 'stand')
   }),
   makePiece({

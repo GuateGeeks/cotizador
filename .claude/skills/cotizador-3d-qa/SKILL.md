@@ -123,5 +123,13 @@ Verifica:
 - **Node.** En la terminal del agente, `node`/`npm` son funciones de nvm que
   fallan en silencio: usa la ruta absoluta del binario.
 
+- **Parpadeo medido en el lugar.** `check:paper` mide la separación de dos planos casi paralelos en sus centroides. Medida como diferencia de distancias al origen, daba falsos positivos lejos del centro del campus.
+- **Juntas y costuras.** El manifiesto de personas informa aparte, sin fallar:
+  - las superposiciones de articulación de los modelos Meshy (`MESHY_JOINTS`: cuello, cintura, falda sobre el muslo, codos, rodillas, caderas);
+  - los triángulos estirados de un modelo con piel por vértice (`SEAMED`), que cuenta bajo el hueso de su pieza.
+- **Presupuesto según la composición.** La niña pesa 958 triángulos y aparece por semilla. Tras cambiar un modelo, mide el estado 6 en GPU y anota el margen: con la niña vigente, 37 770–39 250 de 40 000.
+- **Módulos editados.** Un modelo con `SOURCE.edited` (retocado o adoptado en Blender) no se compara con su GLB: la prueba valida su procedencia. `tools/meshy-import.mjs --check` lo informa como conservado.
+- **Clips.** `asesor/test/pose-clips.test.js` comprueba que un clip solo sustituye la pose con sus argumentos. Sin retoques, `POSES` es igual a `POSE_FUNCTIONS`.
+
 El flujo completo de gestión visual está en
 [GESTION-VISUAL](../../../docs/papercraft/GESTION-VISUAL.md).
