@@ -112,6 +112,13 @@ function photoState(pid, level) {
   return { gl, i, ph: gl[i] };
 }
 // Galería: flechas para cambiar de foto y clic para ampliar (cierra con la X, Esc o fuera de la foto).
+// Una foto que no carga (red lenta o poca memoria en el celular) se reintenta una vez; si vuelve a fallar se oculta el ícono roto.
+document.addEventListener('error', e => {
+  const img = e.target; if (!img || img.tagName !== 'IMG' || !img.closest('.product-media, .small-photo, .lc-photo')) return;
+  if (!img.dataset.retried) { img.dataset.retried = '1'; const base = img.src.split('?')[0]; setTimeout(() => { img.src = base + '?r=' + Date.now(); }, 1500); return; }
+  img.closest('.product-media, .small-photo, .lc-photo').classList.add('img-failed');
+}, true);
+document.addEventListener('load', e => { const img = e.target; if (img && img.tagName === 'IMG') img.closest('.img-failed')?.classList.remove('img-failed'); }, true);
 function paintPhoto(k) {
   const [pid, level] = k.split('@'), { gl, i, ph } = photoState(pid, level);
   document.querySelectorAll(`[data-media="${k}"]`).forEach(box => {
@@ -303,7 +310,7 @@ function loadLab(cb) {
   if (window.GGLab) { cb(); return; }
   if (loadLab.queue) { loadLab.queue.push(cb); return; }
   loadLab.queue = [cb];
-  const sc = document.createElement('script'); sc.src = 'vendor/lab-scene.min.js?v=156'; sc.async = true;
+  const sc = document.createElement('script'); sc.src = 'vendor/lab-scene.min.js?v=160'; sc.async = true;
   sc.onload = () => { const q = loadLab.queue || []; loadLab.queue = null; q.forEach(f => { try { f(); } catch (e) { console.error('No se pudo iniciar la vista 3D.', e); } }); };
   sc.onerror = () => { loadLab.queue = null; sc.remove(); campusUnavailable('No se pudo cargar la vista 3D. Tu configuración sigue disponible.'); };
   document.head.appendChild(sc);
@@ -393,12 +400,32 @@ function paintCampusFeedback(feedback) {
   box.dataset.title = feedback.title; box.dataset.text = feedback.text; box.dataset.items = String((feedback.items || []).length);
   box.textContent = `${feedback.title}. ${feedback.text}`;
 }
-function campusUnavailable(message) {
+// Pérdida de contexto WebGL (típica en celulares: poca memoria de video o volver de segundo plano):
+// primero se espera a que el navegador lo restaure, luego se reconstruye la escena sola y, si no se logra, se ofrece reintentar.
+let lostTimer = null, recoverTries = 0;
+function onCampusLost() {
+  const st = mascotHost?.querySelector('.campus-status'); if (st) st.textContent = 'Reconectando vista 3D…';
+  setCampusControls(false); // the camera has nothing to move until the scene is back (onReady enables them)
+  clearTimeout(lostTimer); lostTimer = setTimeout(() => recoverCampus(true), 2500);
+}
+function recoverCampus(auto) {
+  clearTimeout(lostTimer);
+  if (auto && recoverTries >= 2) { campusUnavailable('La vista 3D se interrumpió. Pulsa «Reintentar vista 3D»; tu avance está guardado.', true); return; }
+  if (auto) recoverTries++;
+  try { mascot?.dispose(); } catch (e) { /* la escena ya estaba perdida */ }
+  mascot = null;
+  mascotHost?.classList.remove('campus-unavailable');
+  const st = mascotHost?.querySelector('.campus-status'); if (st) st.textContent = 'Cargando vista…';
+  placeMascot();
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden && mascot && mascot.getDiagnostics?.().contextLost) recoverCampus(true); });
+function campusUnavailable(message, retry) {
   if (!mascotHost) return;
   mascotHost.classList.remove('campus-ready'); mascotHost.classList.add('campus-unavailable');
   mascotHost.querySelector('.campus-status').textContent = 'Vista sin 3D';
   const fallback = mascotHost.querySelector('.campus-fallback');
-  fallback.textContent = message; mascotHost.querySelector('.campus-static-note').textContent = message;
+  fallback.textContent = message; const note = mascotHost.querySelector('.campus-static-note'); note.textContent = message;
+  if (retry) { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn btn-small btn-outline campus-retry'; b.style.marginLeft = '10px'; b.textContent = 'Reintentar vista 3D'; b.onclick = () => { recoverTries = 0; recoverCampus(false); }; note.appendChild(b); }
   setCampusControls(false);
   paintStaticSummary();
 }
@@ -661,8 +688,8 @@ function placeMascot() {
       mascot = window.GGLab.createMascot(mascotHost.querySelector('.campus-stage'), {
         reduceMotion: matchMedia('(prefers-reduced-motion: reduce)').matches,
         onSelect: ({ kind, id }) => editFromCampus(kind, id),
-        onReady: () => { mascotHost.classList.add('campus-ready'); mascotHost.classList.remove('campus-unavailable'); syncPauseBtn(); setCampusControls(true); },
-        onLost: () => { campusUnavailable('Se interrumpió la vista 3D. Recarga la página para recuperarla; tu avance está guardado.'); }
+        onReady: () => { clearTimeout(lostTimer); recoverTries = 0; mascotHost.classList.add('campus-ready'); mascotHost.classList.remove('campus-unavailable'); syncPauseBtn(); setCampusControls(true); },
+        onLost: onCampusLost
       });
       mascot.setPaused(animPaused); syncCampus(); queueCampusInsets();
     } catch (e) { mascot = null; campusUnavailable('No se pudo iniciar la vista 3D. Puedes seguir configurando tu propuesta.'); }
@@ -979,8 +1006,8 @@ function canProceed(s, key) {
     return s.sharing === 'simultaneous' && s.simIds.length < 2 ? 'Elige al menos dos grupos que coincidan en horario.' : '';
   }
   if (key === 'quantity') {
-    if (unitsOf(s) == null) return 'Indica cuántos equipos usarás.';
-    return analysis(s).state === 'limited' && !s.stations ? 'Elige cómo resolver la capacidad limitada.' : '';
+    // Cualquier cantidad de equipos es válida (también uno solo); la cobertura limitada es un aviso, no un bloqueo.
+    return unitsOf(s) == null ? 'Indica cuántos equipos usarás.' : '';
   }
   return '';
 }
@@ -1049,7 +1076,7 @@ function coverageHTML(s, p, an) {
   if (an.state === 'none') return '';
   if (an.state === 'unconfirmed') return '<div class="warning">Cobertura no confirmada. Si confirmas cuáles grupos coinciden en horario, podemos darte una cantidad exacta.</div>';
   if (an.state === 'full') return `<div class="tip"><b>${u} equipos</b> permiten trabajar a <b>${u * p.ratio} estudiantes</b> al mismo tiempo. Cobertura completa para los grupos seleccionados.</div>`;
-  return `<div class="warning" role="alert"><b>Cobertura limitada.</b> Con ${u} equipos pueden trabajar <b>${an.cap} estudiantes</b> al mismo tiempo, así que algunos grupos tendrían que rotar: ${an.rotations.map(r => `${esc(r.label)}, ${r.rotations} ${plural(r.rotations, 'rotación', 'rotaciones')}`).join('; ')}.${s.sharing === 'simultaneous' ? ' Las rotaciones de grupos que comparten horario deben validarse con el colegio.' : ''} Menos equipos implican una metodología y un horario por validar; no es una experiencia equivalente a la cobertura completa.<div class="links" style="margin-top:12px"><button class="btn btn-small ${s.stations ? 'btn-primary' : 'btn-outline'}" onclick="chooseStations()" aria-pressed="${!!s.stations}">${s.stations ? '✓ ' : ''}Trabajar por estaciones con ${u} equipos</button><button class="btn btn-small btn-outline" onclick="useTeams(${an.rec.teams})">Usar ${an.rec.teams} equipos (cobertura completa)</button></div>${s.stations ? '' : '<p style="margin:10px 0 0">Elige una opción para continuar.</p>'}</div>`;
+  return `<div class="warning" role="alert"><b>Cobertura limitada.</b> Con ${u} ${plural(u, 'equipo', 'equipos')} ${plural(u, 'puede trabajar', 'pueden trabajar')} <b>${an.cap} estudiantes</b> al mismo tiempo, así que algunos grupos tendrían que rotar: ${an.rotations.map(r => `${esc(r.label)}, ${r.rotations} ${plural(r.rotations, 'rotación', 'rotaciones')}`).join('; ')}.${s.sharing === 'simultaneous' ? ' Las rotaciones de grupos que comparten horario deben validarse con el colegio.' : ''} Menos equipos implican una metodología y un horario por validar; no es una experiencia equivalente a la cobertura completa. <b>Puedes continuar con ${u} ${esc(p.hardware)}</b>: la cotización se calcula con esa cantidad.<div class="links" style="margin-top:12px"><button class="btn btn-small ${s.stations ? 'btn-primary' : 'btn-outline'}" onclick="chooseStations()" aria-pressed="${!!s.stations}">${s.stations ? '✓ ' : ''}Trabajar por estaciones con ${u} ${plural(u, 'equipo', 'equipos')}</button><button class="btn btn-small btn-outline" onclick="useTeams(${an.rec.teams})">Usar ${an.rec.teams} equipos (cobertura completa)</button></div>${s.stations ? '' : '<p style="margin:10px 0 0">Elige una opción para continuar.</p>'}</div>`;
 }
 
 function cfgGroups(s, p) {
@@ -1112,7 +1139,7 @@ function noteFor(s, p, an) {
   const sized = entryGroups(s).filter(g => g.students > 0), prov = sized.some(g => !g.confirmed);
   if (!p.ratio) return { pending: true, text: 'Equipamiento por definir con GuateGeeks. Las estaciones y la propuesta económica se definen en la cotización.' };
   if (an.state === 'unconfirmed') return { pending: true, text: `Horarios por confirmar: podrían requerirse entre ${an.rec.scenarios[0].teams} y ${an.rec.scenarios[1].teams} equipos. La selección no confirma cobertura completa.` };
-  if (an.state === 'limited') return { pending: true, text: `Con ${unitsOf(s)} equipos pueden trabajar ${an.cap} estudiantes a la vez; el grupo más grande necesitaría ${an.maxRot} ${plural(an.maxRot, 'rotación', 'rotaciones')}. Se trabaja por estaciones y la metodología y el horario deben validarse.` };
+  if (an.state === 'limited') return { pending: true, text: `Con ${unitsOf(s)} ${plural(unitsOf(s), 'equipo', 'equipos')} ${plural(unitsOf(s), 'puede trabajar', 'pueden trabajar')} ${an.cap} estudiantes a la vez; el grupo más grande necesitaría ${an.maxRot} ${plural(an.maxRot, 'rotación', 'rotaciones')}. Se trabaja por estaciones y la metodología y el horario deben validarse.` };
   if (an.state === 'none') return { pending: true, text: 'Falta definir la cantidad de equipos.' };
   const n = sized.length;
   return { pending: prov, text: `${s.sharing === 'simultaneous' ? 'Los grupos que coinciden usan equipos distintos entre sí; los demás comparten el conjunto.' : (n > 1 ? `Los ${n} grupos pueden utilizar los mismos equipos en horarios distintos.` : 'Equipamiento para el grupo seleccionado.')} Cobertura completa con ${unitsOf(s)} equipos.${prov ? ' Provisional: hay grupos con total sin secciones.' : ''}` };
@@ -1216,6 +1243,13 @@ function includesHTML(s, p, u) {
 function termBtns(i, cur, opts, fn) {
   return `<div class="term-grid" role="radiogroup" aria-label="Plazo">${opts.map(o => `<button type="button" role="radio" aria-checked="${cur === o.v}" class="term-opt ${cur === o.v ? 'on' : ''}" onclick="${fn}(${i},'${o.v}')"><b>${o.t}</b><small>${o.d}</small></button>`).join('')}</div>`;
 }
+// Precio por equipo: solo en la compra (Integra), para que se vea cómo se arma el total. Con IVA se redondea al quetzal.
+const unitBuy = programId => { const b = TARIFFS[programId] && TARIFFS[programId].buy; return b ? (ivaOn() ? Math.round(b * (1 + FISCAL.iva)) : b) : null; };
+const unitLine = (programId, units) => { const u = unitBuy(programId); return u ? `${units} × ${Q(u)} por equipo` : ''; };
+function unitPriceTile(s, units) {
+  const u = unitBuy(s.programId); if (!u) return '';
+  return `<div class="unit-price"><span>Precio por equipo ${ivaTxt()}</span><strong>${Q(u)}</strong><small>${units ? units + ' ' + plural(units, 'equipo', 'equipos') + ' × ' + Q(u) + ' = ' + Q(u * units) : 'Se multiplica por la cantidad de equipos que elegiste'}</small></div>`;
+}
 function modalityPicker(s, i, units) {
   const cur = modKey(s.plan), bim = s.flexBimestres || 2;
   const seg = MODS.map(m => `<button type="button" role="radio" aria-checked="${cur === m.k}" class="seg-btn ${cur === m.k ? 'on' : ''}" onclick="setModality(${i},'${m.k}')"><b>${m.label}</b><small>${m.tag}</small></button>`).join('');
@@ -1223,7 +1257,7 @@ function modalityPicker(s, i, units) {
   let sub = '';
   if (cur === 'FLEX') sub = termBtns(i, bim, [1, 2, 3, 4].map(n => ({ v: n, t: `${n} ${plural(n, 'bimestre', 'bimestres')}`, d: `${n * 2} meses${FISCAL.rentDiscount[n] ? ' · ' + Math.round(FISCAL.rentDiscount[n] * 100) + ' % de descuento' : ''}` })), 'setBim');
   if (cur === 'EVO') sub = termBtns(i, s.plan, [{ v: 'EV8', t: '8 meses', d: 'Cuotas más altas; el equipo es tuyo más pronto' }, { v: 'EV16', t: '16 meses', d: 'Cuotas más bajas; acompañamiento por más tiempo' }], 'setModality');
-  return `<div class="price-panel mod-pick"><div class="seg-title" id="seg-${i}">¿Cómo quieres este programa?</div><div class="seg" role="radiogroup" aria-labelledby="seg-${i}">${seg}</div>${sub}${cm ? includesHTML(s, findP(s.programId), units) : '<p class="pp-note">Elige una modalidad para este programa. Puedes combinar modalidades entre programas.</p>'}</div>`;
+  return `<div class="price-panel mod-pick"><div class="seg-title" id="seg-${i}">¿Cómo quieres este programa?</div><div class="seg" role="radiogroup" aria-labelledby="seg-${i}">${seg}</div>${sub}${cur === 'INTEGRA' ? unitPriceTile(s, units) : ''}${cm ? includesHTML(s, findP(s.programId), units) : '<p class="pp-note">Elige una modalidad para este programa. Puedes combinar modalidades entre programas.</p>'}</div>`;
 }
 function setModality(i, k) {
   const s = state.selected[i]; if (!s) return;
@@ -1260,7 +1294,7 @@ function investmentHTML(t) {
   const unchosen = t.rows.filter(r => r.confirmed && r.entry.plan === 'UNDECIDED').length;
   const cards = gs.map(g => {
     const termTxt = g.m.k === 'FLEX' ? `Renta por ${joinY(g.terms.map(x => x + ' ' + plural(x, 'bimestre', 'bimestres')))}` : g.m.k === 'EVO' ? `Plazo de ${joinY(g.terms.map(x => x + ' meses'))}` : 'Un solo pago, sin cuotas';
-    return `<article class="grp-card"><div class="opt-head"><b>${g.m.k === 'INTEGRA' ? 'Compra de equipos' : g.m.k === 'FLEX' ? 'Renta por bimestres' : 'Pago en cuotas'}</b><span class="pill-light">${g.m.tag}</span></div><div class="opt-total"><span>Total ${ivaTxt()}</span><strong>${Q(money(g))}</strong><small>${ivaOn() ? 'Sin IVA: ' + Q(g.net) : 'Con IVA (referencia): ' + Q(g.total)}</small></div><p class="grp-prog">${esc(joinY(g.names))}</p><p class="grp-term">${termTxt}</p></article>`;
+    return `<article class="grp-card"><div class="opt-head"><b>${g.m.k === 'INTEGRA' ? 'Compra de equipos' : g.m.k === 'FLEX' ? 'Renta por bimestres' : 'Pago en cuotas'}</b><span class="pill-light">${g.m.tag}</span></div><div class="opt-total"><span>Total ${ivaTxt()}</span><strong>${Q(money(g))}</strong><small>${ivaOn() ? 'Sin IVA: ' + Q(g.net) : 'Con IVA (referencia): ' + Q(g.total)}</small></div>${g.m.k === 'INTEGRA' ? `<ul class="grp-units">${g.rows.map(r => `<li><span>${esc(progTitle(r.entry))}</span><b>${unitLine(r.entry.programId, r.units)}</b></li>`).join('')}</ul>` : `<p class="grp-prog">${esc(joinY(g.names))}</p>`}<p class="grp-term">${termTxt}</p></article>`;
   }).join('');
   const all = { net: t.net, total: t.total, tax: t.tax };
   const ps = perStudent(t);
@@ -1349,7 +1383,7 @@ function pdfModel(includeSim = false) {
     };
   });
   // Inversión agrupada por modalidad (nunca por nivel ni por programa)
-  const options = gs.map(g => ({ label: g.m.k === 'INTEGRA' ? 'Compra de equipos' : g.m.k === 'FLEX' ? 'Renta por bimestres' : 'Pago en cuotas', tag: g.m.tag + ' · ' + termLabel(g), programs: joinY(g.names), total: Q(money(g)) }));
+  const options = gs.map(g => ({ label: g.m.k === 'INTEGRA' ? 'Compra de equipos' : g.m.k === 'FLEX' ? 'Renta por bimestres' : 'Pago en cuotas', tag: g.m.tag + ' · ' + termLabel(g), programs: g.m.k === 'INTEGRA' ? g.rows.map(r => `${findP(r.entry.programId).hardware}: ${unitLine(r.entry.programId, r.units)}`).join('; ') : joinY(g.names), total: Q(money(g)) }));
   const onlyBuy = priced.length && priced.every(r => r.entry.plan === 'INTEGRA');
   // Pagos (la compra no tiene formas de pago)
   let pay = null;

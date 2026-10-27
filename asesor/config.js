@@ -33,9 +33,9 @@
     { id: 'tale', name: 'Robótica para pequeños', icon: 'robot', area: 'Robótica', hardware: 'Tale-Bot', ratio: 2,
       short: 'Secuencias, orientación y retos de programación tangible.',
       levels: ['pre'], grades: ['pk', 'ki', 'pr'] },
-    { id: 'master', name: 'Robótica para primaria', icon: 'robot', area: 'Robótica', hardware: 'Robot Master', ratio: 3,
+    { id: 'master', name: 'Robótica con Robot Master', icon: 'robot', area: 'Robótica', hardware: 'Robot Master', ratio: 3,
       short: 'Construcción, movimiento y pensamiento computacional mediante desafíos.',
-      levels: ['prim'], grades: PRIM },
+      levels: ['prim', 'bas', 'bach'], grades: [...PRIM, ...BAS, ...BACH] },
     { id: 'spike', name: 'Robótica con SPIKE Prime', icon: 'robot', area: 'Robótica', hardware: 'LEGO SPIKE Prime', ratio: 3,
       short: 'Sensores, mecánica y programación progresiva con proyectos de ingeniería.',
       levels: ['prim', 'bas', 'bach'], grades: ['p6', ...BAS, ...BACH] },
@@ -78,7 +78,6 @@
     initialRate: 0.2,                       // pago inicial solo en Evoluciona (compra y renta son un solo pago)
     rentDiscount: { 1: 0, 2: 0.02, 3: 0.04, 4: 0.05 }, // descuento por bimestres rentados
     rentMonthsPerPeriod: 2,
-    minUnits: 5,                            // mínimo comercial informativo (equipos)
     // Simulador: cuota sugerida = ceil(total con IVA / estudiantes / meses / cobertura, al múltiplo de redondeo)
     sim: { coverage: 0.75, roundTo: 5, buyMonths: 8 },
     evolucionBaseUnits: 5,                  // las tarifas evo8/evo16 están expresadas por 5 equipos

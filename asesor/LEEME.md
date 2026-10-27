@@ -68,7 +68,7 @@ La prueba de navegador requiere una instalación de Playwright y el navegador de
 - FLEX: renta por equipo y bimestre × equipos × bimestres, con descuento de 0, 2, 4 o 5 % según 1, 2, 3 o 4 bimestres. Es un solo monto por todo el periodo, sin pago inicial ni cuotas (como la compra); el plazo (bimestres × 2 meses) solo se usa en el simulador.
 - Evoluciona 8 y 16 (los únicos con pago inicial y cuotas): precio de referencia por 5 equipos ÷ 5 × equipos × 1.06 (8 meses) o 1.10 (16 meses); 20 % de pago inicial y el resto en cuotas mensuales.
 - IVA 12 %. Precios en quetzales enteros. En Evoluciona todas las cuotas son iguales: el precio absorbe el ajuste de unos pocos quetzales para que no quede una cuota final distinta.
-- Aviso informativo cuando hay menos de 5 equipos (mínimo comercial).
+- No hay mínimo de equipos: se puede cotizar desde un equipo. Si la cantidad no cubre todos los grupos al mismo tiempo, se muestra un aviso de cobertura limitada, pero no bloquea avanzar.
 - Simulador (resumen y PDF): una sola cuota mensual por estudiante para toda la propuesta, calculada sobre el total de estudiantes únicos de los programas en renta (Flex) y en cuotas (Evoluciona), sin separar por nivel ni por programa. Cuota sugerida = total con IVA de esos programas ÷ estudiantes ÷ meses del programa más largo ÷ 0.75, redondeada hacia arriba a múltiplos de 5; el colegio puede quitar la sugerencia y escribir otra. Se muestra como «ganancia del colegio» (ingresos menos pago a GuateGeeks, antes de sus gastos propios). No aplica a Integra.
 
 ## Revisión de diseño con Impeccable

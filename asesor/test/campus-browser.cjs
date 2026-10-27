@@ -509,7 +509,8 @@ async function verifyContextRecovery(page, result) {
   });
   if (!supported) { result.contextRecovery = 'Not exercised: WEBGL_lose_context unavailable'; return; }
   await page.waitForFunction(() => mascot.getDiagnostics().contextLost);
-  assert.equal(await page.locator('.campus-status').textContent(), 'Vista sin 3D');
+  // The browser usually restores the context by itself: the view says it is reconnecting (and rebuilds after 2.5 s if not).
+  assert.equal(await page.locator('.campus-status').textContent(), 'Reconectando vista 3D…');
   assert.equal(await page.getByRole('button', { name: 'Restablecer vista', exact: true }).isDisabled(), true);
   await verifyCounts(page, before.data.students);
   await page.evaluate(() => window.__campusSmokeContext.restoreContext());
