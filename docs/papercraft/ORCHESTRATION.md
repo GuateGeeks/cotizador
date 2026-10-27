@@ -122,3 +122,46 @@ Codex. Este trabajo se hace en Claude Code sobre el cotizador.
   - **Rayos X al enfocar un aula** (pedido de la persona responsable): techo, pisos de arriba, pared hacia la cámara y elementos delgados delante quedan translúcidos (material de vidrio, sin materiales nuevos); los edificios intermedios se ocultan.
   - **Resultados.** Node 109/109; malla PASS (`mesh-r2fix-3`); navegador en las cuatro condiciones PASS (`browser-r2fix-1`), con la nueva prueba de rayos X. Capturas en `artifacts/campus/r2fix-3`, `r2fix-3-movil` y `artifacts/paper/states-r7`.
   - **Sin cambios.** Lectura papercraft general (pliegues, filetes), pared de fondo naranja y patio poco poblado.
+- 2026-10-25 · Composición de actividades (rama `feat/vida-composicion`; bifurcación del coordinador, Opus 5.5; esfuerzo no expuesto). En paralelo, otro agente trabaja la animación (`scene-activity.js`, `campus-scene.js`, `campus-people.js`), que aquí no se tocan. El contrato de actores está en [ACTORES.md](ACTORES.md).
+  - **Problemas de partida** (confirmados con el check nuevo sobre `main`): equipos diminutos (0–117 px² en la vista general y 0–672 px² en el aula enfocada), laptops en diagonal fuera de la mesa, talleres con 1–2 personas y sillas vacías, patio de drones sin nadie. El check marcó 519 fallas de apoyo o cruce en los seis estados (`artifacts/paper/comp-act-antes`).
+  - **Composición:** una actividad por tipo de aula (ver `docs/campus-3d.md`, «Composición de actividades»), a la derecha del pasillo y hacia el frente abierto. Equipos a escala de diorama sobre un hueso `.size`. Tapetes del color del programa, una laptop por estudiante en las aulas de nivel, pista de piso para Tale-Bot y holograma 3.6× con círculo de RV. En el patio, dos pilotos con control (hueso hijo de la persona) y público. Solo hay sillas ocupadas, a una distancia de la mesa según el nivel. Piezas: `table` con `w`/`d` y nueva `component-tray` (53 triángulos).
+  - **Personas** (`plan.js`): `serviceRooms` reserva a los docentes de servicio. El orden es talleres de 3–4, luego grupo del dron, caminantes y tercer estudiante de nivel. Estado 6, antes → después:
+    - talleres 3 → 4 (electrónica: 5, con formación);
+    - aulas de nivel 4 → 3;
+    - patio de drones 0 → 2 pilotos más 1 espectador;
+    - total 40.
+
+    La prueba «el patio conserva 6 caminantes» se reemplazó por «dos pilotos y un espectador». El cambio de intención está documentado en la prueba.
+  - **Herramientas:**
+    - `tools/paper-activity-check.mjs`: apoyo, laptops, cruces triángulo-triángulo y visibilidad con z-buffer por software y las cámaras de la app. Las máscaras superpuestas a capturas reales coinciden (`comp-act-r6-masks`).
+    - Prueba `asesor/test/paper-composition.test.js`.
+    - `tools/campus-rooms.cjs` (acercamientos y encuadres), `tools/campus-rooms-compare.py` (hojas antes/después) y `tools/campus-perf.cjs` (GPU).
+  - **Técnico:**
+    - Node 118/118; `check:paper` PASS (`comp-mesh-final`, estado 6: 32 184 → 30 102 triángulos sin sombras); `check:people` PASS (`comp-people-r1`).
+    - Actividad PASS en los seis estados (`comp-act-final`): 0 fallas de apoyo o cruce. Equipos del estado 6 (general / foco, px²):
+      - Tale-Bot 370 / 2 598;
+      - electrónica 451 / 3 121;
+      - holograma 302 / 3 755;
+      - dino 340 / 3 101;
+      - SPIKE 388 / 2 669;
+      - dron 505 / 3 070.
+    - Navegador SwiftShader: escritorio (con rayos X), móvil, movimiento reducido y sin WebGL PASS (`artifacts/r2-browser.log`). Bundles reconstruidos.
+    - GPU RTX 3060 Ti (ANGLE/D3D12), estado 6 (`comp-antes-gpu` → `comp-r1-gpu`):
+      - vista general 36 952–38 284 → 34 870–36 202 triángulos con sombras;
+      - 75–100 llamadas y 10 materiales;
+      - 59–60 fps, p95 16.8 ms.
+  - **Visual** (imágenes abiertas): hojas `artifacts/paper/comp-hojas-final/*.png` (antes `artifacts/campus/comp-antes-rooms`, después `comp-r2-rooms`); estados en `comp-antes-states`/`comp-r2-states` y `comp-antes-capture`/`comp-r2-capture`. Se leen el robot sobre la pista, el dino de perfil, el kit SPIKE, la protoboard con su bandeja, el holograma con el círculo y los pilotos con control. Persiste:
+    - en reposo el dron queda aterrizado, porque así termina la actividad actual (`hover` queda para la animación);
+    - las aulas de nivel tienen 2 estudiantes por el tope de 40;
+    - las laptops se ven de espaldas desde la cámara en los talleres.
+  - **Pendiente para la animación:** limitar el recorrido de los equipos a `range` (hoy ±0.16/±0.12 con giro de 0.55 rad saca el dino y el SPIKE del borde a media corrida), animar `around` (niños de rodillas) y `pilots`, y usar `facilitator.away`.
+  - NOT_RUN: revisión independiente en contexto nuevo; teléfono físico.
+- 2026-10-25 · Vida del campus (rama `feat/vida-animacion`, encima de `feat/vida-composicion` 876f672; bifurcación del coordinador, Opus 5.5). Pedido de la persona responsable: «las interacciones de los estudiantes y animaciones son aburridas, quiero que le des vida a todo el modelo». Línea base: la escena animaba unos 13 s después de un cambio y se congelaba.
+  - **Bucle.** `tickLife` (en `scene-activity.js`) reemplaza la corrida de 13 s: es una función pura del reloj, con un ciclo de momentos por aula barajado por clave y ciclo, una fase propia por aula y una capa idle por persona. Usa los actores de la composición (`tops`, `range`/`surface`/`motion`, `away`, `around`, `pilots`, `hover`, `holoCentre`) y degrada sin ellos. `tickActors` se conserva; `u ≥ RUN` da el reposo, que es lo que comprueba `paper-activity-check`.
+  - **Energía.** Transiciones hasta 60 fps; vida ambiental 30 fps (`full` con puntero fino) o 20 fps (táctil o `eco`). Nada con pausa, pestaña oculta, fuera de pantalla o contexto perdido; movimiento reducido muestra el reposo.
+  - **Interacciones.** Aula de nivel: exposición, preguntas con mano, ronda del docente, parejas, pizarra. Robótica: programar, correr, porra y choque de manos, o fallo, y devolver. Tale-Bot: grupo de rodillas. Electrónica: conectar, probar y rotar estaciones. RV: explorar, alcanzar, quitarse el visor para hablar. Drones: ocho y aterrizaje con pilotos y público. Servicios, patio y relevo. Geeky reacciona con `giggle`/`nod`, sin partículas, como mucho cada 15 s, y al enfocar evita el lado de la escalera.
+  - **Poses** en `campus-people.js`: `raise`, `talk`, `lean`, `pointDown`, `highFive`, `oops`, `think`, `press`, `hold`, `grab`, `visor`, más `applySeated`. `cheer` y `wave` se rehicieron: las manos ya no tapan la cara. Al sentarse a una mesa, una guarda levanta los brazos sobre la cubierta.
+  - **Técnico.** Node 128/128, con `campus-life.test.js`: determinismo, cambio cada 1.8 s, reposo, eventos, cruces en los estados 3–6 durante 260 s y coste. `check:paper` PASS (`artifacts/paper/vida-mesh-r1`). `check:people` PASS con 13 poses nuevas (`vida-people-r3`). `paper-activity-check` PASS. Navegador SwiftShader en las cuatro condiciones PASS (`artifacts/vida/browser-r1`), con las aserciones de vida continua. `npm run build`.
+  - **Medido.** GPU RTX 3060 Ti (ANGLE D3D12): ambiental 30.0 fps, transición 59.3 fps, tick 0.7–0.9 ms (p95 0.9–1.5), ≤ 36 350 triángulos, ≤ 95 draw calls, 10 materiales (`artifacts/vida/gpu-r3`). SwiftShader: 5–7 fps, limitado por el render en CPU; tick 1.3–1.9 ms (`despues-r4`).
+  - **Visual (imágenes abiertas).** Antes: `artifacts/vida/antes-r2` (main) y `antes-comp-r1` (composición sola). Después: `despues-r4` (SwiftShader) y `gpu-r3` (GPU, 0.5 s reales entre cuadros), con hojas, comparaciones y GIF en `sheets/` y `gif/`. Poses: `poses-r5`. El cambio medio entre cuadros pasa de 0.02–0.25 a 1–3.9 (0–255).
+  - **Pendiente.** Revisión visual independiente en contexto nuevo (NOT_RUN). Teléfono físico (NOT_RUN). El visor de RV es parte de la cabeza: «quitarse el visor» es levantar las manos hacia él. El patio del estado 6 solo tiene una persona en la banca y los pilotos.

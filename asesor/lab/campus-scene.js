@@ -2,9 +2,12 @@
  * Living papercraft campus. The scene is fed by the growth plan (paper/plan.js):
  * its modules are grouped into a few entities (paper/scene-entities.js), each one
  * a single skinned group built from the paper catalog. New pieces assemble from
- * their `stage` declarations (paper/scene-assembly.js), activities end at rest
- * (paper/scene-activity.js) and rendering is on demand. All GPU resources are
- * disposed on replacement or on dispose(); the shared materials are kept.
+ * their `stage` declarations (paper/scene-assembly.js) and the campus lives an
+ * endless, varied schedule of activities (paper/scene-activity.js) while it is
+ * visible. Rendering is paced: up to 60 fps during camera and assembly transitions,
+ * a lower ambient rate otherwise, nothing while paused, hidden, offscreen or with
+ * reduced motion (then on demand only). All GPU resources are disposed on
+ * replacement or on dispose(); the shared materials are kept.
  */
 import {
   WebGLRenderer, Scene, OrthographicCamera, Mesh, MeshBasicMaterial, HemisphereLight, DirectionalLight, BoxGeometry,
@@ -18,7 +21,7 @@ import { PAPER } from './paper/kit.js';
 import { planCampus } from './paper/plan.js';
 import { groupPlan, entitySignature, buildEntityGroup, selectionOf } from './paper/scene-entities.js';
 import { bindStaged, planAssembly, applyAssembly, pendingOf } from './paper/scene-assembly.js';
-import { RUN, tickActors, walkerWorld } from './paper/scene-activity.js';
+import { tickLife, bindLife, walkerWorld } from './paper/scene-activity.js';
 
 // Measured budget (see docs/campus-3d.md): triangles include the shadow pass.
 export const CAMPUS_BUDGET = Object.freeze({ triangles: 40000, drawCalls: 150, materials: 10 });
@@ -30,8 +33,9 @@ export const VIEW_NAMES = Object.freeze(['overview', 'front', 'patio', 'people',
 
 export function createMascot(container, opts = {}) {
   const reduced = !!opts.reduceMotion;
-  const renderer = new WebGLRenderer({ antialias: true, powerPreference: 'low-power' });
-  renderer.setClearColor(PAPER.background, 1);
+  // Transparent canvas: each host paints the solid stage colour (lilac viewer, violet landing banner).
+  const renderer = new WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'low-power' });
+  renderer.setClearColor(PAPER.stage, 0);
   renderer.outputColorSpace = SRGBColorSpace;
   renderer.toneMapping = NeutralToneMapping;
   renderer.toneMappingExposure = 1;
@@ -48,7 +52,7 @@ export function createMascot(container, opts = {}) {
   container.appendChild(tag);
 
   const scene = new Scene(), camera = new OrthographicCamera(-8, 8, 6, -6, .1, 80);
-  scene.background = new Color(PAPER.background);
+  scene.background = null;
   // Light as in the papercraft inspector: bright sky, warm key with soft shadows, lilac fill.
   scene.add(new HemisphereLight(0xffffff, 0xd9cfe6, 1.55));
   const sun = new DirectionalLight(0xfff3e4, 2.1);
@@ -78,8 +82,11 @@ export function createMascot(container, opts = {}) {
   let confirmed = planCampus({}), plan = confirmed, previewState = null, lastData = {}, world = walkerWorld(plan);
   let disposed = false, lost = false, ready = false;
   let paused = false, visible = true, pendingFrame = 0, pendingTimer = 0, lastTime = 0, animationTime = 0, activityTicks = 0;
-  // Activity runs: `run` counts them, `runStart` is when the current one began (animation clock).
-  let run = 0, runStart = -1e9;
+  // Ambient life: poses are a pure function of animationTime (paper/scene-activity.js).
+  // lifeTime is the time last posed (events happen between two ticks); tickCosts measures the CPU per tick.
+  let lifeTime = null, reactions = 0, lastReaction = null, geekyQuietUntil = 0;
+  const tickCosts = new Float32Array(240);
+  let tickCount = 0;
   let yaw = DEFAULT_YAW, targetYaw = DEFAULT_YAW, pitch = PITCH, targetPitch = PITCH, zoomValue = 1, targetZoom = 1, pointer = null, hovered = null;
   let size = { w: 800, h: 500 }, insets = { top: 0, right: 0, bottom: 0, left: 0 };
   const pan = new Vector3(), panTarget = new Vector3(), axisX = new Vector3(), axisY = new Vector3();
@@ -91,7 +98,6 @@ export function createMascot(container, opts = {}) {
   let focus = { kind: 'overview' }, lastCue = null, cueSequence = 0, configurationKey = '';
   const raycaster = new Raycaster(), mouse = new Vector2();
   const moving = () => !reduced && !paused;
-  const runTime = () => moving() ? clamp(animationTime - runStart, 0, RUN) : RUN;
   const freeArea = () => ({ w: Math.max(size.w * .3, size.w - insets.left - insets.right), h: Math.max(size.h * .22, size.h - insets.top - insets.bottom) });
 
   // ---------------------------------------------------------------- plan helpers
@@ -206,20 +212,50 @@ export function createMascot(container, opts = {}) {
   }
 
   // ---------------------------------------------------------------- activity
-  /** Start an activity run unless one is still going (never interrupts or snaps). */
+  /** The campus is always living; a change only makes sure frames are coming. */
   function triggerActivity() {
-    if (disposed || !moving()) return;
-    if (runTime() >= RUN) { run++; runStart = animationTime; }
+    if (!disposed && moving()) schedule();
   }
+  /**
+   * Pose every actor for the animation clock. Reduced motion shows the calm final
+   * state; a paused clock gives the same frame again. Returns the big moments
+   * (robot goals, drone landings) since the previous tick.
+   */
   function tickAll() {
-    const u = runTime(), drones = [];
-    for (const record of records.values()) if (!record.removing && record.meta.actors) tickActors(record.meta.actors, run, u, world, drones);
+    const list = [];
+    for (const record of records.values()) if (!record.removing && record.meta.actors) list.push(record.meta.actors);
+    const start = performance.now();
+    const events = tickLife(list, animationTime, world, { still: reduced, since: lifeTime });
+    if (moving()) tickCosts[tickCount++ % tickCosts.length] = performance.now() - start;
+    lifeTime = animationTime;
+    return events;
+  }
+  function tickCost() {
+    const n = Math.min(tickCount, tickCosts.length);
+    if (!n) return { avg: 0, p95: 0, max: 0, samples: 0 };
+    const list = Array.from(tickCosts.subarray(0, n)).sort((a, b) => a - b);
+    const round = v => Math.round(v * 1000) / 1000;
+    return { avg: round(list.reduce((sum, v) => sum + v, 0) / n), p95: round(list[Math.min(n - 1, Math.floor(n * .95))]), max: round(list[n - 1]), samples: n };
+  }
+  /**
+   * Geeky reacts to big moments: those of the focused activity, or the drone
+   * landing in the overview. Small actions without particles, at most every 15 s.
+   */
+  function react(events) {
+    if (!events.length || reduced || !geeky.cue || geekyHidden() || animationTime < geekyQuietUntil) return;
+    const target = focusTarget(), focusKey = target && explicit() ? target.module.key : null;
+    const event = events.find(e => focusKey ? e.room === focusKey : e.kind === 'landing');
+    if (!event || !geeky.cue(event.kind === 'works' ? 'nod' : 'giggle')) return;
+    geekyQuietUntil = animationTime + 15;
+    reactions++;
+    lastReaction = { kind: event.kind, room: event.room, at: Math.round(animationTime * 10) / 10 };
   }
 
   // ---------------------------------------------------------------- entities
   function makeRecord(entity, previous, assembleOpts) {
     const built = buildEntityGroup(entity, plan, materials);
     const { group } = built;
+    bindLife(built.meta?.actors, built.rig); // optional bones the activities move (wheels, laptops, controller...)
     group.userData.entityKey = entity.key;
     const staged = bindStaged(built.meta, built.rig);
     planAssembly(staged, { before: previous?.names, pending: previous ? pendingOf(previous.staged) : null, moduleKeys: entity.moduleKeys.size ? entity.moduleKeys : new Set([entity.key]), ...assembleOpts });
@@ -330,7 +366,11 @@ export function createMascot(container, opts = {}) {
     if (target && explicit()) {
       // Above the roof of the focused activity, nudged away from the camera: never in front of a balcony or the stairs.
       const top = roofTop(target.x, target.z) || target.y + 1.3, right = { x: Math.cos(yaw), z: -Math.sin(yaw) };
-      return { goal: { x: target.x + right.x * 1.1 + away.x * .5, y: top + .35, z: target.z + right.z * 1.1 + away.z * .5 }, look: [target.x, target.y, target.z], perched: false, celebrate: false, ground: top };
+      // To the right of the activity, or to its left when the right side is over the stairs or a gallery.
+      const links = plan.modules.filter(m => /^(stairs|corridor|bridge)/.test(m.type));
+      const clearance = side => Math.min(9, ...links.map(m => Math.hypot(m.x - (target.x + right.x * side), m.z - (target.z + right.z * side))));
+      const side = clearance(1.1) >= 1.7 || clearance(1.1) >= clearance(-1.1) ? 1.1 : -1.1;
+      return { goal: { x: target.x + right.x * side + away.x * .5, y: top + .35, z: target.z + right.z * side + away.z * .5 }, look: [target.x, target.y, target.z], perched: false, celebrate: false, ground: top };
     }
     // At rest Geeky perches on the roof of the outermost wing (left of the camera), clear of the stairs and galleries.
     const roofs = plan.modules.filter(m => m.type === 'roof').sort((a, b) => a.x - b.x || b.z - a.z);
@@ -461,10 +501,12 @@ export function createMascot(container, opts = {}) {
   // Adaptive quality: slow devices drop the shadow map (contact blobs remain)
   // and render at pixel ratio 1. Decided once from sustained frame intervals.
   let quality = 'full', slowFrames = 0, frameEma = 33;
-  // 60 fps on desktops at full quality; 30 fps on touch devices and in eco quality (battery, heat).
+  // Transitions (camera, assembly, Geeky's travel): 60 fps on desktops at full quality,
+  // 30 fps on touch devices and in eco quality. Ambient life alone: 30 and 20 fps (battery, heat).
   const finePointer = typeof matchMedia === 'function' && matchMedia('(pointer: fine)').matches;
   const maxFps = () => quality === 'full' && finePointer ? 60 : 30;
-  const frameBudget = () => 1000 / maxFps();
+  const ambientFps = () => quality === 'full' && finePointer ? 30 : 20;
+  let targetFps = 0;
   function degrade() {
     if (quality === 'eco') return;
     quality = 'eco';
@@ -486,7 +528,6 @@ export function createMascot(container, opts = {}) {
     const live = moving();
     let active = 0;
     const parts = {};
-    let geekyBusy = false;
     if (live) { animationTime += dt; activityTicks++; }
     if (!live) settle();
     else {
@@ -511,12 +552,12 @@ export function createMascot(container, opts = {}) {
         view[key] += (targetView[key] - view[key]) * rate;
         if (Math.abs(targetView[key] - view[key]) < .002) view[key] = targetView[key]; else { active++; parts['view:' + key] = 1; }
       }
-      tickAll();
+      react(tickAll());
       const g = geekyGoal();
       geeky.tick(animationTime, Math.min(dt, .1), { ...g, cameraYaw: yaw, moving: true }); // slow devices: travel keeps its pace
       geeky.group.visible = !geekyHidden();
-      // Geeky's travel is a transition; its gaze, blinks and gestures only keep frames coming.
-      if (!geeky.settled) { if (geeky.state.gliding) { active++; parts.geeky = 1; } else geekyBusy = true; }
+      // Geeky's travel is a transition; its gaze, blinks and gestures run at the ambient rate.
+      if (!geeky.settled && geeky.state.gliding) { active++; parts.geeky = 1; }
     }
     transitions = active; transitionParts = parts;
     updateMarker(animationTime);
@@ -527,12 +568,15 @@ export function createMascot(container, opts = {}) {
       if (!ready) { ready = true; opts.onReady?.(); }
     } catch (error) { lost = true; opts.onLost?.(error); return; }
     updateTag();
-    // Render on demand: keep going only while something is still moving.
-    // Activities keep frames coming but are not 'transitions': those settle quickly and report 0.
-    const running = live && runTime() < RUN;
-    if (live && (active || running || geekyBusy) && canRender()) pendingTimer = setTimeout(() => { pendingTimer = 0; schedule(); }, Math.max(0, frameBudget() - (performance.now() - time)));
+    // A visible, living campus keeps rendering: at the transition rate while the camera,
+    // an assembly or Geeky's travel moves, at the ambient rate otherwise. Paused or
+    // reduced motion: on demand only. Hidden or offscreen: canRender() is false.
+    // Ambient life is not a 'transition': transitionsActive settles to 0 as before.
+    targetFps = live ? (active ? maxFps() : ambientFps()) : 0;
+    // The timer wakes a little early so the next vsync-aligned frame lands on the budget.
+    if (live && canRender()) pendingTimer = setTimeout(() => { pendingTimer = 0; schedule(); }, Math.max(0, 1000 / targetFps - (performance.now() - time) - 6));
     else if (active) schedule();
-    else lastTime = 0;
+    else { lastTime = 0; targetFps = 0; }
   }
 
   // ---------------------------------------------------------------- focus, views & selection
@@ -635,9 +679,11 @@ export function createMascot(container, opts = {}) {
     try {
       renderer.setPixelRatio(1); renderer.setSize(width, height, false);
       positionCamera();
+      scene.background = new Color(PAPER.stage); // a JPEG has no alpha: the figure keeps the solid viewer colour
       renderer.render(scene, camera);
       url = canvas.toDataURL('image/jpeg', .9);
     } catch (error) { url = null; }
+    scene.background = null;
     plan = saved.plan; size = saved.size; insets = saved.insets; yaw = saved.yaw; pitch = saved.pitch; zoomValue = saved.zoomValue; pan.copy(saved.pan); view = saved.view;
     hidden.forEach(([bone, scale]) => bone.scale.copy(scale));
     marker.visible = was.marker; geeky.group.visible = was.geeky;
@@ -805,7 +851,8 @@ export function createMascot(container, opts = {}) {
         services: list.flatMap(record => (record.meta.actors?.rooms || []).filter(room => room.service).map(room => ({ kind: room.service.kind, room: room.key, programId: room.programId, levelId: room.levelId }))),
         view: viewMode, actorCount: list.length, animatedPeople: list.reduce((n, record) => n + record.people, 0),
         animatedPrograms: [...new Set(list.flatMap(record => (record.meta.actors?.rooms || []).filter(room => room.programId).map(room => room.programId).concat((record.meta.actors?.drones || []).map(() => 'drones'))))],
-        activityTicks, animationTime, activityRun: run, activityTime: runTime(), reactionCount: cueSequence, actorTransitions: reduced || paused ? 0 : building,
+        activityTicks, animationTime, activityTime: lifeTime, reactionCount: cueSequence, actorTransitions: reduced || paused ? 0 : building,
+        life: { still: reduced, reactions, lastReaction }, tickCost: tickCost(), ambientFps: ambientFps(), targetFps,
         entities: records.size, entityKeys: list.map(record => record.entity.key), materials: uniqueMaterials, geometries: renderer.info.memory.geometries,
         triangles: renderer.info.render.triangles, drawCalls: renderer.info.render.calls,
         framePending: !!pendingFrame || !!pendingTimer, paused, visible, contextLost: lost,
@@ -814,7 +861,7 @@ export function createMascot(container, opts = {}) {
         breakdown: list.reduce((acc, record) => { const k = record.entity.kind; acc[k] = (acc[k] || 0) + sum(k, record); return acc; }, {}),
         errors: list.filter(record => record.error).map(record => record.entity.key),
         transitionParts: { ...transitionParts },
-        selectTargets: selectTargets(), geeky: { ...geeky.state.p, settled: geeky.settled },
+        selectTargets: selectTargets(), geeky: { ...geeky.state.p, settled: geeky.settled }, geekyCachedGeometries: geeky.cachedGeometries?.() || 0,
         xray: xray.key ? { room: xray.key.split(':').slice(0, -1 - records_().length).join(':'), meshes: xray.parts.length } : null,
         quality, frameInterval: Math.round(frameEma), yaw, pitch, zoom: zoomValue, framing: { half: view.half, target: { ...targetView }, size: { ...size }, insets: { ...insets } }, camera: 'orthographic', maxFps: maxFps(), limits: CAMPUS_BUDGET };
     },

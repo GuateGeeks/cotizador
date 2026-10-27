@@ -139,3 +139,27 @@ En un acercamiento de zoom ≥ 6 a un aula, una persona, un árbol y un equipo,
 deben verse el espesor, los cantos, al menos un pliegue y una pestaña, la capa
 del marco y una sombra de contacto. Registra por separado el dictamen técnico
 (presupuestos, errores) y el visual (lectura de papel, escala, paleta).
+
+## Personajes y piezas desde paquetes de referencia
+
+Todo alumno de primaria del campus usa un modelo de datos de `asesor/lab/paper/meshy/`:
+- el niño de Meshy, generado desde su GLB con `node tools/meshy-import.mjs`;
+- la niña, el modelo de Blender de la persona responsable, adoptado con `pw.py adopt` de `3d-assets` y con sus 940 triángulos.
+
+La semilla o `skirt` eligen entre los dos y el perfil los recolorea. Para cambiar o retocar un modelo:
+- **Retocar en Blender:** usa `pw.py export` e `import` de `3d-assets` (skill `gg3d-blender-web`). Así se retocan también las poses: los clips de `pose-clips-data.js` sustituyen la función para los argumentos muestreados.
+- **No edites a mano** los módulos generados.
+- **Límites:** el niño respeta `PERSON_LIMIT.r3Student` (320); la niña tiene `PERSON_LIMIT.nina` (960). Un modelo nuevo no se reduce sin preguntar: se informa su efecto en el campus.
+
+`model: 'r2'` conserva el alumno del paquete R2 (`docs/papercraft/construction-r2`), cuyas
+recreaciones R3 (`construction-r3/datos`) reemplazan la receta R2 del mismo id. Para recrear una
+pieza:
+
+1. Lee los pliegues de la lámina de siete vistas.
+2. Pon los vértices en los cruces de pliegues y las aristas sobre los pliegues.
+3. Conserva los sockets de las piezas vecinas.
+4. Compara a escala común contra la lámina.
+
+Los equipos se dibujan a escala de diorama (1.8–3.6×) en un hueso `.size`. Ver
+[GESTION-VISUAL](../../../docs/papercraft/GESTION-VISUAL.md) para el método,
+los presupuestos (`PERSON_LIMIT`) y las decisiones vigentes.

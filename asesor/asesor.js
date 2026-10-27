@@ -310,7 +310,7 @@ function loadLab(cb) {
   if (window.GGLab) { cb(); return; }
   if (loadLab.queue) { loadLab.queue.push(cb); return; }
   loadLab.queue = [cb];
-  const sc = document.createElement('script'); sc.src = 'vendor/lab-scene.min.js?v=159'; sc.async = true;
+  const sc = document.createElement('script'); sc.src = 'vendor/lab-scene.min.js?v=160'; sc.async = true;
   sc.onload = () => { const q = loadLab.queue || []; loadLab.queue = null; q.forEach(f => { try { f(); } catch (e) { console.error('No se pudo iniciar la vista 3D.', e); } }); };
   sc.onerror = () => { loadLab.queue = null; sc.remove(); campusUnavailable('No se pudo cargar la vista 3D. Tu configuración sigue disponible.'); };
   document.head.appendChild(sc);
@@ -405,6 +405,7 @@ function paintCampusFeedback(feedback) {
 let lostTimer = null, recoverTries = 0;
 function onCampusLost() {
   const st = mascotHost?.querySelector('.campus-status'); if (st) st.textContent = 'Reconectando vista 3D…';
+  setCampusControls(false); // the camera has nothing to move until the scene is back (onReady enables them)
   clearTimeout(lostTimer); lostTimer = setTimeout(() => recoverCampus(true), 2500);
 }
 function recoverCampus(auto) {

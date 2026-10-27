@@ -1,18 +1,20 @@
 /**
- * Generates docs/papercraft/personajes/ALUMNO-PRIMARIA.md from the code: the R2 data module
+ * Generates docs/papercraft/personajes/ALUMNO-PRIMARIA.md from the code: the Meshy data modules
+ * (the campus primaria students: source, rig, parts per variant) and then the R2 data module
  * (recipes, instances, rig, landmarks, provenance), the documented redistribution and the
  * faces the builder really emits for the primaria base student. Dev only
  * (tools/people-contract.mjs and the sync test).
  */
 import { createBuilder } from '../campus-kit.js';
-import { addPaperPerson, PRIMARIA_BASE, SHADOW_TRIANGLES, PERSON_LIMIT } from './pieces-people.js';
+import { addPaperPerson, PRIMARIA_BASE, PRIMARIA_R2, SHADOW_TRIANGLES, PERSON_LIMIT } from './pieces-people.js';
+import { MESHY_MODELS, meshyRig } from './meshy/person-meshy.js';
 import { R2_RECIPES, R2_INSTANCES, R2_RIG_H, R2_LANDMARKS_H, R2_PROVENANCE, R2_REDISTRIBUTION, R2_ADAPTATIONS, R2_FACTS, r2Rig } from './r2/person-r2.js';
 
 const f = (x, d = 4) => (Math.round(x * 10 ** d) / 10 ** d).toString();
 const vec = (v, d = 4) => `(${v.map(x => f(x, d)).join(', ')})`;
 
 /** Build the base student and measure it on its emitted geometry (rest pose = bind pose). */
-export function measureBase(spec = PRIMARIA_BASE) {
+export function measureBase(spec = PRIMARIA_R2) {
   const b = createBuilder(); b.base('solid');
   const person = addPaperPerson(b, { ...spec, id: 'b' });
   const g = b.finish({});
@@ -38,25 +40,61 @@ export function measureBase(spec = PRIMARIA_BASE) {
     shoeLength: Math.max(...shoeZ) - Math.min(...shoeZ), total, geometry: Object.values(person.parts).reduce((s, n) => s + n, 0), world };
 }
 
+/** Meshy section: the campus primaria students (boy and girl). */
+function meshyContract(out) {
+  out.push('## Modelos del campus: Meshy', '',
+    'Todo alumno de primaria del campus se construye con un modelo de Meshy: el niño (pantalón) o la niña (falda y coletas), según `skirt` o, sin indicarlo, la semilla.',
+    'Lo genera `node tools/meshy-import.mjs` (un módulo por modelo en `asesor/lab/paper/meshy/`); `asesor/test/primaria-meshy.test.js` compara cada módulo con su GLB cuando está presente.',
+    'La variedad sale del perfil: piel, cabello, chaleco, mochila y zapatos. `model: \'r2\'` construye el alumno del paquete R2 (sección siguiente) y las variantes v1 de cabello y falda.', '');
+  for (const [model, skirt, title] of [['nino', false, 'Niño'], ['nina', true, 'Niña']]) {
+    const spec = { ...PRIMARIA_BASE, skirt }, M = MESHY_MODELS[model], S = M.SOURCE;
+    const m = measureBase(spec), seated = measureBase({ ...spec, seated: true }), H = m.person.scale, rel = meshyRig(model, H);
+    out.push(`### ${title} (\`${model}\`)`, '',
+      `Fuente \`${S.file}\` (local; SHA256 \`${S.sha256}\`): ${S.triangles} triángulos con textura ${S.texture}, objetivo ${S.target} (${S.simplifier}).`,
+      model === 'nino'
+        ? 'Malla única: cortes en las articulaciones como costuras, una simplificación guiada por error y tapas en los extremos de cada segmento.'
+        : 'Piezas cerradas (mangas, manos, piernas, zapatos, coletas): cada pieza sigue a un hueso, la falda se divide en x = 0 y cada pieza se simplifica con un mismo error absoluto.',
+      'Clase de color por cara desde la textura; ojos y sonrisa como calcomanías.', '',
+      '| Medida | Medido en la geometría |', '|---|---:|',
+      `| H (suela a cima del cabello) | ${f(m.H)} |`, `| Cabeza (mentón a cima) / H | ${f(m.head / m.H, 3)} |`,
+      `| Ancho de hombros del torso / H | ${f(m.shoulders / m.H, 3)} |`, `| Punto más bajo | ${f(m.minY)} |`,
+      `| Triángulos de pie (mochila) | ${m.geometry} + ${SHADOW_TRIANGLES} de sombra = ${m.total} ≤ ${PERSON_LIMIT.r3Student} |`,
+      `| Triángulos sentado (sin mochila) | ${seated.geometry} + ${SHADOW_TRIANGLES} de sombra = ${seated.total} ≤ ${PERSON_LIMIT.r3Student} |`, '');
+    out.push('#### Rig', '', model === 'nino' ? 'Pivotes medidos en el modelo y contrastados con UniRig (cadera y codo siguen su predicción; el hombro rígido queda en la punta del hombro).' : 'Pivotes medidos en el modelo (cuadrícula de 0.05 H).', '',
+      '| Hueso | Padre | Pivote raíz de reposo / H | Relativo al padre (escena) | Medido en el builder |', '|---|---|---|---|---|');
+    for (const [k, b] of Object.entries(M.RIG_H)) if (k !== 'root') out.push(`| ${k} | ${b.parent} | ${vec(b.at, 3)} | ${vec(rel[k])} | ${vec(m.world[k])} |`);
+    out.push('', '| Punto | H |', '|---|---:|');
+    for (const [k, v] of Object.entries(M.LANDMARKS_H)) out.push(`| ${k} | ${v} |`);
+    out.push('', '#### Piezas por variante', '', '| Pieza | Hueso | De pie (mochila) | Sentado |', '|---|---|---:|---:|');
+    const all = Object.values(M.VARIANTS).flatMap(v => v.parts), ids = [...new Set(all.map(p => p.id))];
+    const n = (v, id) => M.VARIANTS[v].parts.find(p => p.id === id)?.faces.length ?? '—';
+    for (const id of ids) out.push(`| \`M-${id}\` | ${all.find(p => p.id === id).bone} | ${n('bag', id)} | ${n('plain', id)} |`);
+    out.push('');
+  }
+  out.push('Configuración base (niño; con `skirt: true`, la niña):', '', '```json', JSON.stringify(PRIMARIA_BASE, null, 2), '```', '');
+}
+
 export function alumnoContract() {
   const m = measureBase(), p = m.person, H = p.scale, rel = r2Rig(H);
   const out = [];
-  out.push('# Alumno de primaria R2: contrato y componentes', '',
-    '> Documento **generado** por `node tools/people-contract.mjs` a partir del módulo de datos R2',
-    '> (`asesor/lab/paper/r2/primaria-r2-data.js`, generado a su vez desde los JSON del paquete por `node tools/r2-import.mjs`),',
+  out.push('# Alumno de primaria: contrato y componentes', '',
+    '> Documento **generado** por `node tools/people-contract.mjs` a partir de los módulos de datos Meshy y R2',
+    '> (`asesor/lab/paper/meshy/primaria-meshy-*.js` y `asesor/lab/paper/r2/primaria-r2-data.js`, generados por `node tools/meshy-import.mjs` y `node tools/r2-import.mjs`),',
     '> de `asesor/lab/paper/r2/person-r2.js` y de las caras que el builder emite de verdad. No se edita a mano:',
-    '> `asesor/test/people-contract.test.js` falla si código, datos y documento divergen.', '',
-    'Alcance: el alumno base de primaria con cabello corto, pantalón y mochila se construye completo con el paquete R2.',
-    'Todo alumno de primaria con cabello corto usa la cabeza R2 (P01–P07), también con falda, para que la ropa no cambie la cabeza.',
+    '> `asesor/test/people-contract.test.js` falla si código, datos y documento divergen.', '');
+  meshyContract(out);
+  out.push('## Paquete R2 (`model: \'r2\'`)', '',
+    'Alcance: con `model: \'r2\'`, el alumno de primaria con cabello corto, pantalón y mochila se construye completo con el paquete R2.',
+    'Con R2, todo alumno de primaria con cabello corto usa la cabeza R2 (P01–P07), también con falda, para que la ropa no cambie la cabeza.',
     'Las demás combinaciones conservan la receta v1 (geometría idéntica a `ec4d112`).', '');
-  out.push('## Procedencia', '', `Paquete \`${R2_PROVENANCE.package}\` (${R2_PROVENANCE.manifest}), montaje \`${R2_PROVENANCE.assembly}\`, esquema ${R2_PROVENANCE.schema}.`,
+  out.push('### Procedencia', '', `Paquete \`${R2_PROVENANCE.package}\` (${R2_PROVENANCE.manifest}), montaje \`${R2_PROVENANCE.assembly}\`, esquema ${R2_PROVENANCE.schema}.`,
     `${R2_FACTS.recipes} recetas, ${R2_FACTS.instances} instancias, ${R2_FACTS.packageTriangles} triángulos en el paquete. Los datos se **cargan** de los JSON (importados a un módulo generado), no se transcriben a mano.`, '',
     ...(R2_FACTS.r3.length ? [`Recreaciones R3 activas (\`docs/papercraft/construction-r3/datos\`, mismo esquema): ${Object.entries(R2_PROVENANCE.r3).map(([id, o]) => `${id} (${o.replacedTriangles} → ${o.triangles} triángulos)`).join(', ')}. El paquete R2 sin ellas suma ${R2_FACTS.r2PackageTriangles}.`, ''] : []),
     '| Archivo | SHA256 |', '|---|---|');
   for (const [file, hash] of Object.entries(R2_PROVENANCE.sha256)) out.push(`| \`${file}\` | \`${hash}\` |`);
-  out.push('', '## Configuración reproducible', '', '```json', JSON.stringify(PRIMARIA_BASE, null, 2), '```', '',
+  out.push('', '### Configuración reproducible', '', '```json', JSON.stringify(PRIMARIA_R2, null, 2), '```', '',
     'La piel, el cabello, el chaleco, la mochila y los zapatos del paquete se recolorean a los de la configuración conservando el matiz relativo de cada cara; camisa y pantalón usan los colores del paquete. Los hex son sRGB y el builder los convierte una sola vez a lineal (`THREE.Color`).', '');
-  out.push('## Contrato global', '',
+  out.push('### Contrato global', '',
     '- Ejes: +Y arriba, +Z frente, +X izquierda anatómica. Suelo y = 0. Datos normalizados por H; H = 0.78 se aplica una sola vez.',
     '- Transformación de instancia (MONTAJE §2): `M = T(position) · Rz · Ry · Rx · diag(sx·(mirror ? −1 : 1), sy, sz)`, grados. El builder recibe vértices locales al hueso activo: `H · (M·v − pivote_raíz(hueso))`. Las instancias reflejadas invierten el orden de cada triángulo una vez.',
     '- Un hueso por instancia y por vértice (peso 1); 12 huesos con los nombres y padres del proyecto.',
@@ -67,26 +105,26 @@ export function alumnoContract() {
     `| Ancho de hombros del torso / H | ${R2_LANDMARKS_H.torso_shoulder_width} | ${f(m.shoulders / m.H, 3)} |`,
     `| Largo del zapato / H | — | ${f(m.shoeLength / m.H, 3)} |`,
     `| Punto más bajo | 0 | ${f(m.minY)} |`, '');
-  out.push('### Puntos de referencia (`landmarks_H`)', '', '| Punto | H | Escena |', '|---|---:|---:|');
+  out.push('#### Puntos de referencia (`landmarks_H`)', '', '| Punto | H | Escena |', '|---|---:|---:|');
   for (const [k, v] of Object.entries(R2_LANDMARKS_H)) out.push(`| ${k} | ${v} | ${f(v * H)} |`);
-  out.push('', '### Rig', '', '| Hueso | Padre | Pivote raíz de reposo / H | Relativo al padre (escena) | Medido en el builder |', '|---|---|---|---|---|');
+  out.push('', '#### Rig', '', '| Hueso | Padre | Pivote raíz de reposo / H | Relativo al padre (escena) | Medido en el builder |', '|---|---|---|---|---|');
   for (const [k, b] of Object.entries(R2_RIG_H)) if (k !== 'root') out.push(`| ${k} | ${b.parent} | ${vec(b.at, 3)} | ${vec(rel[k])} | ${vec(m.world[k])} |`);
   const removed = Object.entries(R2_REDISTRIBUTION).reduce((s, [r, x]) => s + x.faces.length * R2_INSTANCES.filter(i => i.recipe === r).length, 0);
-  out.push('', '## Presupuesto', '',
+  out.push('', '### Presupuesto', '',
     `- Paquete: ${R2_FACTS.packageTriangles} triángulos, sin reserva. El proyecto cuenta la sombra de contacto (${SHADOW_TRIANGLES}, capa \`blob\`, auxiliar) en el límite, así que se **redistribuye**: se retiran ${removed} tapas ocultas. Límite del alumno con las recetas R3: ${PERSON_LIMIT.r3Student} (el resto de estudiantes, ${PERSON_LIMIT.student}).`,
     `- Emitido: **${m.geometry}** de geometría + ${SHADOW_TRIANGLES} de sombra = **${m.total}** ${m.total <= PERSON_LIMIT.r3Student ? '≤ ' + PERSON_LIMIT.r3Student : '> ' + PERSON_LIMIT.r3Student + ': **excede** el límite'}. Reserva: 0 (no es geometría).`, '',
     '| Receta | Caras retiradas (índice en el JSON) | Motivo |', '|---|---|---|');
   for (const [r, x] of Object.entries(R2_REDISTRIBUTION)) out.push(`| ${r} | ${x.faces.join(', ')} | ${x.reason} |`);
-  out.push('', '### Adaptaciones de integración (solo posiciones de vértices)', '', '| Receta | Vértices (local / H) | Motivo |', '|---|---|---|');
+  out.push('', '#### Adaptaciones de integración (solo posiciones de vértices)', '', '| Receta | Vértices (local / H) | Motivo |', '|---|---|---|');
   for (const [r, x] of Object.entries(R2_ADAPTATIONS)) out.push(`| ${r} | ${Object.entries(x.vertices).map(([k, v]) => `${k} → ${vec(v)}`).join('; ')} | ${x.reason} |`);
-  out.push('', '## Instancias', '', '| # | Instancia | Receta | Hueso | Reflejo | Posición / H | Rotación (°) | Paquete | Emitidos | Rango (triángulos) |', '|---:|---|---|---|---|---|---|---:|---:|---|');
+  out.push('', '### Instancias', '', '| # | Instancia | Receta | Hueso | Reflejo | Posición / H | Rotación (°) | Paquete | Emitidos | Rango (triángulos) |', '|---:|---|---|---|---|---|---|---:|---:|---|');
   for (const i of R2_INSTANCES) {
     const c = p.components.find(x => x.id === i.id);
     out.push(`| ${i.order} | \`${i.id}\` | ${i.recipe} · ${R2_RECIPES[i.recipe].name} | ${i.bone} | ${i.mirror ? 'sí' : 'no'} | ${vec(i.position)} | ${vec(i.rotation, 1)} | ${R2_RECIPES[i.recipe].faces.length} | ${c ? c.triangles : 0} | ${c ? c.ranges.map(r => r.join('–')).join(', ') : '—'} |`);
   }
-  out.push('', '## Recetas', '');
+  out.push('', '### Recetas', '');
   for (const r of Object.values(R2_RECIPES)) {
-    out.push(`### ${r.id} · ${r.name}`, '', `- **Papel:** ${r.purpose}`, `- **Construcción:** ${r.construction} Superficie: \`${r.kind}\`; ${r.faces.length} triángulos, ${r.vertices.length} vértices; color base ${r.base}.`,
+    out.push(`#### ${r.id} · ${r.name}`, '', `- **Papel:** ${r.purpose}`, `- **Construcción:** ${r.construction} Superficie: \`${r.kind}\`; ${r.faces.length} triángulos, ${r.vertices.length} vértices; color base ${r.base}.`,
       `- **Instancias:** ${R2_INSTANCES.filter(i => i.recipe === r.id).map(i => `\`${i.id}\` (${i.bone})`).join(', ')}.`,
       `- **Sockets:** ${Object.keys(r.sockets).join(', ')}.`);
     if (r.limitations.length) out.push(`- **Límites:** ${r.limitations.join(' ')}`);

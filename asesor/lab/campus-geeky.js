@@ -11,9 +11,10 @@
  * ownMaterials() lists the materials Geeky owns (the campus' `materials` are not touched), dispose().
  * `releaseEntityGroup(geeky.group)` already disposes everything Geeky owns (see userData.skeleton).
  *
- * Rest: the campus renders on demand. Geeky animates only while something happens (appearing,
- * gliding, a cue, the gaze following a new target) and about 3 s afterwards; then it keeps a static pose,
- * `settled` is true and it asks for no frames. With reduced motion the pose is always static.
+ * Rest: Geeky animates only while something happens (appearing, gliding, a cue, the gaze following a
+ * new target) and about 3 s afterwards; then it keeps a static pose and `settled` is true. The living
+ * campus keeps rendering for its own activities; Geeky's travel alone counts as a transition. The scene
+ * cues short reactions (`giggle`, `nod`) on big moments. With reduced motion the pose is always static.
  */
 import { Group } from 'three';
 import { clamp } from './campus-kit.js';
@@ -117,6 +118,8 @@ export function createGeeky(materials, options = {}) {
   }
 
   function ownMaterials() { return embedded.materials(); }
+  /** Geometries Geeky caches lazily by shape (pupil sizes, glyphs): bounded, built once, reused. */
+  function cachedGeometries() { return embedded.renderer.geoCache?.size || 0; }
   function dispose() {
     if (disposed) return;
     disposed = true;
@@ -127,5 +130,5 @@ export function createGeeky(materials, options = {}) {
 
   embedded.step(0); // pose the meshes once so nothing is drawn at the origin before the first tick
   drawn = true;
-  return { group, tick, cue, ownMaterials, dispose, state, get settled() { return state.settled; } };
+  return { group, tick, cue, ownMaterials, cachedGeometries, dispose, state, get settled() { return state.settled; } };
 }

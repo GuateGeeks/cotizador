@@ -33,10 +33,10 @@ test('R2: 20 recetas, 33 instancias, 280 triángulos (más el cambio declarado d
 
 test('R2 emitido: cada instancia en su hueso, caras exteriores y conteo por instancia', async () => {
   const { createBuilder } = await load('../lab/campus-kit.js');
-  const { addPaperPerson, PRIMARIA_BASE } = await load('../lab/paper/pieces-people.js');
+  const { addPaperPerson, PRIMARIA_R2 } = await load('../lab/paper/pieces-people.js');
   const { R2_INSTANCES, recipeFaces } = await load('../lab/paper/r2/person-r2.js');
   const b = createBuilder(); b.base('solid');
-  const p = addPaperPerson(b, { ...PRIMARIA_BASE, id: 't' });
+  const p = addPaperPerson(b, { ...PRIMARIA_R2, id: 't' });
   const g = b.finish({});
   for (const i of R2_INSTANCES) {
     const c = p.components.find(x => x.id === i.id);

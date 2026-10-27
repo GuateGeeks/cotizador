@@ -284,6 +284,32 @@ export const PIECES = [
   },
 
   {
+    // Electronics bench and teacher training: an open tray of sorted components (sheet 06, electronics).
+    id: 'component-tray', label: 'Bandeja de componentes', group: 'tech', size: { w: .16, d: .11, h: .03 }, budget: 60,
+    build(b, p, opts) {
+      const meta = newMeta({ focus: [0, .015, 0] });
+      const W = .08, D = .055, H = .026, w = .006; // half sizes, wall height and thickness
+      const quad = (a, c, d, e, hex, n) => b.face(a, c, d, hex, n).face(a, d, e, hex, n);
+      const out = C.turquoise, inside = C.turquoiseDark, rim = C.turquoiseLight;
+      // Open box folded from one sheet: outer walls, inner walls, rim and floor (the bottom never shows).
+      const ring = [[-W, -D], [W, -D], [W, D], [-W, D]], inner = [[-W + w, -D + w], [W - w, -D + w], [W - w, D - w], [-W + w, D - w]];
+      for (let i = 0; i < 4; i++) {
+        const [a, c] = [ring[i], ring[(i + 1) % 4]], [ai, ci] = [inner[i], inner[(i + 1) % 4]];
+        const n = [c[1] - a[1], 0, a[0] - c[0]];
+        quad([a[0], 0, a[1]], [c[0], 0, c[1]], [c[0], H, c[1]], [a[0], H, a[1]], out, n);
+        quad([ci[0], .004, ci[1]], [ai[0], .004, ai[1]], [ai[0], H, ai[1]], [ci[0], H, ci[1]], inside, n.map(v => -v));
+        quad([a[0], H, a[1]], [c[0], H, c[1]], [ci[0], H, ci[1]], [ai[0], H, ai[1]], rim, [0, 1, 0]);
+      }
+      quad([-W + w, .004, D - w], [W - w, .004, D - w], [W - w, .004, -D + w], [-W + w, .004, -D + w], C.ivory, [0, 1, 0]);
+      // Divider and sorted components (flat chips at two heights, never coplanar with the floor).
+      p.card(0, H / 2, 0, .004, H - .004, 2 * (D - w), rim, { omit: ['-y', '-z', '+z'] });
+      const parts = [[-.05, -.025, C.dark], [-.025, .02, C.red], [-.055, .022, C.yellow], [.03, -.022, C.orange], [.055, .02, C.blue], [.03, .022, C.dark], [.055, -.02, C.yellow]];
+      parts.forEach(([x, z, hex], i) => p.inlay(x, .006 + (i % 2) * .004, z, .02, .016, hex));
+      p.shadow(0, 0, 0, .1, .07);
+      return meta;
+    }
+  },
+  {
     id: 'kit-box', label: 'Caja de equipo', group: 'tech', size: { w: .2, d: .08, h: .26 }, budget: 60, opts: { color: C.orange },
     build(b, p, opts) {
       const meta = newMeta({ focus: [0, .13, .04] });

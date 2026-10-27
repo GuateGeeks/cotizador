@@ -5,6 +5,7 @@
  * heads, bachillerato students are almost adult height.
  */
 import { PAL, LEVEL_COLOR, TAU, hash, pick, lerp, clamp } from './campus-kit.js';
+import { CLIPS } from './paper/pose-clips-data.js';
 
 export const PERSON_SCALE = { pre: .74, prim: .86, bas: .97, bach: 1.04, adult: 1.18 };
 const SKIN = ['#F3CBA5', '#E2AF86', '#C98D62', '#A06A45', '#7E5236'];
@@ -139,15 +140,89 @@ export const POSES = {
   },
   kneel: () => pose({ legL: [0, 0, .06], legR: [0, 0, -.06], shinL: [Math.PI / 2, 0, 0], shinR: [Math.PI / 2, 0, 0], torso: [.15, 0, 0] }),
   sit: () => pose({ legL: [-Math.PI / 2, 0, .05], legR: [-Math.PI / 2, 0, -.05], shinL: [Math.PI / 2, 0, 0], shinR: [Math.PI / 2, 0, 0] }),
-  cheer: t => pose({ armL: [-2.8, 0, -.35 - Math.sin(t * 12) * .15], armR: [-2.8, 0, .35 + Math.sin(t * 12) * .15], foreL: [-.2, 0, 0], foreR: [-.2, 0, 0], head: [-.25, 0, 0] }),
+  // Both arms up in a V (outward first, then raised), shaking: the hands clear the big papercraft head.
+  cheer: t => pose({ armL: [-2.55, 0, .6 + Math.sin(t * 12) * .12], armR: [-2.55, 0, -.6 - Math.sin(t * 12) * .12], foreL: [-.3, 0, 0], foreR: [-.3, 0, 0], head: [-.25, 0, 0] }),
   clap: t => { const c = Math.sin(t * 14) * .18; return pose({ armL: [-1.15, 0, -.32 - c], armR: [-1.15, 0, .32 + c], foreL: [-.75, 0, 0], foreR: [-.75, 0, 0], head: [-.1, 0, 0] }); },
   type: t => pose({ armL: [-.75, 0, -.1], armR: [-.75, 0, .1], foreL: [-.75 + Math.sin(t * 18) * .08, 0, 0], foreR: [-.75 + Math.cos(t * 17) * .08, 0, 0], head: [.25, 0, 0], torso: [.12, 0, 0] }),
   tablet: () => pose({ armL: [-.55, 0, -.3], armR: [-.55, 0, .3], foreL: [-1.05, 0, 0], foreR: [-1.05, 0, 0], head: [.35, 0, 0], torso: [.05, 0, 0] }),
   point: (dir = 0) => pose({ armR: [-1.45, dir, .05], foreR: [-.05, 0, 0], head: [-.05, dir * .6, 0] }),
-  wave: t => pose({ armR: [-.3, 0, 2.5 + Math.sin(t * 9) * .3], foreR: [0, 0, .4 + Math.sin(t * 9) * .3] }),
+  // The arm up and out beside the head, the forearm upright and swinging.
+  wave: t => pose({ armR: [-.25, 0, -2.25], foreR: [0, 0, -.8 + Math.sin(t * 9) * .35], head: [-.05, -.15, 0] }),
   hand: () => pose({ armR: [-3.0, 0, .15], foreR: [-.1, 0, 0] }),
-  vr: (t, k = 0) => pose({ head: [-.15 + Math.sin(t * .9 + k) * .25, Math.sin(t * .6 + k * 2) * .9, 0], armL: [-1.3 + Math.sin(t * 1.3 + k) * .3, .25, -.2], armR: [-1.1 + Math.cos(t * 1.1 + k) * .35, -.25, .2], foreL: [-.3, 0, 0], foreR: [-.25, 0, 0], torso: [0, Math.sin(t * .6 + k * 2) * .25, 0] })
+  vr: (t, k = 0) => pose({ head: [-.15 + Math.sin(t * .9 + k) * .25, Math.sin(t * .6 + k * 2) * .9, 0], armL: [-1.3 + Math.sin(t * 1.3 + k) * .3, .25, -.2], armR: [-1.1 + Math.cos(t * 1.1 + k) * .35, -.25, .2], foreL: [-.3, 0, 0], foreR: [-.25, 0, 0], torso: [0, Math.sin(t * .6 + k * 2) * .25, 0] }),
+  // Ambient-life vocabulary (paper/scene-activity.js). Upper-body poses: seated people take
+  // their legs from sit() through blendBody(). Every pose keeps the rigid 12-bone rig.
+  // Arm `z`: + moves the left arm outward, - the right arm outward.
+  /** Raised hand, asking to speak; the hand sways a little. */
+  raise: t => pose({ armR: [-2.75, 0, -.38 + Math.sin(t * 5) * .06], foreR: [-.2 - Math.sin(t * 5) * .1, 0, 0], torso: [-.04, 0, .06], head: [-.12, .1, 0] }),
+  /** Talking with both hands: forearms beat at different rates, the head bobs. `k` desynchronises people. */
+  talk: (t, k = 0) => pose({
+    armR: [-.55 + Math.sin(t * 3.1 + k) * .16, 0, .05], foreR: [-1.05 + Math.sin(t * 4.3 + k) * .28, 0, 0],
+    armL: [-.4 + Math.sin(t * 2.3 + k * 2) * .1, 0, -.05], foreL: [-.8 + Math.sin(t * 3.7 + k) * .2, 0, 0],
+    head: [-.05 + Math.sin(t * 2.1 + k) * .07, Math.sin(t * 1.3 + k) * .12, Math.sin(t * 1.7 + k) * .05], torso: [.04, Math.sin(t * 1.1 + k) * .06, 0]
+  }),
+  /** Leaning in over the table to watch something; forearms rest toward the work. */
+  lean: (k = 1) => pose({ torso: [.32 * k, 0, 0], head: [.3 * k, 0, 0], armL: [-.55 - .25 * k, 0, -.12], armR: [-.55 - .25 * k, 0, .12], foreL: [-.85, 0, 0], foreR: [-.85, 0, 0] }),
+  /** Pointing down at the table (robot, board) with the right hand. */
+  pointDown: (dir = 0) => pose({ armR: [-1.05, dir, .08], foreR: [-.15, 0, 0], torso: [.22, dir * .3, 0], head: [.38, dir * .6, 0], armL: [-.5, 0, -.1], foreL: [-.8, 0, 0] }),
+  /** High five: one open hand up and out to the side of the partner ('R' right, 'L' left). */
+  highFive: (side = 'R') => side === 'R'
+    ? pose({ armR: [-2.35, 0, -.45], foreR: [-.35, 0, 0], torso: [0, -.25, 0], head: [-.15, -.35, 0] })
+    : pose({ armL: [-2.35, 0, .45], foreL: [-.35, 0, 0], torso: [0, .25, 0], head: [-.15, .35, 0] }),
+  /** Hands on the head: the robot missed. */
+  oops: () => pose({ armL: [-2.5, 0, .75], armR: [-2.5, 0, -.75], foreL: [-1.75, 0, 0], foreR: [-1.75, 0, 0], head: [-.1, 0, 0], torso: [-.05, 0, 0] }),
+  /** Hand to the chin, thinking or reading. */
+  think: () => pose({ armR: [-.85, 0, .05], foreR: [-2.0, 0, 0], armL: [-.6, 0, -.1], foreL: [-.9, 0, 0], head: [.12, 0, .1], torso: [.1, 0, 0] }),
+  /** Pressing components into a board: alternating hands, low over the table. */
+  press: t => {
+    const l = Math.max(0, Math.sin(t * 4.2)), r = Math.max(0, -Math.sin(t * 4.2));
+    return pose({ armL: [-.95 - l * .15, 0, -.08], armR: [-.95 - r * .15, 0, .08], foreL: [-.55 + l * .3, 0, 0], foreR: [-.55 + r * .3, 0, 0], torso: [.28, 0, 0], head: [.42, 0, 0] });
+  },
+  /** Both hands holding a controller in front of the chest; `tilt` rolls the hands (-1..1). */
+  hold: (tilt = 0, pitch = 0) => pose({ armL: [-.45 - pitch * .12, 0, -.32 + tilt * .1], armR: [-.45 - pitch * .12, 0, .32 + tilt * .1], foreL: [-1.15 + tilt * .2, 0, 0], foreR: [-1.15 - tilt * .2, 0, 0], head: [.15, 0, 0] }),
+  /** Reaching up toward a virtual object with both hands (VR). `t` opens and closes the grab. */
+  grab: (t = 0, k = 0) => pose({ armL: [-2.0 + Math.sin(t * 1.7 + k) * .2, .2, -.15], armR: [-2.2 + Math.cos(t * 1.4 + k) * .2, -.2, .15], foreL: [-.35, 0, 0], foreR: [-.3, 0, 0], head: [-.35, Math.sin(t * .8 + k) * .3, 0], torso: [-.06, Math.sin(t * .8 + k) * .15, 0] }),
+  /** Both hands lifting the visor off the eyes (VR), the head turned to someone. */
+  visor: (turn = 0) => pose({ armL: [-2.45, 0, .55], armR: [-2.45, 0, -.55], foreL: [-1.85, 0, 0], foreR: [-1.85, 0, 0], head: [-.25, turn, 0], torso: [0, turn * .3, 0] })
 };
+/**
+ * Keyframed clips retouched in Blender (3d-assets procedural-web, `pw.py import`) replace a pose
+ * for the arguments they were sampled with. A clip is { args, time?, offset?, duration, frames }:
+ * `time.arg` is the argument that drives it (seconds × `time.scale` = that argument), `offset.arg`
+ * an argument added to its time (the per-person desync `k`); any other argument must equal the
+ * sampled one (a missing argument takes the sampled default), or the function keeps the pose.
+ * Frames are whole poses, interpolated linearly and looped over `duration`.
+ */
+const KEYS = Object.keys(ZERO);
+/** The pose functions before any clip replaces them (the Blender bridge compares edits against these). */
+export const POSE_FUNCTIONS = Object.freeze({ ...POSES });
+function clipPose(clip, args) {
+  const n = clip.frames.length;
+  if (!clip.time || n === 1) return pose(clip.frames[0]);
+  let t = (args[clip.time.arg] ?? 0) / clip.time.scale + (clip.offset ? args[clip.offset.arg] ?? 0 : 0);
+  t = ((t % clip.duration) + clip.duration) % clip.duration;
+  const f = t / clip.duration * n, i = Math.floor(f) % n, j = (i + 1) % n, u = f - Math.floor(f), a = clip.frames[i], b = clip.frames[j];
+  const out = {};
+  for (const key of KEYS) out[key] = Array.isArray(ZERO[key]) ? a[key].map((v, k) => lerp(v, b[key][k], u)) : lerp(a[key], b[key], u);
+  return out;
+}
+const sampled = (clip, args) => clip.args.every((v, i) => v === '$t' || i === clip.offset?.arg || (args[i] ?? v) === v);
+/** The pose table with `clips` ({ name: [clip] }) over `functions`. */
+export function withClips(functions, clips) {
+  const out = { ...functions };
+  for (const [name, list] of Object.entries(clips)) {
+    const fn = functions[name];
+    if (fn) out[name] = (...args) => { const clip = list.find(c => sampled(c, args)); return clip ? clipPose(clip, args) : fn(...args); };
+  }
+  return out;
+}
+Object.assign(POSES, withClips(POSE_FUNCTIONS, CLIPS));
+
+/** Additive head look: yaw/pitch blended over the pose's own head by `w` (0..1). Mutates `p`. */
+export function look(p, yaw, pitch, w = 1) {
+  p.head[0] = lerp(p.head[0], pitch, w); p.head[1] = lerp(p.head[1], yaw, w);
+  return p;
+}
 /** Reach both hands toward something at lowered height (0 = waist, 1 = floor). */
 export function reach(lower = .4, hand = 'R', extra = 0) {
   const a = -.6 - lower * .7 - extra;
@@ -163,13 +238,19 @@ export function blendBody(lower, upper) {
   return out;
 }
 
-const KNEEL_DROP = p => -(p.shin - .03 * p.scale);
+/** Kneeling lowers the hips by the shin (or `kneel`, a shorter drop for a long shoe whose toe points down). */
+const KNEEL_DROP = p => -((p.kneel ?? p.shin) - .03 * p.scale);
 /** Apply a pose; `base` is 'stand' | 'kneel' | 'sit' to place the hips. */
 export function applyPose(person, p, base = 'stand', seat) {
   const j = person.joints;
   for (const key of ['torso', 'head', 'armL', 'armR', 'foreL', 'foreR', 'legL', 'legR', 'shinL', 'shinR']) j[key].rotation.set(p[key][0], p[key][1], p[key][2], 'YXZ');
   const lower = base === 'kneel' ? KNEEL_DROP(person) : base === 'sit' ? (seat ?? .26) - person.hipY + .03 : 0;
   j.hips.position.y = person.hipY + lower + (p.y || 0);
+}
+/** Apply a pose `k` of the way between standing (0) and seated on `seat` (1): standing up and sitting down. */
+export function applySeated(person, p, k, seat) {
+  applyPose(person, p, 'stand');
+  person.joints.hips.position.y = person.hipY + clamp(k) * (seat - person.hipY + .03) + (p.y || 0);
 }
 export function placePerson(person, x, z, ry, y = 0) { person.root.position.set(x, y, z); person.root.rotation.set(0, ry, 0); }
 

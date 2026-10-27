@@ -67,8 +67,11 @@ con mediciones antes/después en `docs/campus-3d.md`. Obtén
   rotación, transición de crecimiento).
 - Una emulación de viewport móvil **no** es una prueba en dispositivo real:
   nómbrala como emulación.
-- En reposo, la escena debe dejar de pedir cuadros (render bajo demanda).
-  Compruébalo con `activityTicks` estable.
+- Mientras el campus está a la vista, la vida ambiental sigue a un ritmo fijo
+  (30 fps con `full` y puntero fino, 20 fps en táctil o `eco`); las transiciones
+  suben hasta 60. En pausa, pestaña oculta, fuera de pantalla o contexto perdido
+  no se pide ningún cuadro, y con movimiento reducido se muestra el reposo bajo
+  demanda. Compruébalo con `targetFps`, `ambientFps`, `framePending` y `tickCost`.
 - Agrega y quita módulos de forma repetida (por ejemplo, 20 ciclos de los
   estados 2↔6). `getDiagnostics().geometries` (y `renderer.info.memory`) no debe crecer
   de ciclo en ciclo.
@@ -100,3 +103,33 @@ Verifica:
   propuesta siguen completos y hay un resumen estático;
 - el campus cerrado: la cotización se completa igual;
 - resize y cambio de orientación: no reinician el cotizador.
+
+## Lecciones de los cortes del 24–25 de octubre
+
+- **GPU real.** Chromium headless cae a SwiftShader sin avisar y la escena baja a
+  calidad `eco`, sin sombras. Antes de anotar una cifra, confirma el renderer con
+  `WEBGL_debug_renderer_info`. En WSL:
+  `GALLIUM_DRIVER=d3d12 LD_LIBRARY_PATH=/usr/lib/wsl/lib` y
+  `--ignore-gpu-blocklist --enable-gpu --use-angle=gl` (`tools/campus-perf.cjs`).
+- **Composición.** Comprueba con `tools/paper-activity-check.mjs`: equipos
+  visibles (≥ 250 px² en la vista general, ≥ 2 500 px² en el aula enfocada) y
+  nada que atraviese mesas, sillas, muros o personas.
+- **Piezas contra láminas.** `tools/alumno-piezas-r2.cjs` + `.py` comparan
+  siete vistas con escala común y la ubicación resaltada.
+- **Huesos únicos y personas al final del ensamblaje.** `check:paper` lo
+  verifica: un nombre repetido dejaba a un estudiante visible en el paso 1.
+- **Globales léxicas.** En Playwright, `mascot` e `inspectCampus` son globales
+  léxicas: usa `typeof mascot !== 'undefined'`, no `window.mascot`.
+- **Node.** En la terminal del agente, `node`/`npm` son funciones de nvm que
+  fallan en silencio: usa la ruta absoluta del binario.
+
+- **Parpadeo medido en el lugar.** `check:paper` mide la separación de dos planos casi paralelos en sus centroides. Medida como diferencia de distancias al origen, daba falsos positivos lejos del centro del campus.
+- **Juntas y costuras.** El manifiesto de personas informa aparte, sin fallar:
+  - las superposiciones de articulación de los modelos Meshy (`MESHY_JOINTS`: cuello, cintura, falda sobre el muslo, codos, rodillas, caderas);
+  - los triángulos estirados de un modelo con piel por vértice (`SEAMED`), que cuenta bajo el hueso de su pieza.
+- **Presupuesto según la composición.** La niña pesa 958 triángulos y aparece por semilla. Tras cambiar un modelo, mide el estado 6 en GPU y anota el margen: con la niña vigente, 37 770–39 250 de 40 000.
+- **Módulos editados.** Un modelo con `SOURCE.edited` (retocado o adoptado en Blender) no se compara con su GLB: la prueba valida su procedencia. `tools/meshy-import.mjs --check` lo informa como conservado.
+- **Clips.** `asesor/test/pose-clips.test.js` comprueba que un clip solo sustituye la pose con sus argumentos. Sin retoques, `POSES` es igual a `POSE_FUNCTIONS`.
+
+El flujo completo de gestión visual está en
+[GESTION-VISUAL](../../../docs/papercraft/GESTION-VISUAL.md).

@@ -1,11 +1,17 @@
 _site/
-node_modules/
+node_modules
 artifacts/
 before-desktop.png
 
 # Referencias de diseño papercraft: se guardan localmente (pesan ~47 MB); ver docs/papercraft/reference/README.md
 docs/papercraft/reference/*.png
 docs/papercraft/reference/*.zip
+# Modelos generados (Meshy, Tripo): locales, 17 MB; el módulo importado guarda su SHA256
+docs/papercraft/reference/meshy/*.glb
+docs/papercraft/reference/tripo/*.glb
+# Láminas de referencia de cada personaje y metadatos de descarga de Windows
+docs/papercraft/reference/niña-*/
+*:Zone.Identifier
 
 # Paquete de construcción R1: los PNG se conservan localmente; md, json y svg se versionan
 docs/papercraft/construction/reference/*.png

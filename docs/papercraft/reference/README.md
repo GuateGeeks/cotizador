@@ -97,3 +97,15 @@ por git).
 
 Geeky no aparece en la referencia. Se conserva como marca en la entrada solo si
 la persona responsable lo confirma.
+
+## Modelos 3D generados (2026-10-25)
+
+Entregados por la persona responsable; **no se versionan** (`.gitignore`), se conservan localmente.
+
+| Archivo | Origen | SHA256 | Uso |
+|---|---|---|---|
+| `meshy/Meshy_AI_Papercraft_Student_1025165445_image-to-3d-texture.glb` | Meshy, image-to-3d con textura (369 242 triángulos, textura 2048²) | `f7908bba0ad82fb2eb595f0e9c087f338ea9525fe248a0d1cf81eee9b4137302` | Alumno de primaria del campus, vía `node tools/meshy-import.mjs` ([GESTION-VISUAL](../GESTION-VISUAL.md)). |
+| `C:\Users\adawolfs\OneDrive\Documents\Blender\GuateGeeks\nina-primaria.blend` | Blender (malla Meshy de 940 triángulos, esqueleto Mixamo, textura 2048²), de la persona responsable | `197f4a9045bd3a9ed673cac369c90ff5ce6faf5ec4e11324ea48ae551b1f7191` | **Alumna de primaria vigente**, vía `pw.py adopt` de `3d-assets`. |
+| `meshy/niña-primaria.glb` | Meshy, image-to-3d con textura (3 951 triángulos en 42 piezas) | `a527860238ff1d23647d6029c588b10151cb32ca9ad11389c4ed7267721dd1cb` | Versión anterior de la alumna (`node tools/meshy-import.mjs --model nina --force` la regeneraría). |
+| `meshy/niña-preprimaria.glb`, `tripo/niña-preprimaria.glb` y las láminas `niña-primaria/`, `niña-preprimaria/` | Meshy y Tripo | — | Referencias; sin integrar. |
+| `tripo/paper character 3d model.glb` | Tripo (7 451 triángulos) | `7a858ae65375497299f03158bc87115e43897515a380ecb553dece24f3032568` | Referencia; sin integrar. |
