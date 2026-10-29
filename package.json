@@ -15,7 +15,9 @@
     "docs:people": "node tools/people-contract.mjs",
     "shot:alumno": "node tools/alumno-shot.cjs",
     "import:r2": "node tools/r2-import.mjs",
-    "import:meshy": "node tools/meshy-import.mjs"
+    "import:meshy": "node tools/meshy-import.mjs",
+    "test:agent-browser": "node asesor/test/agent-browser.cjs",
+    "check:agent": "node tools/sync-geeky-agent.mjs --check"
   },
   "devDependencies": {
     "esbuild": "0.25.12",

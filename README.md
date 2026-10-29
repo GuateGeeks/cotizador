@@ -25,3 +25,7 @@ Para verlo localmente, sirve la raíz del repositorio por HTTP y abre `/asesor/i
 - `assets/`: marca y fotografías de equipos utilizadas por las propuestas.
 
 Socrates Aprende está disponible para estudiantes de 4.º a 6.º primaria en la fase actual. Para preprimaria y de 1.º a 3.º primaria se ofrece como recurso docente, sin contenido estudiantil. La ampliación para estudiantes se realizará por fases: primero básico y después bachillerato. El acceso y su vigencia se acuerdan con GuateGeeks según el modelo. La plataforma abre desde su enlace público. Los importes son estimaciones comerciales y se confirman con GuateGeeks.
+
+## Asistente Geeky
+
+Voz opcional, chat y controles del cotizador y campus: [integración y despliegue](docs/geeky-agent.md), [validación](docs/geeky-agent-validation.md). El runtime se versiona en [GuateGeeks/geeky-agent](https://github.com/GuateGeeks/geeky-agent).

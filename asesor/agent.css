@@ -1,0 +1,45 @@
+/* Companion inherits the Cotizador palette and typography. */
+#geeky-companion{position:fixed;right:20px;bottom:20px;z-index:85;color:#321853;font:inherit}
+#geeky-companion [hidden]{display:none!important}
+#geeky-companion button,#geeky-companion textarea{font:inherit}
+#geeky-companion button{min-height:44px;cursor:pointer}
+#geeky-companion svg{width:22px;height:22px;flex:none}
+#geeky-companion button:focus-visible,#geeky-companion textarea:focus-visible{outline:3px solid #ffc857;outline-offset:3px}
+#geeky-companion button:disabled{opacity:.55;cursor:wait}
+#geeky-companion ::selection{background:#eee4fb;color:#321853}
+.geeky-launcher{display:flex;align-items:center;gap:12px;border:0;border-radius:12px;background:#321853;color:#fff;padding:12px 18px;text-align:left;box-shadow:0 6px 22px #32185326}
+.geeky-launcher:hover{background:#6942a1}
+.geeky-launcher strong,.geeky-launcher small{display:block}.geeky-launcher strong{font-size:15px}.geeky-launcher small{font-size:12px;color:#e9dff7;margin-top:3px}
+.geeky-panel{width:380px;max-width:calc(100vw - 40px);height:650px;max-height:calc(100dvh - 40px);background:#fff;border-radius:16px;box-shadow:0 12px 45px #32185330;display:flex;flex-direction:column;overflow:hidden}
+.geeky-header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 20px;background:#321853;color:#fff}
+.geeky-header h2{font-size:24px;line-height:1.15;color:inherit;margin:0;letter-spacing:-.02em}
+.geeky-header p{font-size:12px;color:#e9dff7;margin:5px 0 0}
+.geeky-icon{display:grid;place-items:center;width:44px;padding:8px;background:transparent;border:0;border-radius:9px;color:inherit}
+.geeky-icon:hover{background:#ffffff1f}
+.geeky-toolbar{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid #e5dfe9;font-size:12px}
+#geeky-status{line-height:1.4;color:#6d5879}
+#geeky-voice{border:1px solid #e5dfe9;border-radius:9px;background:#fff;display:flex;align-items:center;gap:7px;padding:8px 10px;color:#321853;font-size:12px}
+#geeky-voice:hover{background:#eee4fb}
+#geeky-voice[aria-pressed=true]{background:#321853;color:#fff;border-color:#321853}
+.geeky-messages{min-height:80px;flex:1;overflow-y:auto;padding:22px 20px 8px;scrollbar-width:thin;scrollbar-color:#b8a4ce transparent;overscroll-behavior:contain}
+.geeky-message{margin:0 0 20px;overflow-wrap:anywhere}
+.geeky-message strong{font-size:12px;color:#6942a1;font-weight:750}
+.geeky-message p{font-size:14px;line-height:1.65;margin:6px 0 0;white-space:pre-wrap;color:#321853}
+.geeky-message[data-role=user]{padding:12px 14px;background:#f4eff9;border-radius:12px;margin-left:24px}
+.geeky-message[data-role=user] strong{color:#6d5879}
+.geeky-suggestions{padding:0 20px 12px;display:flex;flex-wrap:wrap;gap:8px}
+.geeky-suggestions button{background:#fff;border:1px solid #e5dfe9;border-radius:9px;padding:8px 10px;color:#321853;font-size:12px}
+.geeky-suggestions button:hover{background:#fff8ec}
+.geeky-error{margin:0 14px 8px;padding:10px 12px;background:#fff3e3;color:#743b13;border-radius:9px;font-size:12px;line-height:1.5;max-height:110px;overflow:auto;overflow-wrap:anywhere}
+.geeky-actionbar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 16px;border-top:1px solid #e5dfe9;color:#6d5879;font-size:12px;line-height:1.4}
+#geeky-undo{display:flex;align-items:center;gap:5px;background:none;border:0;border-radius:8px;color:#6942a1;font-size:12px;padding:6px}
+#geeky-undo svg{width:17px;height:17px}
+.geeky-compose{display:flex;align-items:flex-end;gap:8px;padding:0 14px 12px}
+#geeky-input{resize:none;width:100%;min-height:64px;max-height:120px;border:1px solid #d4c9df;border-radius:9px;background:#fff;color:#321853;padding:10px 12px;line-height:1.45;font-size:14px;caret-color:#6942a1}
+#geeky-input::placeholder{color:#6d5879;opacity:1}
+#geeky-send{display:grid;place-items:center;background:#ff9d38;color:#321853;border:0;border-radius:9px;width:44px;flex:none}
+#geeky-send:hover{background:#ffb356}
+.geeky-disclosure{font-size:12px;line-height:1.5;color:#6d5879;background:#faf8fc;margin:0;padding:10px 16px}
+.geeky-sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(max-width:650px){#geeky-companion{right:12px;bottom:max(12px,env(safe-area-inset-bottom))}.geeky-launcher{padding:10px 14px}.geeky-panel{width:calc(100vw - 24px);max-width:none;height:610px;max-height:calc(100dvh - 90px)}.geeky-header{padding:14px 16px}.geeky-messages{padding:18px 16px 6px}#geeky-input{font-size:16px}.geeky-disclosure{font-size:12px}}
+@media(prefers-reduced-motion:no-preference){.geeky-panel{animation:geeky-arrive 180ms cubic-bezier(.16,1,.3,1)}@keyframes geeky-arrive{from{transform:translateY(8px)}to{transform:translateY(0)}}}

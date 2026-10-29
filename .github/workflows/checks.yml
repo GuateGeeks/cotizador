@@ -23,6 +23,8 @@ jobs:
         run: npm ci
       - name: Unit tests (engine, prices, PDF, campus rules)
         run: npm test
+      - name: Verify pinned Geeky client
+        run: npm run check:agent
       - name: Build the 3D campus bundle
         run: npm run build
       - name: Committed bundle matches the sources
