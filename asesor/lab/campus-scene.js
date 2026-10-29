@@ -751,6 +751,14 @@ export function createMascot(container, opts = {}) {
     schedule();
   }
   function zoom(delta) { if (!disposed && Number.isFinite(delta)) zoomAt(Math.exp(delta * 2)); }
+  // Short, allowlisted reactions use the existing rig and animation scheduler.
+  function agentGesture(name) {
+    if (disposed || reduced || paused || !visible || geekyHidden() || !['greet', 'nod', 'point', 'celebrate'].includes(name)) return false;
+    if (!geeky.cue?.(name)) return false;
+    schedule();
+    return true;
+  }
+
   function resetView() { targetYaw = DEFAULT_YAW; targetPitch = PITCH; targetZoom = 1; panTarget.set(0, 0, 0); viewMode = 'overview'; frameBox = null; setFocus({ kind: 'overview' }); schedule(); }
   function setPaused(value) { paused = !!value; if (paused) settle(); schedule(); }
   function wheel(event) {
@@ -838,7 +846,7 @@ export function createMascot(container, opts = {}) {
   update({}); resize();
 
   return {
-    update, resize, rotate, zoom, resetView, setPaused, setFocus: next => setFocus(next), setInsets, setHoverVerb, setView, capture,
+    update, resize, rotate, zoom, resetView, setPaused, agentGesture, setFocus: next => setFocus(next), setInsets, setHoverVerb, setView, capture,
     getDiagnostics() {
       const list = records_();
       const building = list.filter(record => record.staged.some(item => item.fresh && !item.done)).length;

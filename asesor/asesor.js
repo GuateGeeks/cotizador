@@ -22,7 +22,13 @@ try {
   ui.notice = 'No se pudo leer tu avance guardado; se empezó uno nuevo.';
 }
 Object.values(state.enroll || {}).forEach(g => { if (g && Array.isArray(g.sections)) g.sections.forEach((s, i) => { s.name = String.fromCharCode(65 + (i % 26)); }); });
+let agentHostVersion = 0, agentHostSignature = JSON.stringify(state), agentHostRendering = false;
 function store() {
+  const signature = JSON.stringify(state);
+  if (signature !== agentHostSignature) {
+    agentHostVersion++; agentHostSignature = signature;
+    window.dispatchEvent(new CustomEvent('gg:quote-changed'));
+  }
   try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* almacenamiento no disponible: el recorrido sigue funcionando */ }
 }
 
@@ -1223,7 +1229,7 @@ const MODS = [
   { k: 'EVO', label: 'Pagar en cuotas', tag: 'Evoluciona', note: 'Pago inicial y cuotas mensuales; al terminar, el equipo es del colegio.' }
 ];
 const modKey = plan => isEvo(plan) ? 'EVO' : plan;
-function syncCalc() { state.selected.forEach(s => { if (s.confirmed) s.calc = M.entrySignature(s, groups()); }); }
+function syncCalc() { if (agentHostRendering) return; state.selected.forEach(s => { if (s.confirmed) s.calc = M.entrySignature(s, groups()); }); }
 // Qué recibe el colegio según la modalidad elegida, redactado por programa (se usa en pantalla y en el PDF).
 const SOC = ['Sócrates Aprende', 'Plataforma de GuateGeeks para docentes y estudiantes'];
 function includesFor(s, p, u) {
@@ -1586,3 +1592,50 @@ function placeProgressLine() {
   el.firstChild.style.width = state.step * 20 + '%';
   progIO = new IntersectionObserver(es => { el.classList.toggle('on', !es[0].isIntersecting); }, { threshold: 0 }); progIO.observe(nav);
 }
+
+
+// Geeky host boundary: only the semantic adapter uses quote replacement.
+window.GGCotizadorHost = Object.freeze({
+  getState: () => JSON.parse(JSON.stringify(state)),
+  getVersion: () => agentHostVersion,
+  replaceState(next) {
+    const before = state;
+    state = JSON.parse(JSON.stringify(next));
+    ui.assign = false; ui.assignSel = {}; ui.assignSeen = ''; ui.preview = null;
+    ui.sub = 0; ui.single = false; ui.review = !!state.selected?.[state.selectedIndex]?.confirmed;
+    const dialog = document.getElementById('confirm'); if (dialog?.open) dialog.close();
+    const previousRendering = agentHostRendering;
+    agentHostRendering = true;
+    try { render(); } catch (e) { state = before; store(); throw e; }
+    finally { agentHostRendering = previousRendering; }
+  },
+  sceneCapabilities() {
+    return { available: !!mascot && !campusHidden && !!mascotHost?.classList.contains('campus-ready'),
+      visible: !campusHidden, paused: animPaused, reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches };
+  },
+  scene(action, args) {
+    const no = error => ({ ok: false, error, message: 'El campus no está disponible para esa acción; la cotización sigue funcionando.' });
+    const done = () => ({ ok: true, message: 'Campus actualizado.', scene: this.sceneCapabilities() });
+    if (!args || typeof args !== 'object') return no('invalid_arguments');
+    if (action === 'show' && typeof args.visible === 'boolean') {
+      if (campusHidden === args.visible) toggleCampus(); return done();
+    }
+    if (action === 'pause' && typeof args.paused === 'boolean') { setAnimPaused(args.paused); return done(); }
+    if (!this.sceneCapabilities().available) return no('scene_unavailable');
+    if (action === 'rotate' && ['left', 'right'].includes(args.direction)) mascot.rotate(args.direction === 'left' ? -.25 : .25);
+    else if (action === 'zoom' && ['in', 'out'].includes(args.direction)) mascot.zoom(args.direction === 'in' ? .12 : -.12);
+    else if (action === 'reset') mascot.resetView();
+    else if (action === 'view' && ['overview', 'front', 'patio', 'people', 'program'].includes(args.name)) {
+      if (args.name === 'program' && !campusFeedback?.focus?.programId) return no('focus_required');
+      mascot.setView(args.name);
+    } else if (action === 'focus' && ['program', 'level', 'overview'].includes(args.kind)) {
+      if (args.kind === 'program' && !PROGRAMS.some(p => p.id === args.id) || args.kind === 'level' && !LEVELS.some(l => l.id === args.id)) return no('unknown_focus');
+      inspectCampus(args.kind, args.id);
+    } else if (action === 'gesture' && ['greet', 'nod', 'point', 'celebrate'].includes(args.name)) {
+      if (animPaused) return no('animation_paused');
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) return no('reduced_motion');
+      if (!mascot.agentGesture?.(args.name)) return no('gesture_unavailable');
+    } else return no('invalid_arguments');
+    return done();
+  }
+});

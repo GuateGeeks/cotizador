@@ -33,21 +33,34 @@ jobs:
           node-version: 22
           cache: npm
       - name: Test and build the 3D campus bundle
-        # Nothing is published unless the quotation engine and campus rules pass.
         run: |
           npm ci
           npm test
+          npm run check:agent
           npm run build
       - name: Prepare the site (asesor de programas educativos)
+        env:
+          GEEKY_AGENT_ENDPOINT: ${{ vars.GEEKY_AGENT_ENDPOINT }}
         run: |
           mkdir -p _site
           cp asesor/index.html asesor/asesor.css asesor/asesor.js asesor/campus-experience.js asesor/config.js asesor/motor.js asesor/pdf.js asesor/propuesta-pdf.js _site/
+          cp asesor/agent-adapter.js asesor/agent-config.js asesor/agent-ui.mjs asesor/agent.css _site/
           cp -R asesor/vendor _site/vendor
           cp -R assets _site/assets
+          node --input-type=module <<'JS'
+          import {writeFileSync} from 'node:fs';
+          const endpoint = process.env.GEEKY_AGENT_ENDPOINT || '';
+          // Keep the checked-in public configuration when no repository override exists.
+          if (!endpoint) process.exit(0);
+          if (endpoint && (new URL(endpoint).protocol !== 'https:' || new URL(endpoint).username || new URL(endpoint).password)) {
+            throw new Error('GEEKY_AGENT_ENDPOINT must be a public HTTPS endpoint without credentials');
+          }
+          writeFileSync('_site/agent-config.js', 'window.GG_AGENT_CONFIG = Object.freeze(' + JSON.stringify({enabled:true, endpoint}) + ');\n');
+          JS
           # el asesor vive en la raíz del sitio: sus rutas ../assets pasan a assets
           sed -i.bak 's#\.\./assets/#assets/#g' _site/index.html _site/asesor.js _site/config.js
           rm -f _site/*.bak
-          if grep -rn '\.\./' _site/*.html _site/*.js; then echo 'Quedaron rutas relativas fuera del sitio'; exit 1; fi
+          if grep -rn '\.\./' _site/*.html _site/*.js _site/*.mjs; then echo 'Quedaron rutas relativas fuera del sitio'; exit 1; fi
       - name: Upload the site artifact
         uses: actions/upload-pages-artifact@v3
         with:
