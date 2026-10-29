@@ -1,4 +1,4 @@
-const AGENT_MODULE = './vendor/geeky-agent/6194d34c7fa3911adaea800cd95b095afb1c8b4b/client.mjs';
+const AGENT_MODULE = './vendor/geeky-agent/6cc7767939f0ee3c047c241411d2525f594ebb69/client.mjs';
 // Presentation only; transport is versioned in GuateGeeks/geeky-agent.
 const icons = {
   close:'<path d="m6 6 12 12M18 6 6 18"/>',
@@ -125,7 +125,7 @@ export function mountGeeky({config=window.GG_AGENT_CONFIG || {},adapter=()=>wind
   function openProposal(){
     const result=adapter()?.openProposal?.();
     if(!result?.ok){error('Todavía no pude abrir la propuesta. Intenta de nuevo en un momento.');return false;}
-    error('');el('action').textContent='Tu propuesta está abierta. La construiremos paso a paso.';character?.react('success');gesture('point');refresh();return true;
+    error('');el('action').textContent='Propuesta abierta.';character?.react('success');gesture('point');refresh();return true;
   }
   function close(){
     generation++;connecting=null;connected=false;voice=false;busy=false;voiceBusy=false;activity='idle';opened=false;
@@ -139,7 +139,7 @@ export function mountGeeky({config=window.GG_AGENT_CONFIG || {},adapter=()=>wind
   };
   el('close').onclick=close;
   el('proposal').onclick=()=>{if(openProposal())close();};
-  el('start').onclick=()=>{if(openProposal())void send('Armemos mi propuesta. Guíame con una pregunta a la vez y mantén la vista de Propuesta mientras la completamos.');};
+  el('start').onclick=()=>{if(openProposal())void send('Quiero empezar mi cotización. Pregunta solo el primer dato que falte y mantén la vista de Propuesta.');};
   el('form').onsubmit=event=>{event.preventDefault();void send(el('input').value);};
   el('input').oninput=refresh;
   el('input').onkeydown=event=>{if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing){event.preventDefault();void send(el('input').value);}};
@@ -167,7 +167,7 @@ export function mountGeeky({config=window.GG_AGENT_CONFIG || {},adapter=()=>wind
   import('./vendor/agent-character.mjs?v=164').then(({mountGeekyCharacter})=>{
     const fallback=face.querySelector('img');character=mountGeekyCharacter(face);fallback?.remove();refresh();if(opened)character.react('greet');
   }).catch(()=>{/* Original brand image remains if the optional character module fails. */});
-  showMessage({id:'welcome',role:'assistant',text:'¡Hola! Soy Geeky. Tú conoces tu colegio; yo te ayudo a darle forma. Abramos tu propuesta y construyámosla juntos.',final:true});refresh();
+  showMessage({id:'welcome',role:'assistant',text:'¡Hola! Soy Geeky. ¿Qué quieres cotizar?',final:true});refresh();
   return Object.freeze({close,getDiagnostics:()=>({state:displayState(),open:opened,character:character?.getDiagnostics()||null})});
 }
 if(typeof window!=='undefined')window.GGGeekyCompanion=mountGeeky();

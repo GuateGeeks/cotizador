@@ -4,7 +4,7 @@
 #geeky-companion button,#geeky-companion textarea{font:inherit}
 #geeky-companion button{min-height:44px;cursor:pointer}
 #geeky-companion .geeky-symbol{width:20px;height:20px;flex:none}
-#geeky-companion button:focus-visible,#geeky-companion textarea:focus-visible,#geeky-companion summary:focus-visible{outline:2px solid var(--g-ink);outline-offset:3px;box-shadow:0 0 0 5px #ffc857}
+#geeky-companion button:focus-visible,#geeky-companion summary:focus-visible{outline:2px solid var(--g-ink);outline-offset:3px;box-shadow:0 0 0 5px #ffc857}
 #geeky-companion button:disabled{opacity:.55;cursor:default}
 #geeky-companion ::selection{background:#eee4fb;color:var(--g-ink)}
 .geeky-launcher{display:flex;align-items:center;gap:10px;max-width:calc(100vw - 32px);padding:5px 16px 5px 5px;border:0;border-radius:16px;background:var(--g-cream);color:var(--g-ink);text-align:left;box-shadow:0 8px 30px #210d3a2b}
@@ -38,6 +38,7 @@
 #geeky-undo{display:flex;align-items:center;gap:5px;background:none;border:0;border-radius:8px;color:#6942a1;font-size:12px;padding:6px;white-space:nowrap}#geeky-undo .geeky-symbol{width:16px;height:16px}
 .geeky-compose{display:flex;flex-direction:column;margin:0 16px;padding:5px 5px 5px 12px;border:1px solid #cbbbd9;border-radius:12px;background:#fff;flex:none}.geeky-compose:focus-within{border-color:#6942a1}
 #geeky-input{resize:none;display:block;width:100%;min-height:55px;max-height:110px;border:0;border-radius:6px;background:transparent;color:var(--g-ink);padding:7px 7px 2px 0;line-height:1.45;font-size:14px;caret-color:#6942a1}
+#geeky-input:focus{outline:none;box-shadow:none}
 #geeky-input::placeholder{color:var(--g-muted);opacity:1}
 .geeky-compose-tools{display:flex;align-items:center;justify-content:space-between;gap:12px}
 #geeky-voice{border:0;border-radius:8px;background:transparent;display:flex;align-items:center;gap:6px;padding:7px 9px 7px 0;color:var(--g-ink);font-size:12px}
