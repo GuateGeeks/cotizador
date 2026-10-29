@@ -9,7 +9,7 @@ const output = path.join(root, 'artifacts', 'geeky-agent', 'ui-' + Date.now());
 const mime = {'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript','.css':'text/css','.png':'image/png','.glb':'model/gltf-binary'};
 const mockClient = `
 export function createRealtimeClient({onEvent}) {
-  window.agentTest = {connects: 0, disconnects: 0, texts: [], voice: false};
+  window.agentTest = {connects: 0, disconnects: 0, texts: [], voice: false, emit: onEvent};
   let next = 0;
   return {
     async connect() { window.agentTest.connects++; onEvent({type:'status',status:'connected'}); },
@@ -38,6 +38,36 @@ export function createRealtimeClient({onEvent}) {
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
   const browser = await chromium.launch({headless:true,args:['--use-angle=swiftshader','--enable-unsafe-swiftshader']});
   try {
+    const onboarding=await browser.newPage({viewport:{width:1440,height:1000},reducedMotion:'reduce'});
+    await onboarding.route('**/vendor/geeky-agent/**/client.mjs*',route=>route.fulfill({contentType:'text/javascript',body:mockClient}));
+    await onboarding.goto('http://127.0.0.1:'+server.address().port+'/asesor/index.html');
+    await onboarding.waitForFunction(()=>GGGeekyCompanion?.getDiagnostics().character?.renderer==='svg');
+    assert.equal(await onboarding.evaluate(()=>GGCotizadorHost.getState().step),0,'landing never jumps automatically');
+    assert.equal(await onboarding.evaluate(()=>GGGeekyCompanion.getDiagnostics().character.animating),false,'closed character has no RAF');
+    await onboarding.screenshot({path:path.join(output,'launcher-character.png')});
+    await onboarding.locator('#geeky-launcher').click();
+    await onboarding.screenshot({path:path.join(output,'welcome-character.png')});
+    for(const paused of [true,false]){
+      await onboarding.evaluate(paused=>setAnimPaused(paused),paused);
+      assert.equal(await onboarding.locator('#geeky-motion').isDisabled(),paused,'campus pause updates control immediately');
+      assert.equal(await onboarding.locator('#geeky-motion').getAttribute('aria-pressed'),String(paused));
+      assert.equal(await onboarding.evaluate(()=>GGGeekyCompanion.getDiagnostics().character.paused),paused);
+    }
+    await onboarding.locator('#geeky-start').click();
+    await onboarding.waitForFunction(()=>GGCotizadorHost.getState().step===5&&window.agentTest?.texts.length===1);
+    assert.equal(await onboarding.locator('#proposal-draft-title').innerText(),'Aquí empieza tu propuesta');
+    assert.equal(await onboarding.evaluate(()=>GGCotizadorHost.getState().selected.length),0,'start never invents programs');
+    assert.equal(await onboarding.evaluate(()=>GGGeekyCompanion.getDiagnostics().character.animating),false,'reduced motion stays static');
+    for(const state of ['thinking','speaking','listening','acting','idle']){
+      await onboarding.evaluate(state=>agentTest.emit({type:'activity',state}),state);
+      assert.equal(await onboarding.locator('#geeky-companion').getAttribute('data-state'),state);
+      assert.equal(await onboarding.evaluate(()=>GGGeekyCompanion.getDiagnostics().character.state),state);
+    }
+    await onboarding.screenshot({path:path.join(output,'proposal-character.png')});
+    await onboarding.locator('#geeky-close').click();
+    await onboarding.reload();
+    assert.equal(await onboarding.evaluate(()=>GGCotizadorHost.getState().step),5,'empty proposal survives reload');
+    await onboarding.close();
     for (const viewport of [{width:1440,height:1000},{width:390,height:844}]) {
       const page = await browser.newPage({viewport,reducedMotion:'reduce'});
       await page.route('**/vendor/geeky-agent/**/client.mjs*', route=>route.fulfill({contentType:'text/javascript',body:mockClient}));
@@ -110,12 +140,30 @@ export function createRealtimeClient({onEvent}) {
       await page.locator('#geeky-close').click();
       assert.equal(await page.locator('#geeky-panel').isVisible(),false);
       assert.equal(await page.evaluate(()=>window.agentTest.disconnects),1,'close releases connection');
+      assert.equal(await page.evaluate(()=>GGGeekyCompanion.getDiagnostics().character.animating),false,'close stops character RAF');
       await page.locator('#geeky-launcher').click();
       assert.equal(await page.locator('.geeky-message[data-role="user"]').count(),2,'transcript retained on reopen');
       await page.keyboard.press('Escape');
       assert.equal(await page.locator('#geeky-panel').isVisible(),false);
       await page.close();
     }
+    const compact=await browser.newPage({viewport:{width:390,height:360},reducedMotion:'reduce'});
+    await compact.route('**/vendor/geeky-agent/**/client.mjs*',route=>route.fulfill({contentType:'text/javascript',body:mockClient}));
+    await compact.goto('http://127.0.0.1:'+server.address().port+'/asesor/index.html');
+    await compact.locator('#geeky-launcher').click();
+    const compactPanel=compact.locator('#geeky-panel');
+    assert.match(await compactPanel.evaluate(el=>getComputedStyle(el).overflowY),/auto|scroll/,'short panel allows scrolling all controls');
+    await compact.locator('#geeky-voice').click();
+    await compact.locator('#geeky-error').waitFor({state:'visible'});
+    await compact.locator('#geeky-send').scrollIntoViewIfNeeded();
+    const sendBounds=await compact.locator('#geeky-send').boundingBox();
+    assert.ok(sendBounds.y>=0&&sendBounds.y+sendBounds.height<=360,'composer reachable with microphone error');
+    await compact.screenshot({path:path.join(output,'390-short-error.png')});
+    await compact.locator('#geeky-input').fill('Continuar con poco espacio');
+    await compact.locator('#geeky-send').click();
+    await compact.waitForFunction(()=>agentTest.texts.length===1);
+    await compact.locator('#geeky-close').click();
+    await compact.close();
     const fallback = await browser.newPage({viewport:{width:390,height:844}});
     await fallback.addInitScript(()=>{
       const original=HTMLCanvasElement.prototype.getContext;
@@ -123,7 +171,9 @@ export function createRealtimeClient({onEvent}) {
     });
     await fallback.route('**/vendor/geeky-agent/**/client.mjs*',route=>route.fulfill({contentType:'text/javascript',body:mockClient}));
     await fallback.goto('http://127.0.0.1:'+server.address().port+'/asesor/index.html');
+    await fallback.waitForFunction(()=>GGGeekyCompanion?.getDiagnostics().character?.renderer==='svg');
     await fallback.locator('#geeky-launcher').click();
+    assert.equal(await fallback.locator('#geeky-character svg').count(),1,'original character works without WebGL');
     await fallback.locator('#geeky-input').fill('Ayúdame sin el campus');
     await fallback.locator('#geeky-send').click();
     await fallback.waitForFunction(()=>window.agentTest?.texts.length===1);

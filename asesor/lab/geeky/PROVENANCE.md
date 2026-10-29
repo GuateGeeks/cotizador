@@ -1,9 +1,9 @@
-# Procedencia de Geeky 3D
+# Procedencia de Geeky
 
 - Fuente: https://github.com/GuateGeeks/geeky-animation
 - Commit: `0089c59`
 - Los archivos de esta carpeta (salvo `embedded.js` y este documento) son copias sin modificar de la fuente. La estructura relativa se conserva (`live/` y `geeky-motion.mjs`) para que sus importaciones, por ejemplo `core.mjs` -> `../geeky-motion.mjs`, sigan intactas.
-- No se copiaron `assistant.mjs`, `svg-renderer.mjs`, `actor.mjs` ni `index.mjs`: el campus no los usa.
+- El retrato del agente usa también `live/svg-renderer.mjs`, copiado sin modificar del mismo commit. No se copiaron `assistant.mjs`, `actor.mjs` ni `index.mjs`.
 
 | Archivo aquí | Ruta en la fuente | SHA256 |
 |---|---|---|
@@ -15,6 +15,7 @@
 | `live/technology-actions.mjs` | `src/live/technology-actions.mjs` | `f79db546812eb2ec96e2d5ae811df0ffed39372abec76f761c4c6707dbd69dd2` |
 | `live/technology-props.mjs` | `src/live/technology-props.mjs` | `62856cb0a1d6dc9ef19dea055ef0fd1531fe6b6bff68dc7a525f98e3bacf4a86` |
 | `live/three-renderer.mjs` | `src/live/three-renderer.mjs` | `502099db0a2015058bf2e5bee60cf6616d65282d8371a3abbfca0069b006e0aa` |
+| `live/svg-renderer.mjs` | `src/live/svg-renderer.mjs` | `6e25fa42c4b4c8e61e507546f1a2405ed6679b2925b4724e5d71c125eccad6df` |
 
 ## Licencia
 
@@ -24,5 +25,7 @@ El repositorio de origen no declara una licencia. Pertenece a la misma organizac
 
 - `embedded.js`: monta el `ThreeRenderer` original sin WebGL propio (`Object.create(ThreeRenderer.prototype)`, escena = un `Group` del campus, `gl` = stub, sin sus luces) y expone `step(dt)` = `renderer.render(brain.update(dt), brain.fx())`.
 - `../campus-geeky.js`: posición, escala (0,027), orientación a la cámara, mirada, acciones y reposo en el campus.
+
+- `../agent-character.js`: retrato SVG decorativo que consume los contornos, `GeekyBrain` y `SvgRenderer` originales. Mapea actividad real a acciones existentes, limita el dibujo a 30 fps y ventanas de ocho segundos, y detiene RAF al ocultarse, pausarse o activar movimiento reducido. Saludo = `waving`; cambio exitoso = `nod`. No crea un contexto WebGL.
 
 Para verificar: `sha256sum geeky-motion.mjs live/*.mjs` debe coincidir con la tabla y con los mismos archivos en el commit `0089c59`.

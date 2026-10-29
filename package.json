@@ -2,7 +2,7 @@
   "name": "guategeeks-cotizador",
   "private": true,
   "scripts": {
-    "build": "esbuild asesor/lab/lab-scene.js --bundle --minify --format=iife --global-name=GGLab --target=es2019 --legal-comments=none --outfile=asesor/vendor/lab-scene.min.js",
+    "build": "esbuild asesor/lab/lab-scene.js --bundle --minify --format=iife --global-name=GGLab --target=es2019 --legal-comments=none --outfile=asesor/vendor/lab-scene.min.js && npm run build:agent-character",
     "test": "node --test asesor/test/*.test.js",
     "serve": "python3 -m http.server 8087 --bind 127.0.0.1",
     "test:browser": "node asesor/test/campus-browser.cjs",
@@ -17,7 +17,8 @@
     "import:r2": "node tools/r2-import.mjs",
     "import:meshy": "node tools/meshy-import.mjs",
     "test:agent-browser": "node asesor/test/agent-browser.cjs",
-    "check:agent": "node tools/sync-geeky-agent.mjs --check"
+    "check:agent": "node tools/sync-geeky-agent.mjs --check",
+    "build:agent-character": "esbuild asesor/lab/agent-character.js --bundle --minify --format=esm --target=es2019 --legal-comments=none --outfile=asesor/vendor/agent-character.mjs"
   },
   "devDependencies": {
     "esbuild": "0.25.12",

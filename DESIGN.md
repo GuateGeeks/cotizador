@@ -23,6 +23,14 @@ colors:
   scene-line: "#3218532e"
   scene-focus-ring: "#321853"
   camera-ink: "#321853"
+  agent-launcher-hover: "#fff0d9"
+  agent-surface: "#f4eff9"
+  agent-listening: "#356a5c"
+  agent-error-status: "#88421d"
+  agent-error-paper: "#fff3e3"
+  agent-error-ink: "#743b13"
+  agent-input-line: "#cbbbd9"
+  agent-disclosure: "#faf8fc"
 typography:
   body:
     fontFamily: '"Avenir Next", Avenir, Inter, "Segoe UI", system-ui, sans-serif'
@@ -38,6 +46,28 @@ typography:
     lineHeight: 1.6
   control-label:
     fontSize: "12px"
+  agent-small:
+    fontSize: "11px"
+    lineHeight: 1.5
+  agent-message:
+    fontSize: "14px"
+    lineHeight: 1.65
+  agent-mobile-input:
+    fontSize: "16px"
+    lineHeight: 1.45
+  agent-draft-title:
+    fontSize: "23px"
+    lineHeight: 1.2
+    letterSpacing: "-0.02em"
+  agent-title-short:
+    fontSize: "24px"
+  agent-title-mobile:
+    fontSize: "27px"
+  agent-title:
+    fontSize: "29px"
+    fontWeight: 780
+    lineHeight: 1.1
+    letterSpacing: "-0.025em"
 rounded:
   flush: "0px"
   input: "7px"
@@ -107,6 +137,18 @@ components:
     textColor: "{colors.scene-ink}"
     rounded: "12px"
     padding: "8px 12px"
+  agent-start:
+    backgroundColor: "{colors.action}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.control}"
+    padding: "10px 13px"
+    height: "44px"
+  agent-panel:
+    backgroundColor: "{colors.paper}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.option}"
+    width: "390px"
+    height: "710px"
   viewer-counter:
     backgroundColor: "{colors.scene-glass}"
     textColor: "{colors.scene-ink}"
@@ -134,3 +176,16 @@ Leyenda y contadores: la leyenda «Representación de tu configuración» va en 
 Escena: isla facetada violeta, fachadas marfil, cubierta plana violeta, acceso naranja y circulaciones turquesa. Las tecnologías se reconocen por su forma de producto (Tale-Bot, dinosaurio Robot Master, base SPIKE, placa de circuitos, cuadricóptero, visores con holograma) y por su ciclo de actividad. Personas articuladas con proporciones por edad y colores de nivel. Geeky, de GuateGeeks/geeky-animation, guía la mirada desde la entrada. Las reglas de construcción y detalle proceden del benchmark school-flat de 3d-assets, adaptadas al storyboard.
 
 Referencias: `docs/campus-3d.md`. Se recuperaron el texto y una imagen de la conversación «Definir storyboards 3D». La imagen adicional «Del aula al campus» suministrada durante la implementación prevalece como dirección visual final; el rediseño del 24 de octubre de 2026 siguió su descripción de seis cuadros y estas reglas.
+
+
+## Components
+
+### Geeky, guía de la propuesta
+
+Extensión acotada al acceso, chat y borrador vacío de Propuesta (asesor/agent.css). Conserva el campus descrito arriba: papel y crema, tinta violeta, tipografía heredada y naranja para «Empezar mi cotización». La cabecera usa el SVG original de Geeky, sin otro visor 3D. Las variantes agent-* del frontmatter son valores intencionales del componente; conservan la paleta y jerarquía globales. Violeta claro distingue mensajes del usuario y hover; verde identifica escucha y marrón/naranja identifica error junto con texto explícito. No depender solo del color.
+
+El acceso queda a 20 px de los bordes derecho e inferior; el panel limita ancho y altura al viewport con 40 px de margen total. La cabecera reserva 112 × 104 px al personaje. A 650 px de ancho, panel = viewport menos 24 px, con área segura inferior y retrato de 98 × 96 px. A 620 px de alto compacta cabecera y compositor y oculta barra de propuesta y disclosure. La conversación se desplaza dentro del panel; texto largo puede partirse. Los tamaños agent-* documentan la jerarquía propia del chat y borrador, sin ampliar por defecto la escala del formulario. Las propiedades tipográficas normativas están en el frontmatter.
+
+El panel se eleva con sombra violeta suave; recetas y entrada de 220 ms en el sidecar. Botones de al menos 44 px de alto; foco de 2 px oscuro con separación de 3 px y aro amarillo de 5 px. El retrato es decorativo: estado y anuncios pertenecen al DOM. La actividad proviene del transporte; recibir texto no representa voz. El SVG limita frecuencia a 30 FPS y actividad a ventanas de ocho segundos más la duración de reacciones originales. Pausa local o del campus, movimiento reducido, cierre y pestaña oculta dejan pose estática; no es rendimiento medido.
+
+«Empezar mi cotización» abre Propuesta localmente antes de conectar. La carga inicial conserva el paso; navegar conserva datos y undo comercial. Ver [docs/geeky-agent.md](docs/geeky-agent.md) para comportamiento, procedencia y verificación.
