@@ -179,3 +179,33 @@ test('adding unrelated program preserves stale manual schedule after section rem
   assert.equal(x.api.getContext().summary.net,0);
 });
 
+
+test('real host summary render does not reprice untouched stale entries during agent updates',()=>{
+  const source=fs.readFileSync(require('node:path').join(__dirname,'../asesor.js'),'utf8');
+  const hostCode=source.slice(source.indexOf('// Geeky host boundary'));
+  const syncCode=source.match(/function syncCalc\(\) \{[^\n]+/)[0];
+  let state=structuredClone(setup().state);
+  state.step=5;
+  state.selected=[{id:'manual',programId:'master',groupIds:['p1-1'],sharing:'simultaneous',simIds:['p1-1'],units:null,stations:false,plan:'FLEX',flexBimestres:1,confirmed:true,calc:'previous-two-section-signature'}];
+  const sandbox={window:{GG_CONFIG:C,GGMotor:M},M,PROGRAMS:C.PROGRAMS,LEVELS:C.LEVELS,JSON,agentHostVersion:0,agentHostRendering:false,
+    get state(){return state},set state(next){state=next},groups:()=>M.groupsOf(state.enroll,C.LEVELS,state.levels),
+    ui:{},document:{getElementById:()=>null},mascot:null,mascotHost:null,campusHidden:true,animPaused:false,
+    matchMedia:()=>({matches:false}),store(){},render(){vm.runInContext('syncCalc()',context)}};
+  const context=vm.createContext(sandbox);
+  vm.runInContext(syncCode+'\n'+hostCode,context);
+  vm.runInContext(fs.readFileSync(require('node:path').join(__dirname,'../agent-adapter.js'),'utf8'),context);
+  const api=sandbox.window.GGCotizadorAgent, before=JSON.stringify(state.selected[0]);
+  const result=api.executeTool('update_cotizador',{action:'add_program',args:{programId:'electronics',groupIds:['p1-1']},expectedRevision:api.getContext().revision});
+  assert.equal(result.ok,true);
+  assert.equal(JSON.stringify(state.selected[0]),before);
+  assert.equal(api.getContext().selection[0].status,'stale');
+  assert.equal(api.getContext().summary.net,0);
+  assert.equal(sandbox.agentHostRendering,false);
+  // An ordinary manual summary still keeps its established recalculation behavior.
+  vm.runInContext('syncCalc()',context);
+  assert.notEqual(state.selected[0].calc,'previous-two-section-signature');
+  sandbox.render=()=>{throw new Error('render failed')};
+  assert.throws(()=>sandbox.window.GGCotizadorHost.replaceState(state),/render failed/);
+  assert.equal(sandbox.agentHostRendering,false);
+});
+
