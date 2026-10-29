@@ -159,3 +159,23 @@ test('new entry ids do not collide with persisted agent ids after adapter reload
   assert.equal(new Set(x.state.selected.map(e=>e.id)).size,2);
 });
 
+
+test('adding unrelated program preserves stale manual schedule after section removal',()=>{
+  const x=setup();
+  update(x,'add_program',{programId:'master',groupIds:['p1-1','p1-2']});
+  const id=x.state.selected[0].id;
+  update(x,'set_schedule',{entryId:id,sharing:'simultaneous',simIds:['p1-1','p1-2']});
+  update(x,'set_modality',{entryId:id,plan:'FLEX'});
+  x.manual(s=>{
+    s.enroll.p1.sections=s.enroll.p1.sections.filter(sec=>sec.id!=='p1-2');
+    const e=s.selected[0];e.groupIds=['p1-1'];e.simIds=['p1-1'];
+  });
+  const before=JSON.stringify(x.state.selected[0]);
+  assert.equal(x.api.getContext().selection[0].status,'stale');
+  assert.equal(x.api.getContext().summary.net,0);
+  assert.equal(update(x,'add_program',{programId:'electronics',groupIds:['p1-1']}).ok,true);
+  assert.equal(JSON.stringify(x.state.selected.find(e=>e.id===id)),before);
+  assert.equal(x.api.getContext().selection.find(e=>e.id===id).status,'stale');
+  assert.equal(x.api.getContext().summary.net,0);
+});
+

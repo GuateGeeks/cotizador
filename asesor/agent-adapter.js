@@ -125,9 +125,10 @@
       if (!g || !(g.students>0) || !p.grades.includes(g.gradeId) || s.selected.some(other=>other!==e&&other.programId===e.programId&&other.groupIds.includes(id))) fail('incompatible_group');
     }
   }
-  function normalize(s, signatures, calculate, removedIds) {
+  function normalize(s, signatures, calculate, removedIds, touchedIds) {
     const gs=groups(s), active=new Set(gs.filter(g=>g.students>0).map(g=>g.id));
     s.selected.forEach(e=>{
+      if (!calculate && !touchedIds.has(e.id) && !e.groupIds.some(id=>removedIds.has(id))) return;
       e.groupIds=e.groupIds.filter(id=>!removedIds.has(id));
       e.simIds=e.simIds.filter(id=>e.groupIds.includes(id));
       if(e.groupIds.length===1){e.sharing='separate';e.simIds=[];}
@@ -181,7 +182,10 @@
       const removedIds = new Set();
       if (action === 'set_levels') { const currentIds=new Set(groups(s).map(g=>g.id)); previousGroups.filter(g=>!currentIds.has(g.id)).forEach(g=>removedIds.add(g.id)); }
       if (action === 'remove_section' || action === 'set_students' && !(a.students > 0)) removedIds.add(a.sectionId);
-      normalize(s,signatures,action==='calculate',removedIds);
+      const touchedIds = new Set();
+      if (e && s.selected.includes(e)) touchedIds.add(e.id);
+      if (action === 'set_students') s.selected.filter(e=>e.groupIds.includes(a.sectionId)).forEach(e=>touchedIds.add(e.id));
+      normalize(s,signatures,action==='calculate',removedIds,touchedIds);
     }
     validState(s);
   }
