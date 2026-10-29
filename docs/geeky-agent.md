@@ -20,8 +20,8 @@ En Cotizador, configurar temporalmente `asesor/agent-config.js` con endpoint `ht
 
 1. Desplegar el servidor de geeky-agent con HTTPS y su OPENAI_API_KEY. Su README documenta Docker, ALLOWED_ORIGINS, controles de acceso y límites.
 2. Configurar ALLOWED_ORIGINS con el origen exacto que sirve Cotizador (por ejemplo https://guategeeks.com). Es el origen, no la ruta /cotizador.
-3. Configurar la variable de repositorio GitHub **GEEKY_AGENT_ENDPOINT** con la URL HTTPS completa del endpoint /session.
-4. El workflow de Pages genera solo esa configuración pública. Ninguna clave debe agregarse a Pages. El valor vacío intenta /session en el mismo origen y permite despliegues con proxy; GitHub Pages por sí solo no sirve ese endpoint.
+3. Configurar la URL HTTPS completa del endpoint /session en `asesor/agent-config.js`, o usar la variable de repositorio GitHub **GEEKY_AGENT_ENDPOINT** para sobrescribirla durante el despliegue. Esta URL es pública; no requiere un secreto de GitHub.
+4. El workflow de Pages conserva la configuración del repositorio si no existe la variable; si existe, genera solo esa configuración pública. Ninguna clave debe agregarse a Pages. El valor vacío intenta /session en el mismo origen y permite despliegues con proxy; GitHub Pages por sí solo no sirve ese endpoint.
 5. Verificar voz y texto con una clave y navegador reales antes de habilitar el servicio para visitantes.
 
 No se despliega ningún backend ni se configura ninguna credencial al instalar estos archivos. Si falta el servicio, el panel explica el fallo y el cotizador manual sigue disponible. Para ocultar el panel en un despliegue propio, establecer enabled:false en agent-config.js.

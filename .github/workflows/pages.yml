@@ -50,6 +50,8 @@ jobs:
           node --input-type=module <<'JS'
           import {writeFileSync} from 'node:fs';
           const endpoint = process.env.GEEKY_AGENT_ENDPOINT || '';
+          // Keep the checked-in public configuration when no repository override exists.
+          if (!endpoint) process.exit(0);
           if (endpoint && (new URL(endpoint).protocol !== 'https:' || new URL(endpoint).username || new URL(endpoint).password)) {
             throw new Error('GEEKY_AGENT_ENDPOINT must be a public HTTPS endpoint without credentials');
           }
