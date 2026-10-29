@@ -1,4 +1,4 @@
-const AGENT_MODULE = './vendor/geeky-agent/0222867adcb94ab3225fb2b61ebff68c3a8cdce1/client.mjs';
+const AGENT_MODULE = './vendor/geeky-agent/abf4877cb292bdb1015d7e5ccfdd2fa9a9ac39b9/client.mjs';
 // Presentation only; transport is versioned in GuateGeeks/geeky-agent.
 const icons = {
   chat: '<path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5H4l-2 2V11.5a9.5 9.5 0 0 1 19 0Z"/><path d="M7 10h8M7 14h5"/>',
