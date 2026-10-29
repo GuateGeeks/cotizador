@@ -136,3 +136,26 @@ test('manual edit and revert still invalidates revision and undo',()=>{
   assert.equal(x.api.getContext().canUndo,false);
 });
 
+
+for (const students of [null,0]) test('unrelated agent actions preserve manual enrollment '+students+' and pending program scope',()=>{
+  const x=setup();
+  update(x,'add_program',{programId:'master',groupIds:['p1-1']});
+  const id=x.state.selected[0].id;
+  update(x,'set_modality',{entryId:id,plan:'FLEX'});
+  x.manual(s=>{s.enroll.p1.sections[0].students=students;s.step=5;});
+  const entry=JSON.stringify(x.state.selected);
+  assert.equal(x.api.getContext().error,undefined);
+  for (const [action,args] of [['set_tax',{enabled:true}],['navigate',{step:5}],['set_projection',{useSuggested:false,fee:25}],['set_levels',{levelIds:['prim']}]]) {
+    assert.equal(update(x,action,args).ok,true,action);
+    assert.equal(JSON.stringify(x.state.selected),entry,action+' must preserve pending manual scope');
+    assert.equal(x.state.step,5,action+' must preserve proposal step');
+  }
+});
+test('new entry ids do not collide with persisted agent ids after adapter reload',()=>{
+  const x=setup();
+  x.manual(s=>s.selected.push({id:'master@agent-1',programId:'master',groupIds:['p1-1'],sharing:'separate',simIds:[],units:null,stations:false,plan:'UNDECIDED',flexBimestres:1,confirmed:false,calc:null}));
+  assert.equal(update(x,'add_program',{programId:'master',groupIds:['p1-2']}).ok,true);
+  assert.equal(x.state.selected.length,2);
+  assert.equal(new Set(x.state.selected.map(e=>e.id)).size,2);
+});
+

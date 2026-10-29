@@ -125,14 +125,14 @@
       if (!g || !(g.students>0) || !p.grades.includes(g.gradeId) || s.selected.some(other=>other!==e&&other.programId===e.programId&&other.groupIds.includes(id))) fail('incompatible_group');
     }
   }
-  function normalize(s, signatures, calculate) {
+  function normalize(s, signatures, calculate, removedIds) {
     const gs=groups(s), active=new Set(gs.filter(g=>g.students>0).map(g=>g.id));
     s.selected.forEach(e=>{
-      e.groupIds=e.groupIds.filter(id=>active.has(id));
+      e.groupIds=e.groupIds.filter(id=>!removedIds.has(id));
       e.simIds=e.simIds.filter(id=>e.groupIds.includes(id));
       if(e.groupIds.length===1){e.sharing='separate';e.simIds=[];}
       if(e.sharing!=='simultaneous') e.simIds=[];
-      const ready=e.groupIds.length && e.sharing && (e.sharing!=='simultaneous'||e.simIds.length>=2) && (!program(e.programId).ratio||M.effectiveUnits(e,program(e.programId),gs)!==null);
+      const ready=e.groupIds.length && e.groupIds.every(id=>active.has(id)) && e.sharing && (e.sharing!=='simultaneous'||e.simIds.length>=2) && (!program(e.programId).ratio||M.effectiveUnits(e,program(e.programId),gs)!==null);
       const signature=M.entrySignature(e,gs);
       if(calculate || signatures.get(e.id)!==signature){ e.confirmed=!!ready; e.calc=ready?signature:null; }
     });
@@ -145,7 +145,8 @@
     else if(s.step>1&&!s.levels.length)s.step=1;
   }
   function mutate(s,action,a) {
-    const signatures = new Map(s.selected.map(e => [e.id, M.entrySignature(e,groups(s))]));
+    const original = JSON.stringify(s), previousGroups = groups(s);
+    const signatures = new Map(s.selected.map(e => [e.id, M.entrySignature(e,previousGroups)]));
     let e;
     if(has(a,'entryId'))e=findEntry(s,a.entryId);
     switch(action) {
@@ -155,7 +156,8 @@
       case 'remove_section': {const g=ensureGrade(s,a.gradeId);if(!g.sections.some(sec=>sec.id===a.sectionId))fail('unknown_section');g.sections=g.sections.filter(sec=>sec.id!==a.sectionId);if(!g.sections.length)g.sections=[{id:a.gradeId+'-agent-'+(++sequence),name:'A',students:null}];break;}
       case 'add_program': {
         if(!program(a.programId))fail('unknown_program');
-        e={id:a.programId+'@agent-'+(++sequence),programId:a.programId,groupIds:[],sharing:null,simIds:[],units:null,stations:false,plan:'UNDECIDED',flexBimestres:1,confirmed:false,calc:null};
+        let id; do { id=a.programId+'@agent-'+(++sequence); } while(s.selected.some(e=>e.id===id));
+        e={id,programId:a.programId,groupIds:[],sharing:null,simIds:[],units:null,stations:false,plan:'UNDECIDED',flexBimestres:1,confirmed:false,calc:null};
         participating(s,e,a.groupIds);e.groupIds=a.groupIds.slice();s.selected.push(e);break;
       }
       case 'remove_program':s.selected=s.selected.filter(x=>x!==e);break;
@@ -173,7 +175,15 @@
       case 'calculate':break;
       default:fail('unknown_action');
     }
-    normalize(s,signatures,action==='calculate');validState(s);
+    // Unrelated settings must preserve manual pending scope, including empty enrollment.
+    if (JSON.stringify(s) === original && action !== 'calculate') return;
+    if (!['set_tax','set_projection','navigate'].includes(action)) {
+      const removedIds = new Set();
+      if (action === 'set_levels') { const currentIds=new Set(groups(s).map(g=>g.id)); previousGroups.filter(g=>!currentIds.has(g.id)).forEach(g=>removedIds.add(g.id)); }
+      if (action === 'remove_section' || action === 'set_students' && !(a.students > 0)) removedIds.add(a.sectionId);
+      normalize(s,signatures,action==='calculate',removedIds);
+    }
+    validState(s);
   }
   function executeTool(name, args) {
     try {
