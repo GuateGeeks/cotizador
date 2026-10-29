@@ -7,7 +7,7 @@ const M = require('../motor.js'), C = require('../config.js');
 function setup() {
   let state = {v:1,step:1,levels:['prim'],enroll:{p1:{confirmed:true,sections:[{id:'p1-1',name:'A',students:24},{id:'p1-2',name:'B',students:24}]}},selected:[],selectedIndex:0,levelIndex:0,skipped:[],fee:null,useSuggested:true,iva:false};
   let version=0, renders=0;
-  const host = {getState:()=>structuredClone(state),getVersion:()=>version,replaceState:s=>{state=structuredClone(s);version++;renders++;},scene:()=>({ok:false,error:'scene_unavailable'}),sceneCapabilities:()=>({available:false})};
+  const host = {getState:()=>structuredClone(state),getVersion:()=>version,replaceState:s=>{state=structuredClone(s);version++;renders++;},navigate:(step,selectedIndex)=>{state.step=step;if(selectedIndex!==undefined)state.selectedIndex=selectedIndex;version++;renders++;},scene:()=>({ok:false,error:'scene_unavailable'}),sceneCapabilities:()=>({available:false})};
   const window={GG_CONFIG:C,GGMotor:M,GGCotizadorHost:host};
   const path=require('node:path').join(__dirname,'../agent-adapter.js');
   if(fs.existsSync(path)) vm.runInNewContext(fs.readFileSync(path,'utf8'),{window,structuredClone});
@@ -209,3 +209,130 @@ test('real host summary render does not reprice untouched stale entries during a
   assert.equal(sandbox.agentHostRendering,false);
 });
 
+
+test('opening an empty proposal is local navigation without inventing quote data',()=>{
+  const x=setup();x.manual(s=>{s.levels=[];s.enroll={};s.step=0;});
+  const before=structuredClone(x.state);
+  const result=x.api.openProposal();
+  assert.equal(result.ok,true);assert.equal(result.context.step,5);
+  assert.deepEqual(x.state,{...before,step:5});
+  assert.equal(result.context.canUndo,false);
+  assert.equal(update(x,'navigate',{step:1}).ok,true);
+  assert.equal(update(x,'navigate',{step:4}).error,'step_unavailable');
+  assert.equal(update(x,'navigate',{step:5}).ok,true);
+});
+test('proposal navigation preserves commercial undo and undo keeps the current view',()=>{
+  const x=setup();update(x,'set_tax',{enabled:true});
+  const revision=x.api.getContext().revision;
+  assert.equal(x.api.openProposal().context.canUndo,true);
+  assert.equal(x.api.getContext().revision,revision+1);
+  assert.equal(update(x,'navigate',{step:2}).context.canUndo,true);
+  assert.equal(x.api.executeTool('undo_cotizador',{expectedRevision:x.api.getContext().revision}).ok,true);
+  assert.equal(x.state.iva,false);assert.equal(x.state.step,2);
+});
+test('opening a proposal preserves stored stale and pending selections exactly',()=>{
+  const x=setup();
+  update(x,'add_program',{programId:'master',groupIds:['p1-1']});
+  update(x,'set_modality',{entryId:x.state.selected[0].id,plan:'FLEX'});
+  x.manual(s=>{s.selected[0].calc='previous-signature';s.enroll.p1.sections[0].students=null;});
+  update(x,'set_tax',{enabled:true});
+  const before=structuredClone(x.state), status=x.api.getContext().selection[0].status;
+  assert.equal(x.api.openProposal().ok,true);
+  assert.deepEqual(x.state,{...before,step:5});
+  assert.equal(x.api.getContext().selection[0].status,status);
+  assert.equal(x.api.getContext().canUndo,true);
+});
+test('empty proposal gives manual next steps without a fake price or download',()=>{
+  const source=fs.readFileSync(require('node:path').join(__dirname,'../asesor.js'),'utf8');
+  const code=source.slice(source.indexOf('function renderSummary()'),source.indexOf('function render()'));
+  for(const [levels,students,next] of [[[],false,1],[['prim'],false,2],[['prim'],true,3]]) {
+    let output='';const state={selected:[],levels};
+    vm.runInNewContext(code+';renderSummary();',{state,hasStudents:()=>students,registered:()=>students?24:0,icon:()=>'',frame:(title,description,content)=>{output=title+description+content;}});
+    assert.match(output,/Borrador/);assert.ok(output.includes('step('+next+')'));
+    assert.match(output,/precios/);assert.doesNotMatch(output,/Q\s*0|downloadPdf/);
+  }
+});
+
+test('pause control publishes its actual state for the independent portrait',()=>{
+  const source=fs.readFileSync(require('node:path').join(__dirname,'../asesor.js'),'utf8');
+  const code=source.slice(source.indexOf('function setAnimPaused(v)'),source.indexOf('function syncPauseBtn()'));
+  const events=[],sandbox={animPaused:false,mascot:null,duck3:null,localStorage:{setItem(){}},syncPauseBtn(){},window:{dispatchEvent:e=>events.push(e)},CustomEvent:class{constructor(type,init){this.type=type;this.detail=init.detail}}};
+  vm.runInNewContext(code+';setAnimPaused(true);setAnimPaused(false);',sandbox);
+  assert.deepEqual(events.map(e=>[e.type,e.detail.paused]),[['gg:animations-changed',true],['gg:animations-changed',false]]);
+});
+test('real host proposal navigation retains stale prices and rolls back on render failure',()=>{
+  const source=fs.readFileSync(require('node:path').join(__dirname,'../asesor.js'),'utf8');
+  let state=structuredClone(setup().state);
+  state.selected=[{id:'manual',programId:'master',groupIds:['p1-1'],sharing:'separate',simIds:[],units:null,stations:false,plan:'FLEX',flexBimestres:1,confirmed:true,calc:'stale-signature'}];
+  const sandbox={window:{GG_CONFIG:C,GGMotor:M},M,PROGRAMS:C.PROGRAMS,LEVELS:C.LEVELS,JSON,agentHostVersion:0,agentHostRendering:false,
+    get state(){return state},set state(next){state=next},groups:()=>M.groupsOf(state.enroll,C.LEVELS,state.levels),hasStudents:()=>true,
+    ui:{},store(){},render(){vm.runInContext('syncCalc()',context)}};
+  const context=vm.createContext(sandbox);
+  vm.runInContext(source.match(/function canStep\(n\) \{[^\n]+/)[0]+';'+source.match(/function syncCalc\(\) \{[^\n]+/)[0]+';'+source.slice(source.indexOf('// Geeky host boundary')),context);
+  vm.runInContext(fs.readFileSync(require('node:path').join(__dirname,'../agent-adapter.js'),'utf8'),context);
+  const before=JSON.stringify(state.selected);
+  assert.equal(sandbox.window.GGCotizadorAgent.openProposal().ok,true);
+  assert.equal(state.step,5);assert.equal(JSON.stringify(state.selected),before);assert.equal(sandbox.agentHostRendering,false);
+  sandbox.render=()=>{throw new Error('render failed')};
+  assert.throws(()=>sandbox.window.GGCotizadorHost.navigate(1),/render failed/);
+  assert.equal(state.step,5);assert.equal(JSON.stringify(state.selected),before);assert.equal(sandbox.agentHostRendering,false);
+});
+
+test('undo returns to a draft if its restored state cannot support the current editor',()=>{
+  const x=setup();x.manual(s=>{s.levels=[];s.enroll={};});
+  update(x,'set_levels',{levelIds:['prim']});
+  update(x,'navigate',{step:2});
+  assert.equal(x.api.executeTool('undo_cotizador',{expectedRevision:x.api.getContext().revision}).ok,true);
+  assert.equal(x.state.levels.length,0);assert.equal(x.state.step,5);
+});
+
+test('commercial edits keep the proposal draft open through empty levels and selection',()=>{
+  const x=setup();x.manual(s=>{s.levels=[];s.enroll={};});
+  x.api.openProposal();
+  assert.equal(update(x,'set_levels',{levelIds:['prim']}).ok,true);assert.equal(x.state.step,5);
+  assert.equal(x.api.executeTool('undo_cotizador',{expectedRevision:x.api.getContext().revision}).ok,true);
+  assert.equal(x.state.step,5);assert.deepEqual(x.state.levels,[]);
+  update(x,'set_levels',{levelIds:['prim']});update(x,'set_students',{gradeId:'p1',sectionId:'p1-1',students:24});
+  assert.equal(x.state.step,5);
+  update(x,'add_program',{programId:'master',groupIds:['p1-1']});
+  update(x,'remove_program',{entryId:x.state.selected[0].id});assert.equal(x.state.step,5);
+  update(x,'set_levels',{levelIds:[]});assert.equal(x.state.step,5);
+});
+test('reload retains an empty saved proposal while guarding incomplete editors',()=>{
+  const source=fs.readFileSync(require('node:path').join(__dirname,'../asesor.js'),'utf8');
+  const start=source.indexOf("if (location.hash === '#ejemplo')");
+  const code=source.slice(start,source.indexOf('render();',start));
+  for(const [initial,expected] of [[5,5],[2,1],[4,1],[0,0]]) {
+    const state={step:initial,levels:[]};vm.runInNewContext(code,{state,location:{hash:''}});assert.equal(state.step,expected);
+  }
+});
+
+test('real manual navigation retains undo while commercial edit and revert invalidates it',()=>{
+  const source=fs.readFileSync(require('node:path').join(__dirname,'../asesor.js'),'utf8');
+  let state=structuredClone(setup().state),events=[];state.levels.push('bas');
+  const sandbox={window:{GG_CONFIG:C,GGMotor:M,dispatchEvent:e=>events.push(e)},CustomEvent:class{constructor(type){this.type=type}},localStorage:{setItem(){}},KEY:'test',JSON,M,PROGRAMS:C.PROGRAMS,LEVELS:C.LEVELS,
+    get state(){return state},set state(next){state=next},groups:()=>M.groupsOf(state.enroll,C.LEVELS,state.levels),hasStudents:()=>true,
+    ui:{},mascot:null,mascotHost:null,campusHidden:true,animPaused:false,matchMedia:()=>({matches:false}),document:{getElementById:()=>null},assignPending:()=>[],pickConfigTarget(){},render(){vm.runInContext('syncCalc();store();',context)}};
+  const context=vm.createContext(sandbox);
+  const stateTracking=source.slice(source.indexOf('let agentHostVersion ='),source.indexOf('// ---------- Utilidades'));
+  vm.runInContext(stateTracking+source.match(/function canStep\(n\) \{[^\n]+/)[0]+source.slice(source.indexOf('function step(n)'),source.indexOf('function start()'))+source.match(/function syncCalc\(\) \{[^\n]+/)[0]+source.slice(source.indexOf('// Geeky host boundary')),context);
+  vm.runInContext(fs.readFileSync(require('node:path').join(__dirname,'../agent-adapter.js'),'utf8'),context);
+  const api=sandbox.window.GGCotizadorAgent,update=(action,args,revision=api.getContext().revision)=>api.executeTool('update_cotizador',{action,args,expectedRevision:revision});
+  assert.equal(update('set_tax',{enabled:true}).ok,true);assert.equal(api.openProposal().ok,true);const beforeNavigation=api.getContext().revision;
+  vm.runInContext('step(1);state.levelIndex=1;store();',context);
+  assert.equal(api.getContext().canUndo,true);
+  assert.ok(api.getContext().revision>beforeNavigation);
+  assert.equal(update('set_tax',{enabled:false},beforeNavigation).error,'revision_conflict');
+  assert.equal(api.executeTool('undo_cotizador',{expectedRevision:api.getContext().revision}).ok,true);
+  assert.equal(state.step,1);assert.equal(state.levelIndex,1);assert.equal(state.iva,false);
+  state.selected=[{id:'manual',programId:'master',groupIds:['p1-1'],sharing:'separate',simIds:[],units:null,stations:false,plan:'FLEX',flexBimestres:1,confirmed:true,calc:'stale-signature'}];
+  vm.runInContext('store();',context);
+  update('set_tax',{enabled:true});const selectionBefore=JSON.stringify(state.selected);
+  vm.runInContext('step(5);',context);
+  assert.equal(JSON.stringify(state.selected),selectionBefore);
+  assert.equal(api.getContext().canUndo,true);
+  const beforeManual=api.getContext().revision;
+  vm.runInContext('state.fee=100;store();state.fee=null;store();',context);
+  assert.equal(update('set_tax',{enabled:false},beforeManual).error,'revision_conflict');
+  assert.equal(api.getContext().canUndo,false);
+});

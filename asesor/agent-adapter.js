@@ -80,12 +80,20 @@
       if (e.simIds.some(id=>!e.groupIds.includes(id)) || new Set(e.simIds).size!==e.simIds.length) fail('invalid_state');
     }
   }
-  let revision = 0, observed = null, undo = null, sequence = 0;
+  let revision = 0, observed = null, observedCommercial = null, undo = null, sequence = 0;
+  const commercialSignature = () => {
+    const { step, selectedIndex, levelIndex, ...commercial } = H.getState();
+    return JSON.stringify([H.getVersion?.() ?? 0, commercial]);
+  };
   const signature = () => JSON.stringify([H.getVersion?.() ?? 0, H.getState()]);
   function observe() {
-    const sig = signature();
-    if (observed === null) observed = sig;
-    else if (sig !== observed) { revision++; observed = sig; undo = null; }
+    const sig = signature(), commercial = commercialSignature();
+    if (observed === null) { observed = sig; observedCommercial = commercial; }
+    else if (sig !== observed) {
+      revision++;
+      if (commercial !== observedCommercial) undo = null;
+      observed = sig; observedCommercial = commercial;
+    }
     return H.getState();
   }
   function getContext() {
@@ -142,8 +150,8 @@
     s.levelIndex=Math.max(0,Math.min(s.levelIndex||0,s.levels.length-1));
     s.skipped=(s.skipped||[]).filter(id=>active.has(id));
     for(const g of Object.values(s.enroll)) g.sections.forEach((sec,i)=>sec.name=String.fromCharCode(65+i));
-    if(s.step>=4&&!s.selected.length)s.step=groups(s).some(g=>g.students>0)?3:s.levels.length?2:1;
-    else if(s.step>1&&!s.levels.length)s.step=1;
+    if(s.step===4&&!s.selected.length)s.step=groups(s).some(g=>g.students>0)?3:s.levels.length?2:1;
+    else if(s.step>1&&s.step!==5&&!s.levels.length)s.step=1;
   }
   function mutate(s,action,a) {
     const original = JSON.stringify(s), previousGroups = groups(s);
@@ -171,7 +179,7 @@
       case 'set_tax':s.iva=a.enabled;break;
       case 'set_projection':s.useSuggested=a.useSuggested;s.fee=a.fee;break;
       case 'navigate':
-        if(a.step===2&&!s.levels.length||a.step===3&&!groups(s).some(g=>g.students>0)||a.step>=4&&!s.selected.length)fail('step_unavailable');
+        if(a.step===2&&!s.levels.length||a.step===3&&!groups(s).some(g=>g.students>0)||a.step===4&&!s.selected.length)fail('step_unavailable');
         s.step=a.step;if(e)s.selectedIndex=s.selected.indexOf(e);break;
       case 'calculate':break;
       default:fail('unknown_action');
@@ -197,7 +205,12 @@
         validate(args,shape({expectedRevision:num(0,Number.MAX_SAFE_INTEGER)}));
         if(args.expectedRevision!==revision)fail('revision_conflict');
         if(!undo)fail('undo_unavailable');
-        const previous=undo;undo=null;H.replaceState(copy(previous));revision++;observed=signature();
+        const current=H.getState(), previous=copy(undo);
+        const unavailable=current.step===2&&!previous.levels.length || current.step===3&&!groups(previous).some(g=>g.students>0) || current.step===4&&!previous.selected.length;
+        previous.step=unavailable?5:current.step;
+        previous.selectedIndex=Math.max(0,Math.min(current.selectedIndex||0,previous.selected.length-1));
+        previous.levelIndex=Math.max(0,Math.min(current.levelIndex||0,previous.levels.length-1));
+        undo=null;H.replaceState(previous);revision++;observed=signature();observedCommercial=commercialSignature();
         return {ok:true,revision,message:'Se deshizo el último cambio de Geeky.',context:getContext()};
       }
       if(name!=='update_cotizador')fail('unknown_tool');
@@ -206,13 +219,19 @@
       if(args.expectedRevision!==revision)fail('revision_conflict');
       const before=H.getState();validState(before);const draft=copy(before);
       mutate(draft,args.action,args.args);
-      if(JSON.stringify(before)!==JSON.stringify(draft)){H.replaceState(draft);revision++;observed=signature();undo=before;}
+      if(JSON.stringify(before)!==JSON.stringify(draft)){
+        if(args.action==='navigate')H.navigate(draft.step,draft.selectedIndex);
+        else { H.replaceState(draft);undo=before; }
+        revision++;observed=signature();observedCommercial=commercialSignature();
+      }
       return {ok:true,revision,message:'Cotización actualizada.',context:getContext()};
     } catch(e) { return {ok:false,error:e.code||'action_failed',message:e.code?'Revisa los argumentos y el contexto antes de volver a intentar.':'No se pudo completar la acción.',revision,context:getContext()}; }
   }
   // Scene controls have an independent allowlist and never write quotation state.
   const executeQuoteTool=executeTool;
-  root.GGCotizadorAgent=Object.freeze({getContext,executeTool(name,args){
+  root.GGCotizadorAgent=Object.freeze({getContext,openProposal(){
+    return executeQuoteTool('update_cotizador',{action:'navigate',args:{step:5},expectedRevision:getContext().revision});
+  },executeTool(name,args){
     if(name!=='control_campus')return executeQuoteTool(name,args);
     try{
       if(!args||Object.keys(args).some(k=>!['action','args'].includes(k))||!has(sceneActions,args.action))fail('unknown_scene_action');

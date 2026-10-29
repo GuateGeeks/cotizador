@@ -28,4 +28,4 @@ jobs:
       - name: Build the 3D campus bundle
         run: npm run build
       - name: Committed bundle matches the sources
-        run: git diff --exit-code -- asesor/vendor/lab-scene.min.js || (echo 'Run npm run build and commit asesor/vendor/lab-scene.min.js' && exit 1)
+        run: git diff --exit-code -- asesor/vendor/lab-scene.min.js asesor/vendor/agent-character.mjs || (echo 'Run npm run build and commit generated campus and character bundles' && exit 1)

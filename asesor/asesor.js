@@ -23,10 +23,18 @@ try {
 }
 Object.values(state.enroll || {}).forEach(g => { if (g && Array.isArray(g.sections)) g.sections.forEach((s, i) => { s.name = String.fromCharCode(65 + (i % 26)); }); });
 let agentHostVersion = 0, agentHostSignature = JSON.stringify(state), agentHostRendering = false;
+function quoteCommercialSignature(s) {
+  const { step, selectedIndex, levelIndex, ...commercial } = s;
+  return JSON.stringify(commercial);
+}
+let agentHostCommercialSignature = quoteCommercialSignature(state);
 function store() {
-  const signature = JSON.stringify(state);
+  const signature = JSON.stringify(state), commercialSignature = quoteCommercialSignature(state);
+  if (commercialSignature !== agentHostCommercialSignature) {
+    agentHostVersion++; agentHostCommercialSignature = commercialSignature;
+  }
   if (signature !== agentHostSignature) {
-    agentHostVersion++; agentHostSignature = signature;
+    agentHostSignature = signature;
     window.dispatchEvent(new CustomEvent('gg:quote-changed'));
   }
   try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* almacenamiento no disponible: el recorrido sigue funcionando */ }
@@ -160,12 +168,15 @@ const miniature = s => { const { ph } = photoState(s.programId, levelKey(s)); re
 // ---------- Navegación y marco ----------
 let previousStep = -1, toastTimer;
 function notify(message) { const t = document.getElementById('notification'); t.textContent = message; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => t.hidden = true, 4200); }
-function canStep(n) { return n === 1 || (n === 2 && state.levels.length > 0) || (n === 3 && hasStudents()) || (n >= 4 && state.selected.length > 0); }
+function canStep(n) { return n === 1 || (n === 2 && state.levels.length > 0) || (n === 3 && hasStudents()) || (n === 4 && state.selected.length > 0) || n === 5; }
 function step(n) {
   n = Math.max(0, Math.min(5, n));
   if (n === 4 && state.step !== 4) pickConfigTarget();
   if (n === 3) { const p = assignPending(), sig = p.map(g => g.id).join(); if (p.length && sig !== ui.assignSeen) { ui.assign = true; ui.assignSeen = sig; } else if (!p.length) ui.assign = false; }
-  state.step = n; render();
+  state.step = n;
+  const previousRendering = agentHostRendering;
+  agentHostRendering = true;
+  try { render(); } finally { agentHostRendering = previousRendering; }
 }
 function start() { step(1); }
 // Confirmación propia (los cuadros nativos pueden estar bloqueados en algunos navegadores).
@@ -328,6 +339,7 @@ let animPaused = false; try { animPaused = localStorage.getItem('gg_asesor_pause
 function setAnimPaused(v) {
   animPaused = !!v; try { localStorage.setItem('gg_asesor_pause', v ? '1' : '0'); } catch (e) { /* ignorar */ }
   if (mascot) mascot.setPaused(animPaused); if (duck3) duck3.setPaused(animPaused); syncPauseBtn();
+  window.dispatchEvent(new CustomEvent('gg:animations-changed', { detail: { paused: animPaused } }));
 }
 function syncPauseBtn() { const b = mascotHost && mascotHost.querySelector('.campus-pause'); if (!b) return; b.setAttribute('aria-pressed', String(animPaused)); b.setAttribute('aria-label', animPaused ? 'Activar animaciones del colegio' : 'Pausar animaciones del colegio'); b.dataset.tip = animPaused ? 'Reanudar animaciones' : 'Pausar animaciones'; b.innerHTML = `${icon(animPaused ? 'play' : 'pause')}<span>${animPaused ? 'Reanudar' : 'Pausar'}</span>`; mascotHost.dataset.paused = String(animPaused); if (mascotHost.classList.contains('campus-ready')) mascotHost.querySelector('.campus-status').textContent = animPaused ? 'En pausa' : 'En vivo'; }
 const STATION_OF = { tale: 'robotics', master: 'robotics', spike: 'robotics', electronics: 'electronics', drones: 'drones', immersive: 'immersive' };
@@ -1530,7 +1542,13 @@ function coveragePanel() {
 }
 function renderSummary() {
   const list = state.selected;
-  if (!list.length) { frame('Tu propuesta educativa', 'Aquí se reunirán los programas y equipos que elijas para tu institución.', `<div class="empty">Todavía no has agregado programas. Tus niveles y estudiantes registrados se conservan.</div><div class="foot"><button class="btn btn-primary" onclick="step(${hasStudents() ? 3 : state.levels.length ? 2 : 1})">${hasStudents() ? 'Elegir programas' : 'Continuar mi propuesta'} ${icon('arrow')}</button></div>`); return; }
+  if (!list.length) {
+    const next = hasStudents() ? 3 : state.levels.length ? 2 : 1;
+    const action = next === 3 ? 'Elegir programas' : next === 2 ? 'Registrar estudiantes' : 'Elegir niveles';
+    frame('Tu propuesta educativa', 'Construye tu propuesta con Geeky o completa los pasos a tu ritmo.',
+      `<section class="proposal-empty" aria-labelledby="proposal-draft-title"><span class="status amber">Borrador</span><h2 id="proposal-draft-title">Aquí empieza tu propuesta</h2><p>Reuniremos aquí los programas, equipos y modalidades que elijas para tu institución.</p><p>Todavía no hay programas ni precios definidos. ${state.levels.length ? 'Tus niveles y estudiantes registrados se conservan.' : 'Empieza por los niveles educativos de tu colegio.'}</p><div class="links"><button class="btn btn-primary" onclick="step(${next})">${action} ${icon('arrow')}</button>${next > 1 ? '<button class="btn btn-outline" onclick="step(1)">Revisar niveles</button>' : ''}${next === 3 ? '<button class="btn btn-outline" onclick="step(2)">Revisar estudiantes</button>' : ''}</div><p class="fineprint">Tu avance se guarda en este navegador. Los precios aparecerán cuando configures tus programas.</p></section>`);
+    return;
+  }
   syncCalc();
   const t = M.proposalTotals(list, PROGRAMS, groups(), TARIFFS, FISCAL), nlevels = new Set(list.flatMap(s => entryLevels(s).map(l => l.id))).size;
   const provisional = groups().some(g => list.some(s => s.groupIds.includes(g.id)) && !g.confirmed);
@@ -1553,7 +1571,7 @@ lbox.addEventListener('close', () => { ui.lb = null; });
 lbox.addEventListener('keydown', e => { if (e.key === 'ArrowLeft') shiftPhoto(null, null, -1); if (e.key === 'ArrowRight') shiftPhoto(null, null, 1); });
 document.getElementById('notice').querySelector('button').addEventListener('click', () => { ui.notice = ''; updateHeader(); });
 if (location.hash === '#ejemplo') { example(); state.step = 5; }
-if (state.step > 1 && !state.levels.length) state.step = 1;
+if (state.step > 1 && state.step !== 5 && !state.levels.length) state.step = 1;
 render();
 
 // Pato robot 3D: camina por la barra de pasos, mira hacia arriba a lo que haces y espera. Si no hay WebGL queda el pato SVG.
@@ -1598,6 +1616,18 @@ function placeProgressLine() {
 window.GGCotizadorHost = Object.freeze({
   getState: () => JSON.parse(JSON.stringify(state)),
   getVersion: () => agentHostVersion,
+  navigate(nextStep, selectedIndex) {
+    if (!Number.isInteger(nextStep) || nextStep < 0 || nextStep > 5 || nextStep > 0 && !canStep(nextStep)) throw new Error('step_unavailable');
+    if (selectedIndex !== undefined && (!Number.isInteger(selectedIndex) || selectedIndex < 0 || selectedIndex >= Math.max(1,state.selected.length))) throw new Error('unknown_entry');
+    const beforeStep = state.step, beforeIndex = state.selectedIndex;
+    state.step = nextStep;
+    if (selectedIndex !== undefined) state.selectedIndex = selectedIndex;
+    ui.focusTitle = true;
+    const previousRendering = agentHostRendering;
+    agentHostRendering = true;
+    try { render(); } catch (e) { state.step = beforeStep; state.selectedIndex = beforeIndex; store(); throw e; }
+    finally { agentHostRendering = previousRendering; }
+  },
   replaceState(next) {
     const before = state;
     state = JSON.parse(JSON.stringify(next));

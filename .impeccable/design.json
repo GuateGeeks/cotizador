@@ -13,7 +13,18 @@
         "purpose": "Jerarquía compacta común a escritorio y móvil."
       }
     },
-    "shadows": [],
+    "shadows": [
+      {
+        "name": "agent-launcher",
+        "value": "0 8px 30px #210d3a2b",
+        "purpose": "Acceso flotante del agente."
+      },
+      {
+        "name": "agent-panel",
+        "value": "0 14px 48px #210d3a30",
+        "purpose": "Chat elevado sobre el cotizador."
+      }
+    ],
     "motion": [
       {
         "name": "camera-control-background",
@@ -39,6 +50,16 @@
         "name": "focus-reveal",
         "value": "exponential approach, rate 6/s",
         "purpose": "Cámara, pérgolas y techos al explorar una actividad; interrumpible y conserva giro y zoom del usuario. Geeky vuela con un resorte críticamente amortiguado."
+      },
+      {
+        "name": "agent-arrive",
+        "value": "220ms cubic-bezier(.16,1,.3,1), translateY(10px) to 0",
+        "purpose": "Entrada del panel solo sin movimiento reducido."
+      },
+      {
+        "name": "agent-activity",
+        "value": "30 FPS maximum; 8s activity windows plus original reaction duration",
+        "purpose": "SVG original con RAF suspendido al cerrar, ocultar, pausar o reducir movimiento; no medición de rendimiento."
       }
     ],
     "breakpoints": [
@@ -57,6 +78,14 @@
       {
         "name": "short-mobile",
         "value": "600px height"
+      },
+      {
+        "name": "agent-mobile",
+        "value": "650px"
+      },
+      {
+        "name": "agent-short",
+        "value": "620px height"
       }
     ]
   },
@@ -132,6 +161,14 @@
       "description": "Leyenda discreta: la maqueta es una representación, no un plano.",
       "html": "<p class=\"ds-note\">Representación de tu configuración</p>",
       "css": ".ds-note{display:inline-block;margin:12px;padding:8px 14px;border:1px solid rgba(50,24,83,.18);border-radius:12px;background:rgba(255,255,255,.8);color:#321853;font-family:\"Avenir Next\",Avenir,Inter,\"Segoe UI\",system-ui,sans-serif;font-size:12px}"
+    },
+    {
+      "name": "Empezar con Geeky",
+      "kind": "button",
+      "refersTo": "agent-start",
+      "description": "Abre Propuesta localmente antes de conectar.",
+      "html": "<button class=\"ds-agent-start\">Empezar mi cotización <span aria-hidden=\"true\">→</span></button>",
+      "css": ".ds-agent-start{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;padding:10px 13px;border:0;border-radius:9px;background:#ff9d38;color:#321853;font-family:\"Avenir Next\",Avenir,Inter,\"Segoe UI\",system-ui,sans-serif;font-size:13px;font-weight:700;cursor:pointer}.ds-agent-start:hover{background:#ffb356}.ds-agent-start:focus-visible{outline:2px solid #321853;outline-offset:3px;box-shadow:0 0 0 5px #ffc857}.ds-agent-start:disabled{opacity:.55;cursor:default}"
     }
   ],
   "narrative": {
