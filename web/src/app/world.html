@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GuateGeeks World</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #F4F1F6; font-family: system-ui, sans-serif; color: #321853; }
+  #stage { position: fixed; inset: 0; }
+  canvas { display: block; width: 100%; height: 100%; }
+  .bar { position: fixed; left: 16px; right: 16px; display: flex; gap: 8px; flex-wrap: wrap; }
+  #tools { top: 16px; justify-content: flex-end; }
+  #scope { bottom: 16px; justify-content: center; }
+  button { min-height: 44px; padding: 0 14px; border: 1px solid #32185330; border-radius: 12px; background: #ffffffcc; color: inherit; font: inherit; cursor: pointer; }
+  button[aria-pressed="true"] { background: #6942A1; color: #fff; }
+  button:focus-visible { outline: 3px solid #321853; outline-offset: 2px; }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<nav id="tools" class="bar" aria-label="Vista">
+  <button id="overview">Vista general</button>
+  <button id="pause" aria-pressed="false">Pausar</button>
+</nav>
+<nav id="scope" class="bar" aria-label="Crecimiento del colegio"></nav>
+<script type="module">
+  import { createWorld } from '../world/create-world.js';
+  import states from './states.json';
+  const report = new URLSearchParams(location.search).has('report') && window.reportWorld;
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const world = window.world = createWorld(document.querySelector('#stage'), { reduceMotion, base: '/models/', onError: error => { report?.(error); console.warn('world', error); } });
+  const names = ['Escuela inicial', 'Comunidad educativa', 'Robótica', 'Ampliación', 'Conexiones', 'Campus'];
+  const scope = document.querySelector('#scope');
+  names.forEach((name, index) => {
+    const button = document.createElement('button');
+    button.textContent = name;
+    button.setAttribute('aria-pressed', index === 0);
+    button.onclick = () => {
+      scope.querySelectorAll('button').forEach(item => item.setAttribute('aria-pressed', item === button));
+      world.update(states[index]);
+    };
+    scope.append(button);
+  });
+  document.querySelector('#overview').onclick = () => world.setFocus(null);
+  const pause = document.querySelector('#pause');
+  pause.onclick = () => {
+    const next = pause.getAttribute('aria-pressed') !== 'true';
+    pause.setAttribute('aria-pressed', next);
+    pause.textContent = next ? 'Reanudar' : 'Pausar';
+    world.setPaused(next);
+  };
+</script>
+</body>
+</html>
