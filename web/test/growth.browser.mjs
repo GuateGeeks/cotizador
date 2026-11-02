@@ -16,6 +16,8 @@ const diag = page => page.evaluate(() => window.world.getDiagnostics());
 const page = await browser.newPage({ viewport: { width: 1400, height: 880 } });
 const problems = [];
 page.on('pageerror', e => problems.push(String(e)));
+page.on('crash', () => console.error('PAGE CRASHED'));
+const stage = name => console.error(`[${new Date().toISOString().slice(11, 19)}] ${name}`);
 page.on('console', m => { if (m.type() === 'error') problems.push(m.text()); });
 await page.goto(URL);
 await settled(page);
@@ -23,6 +25,7 @@ const first = await diag(page);
 expect(first.entityKeys.includes('room:pre:0'), 'example room missing');
 
 for (const [index, state] of states.entries()) {
+  stage(`state ${index + 1}`);
   await page.evaluate(input => window.world.update(input), state);
   await settled(page);
   await page.waitForTimeout(500);
@@ -42,6 +45,7 @@ for (const key of before.entityKeys) if (after.entityIds[key] && !key.startsWith
 await page.evaluate(input => window.world.update(input), states[5]);
 await settled(page);
 const baseline = await diag(page);
+stage('rapid');
 await page.evaluate(([a, b]) => { for (let i = 0; i < 51; i += 1) window.world.update(i % 2 ? a : b); }, [states[1], states[5]]);
 await settled(page);
 const rapid = await diag(page);
@@ -49,6 +53,7 @@ expect(rapid.entityKeys.length === baseline.entityKeys.length, `rapid updates en
 expect(rapid.geometries <= baseline.geometries + 2, `geometry leak: ${baseline.geometries} -> ${rapid.geometries}`);
 console.log(JSON.stringify({ triangles: baseline.triangles, drawCalls: baseline.drawCalls, entities: baseline.entityKeys.length, geometries: baseline.geometries }));
 
+stage('reduced');
 const quiet = await browser.newContext({ reducedMotion: 'reduce', viewport: { width: 1000, height: 700 } });
 const still = await quiet.newPage();
 await still.goto(URL);
@@ -64,6 +69,7 @@ expect(rest.framePending === false, 'reduced motion keeps a frame pending at res
 expect(framesA === framesB, 'reduced motion keeps rendering at rest');
 await quiet.close();
 
+stage('broken');
 const broken = await browser.newPage();
 const reports = [];
 await broken.exposeFunction('reportWorld', value => reports.push(value));
@@ -76,6 +82,7 @@ expect(reports.some(r => r.kind === 'asset' && r.id === 'arch-roof'), 'onError n
 expect(hurt.entityKeys.includes('room:pre:0'), 'other modules should survive one failed asset');
 await broken.close();
 
+stage('blind');
 const blind = await browser.newPage();
 await blind.addInitScript(() => { HTMLCanvasElement.prototype.getContext = () => null; });
 const reportsBlind = [];

@@ -68,7 +68,7 @@
   "skins": 0,
   "animations": [],
   "bytes": 55504,
-  "sha256": "aa258849f243ed1c20ace979689a92e7861a76ad7d5a72c501fbb8d713e050e8",
+  "sha256": "ef03aa4ebe850fea899a27e3a32f0acd63d0694aba470f7bb185220acbbf249b",
   "blender": "5.2.3 LTS",
   "verdicts": {
     "technical": "PASS",

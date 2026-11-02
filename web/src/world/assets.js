@@ -1,5 +1,6 @@
 // Loads kit GLBs once and swaps exported materials for the shared factory's instances.
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { materialFor } from './materials.js';
 
 const pending = new Map();
@@ -18,7 +19,7 @@ function adopt(scene) {
 
 export function loadAsset(id, base = 'models/') {
   if (!pending.has(id)) {
-    const load = new GLTFLoader().loadAsync(`${base}${id}.glb`).then(gltf => ({ id, scene: adopt(gltf.scene), animations: gltf.animations }));
+    const load = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync(`${base}${id}.glb`).then(gltf => ({ id, scene: adopt(gltf.scene), animations: gltf.animations }));
     load.catch(() => pending.delete(id)); // A failed fetch must not poison a later retry.
     pending.set(id, load);
   }

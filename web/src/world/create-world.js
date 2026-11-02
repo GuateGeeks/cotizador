@@ -1,7 +1,7 @@
 // Plan-driven scene. Method names follow the cotizador's createMascot so the later swap stays small.
 import {
   AmbientLight, AnimationMixer, Color, DirectionalLight, ExtrudeGeometry, Group, HemisphereLight, LoopRepeat, MathUtils, Mesh,
-  OrthographicCamera, PCFSoftShadowMap, Scene, Shape, SRGBColorSpace, Timer, Vector3, WebGLRenderer
+  OrthographicCamera, PCFSoftShadowMap, Raycaster, Scene, Shape, SRGBColorSpace, Timer, Vector2, Vector3, WebGLRenderer
 } from 'three';
 import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
 import constants from '../../../world/constants.json';
@@ -10,12 +10,24 @@ import { planWorld } from '../layout/plan.js';
 import { clearAssets, loadAsset } from './assets.js';
 import { diffEntities, signatureOf } from './entities.js';
 import { disposeMaterials, materialFor } from './materials.js';
+import { buildBatch, clearBatch, mergeStatic } from './merge.js';
 
 const BASE = constants.base;
 const ENTER_MS = 520, LEAVE_MS = 220;
-const STUDENT = 'char-student-primary';
-const ROOM_ASSETS = ['furn-table-four', 'furn-chair-orange', 'furn-chair-turquoise', STUDENT];
-const PROGRAM_EQUIPMENT = { spike: 'equip-rover-spike' };
+const STUDENT = 'char-student-primary', STUDENT_LOD = 'char-student-primary-lod1';
+const ROOM_ASSETS = ['furn-table-four', 'furn-chair-orange', 'furn-chair-turquoise', 'furn-shelves', 'equip-kit-storage', STUDENT, STUDENT_LOD];
+const LEVEL_SCALE = { pre: .82, prim: 1, bas: 1.1, bach: 1.18 }; // Stand-ins until each level has its own approved character.
+const CLOSE_VIEW = 7;
+const TOP = BASE + .608;
+// Hero equipment is enlarged so a program reads at campus distance. [asset, x, y, z, rotation, scale]
+const PROGRAM_SETUP = {
+  tale: [['equip-rover-programmable', 0, BASE, 1.1, .5, 2.4], ['equip-rover-programmable', -1.05, TOP, -.2, -.4, 1]],
+  master: [['equip-dino', 0, BASE, 1.1, -.5, 2.4], ['equip-laptop', 1.35, TOP, -.2, 0, 1]],
+  spike: [['equip-rover-spike', 0, BASE, 1.1, .5, 2.2], ['equip-rover-spike', 1.35, TOP, -.2, .5, 1], ['equip-laptop', -1.05, TOP, -.2, 0, 1]],
+  electronics: [['equip-printer', -2.1, BASE, 1.2, .4, 1.5], ['equip-arm', 0, BASE, 1.1, .3, 2], ['equip-electronics-kit', -1.05, TOP, -.2, .2, 1.4], ['equip-electronics-kit', 1.35, TOP, -.2, -.2, 1.4]],
+  immersive: [['equip-screen', .1, BASE, 1, 0, 1], ['equip-vr-set', -1.05, TOP, -.2, .2, 1.6], ['equip-vr-set', 1.35, TOP, -.2, -.2, 1.6]]
+};
+const LEVEL_TABLE_ITEM = { bas: 'equip-laptop', bach: 'equip-laptop', prim: 'equip-organizer', pre: 'equip-organizer' };
 const easeOut = t => 1 - Math.pow(1 - t, 3) + Math.sin(t * Math.PI) * .07;
 
 function roundedRect(width, depth, radius) {
@@ -46,7 +58,7 @@ function inertHandle(reason, onError) {
   onError?.({ kind: reason });
   const noop = () => {};
   const diagnostics = { ready: false, loaded: 0, errors: [reason], triangles: 0, geometries: 0, drawCalls: 0, entityKeys: [], entityIds: {}, pendingLoads: 0, transitionsActive: 0, framePending: false, frames: 0 };
-  return { update: noop, resize: noop, rotate: noop, zoom: noop, resetView: noop, setPaused: noop, setFocus: noop, capture: () => null, getDiagnostics: () => diagnostics, dispose: noop };
+  return { update: noop, resize: noop, rotate: noop, zoom: noop, resetView: noop, setPaused: noop, setFocus: noop, setInsets: noop, setHoverVerb: noop, setView: noop, agentGesture: noop, capture: () => null, getDiagnostics: () => diagnostics, dispose: noop };
 }
 
 export function createWorld(container, opts = {}) {
@@ -91,6 +103,8 @@ export function createWorld(container, opts = {}) {
   const leaving = new Set();
   const errors = [];
   const walkers = [];
+  const insets = { left: 0, right: 0, top: 0, bottom: 0 };
+  let batched = null, batchTimer = 0, lod = 'campus', viewMode = 'normal', contextLost = false, lastGesture = null;
   let plan = null, frame = 0, frames = 0, elapsed = 0, ready = false, paused = false, disposed = false, pendingLoads = 0, generation = 0, geometriesBeforeDispose = 0, islandKey = '';
   const timer = new Timer();
 
@@ -109,10 +123,21 @@ export function createWorld(container, opts = {}) {
     const aspect = width / height;
     const half = aspect < 1.4 ? view.half * 1.4 / aspect : view.half;
     Object.assign(camera, { left: -half * aspect, right: half * aspect, top: half, bottom: -half });
+    const shift = (insets.right - insets.left) / 2;
+    if (shift) camera.setViewOffset(width, height, shift, 0, width, height); else camera.clearViewOffset();
     camera.updateProjectionMatrix();
   }
 
+  function applyLod() {
+    const next = view.half < CLOSE_VIEW ? 'close' : 'campus';
+    if (next === lod) return;
+    lod = next;
+    for (const entity of entities.values()) for (const pair of entity.pairs) { pair.high.visible = lod === 'close'; pair.low.visible = lod !== 'close'; }
+  }
+
   function draw() {
+    if (contextLost) return;
+    applyLod();
     aim();
     renderer.render(scene, camera);
     frames += 1;
@@ -131,8 +156,13 @@ export function createWorld(container, opts = {}) {
   function finishLeave(entity) {
     leaving.delete(entity);
     root.remove(entity.group);
+    release(entity);
+  }
+
+  function release(entity) {
     for (const mixer of entity.mixers) mixer.stopAllAction();
-    for (const walker of entity.walkers) walkers.splice(walkers.indexOf(walker), 1);
+    for (const geometry of entity.owned) geometry.dispose();
+    for (const walker of entity.walkers) if (walkers.includes(walker)) walkers.splice(walkers.indexOf(walker), 1);
   }
 
   function tick(time) {
@@ -158,9 +188,12 @@ export function createWorld(container, opts = {}) {
     }
     if (animate()) {
       elapsed += delta;
-      for (const entity of entities.values()) for (const mixer of entity.mixers) mixer.update(delta);
+      for (const entity of entities.values()) for (const mixer of entity.mixers) if (mixer.getRoot().visible) mixer.update(delta);
       for (const walker of walkers) walkAlong(walker);
-      for (const entity of entities.values()) for (const wheel of entity.spinners) wheel.rotation.x += delta * 2;
+      for (const entity of entities.values()) {
+        for (const spinner of entity.spinners) spinner.node.rotation[spinner.axis] += delta * spinner.speed;
+        for (const hover of entity.hovers) hover.position.y = hover.userData.height + Math.sin(elapsed * 1.4) * .22;
+      }
     }
     draw();
     if (animate() || moving() || cameraSettling()) invalidate();
@@ -172,8 +205,10 @@ export function createWorld(container, opts = {}) {
     const distance = (elapsed * .9 + walker.phase * span) % span;
     const going = distance < span / 2;
     const x = going ? x0 + distance : x1 - (distance - span / 2);
-    walker.object.position.set(x, 0, z + walker.lane);
-    walker.object.rotation.y = going ? Math.PI / 2 : -Math.PI / 2;
+    for (const object of walker.objects) {
+      object.position.set(x, 0, z + walker.lane);
+      object.rotation.y = going ? Math.PI / 2 : -Math.PI / 2;
+    }
   }
 
   function placeIn(group, asset, x, y, z, rotation = 0) {
@@ -184,67 +219,119 @@ export function createWorld(container, opts = {}) {
     return object;
   }
 
-  function character(entity, asset, clipName, x, y, z, rotation, time = 0) {
-    const object = cloneSkinned(asset.scene);
-    object.position.set(x, y, z);
-    object.rotation.y = rotation;
-    entity.group.add(object);
-    const mixer = new AnimationMixer(object);
-    mixer.clipAction(asset.animations.find(item => item.name === clipName)).setLoop(LoopRepeat).play();
-    mixer.setTime(time);
-    entity.mixers.push(mixer);
-    return object;
+  function character(entity, kit, clipName, x, y, z, rotation, time = 0, scale = 1) {
+    const make = (asset, visible) => {
+      const object = cloneSkinned(asset.scene);
+      object.position.set(x, y, z);
+      object.rotation.y = rotation;
+      object.scale.setScalar(scale);
+      object.visible = visible;
+      entity.group.add(object);
+      const mixer = new AnimationMixer(object);
+      mixer.clipAction(asset.animations.find(item => item.name === clipName)).setLoop(LoopRepeat).play();
+      mixer.setTime(time);
+      entity.mixers.push(mixer);
+      return object;
+    };
+    const castsShadow = entity.key.startsWith('walker:');
+    const pair = { high: make(kit.get(STUDENT), lod === 'close'), low: make(kit.get(STUDENT_LOD), lod !== 'close') };
+    pair.low.traverse(node => { if (node.isMesh) node.castShadow = castsShadow; });
+    entity.pairs.push(pair);
+    return pair;
   }
 
   function furnish(entity, module, kit) {
-    const table = kit.get('furn-table-four'), orange = kit.get('furn-chair-orange'), teal = kit.get('furn-chair-turquoise'), student = kit.get(STUDENT);
-    const floor = BASE;
-    placeIn(entity.group, table, -1.05, floor, -.2);
-    placeIn(entity.group, table, 1.35, floor, -.2);
+    const group = entity.group;
+    const table = kit.get('furn-table-four'), orange = kit.get('furn-chair-orange'), teal = kit.get('furn-chair-turquoise');
+    placeIn(group, table, -1.05, BASE, -.2);
+    placeIn(group, table, 1.35, BASE, -.2);
     for (const [cx, first, second] of [[-1.05, orange, teal], [1.35, teal, orange]]) {
-      placeIn(entity.group, first, cx - .4, floor, .54, Math.PI);
-      placeIn(entity.group, second, cx + .4, floor, .54, Math.PI);
-      placeIn(entity.group, second, cx - .4, floor, -.94);
-      placeIn(entity.group, first, cx + .4, floor, -.94);
+      placeIn(group, second, cx - .4, BASE, -.94);
+      placeIn(group, first, cx + .4, BASE, -.94);
     }
-    placeIn(entity.group, orange, .47, floor, -.2, Math.PI / 2);
-    const seats = [[.47, -.2, Math.PI / 2, 'sit'], [2.4, 1, -.6, 'idle'], [-2.2, 1.1, .5, 'idle'], [-.1, 1.2, .2, 'interact']];
+    placeIn(group, orange, .47, BASE, -.2, Math.PI / 2);
+    placeIn(group, kit.get('furn-shelves'), 2.1, BASE, -1.95);
+    placeIn(group, kit.get('equip-kit-storage'), -2.1, BASE, -1.95);
+    for (const [asset, x, y, z, rotation, scale] of PROGRAM_SETUP[module.programId] || []) {
+      const object = placeIn(group, kit.get(asset), x, y, z, rotation);
+      object.scale.setScalar(scale);
+      const hero = scale > 1.5; // Only the enlarged rover turns its wheels; table models merge into the room.
+      object.traverse(node => {
+        if (!/^wheel_/.test(node.name)) return;
+        if (hero) entity.spinners.push({ node, axis: 'x', speed: 2 });
+        else node.name = `still_${node.name}`;
+      });
+      object.traverse(node => { if (node.isMesh) node.castShadow = false; });
+    }
+    const item = kit.get(LEVEL_TABLE_ITEM[module.levelId]);
+    if (item) for (const x of [-1.05, 1.35]) placeIn(group, item, x, TOP, -.2);
+  }
+
+  function seat(entity, module, kit) {
+    const seats = [[.47, -.2, Math.PI / 2, 'sit'], [2.4, 1, -.6, 'idle'], [-2.2, 1.1, .5, 'idle'], [-.9, 1.2, .2, 'interact']];
+    const scale = LEVEL_SCALE[module.levelId] ?? 1.1;
     for (let i = 0; i < (module.population || 1); i += 1) {
       const [x, z, rotation, clip] = seats[i];
-      character(entity, student, clip, x, floor + (clip === 'sit' ? .02 : 0), z, rotation, i * .4);
-    }
-    const equipment = kit.get(PROGRAM_EQUIPMENT[module.programId]);
-    if (equipment) {
-      const rover = placeIn(entity.group, equipment, 1.35, floor + .608, -.2, .5);
-      entity.spinners.push(rover.getObjectByName('wheel_l'), rover.getObjectByName('wheel_r'));
+      character(entity, kit, clip, x, BASE + (clip === 'sit' ? .02 : 0), z, rotation, i * .4, scale);
     }
   }
 
   function needs(module) {
     const ids = [module.asset];
     if (module.type === 'room') ids.push(...ROOM_ASSETS);
-    if (PROGRAM_EQUIPMENT[module.programId]) ids.push(PROGRAM_EQUIPMENT[module.programId]);
+    if (LEVEL_TABLE_ITEM[module.levelId]) ids.push(LEVEL_TABLE_ITEM[module.levelId]);
+    for (const [asset] of PROGRAM_SETUP[module.programId] || []) ids.push(asset);
+    if (module.type === 'patio') ids.push('equip-drone');
     return ids;
   }
 
   function build(module, kit) {
     const group = new Group();
-    const entity = { key: module.key, signature: signatureOf(module), group, mixers: [], spinners: [], walkers: [], home: { y: module.y }, enter: reduced ? null : 0 };
+    const entity = { key: module.key, signature: signatureOf(module), group, mixers: [], spinners: [], walkers: [], hovers: [], pairs: [], owned: [], home: { y: module.y }, enter: reduced ? null : 0 };
     group.position.set(module.x, module.y, module.z);
     group.rotation.y = module.rot;
+    group.userData.entity = module;
     const shell = placeIn(group, kit.get(module.asset), 0, 0, 0);
     if (module.seedScale) shell.scale.setScalar(module.seedScale);
     if (module.type === 'room') furnish(entity, module, kit);
+    entity.owned = mergeStatic(group);
+    entity.staticMeshes = group.children.filter(child => child.isMesh);
+    if (module.type === 'room') seat(entity, module, kit);
+    if (module.type === 'patio') {
+      const drone = placeIn(group, kit.get('equip-drone'), 0, 2.4, 0);
+      drone.scale.setScalar(3);
+      drone.userData.height = 2.4;
+      entity.hovers.push(drone);
+      drone.traverse(node => { if (/^rotor_/.test(node.name)) entity.spinners.push({ node, axis: 'y', speed: 16 }); });
+    }
+    if (viewMode === 'xray' && module.type === 'roof') group.visible = false;
     if (!reduced) group.scale.setScalar(.001);
     root.add(group);
     entities.set(module.key, entity);
+  }
+
+  function unbatch() {
+    clearTimeout(batchTimer);
+    clearBatch(batched);
+    batched = null;
+  }
+
+  function scheduleBatch() {
+    clearTimeout(batchTimer);
+    batchTimer = setTimeout(() => {
+      if (disposed || moving() || pendingLoads) return scheduleBatch();
+      clearBatch(batched);
+      const settled = [...entities.values()].filter(entity => entity.group.visible).flatMap(entity => entity.staticMeshes || []);
+      batched = buildBatch(settled, root);
+      invalidate();
+    }, 300);
   }
 
   function discard(key) {
     const entity = entities.get(key);
     if (!entity) return;
     entities.delete(key);
-    if (reduced) { root.remove(entity.group); for (const mixer of entity.mixers) mixer.stopAllAction(); return; }
+    if (reduced) { root.remove(entity.group); release(entity); return; }
     entity.leave = 1;
     leaving.add(entity);
   }
@@ -270,19 +357,15 @@ export function createWorld(container, opts = {}) {
   }
 
   function syncWalkers(wanted, kit) {
-    const student = kit.get(STUDENT);
-    if (!student) return;
-    while (walkers.length > wanted) {
-      const walker = walkers.pop();
-      discard(walker.key);
-    }
+    if (!kit.get(STUDENT) || !kit.get(STUDENT_LOD)) return;
+    while (walkers.length > wanted) discard(walkers.pop().key);
     for (let i = walkers.length; i < wanted; i += 1) {
       const key = `walker:${i}`;
       const group = new Group();
-      const entity = { key, signature: key, group, mixers: [], spinners: [], walkers: [], home: { y: 0 }, enter: null };
+      const entity = { key, signature: key, group, mixers: [], spinners: [], walkers: [], hovers: [], pairs: [], owned: [], home: { y: 0 }, enter: null };
       root.add(group);
-      const object = character(entity, student, 'walk', 0, 0, 0, 0, i * .3);
-      const walker = { key, object, phase: (i * .37) % 1, lane: i % 2 ? .4 : -.4 };
+      const { high, low } = character(entity, kit, 'walk', 0, 0, 0, 0, i * .3, i % 3 ? 1 : .9);
+      const walker = { key, objects: [high, low], phase: (i * .37) % 1, lane: i % 2 ? .4 : -.4 };
       entity.walkers.push(walker);
       walkers.push(walker);
       entities.set(key, entity);
@@ -292,13 +375,14 @@ export function createWorld(container, opts = {}) {
   function update(input) {
     if (disposed) return;
     plan = planWorld(normalizeWorldInput(input));
+    unbatch();
     const mine = ++generation;
     syncIsland(plan.island);
     const entries = plan.modules;
     const current = new Map([...entities].filter(([key]) => !key.startsWith('walker:')));
     const { add, remove } = diffEntities(current, entries);
     for (const key of remove) discard(key);
-    const ids = new Set(add.flatMap(needs).concat(STUDENT));
+    const ids = new Set(add.flatMap(needs).concat(STUDENT, STUDENT_LOD));
     pendingLoads += 1;
     Promise.allSettled([...ids].map(id => loadAsset(id, opts.base).then(asset => [id, asset]))).then(results => {
       pendingLoads -= 1;
@@ -316,6 +400,7 @@ export function createWorld(container, opts = {}) {
         }
         syncWalkers(Math.min(8, 2 + Math.floor(plan.modules.filter(m => m.type === 'room').length / 2)), kit);
         ready = true;
+        scheduleBatch();
         resize();
       }
       invalidate();
@@ -329,15 +414,50 @@ export function createWorld(container, opts = {}) {
   }
 
   let dragging = null;
-  const down = event => { dragging = { x: event.clientX, y: event.clientY }; renderer.domElement.setPointerCapture?.(event.pointerId); };
+  let travelled = 0;
+  const pick = event => {
+    const box = renderer.domElement.getBoundingClientRect();
+    const pointer = new Vector2((event.clientX - box.left) / box.width * 2 - 1, -(event.clientY - box.top) / box.height * 2 + 1);
+    const ray = new Raycaster();
+    ray.setFromCamera(pointer, camera);
+    for (const hit of ray.intersectObjects(root.children, true)) {
+      let node = hit.object;
+      while (node && !node.userData.entity) node = node.parent;
+      if (node) {
+        const { key, levelId, programId } = node.userData.entity;
+        opts.onSelect?.({ key, levelId, programId });
+        return handle.setFocus({ key });
+      }
+    }
+  };
+  const down = event => {
+    dragging = { x: event.clientX, y: event.clientY };
+    travelled = 0;
+    try { renderer.domElement.setPointerCapture(event.pointerId); } catch { /* Synthetic events have no capture target. */ }
+  };
   const move = event => {
     if (!dragging) return;
+    travelled += Math.abs(event.clientX - dragging.x) + Math.abs(event.clientY - dragging.y);
     goal.yaw -= (event.clientX - dragging.x) * .006;
     goal.pitch = MathUtils.clamp(goal.pitch + (event.clientY - dragging.y) * .004, .25, 1.1);
     dragging = { x: event.clientX, y: event.clientY };
     invalidate();
   };
-  const up = () => { dragging = null; };
+  const up = event => {
+    if (dragging && travelled < 5) pick(event);
+    dragging = null;
+  };
+  const key = event => {
+    const actions = { ArrowLeft: () => handle.rotate(.2), ArrowRight: () => handle.rotate(-.2), '+': () => handle.zoom(.9), '=': () => handle.zoom(.9), '-': () => handle.zoom(1.1), Home: () => handle.resetView() };
+    if (actions[event.key]) { event.preventDefault(); actions[event.key](); }
+  };
+  const lost = event => { event.preventDefault(); contextLost = true; };
+  const restored = () => { contextLost = false; invalidate(); };
+  renderer.domElement.tabIndex = 0;
+  renderer.domElement.setAttribute('aria-label', opts.label || 'Campus interactivo');
+  renderer.domElement.addEventListener('keydown', key);
+  renderer.domElement.addEventListener('webglcontextlost', lost);
+  renderer.domElement.addEventListener('webglcontextrestored', restored);
   const wheel = event => { event.preventDefault(); handle.zoom(event.deltaY > 0 ? 1.1 : .9); };
   renderer.domElement.addEventListener('pointerdown', down);
   renderer.domElement.addEventListener('pointermove', move);
@@ -359,6 +479,16 @@ export function createWorld(container, opts = {}) {
       invalidate();
     },
     setPaused(next) { paused = !!next; invalidate(); },
+    setInsets(next) { Object.assign(insets, next); invalidate(); },
+    setHoverVerb(text) { renderer.domElement.title = text || ''; },
+    setView(mode) {
+      viewMode = mode === 'xray' ? 'xray' : 'normal';
+      unbatch();
+      for (const entity of entities.values()) if (entity.key.startsWith('roof:')) entity.group.visible = viewMode === 'normal';
+      scheduleBatch();
+      invalidate();
+    },
+    agentGesture(gesture) { lastGesture = gesture; }, // Geeky is not in this scene yet; the host keeps its own character.
     setFocus(next) {
       const module = next && plan?.modules.find(m => (next.kind === 'level' && m.levelId === next.id) || (next.kind === 'program' && m.programId === next.id) || m.key === next.key);
       if (!module) return handle.resetView();
@@ -372,11 +502,13 @@ export function createWorld(container, opts = {}) {
       const keys = [...entities.keys()];
       return { ready, errors: [...errors], paused, yaw: goal.yaw, triangles: renderer.info.render.triangles, drawCalls: renderer.info.render.calls,
         geometries: disposed ? 0 : renderer.info.memory.geometries, frames, geometriesBeforeDispose, entityKeys: keys, entityIds: Object.fromEntries(keys.map(key => [key, entities.get(key).group.uuid])),
-        pendingLoads, transitionsActive: reduced ? 0 : moving() ? 1 : 0, framePending: !!frame, loaded: entities.size };
+        pendingLoads, transitionsActive: reduced ? 0 : moving() ? 1 : 0, framePending: !!frame, loaded: entities.size, lod, focused: handle.focused, contextLost, view: viewMode, lastGesture,
+        animatedPrograms: [...new Set((plan?.modules || []).filter(m => m.programId).map(m => m.programId))] };
     },
     dispose() {
       if (disposed) return;
       geometriesBeforeDispose = renderer.info.memory.geometries;
+      unbatch();
       disposed = true;
       cancelAnimationFrame(frame);
       observer?.disconnect();
@@ -384,7 +516,10 @@ export function createWorld(container, opts = {}) {
       renderer.domElement.removeEventListener('pointermove', move);
       renderer.domElement.removeEventListener('pointerup', up);
       renderer.domElement.removeEventListener('wheel', wheel);
-      for (const entity of entities.values()) for (const mixer of entity.mixers) mixer.stopAllAction();
+      renderer.domElement.removeEventListener('keydown', key);
+      renderer.domElement.removeEventListener('webglcontextlost', lost);
+      renderer.domElement.removeEventListener('webglcontextrestored', restored);
+      for (const entity of entities.values()) release(entity);
       scene.traverse(node => node.geometry?.dispose());
       disposeMaterials();
       clearAssets();

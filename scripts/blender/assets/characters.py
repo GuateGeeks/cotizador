@@ -74,7 +74,7 @@ def height_at_rest(arm, mesh):
     arm.data.pose_position = 'POSE'
     return max(heights) - min(heights), min(heights)
 
-def bake_reduced(arm, mesh, triangles):
+def bake_reduced(arm, mesh, triangles, target):
     """Reduce, unwrap afresh and bake colour from the original.
 
     Decimating alone tears the texture across UV seams, so the old UVs are never reused.
@@ -100,7 +100,7 @@ def bake_reduced(arm, mesh, triangles):
         if name in mesh.data.attributes:
             mesh.data.attributes.remove(mesh.data.attributes[name])
     reduce = mesh.modifiers.new('reduce', 'DECIMATE')
-    reduce.ratio = TARGET_TRIANGLES / triangles
+    reduce.ratio = target / triangles
     mesh.modifiers.move(len(mesh.modifiers) - 1, 0)
     with bpy.context.temp_override(object=mesh, active_object=mesh):
         bpy.ops.object.modifier_apply(modifier='reduce')
@@ -138,6 +138,13 @@ def bake_reduced(arm, mesh, triangles):
 
 @register('char-student-primary', budget=6000)
 def student_primary():
+    return student(TARGET_TRIANGLES)
+
+@register('char-student-primary-lod1', budget=1500)
+def student_lod():
+    return student(1400)
+
+def student(target):
     source = ROOT / 'assets/sources/meshy/poc/student-walk.glb'
     before = set(bpy.data.objects)
     bpy.ops.import_scene.gltf(filepath=str(source))
@@ -154,7 +161,7 @@ def student_primary():
             bpy.data.objects.remove(o)
     arm.parent = b.root
     triangles = sum(len(p.vertices) - 2 for p in mesh.data.polygons)
-    bake_reduced(arm, mesh, triangles)
+    bake_reduced(arm, mesh, triangles, target)
     height, floor = height_at_rest(arm, mesh)
     arm.scale = arm.scale * (C['studentHeight'] / height)
     bpy.context.view_layer.update()

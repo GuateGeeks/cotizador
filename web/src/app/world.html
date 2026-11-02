@@ -27,7 +27,7 @@
   import states from './states.json';
   const report = new URLSearchParams(location.search).has('report') && window.reportWorld;
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const world = window.world = createWorld(document.querySelector('#stage'), { reduceMotion, base: '/models/', onError: error => { report?.(error); console.warn('world', error); } });
+  const world = window.world = createWorld(document.querySelector('#stage'), { reduceMotion, base: '/models/', onError: error => { report?.(error); console.warn('world', error); }, onSelect: value => window.__selected?.(value) });
   const names = ['Escuela inicial', 'Comunidad educativa', 'Robótica', 'Ampliación', 'Conexiones', 'Campus'];
   const scope = document.querySelector('#scope');
   names.forEach((name, index) => {

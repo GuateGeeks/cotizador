@@ -64,6 +64,5 @@
     "interact"
   ],
   "armature": "Armature",
-  "islands": 1,
-  "visual_note": "Passes at campus scale; close-up shows specks and jagged colour edges from the bake."
+  "islands": 1
 }

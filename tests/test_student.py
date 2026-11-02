@@ -16,5 +16,12 @@ class Student(unittest.TestCase):
         self.assertEqual(sorted(self.m['animations']), ['idle', 'interact', 'sit', 'walk'])
         self.assertEqual(self.m['skins'], 1)
 
+class StudentLod(unittest.TestCase):
+    def test_campus_distance_model_shares_clips_and_height(self):
+        m = build('char-student-primary-lod1')
+        self.assertLessEqual(m['triangles'], 1500)
+        self.assertEqual(sorted(m['animations']), ['idle', 'interact', 'sit', 'walk'])
+        self.assertAlmostEqual(m['size_m'][1], 1.35, delta=.02)
+
 if __name__ == '__main__':
     unittest.main()
