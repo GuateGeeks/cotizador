@@ -1,0 +1,21 @@
+{
+  "pairs": [
+    ["arch-classroom-standard", "socket_east", "arch-classroom-standard", "socket_west"],
+    ["arch-classroom-standard", "socket_east", "arch-classroom-end", "socket_west"],
+    ["arch-classroom-standard", "socket_east", "arch-classroom-expandable", "socket_west"],
+    ["arch-classroom-expandable", "socket_east", "arch-classroom-corner", "socket_west"],
+    ["arch-classroom-standard", "socket_east", "arch-corridor", "socket_west"],
+    ["arch-corridor", "socket_east", "arch-classroom-standard", "socket_west"],
+    ["arch-classroom-standard", "socket_east", "arch-support", "socket_west"],
+    ["arch-entrance", "socket_east", "arch-classroom-standard", "socket_west"],
+    ["arch-classroom-standard", "socket_floor_above", "arch-classroom-upper", "socket_floor_below"],
+    ["arch-support", "socket_floor_above", "arch-classroom-upper", "socket_floor_below"],
+    ["arch-classroom-upper", "socket_floor_above", "arch-roof", "socket_floor_below"],
+    ["arch-corridor", "socket_floor_above", "arch-roof", "socket_floor_below"],
+    ["arch-classroom-upper", "socket_east", "arch-classroom-upper", "socket_west"],
+    ["arch-balcony", "socket_east", "arch-balcony", "socket_west"],
+    ["arch-balcony", "socket_east", "arch-bridge", "socket_west"],
+    ["arch-pathway", "socket_east", "arch-pathway", "socket_west"],
+    ["arch-terrain-tile", "socket_east", "arch-terrain-tile", "socket_west"]
+  ]
+}

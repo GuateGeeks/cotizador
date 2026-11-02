@@ -1,0 +1,53 @@
+{
+  "id": "arch-balcony",
+  "triangles": 872,
+  "budget": 8000,
+  "materials": [
+    "GG_GlassSoft",
+    "GG_IvorySoft",
+    "GG_PurplePrimary",
+    "GG_TurquoiseAccent"
+  ],
+  "size_m": [
+    6.0,
+    4.24,
+    1.4
+  ],
+  "bounds": {
+    "min": [
+      -3.0,
+      -3.18,
+      -0.7
+    ],
+    "max": [
+      3.0,
+      1.06,
+      0.7
+    ]
+  },
+  "sockets": {
+    "socket_east": [
+      3,
+      0,
+      0
+    ],
+    "socket_west": [
+      -3,
+      0,
+      0
+    ]
+  },
+  "pivots": {},
+  "skins": 0,
+  "animations": [],
+  "bytes": 20700,
+  "sha256": "7ce393b89d48575c17fe6698f1fdfb0efd0952b637840389848349385a81269f",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

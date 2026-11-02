@@ -1,0 +1,76 @@
+{
+  "id": "arch-corridor",
+  "triangles": 1064,
+  "budget": 8000,
+  "materials": [
+    "GG_GlassSoft",
+    "GG_IvorySoft",
+    "GG_PurplePrimary",
+    "GG_TurquoiseAccent"
+  ],
+  "size_m": [
+    6.0,
+    3.2,
+    5.0
+  ],
+  "bounds": {
+    "min": [
+      -3.0,
+      0.0,
+      -2.5
+    ],
+    "max": [
+      3.0,
+      3.2,
+      2.5
+    ]
+  },
+  "sockets": {
+    "socket_east": [
+      3,
+      0,
+      0
+    ],
+    "socket_floor_above": [
+      0.0,
+      3.2,
+      0.0
+    ],
+    "socket_floor_below": [
+      0,
+      0,
+      0
+    ],
+    "socket_west": [
+      -3,
+      0,
+      0
+    ]
+  },
+  "pivots": {
+    "header": {
+      "position": [
+        0.0,
+        2.99,
+        2.35
+      ],
+      "centre": [
+        0.0,
+        2.99,
+        2.35
+      ]
+    }
+  },
+  "skins": 0,
+  "animations": [],
+  "bytes": 23736,
+  "sha256": "cfa633c04339b0ea18ea28d703250ce5aed38480138a56595363e3ee984bf89b",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

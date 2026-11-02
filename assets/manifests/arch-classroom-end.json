@@ -1,0 +1,79 @@
+{
+  "id": "arch-classroom-end",
+  "triangles": 1996,
+  "budget": 8000,
+  "materials": [
+    "GG_GlassSoft",
+    "GG_IvorySoft",
+    "GG_LightWarm",
+    "GG_PurpleDark",
+    "GG_PurplePrimary",
+    "GG_ScreenEmissive",
+    "GG_WarmInterior"
+  ],
+  "size_m": [
+    6.0,
+    3.2,
+    5.0
+  ],
+  "bounds": {
+    "min": [
+      -3.0,
+      0.0,
+      -2.5
+    ],
+    "max": [
+      3.0,
+      3.2,
+      2.5
+    ]
+  },
+  "sockets": {
+    "socket_east": [
+      3,
+      0,
+      0
+    ],
+    "socket_floor_above": [
+      0.0,
+      3.2,
+      0.0
+    ],
+    "socket_floor_below": [
+      0,
+      0,
+      0
+    ],
+    "socket_west": [
+      -3,
+      0,
+      0
+    ]
+  },
+  "pivots": {
+    "header": {
+      "position": [
+        0.0,
+        2.99,
+        2.35
+      ],
+      "centre": [
+        0.0,
+        2.99,
+        2.35
+      ]
+    }
+  },
+  "skins": 0,
+  "animations": [],
+  "bytes": 42312,
+  "sha256": "15203595a0a01b68b6ba98c67153d8999df8f23377cf733cdbfe3ca98d6eb028",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

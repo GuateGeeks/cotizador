@@ -65,7 +65,8 @@ describe('planWorld', () => {
   it('stairs reach the balcony that serves the upper floor', () => {
     const result = byKey(stacked);
     expect(result.has('upper:prim:0') && result.has('stairs:front')).toBe(true);
-    expect([...result.keys()].some(k => k.startsWith('balcony:'))).toBe(true);
+    expect(result.has('balcony:1')).toBe(true);
+    expect(result.has('bridge:0')).toBe(true);
     expect(byKey(plan(scope(['pre']))).has('stairs:front')).toBe(false);
   });
   it('fills gaps in the row so the school stays connected', () => {

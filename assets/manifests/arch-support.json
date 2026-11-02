@@ -1,0 +1,61 @@
+{
+  "id": "arch-support",
+  "triangles": 1852,
+  "budget": 8000,
+  "materials": [
+    "GG_IvorySoft",
+    "GG_PurplePrimary"
+  ],
+  "size_m": [
+    6.0,
+    3.2,
+    5.0
+  ],
+  "bounds": {
+    "min": [
+      -3.0,
+      0.0,
+      -2.5
+    ],
+    "max": [
+      3.0,
+      3.2,
+      2.5
+    ]
+  },
+  "sockets": {
+    "socket_east": [
+      3,
+      0,
+      0
+    ],
+    "socket_floor_above": [
+      0.0,
+      3.2,
+      0.0
+    ],
+    "socket_floor_below": [
+      0,
+      0,
+      0
+    ],
+    "socket_west": [
+      -3,
+      0,
+      0
+    ]
+  },
+  "pivots": {},
+  "skins": 0,
+  "animations": [],
+  "bytes": 36976,
+  "sha256": "84daa2ce89ee9213fa23c7f653abcca5f544a4090a8aa5529a5c6aea95482d70",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

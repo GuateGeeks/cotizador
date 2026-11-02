@@ -1,0 +1,42 @@
+{
+  "id": "arch-courtyard",
+  "triangles": 1964,
+  "budget": 8000,
+  "materials": [
+    "GG_GreenFoliage",
+    "GG_IvorySoft",
+    "GG_TurquoiseAccent",
+    "GG_WarmInterior"
+  ],
+  "size_m": [
+    8.0,
+    0.8027,
+    5.0
+  ],
+  "bounds": {
+    "min": [
+      -4.0,
+      0.0,
+      -2.5
+    ],
+    "max": [
+      4.0,
+      0.802703,
+      2.5
+    ]
+  },
+  "sockets": {},
+  "pivots": {},
+  "skins": 0,
+  "animations": [],
+  "bytes": 38320,
+  "sha256": "3cd77907b1157651d1030012838094995f37fccdeb9f28b08aac3a46a0f0a52d",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

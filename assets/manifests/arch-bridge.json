@@ -1,0 +1,53 @@
+{
+  "id": "arch-bridge",
+  "triangles": 1024,
+  "budget": 8000,
+  "materials": [
+    "GG_GlassSoft",
+    "GG_IvorySoft",
+    "GG_PurplePrimary",
+    "GG_TurquoiseAccent"
+  ],
+  "size_m": [
+    6.0,
+    4.24,
+    1.4
+  ],
+  "bounds": {
+    "min": [
+      -3.0,
+      -3.18,
+      -0.7
+    ],
+    "max": [
+      3.0,
+      1.06,
+      0.7
+    ]
+  },
+  "sockets": {
+    "socket_east": [
+      3,
+      0,
+      0
+    ],
+    "socket_west": [
+      -3,
+      0,
+      0
+    ]
+  },
+  "pivots": {},
+  "skins": 0,
+  "animations": [],
+  "bytes": 23772,
+  "sha256": "163b26efeaaf35a9e834997f7c517bef7e8412429ed0cd9c80ea06f9343f5135",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

@@ -1,0 +1,51 @@
+{
+  "id": "arch-pathway",
+  "triangles": 264,
+  "budget": 2000,
+  "materials": [
+    "GG_IvorySoft",
+    "GG_WarmInterior"
+  ],
+  "size_m": [
+    6.0,
+    0.045,
+    1.6
+  ],
+  "bounds": {
+    "min": [
+      -3.0,
+      0.0,
+      -0.8
+    ],
+    "max": [
+      3.0,
+      0.045,
+      0.8
+    ]
+  },
+  "sockets": {
+    "socket_east": [
+      3,
+      0,
+      0
+    ],
+    "socket_west": [
+      -3,
+      0,
+      0
+    ]
+  },
+  "pivots": {},
+  "skins": 0,
+  "animations": [],
+  "bytes": 8224,
+  "sha256": "beccef7f8e250b101268ccb9ab0f4296432febd9c13a4e24de125031032c0ff3",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

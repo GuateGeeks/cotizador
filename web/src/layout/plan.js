@@ -51,7 +51,7 @@ export function planWorld(data) {
       continue;
     }
     const [column, floor] = PROJECT_SLOT[program];
-    building(`project:${program}`, 'room', 'arch-classroom-expandable', column, floor, { programId: program, population: 2 });
+    building(`project:${program}`, 'room', program === 'immersive' ? 'arch-classroom-corner' : 'arch-classroom-expandable', column, floor, { programId: program, population: 2 });
   }
 
   const lastColumn = Math.max(...[...taken.values()].map(m => m.column));
@@ -61,15 +61,18 @@ export function planWorld(data) {
   for (let column = 0; column < lastColumn; column += 1) {
     if (!taken.has(`${column}:0`)) building(`corridor:${column}`, 'corridor', 'arch-corridor', column, 0);
   }
+  const east = taken.get(`${lastColumn}:0`);
+  if (east?.asset === 'arch-classroom-standard') east.asset = 'arch-classroom-end';
   for (const module of taken.values()) {
     const above = taken.has(`${module.column}:${module.floor + 1}`);
-    if (!above) add(`roof:${module.column}:${module.floor + 1}`, 'roof', module.type === 'corridor' ? 'arch-roof-low' : 'arch-roof', module.column, module.floor + 1);
+    if (!above) add(`roof:${module.column}:${module.floor + 1}`, 'roof', 'arch-roof', module.column, module.floor + 1);
   }
   const uppers = [...taken.values()].filter(m => m.floor === 1).map(m => m.column);
   if (uppers.length) {
     const reach = Math.max(1, ...uppers);
     for (let column = 0; column <= reach; column += 1) {
-      add(`balcony:${column}`, 'balcony', 'arch-balcony', column, 1, BAY_D / 2 + BALCONY_D / 2);
+      const served = taken.has(`${column}:1`);
+      add(`${served ? 'balcony' : 'bridge'}:${column}`, 'balcony', served ? 'arch-balcony' : 'arch-bridge', column, 1, BAY_D / 2 + BALCONY_D / 2);
     }
     add('stairs:front', 'stairs', 'arch-stairs', .5, 0, BAY_D / 2 + BALCONY_D + STAIR_LENGTH);
   }
@@ -82,9 +85,9 @@ export function planWorld(data) {
   for (let i = 0; i <= lastColumn; i += 1) if (rooms >= 2) add(`planter:${i}`, 'planter', 'arch-planter', i + .22, 0, BAY_D / 2 + .7, uppers.includes(i) ? { hidden: true } : {});
 
   const west = -BAY_W / 2 - ENTRANCE_W - 3;
-  const east = columnX(lastColumn) + BAY_W / 2 + 3;
+  const eastEdge = columnX(lastColumn) + BAY_W / 2 + 3;
   const depthFront = BAY_D / 2 + (data.programs.includes('drones') ? 10 : uppers.length ? 9 : 6);
   const depthBack = -BAY_D / 2 - 5;
-  const island = { x: (west + east) / 2, z: (depthFront + depthBack) / 2, width: east - west, depth: depthFront - depthBack, height: 1.3 };
+  const island = { x: (west + eastEdge) / 2, z: (depthFront + depthBack) / 2, width: eastEdge - west, depth: depthFront - depthBack, height: 1.3 };
   return { modules: modules.filter(m => !m.hidden), island, levels: LEVEL_IDS.filter(id => levels.includes(id)) };
 }

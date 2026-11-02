@@ -1,0 +1,42 @@
+{
+  "id": "arch-planter",
+  "triangles": 968,
+  "budget": 2000,
+  "materials": [
+    "GG_GreenDark",
+    "GG_GreenFoliage",
+    "GG_IvorySoft",
+    "GG_PurplePrimary"
+  ],
+  "size_m": [
+    1.6,
+    0.8028,
+    0.62
+  ],
+  "bounds": {
+    "min": [
+      -0.8,
+      0.0,
+      -0.31
+    ],
+    "max": [
+      0.8,
+      0.802816,
+      0.31
+    ]
+  },
+  "sockets": {},
+  "pivots": {},
+  "skins": 0,
+  "animations": [],
+  "bytes": 21864,
+  "sha256": "36a74472fc79f5de02f62f86ca7e3d8ce2b468281b1d147b257e36fedd709e99",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

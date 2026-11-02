@@ -4,7 +4,7 @@ import json, math, pathlib
 import bpy
 
 from gg import geometry
-from gg.geometry import arch, box
+from gg.geometry import arch, ball, box, cyl
 from gg.sockets import add_socket, register
 
 ROOT = pathlib.Path(__file__).resolve().parents[3]
@@ -30,11 +30,13 @@ def side_wall(x, solid=False):
     for y in (-.53, .53):
         window(x, y, 1.0, head - sill, BASE + (sill + head) / 2)
 
-def classroom_shell(left_open=True, right_open=True):
+def classroom_shell(left_open=True, right_open=True, accent='GG_PurplePrimary', inlay=None):
     box('slab', (W, D, BASE), (0, 0, BASE / 2), 'GG_PurplePrimary', r=.06, corner=.14)
     box('floor', (W - .3, D - .3, .03), (0, 0, BASE + .01), 'GG_WarmInterior', r=.01, seg=1)
+    if inlay:
+        box('inlay', (W - 2, D - 2.4, .012), (0, -.1, BASE + .03), inlay, r=.004, seg=1)
     box('wall_back', (W, T, H), (0, D / 2 - T / 2, BASE + H / 2), 'GG_IvorySoft', r=.04)
-    box('accent_back', (W - .5, .03, 1.2), (0, D / 2 - T - .015, BASE + 2.2), 'GG_PurplePrimary', r=.01, seg=1)
+    box('accent_back', (W - .5, .03, 1.2), (0, D / 2 - T - .015, BASE + 2.2), accent, r=.01, seg=1)
     box('inner_back', (W - .5, .03, 1.6), (0, D / 2 - T - .015, BASE + .8), 'GG_WarmInterior', r=.01, seg=1)
     side_wall(-W / 2 + T / 2, not left_open)
     side_wall(W / 2 - T / 2, not right_open)
@@ -80,3 +82,120 @@ def island_slice():
     w, d, h = 17.0, 12.5, 1.3
     box('island', (w, d, h), (0, 0, -h / 2 - .12), 'GG_PurplePrimary', r=.35, corner=d * .2, seg=5, cseg=20)
     box('top', (w - .55, d - .55, .13), (0, 0, -.065), 'GG_IvorySoft', r=.05, corner=d * .18, cseg=20)
+
+def bay_sockets(top=TOP):
+    add_socket('east', (W / 2, 0, 0))
+    add_socket('west', (-W / 2, 0, 0))
+    add_socket('floor_above', (0, 0, top))
+    add_socket('floor_below', (0, 0, 0))
+
+@register('arch-classroom-upper', budget=8000)
+def classroom_upper():
+    classroom_shell(accent='GG_NavyFabric')
+
+@register('arch-classroom-expandable', budget=8000)
+def classroom_expandable():
+    classroom_shell(accent='GG_TurquoiseAccent', inlay='GG_TurquoiseAccent')
+
+@register('arch-classroom-end', budget=8000)
+def classroom_end():
+    classroom_shell(right_open=False)
+
+@register('arch-classroom-corner', budget=8000)
+def classroom_corner():
+    classroom_shell(right_open=False, accent='GG_OrangeAccent', inlay='GG_OrangeAccent')
+
+@register('arch-support', budget=8000)
+def support():
+    box('slab', (W, D, BASE), (0, 0, BASE / 2), 'GG_PurplePrimary', r=.06, corner=.14)
+    box('beam_front', (W, .4, .4), (0, -D / 2 + .2, TOP - .2), 'GG_IvorySoft', r=.06)
+    box('beam_back', (W, .4, .4), (0, D / 2 - .2, TOP - .2), 'GG_IvorySoft', r=.06)
+    for x in (-W / 2 + .3, W / 2 - .3):
+        box('tie', (.4, D - .8, .3), (x, 0, TOP - .15), 'GG_IvorySoft', r=.05)
+        for y in (-D / 2 + .3, D / 2 - .3):
+            box('column', (.6, .6, H - .4), (x, y, BASE + (H - .4) / 2), 'GG_PurplePrimary', r=.08, corner=.12)
+    bay_sockets()
+
+@register('arch-corridor', budget=8000)
+def corridor():
+    box('slab', (W, D, BASE), (0, 0, BASE / 2), 'GG_PurplePrimary', r=.06, corner=.14)
+    box('walk', (W - .3, D - .3, .03), (0, 0, BASE + .01), 'GG_TurquoiseAccent', r=.01, seg=1)
+    box('wall_back', (W, T, H), (0, D / 2 - T / 2, BASE + H / 2), 'GG_IvorySoft', r=.04)
+    box('header', (W, .3, .42), (0, -D / 2 + .15, TOP - .21), 'GG_IvorySoft', r=.06)
+    for x in (-W / 2 + .2, W / 2 - .2):
+        box('tie', (.4, D - .55, .3), (x, -.03, TOP - .15), 'GG_IvorySoft', r=.05)
+        box('post', (.4, .3, H - .42), (x, -D / 2 + .15, BASE + (H - .42) / 2), 'GG_PurplePrimary', r=.06)
+    for x in (-1.5, 1.5):
+        box('pane', (1.8, .08, H - .42), (x, -D / 2 + .15, BASE + (H - .42) / 2), 'GG_GlassSoft', r=.01, seg=1)
+    bay_sockets()
+
+def balcony_deck(back_rail=False):
+    bd = 1.4
+    box('deck', (W, bd, BASE), (0, 0, BASE / 2), 'GG_IvorySoft', r=.04)
+    box('walk', (W - .1, bd - .1, .02), (0, 0, BASE + .005), 'GG_TurquoiseAccent', r=.005, seg=1)
+    rails = (-bd / 2 + .06, bd / 2 - .06) if back_rail else (-bd / 2 + .06,)
+    for y in rails:
+        box('rail_glass', (W - 1.9, .05, .78), (0, y, BASE + .4), 'GG_GlassSoft', r=.01, seg=1)
+        box('rail', (W - 1.75, .09, .08), (0, y, BASE + .82), 'GG_IvorySoft', r=.035)
+    for x in (-W / 2 + 1, W / 2 - 1):
+        box('post', (.24, .24, FLOOR), (x, 0, -FLOOR / 2 + .02), 'GG_PurplePrimary', r=.05, corner=.05)
+    add_socket('east', (W / 2, 0, 0))
+    add_socket('west', (-W / 2, 0, 0))
+
+FLOOR = TOP
+
+@register('arch-balcony', budget=8000)
+def balcony():
+    balcony_deck()
+
+@register('arch-bridge', budget=8000)
+def bridge():
+    balcony_deck(back_rail=True)
+
+@register('arch-stairs', budget=8000)
+def stairs(steps=14):
+    run, rise = .32, TOP / steps
+    for i in range(steps):
+        h = rise * (i + 1)
+        box('step', (1.5, run, h), (0, i * run + run / 2, h / 2), 'GG_TurquoiseAccent', r=.015, seg=1)
+    length = steps * run
+    tilt = math.atan2(TOP, length)
+    slope = length / math.cos(tilt)
+    for s in (-1, 1):
+        box('rail_glass', (.05, slope * .95, .7), (s * .78, length / 2, TOP / 2 + .46), 'GG_GlassSoft', r=.01, seg=1, rot=(tilt, 0, 0))
+        box('rail', (.1, slope, .08), (s * .78, length / 2, TOP / 2 + .84), 'GG_IvorySoft', r=.035, rot=(tilt, 0, 0))
+    add_socket('floor_above', (0, length, TOP))
+
+@register('arch-terrain-tile', budget=2000)
+def terrain_tile():
+    box('soil', (W, D, .12), (0, 0, -.06), 'GG_IvorySoft', r=.02)
+    box('grass', (W - .3, D - .3, .03), (0, 0, .01), 'GG_GreenFoliage', r=.015, corner=.3)
+    add_socket('east', (W / 2, 0, 0))
+    add_socket('west', (-W / 2, 0, 0))
+
+@register('arch-pathway', budget=2000)
+def pathway():
+    box('path', (W, 1.6, .03), (0, 0, .015), 'GG_WarmInterior', r=.01, seg=1)
+    for x in range(-2, 3):
+        box('paver', (1.05, 1.3, .02), (x * 1.2, 0, .035), 'GG_IvorySoft', r=.008, seg=1)
+    add_socket('east', (W / 2, 0, 0))
+    add_socket('west', (-W / 2, 0, 0))
+
+@register('arch-courtyard', budget=8000)
+def courtyard():
+    box('pad', (W + 2, D, .05), (0, 0, .025), 'GG_WarmInterior', r=.02, corner=.5)
+    cyl('ring', 1.7, 1.7, .03, (0, 0, .05), 'GG_TurquoiseAccent', seg=40, bev=.01)
+    cyl('ring_in', 1.45, 1.45, .035, (0, 0, .05), 'GG_IvorySoft', seg=40, bev=.01)
+    for x, y in ((-3.2, 1.7), (3.2, 1.7)):
+        box('planter', (1.4, .6, .45), (x, y, .27), 'GG_IvorySoft', r=.05, corner=.08)
+        for i in range(3):
+            ball('shrub', (.24,) * 3, (x - .4 + i * .4, y, .56), 'GG_GreenFoliage', sub=2, wobble=.05, seed=i)
+
+@register('arch-planter', budget=2000)
+def planter():
+    w = 1.6
+    box('base', (w, .62, .1), (0, 0, .05), 'GG_PurplePrimary', r=.03, corner=.08)
+    box('body', (w - .04, .58, .4), (0, 0, .3), 'GG_IvorySoft', r=.04, corner=.08)
+    for i in range(5):
+        x = (i + .5) / 5 * (w - .25) - (w - .25) / 2
+        ball('shrub', (.2, .2, .2 + (i % 2) * .05), (x, (-1) ** i * .07, .55), 'GG_GreenFoliage' if i % 3 else 'GG_GreenDark', sub=2, wobble=.05, seed=i)

@@ -1,0 +1,47 @@
+{
+  "id": "arch-stairs",
+  "triangles": 920,
+  "budget": 8000,
+  "materials": [
+    "GG_GlassSoft",
+    "GG_IvorySoft",
+    "GG_TurquoiseAccent"
+  ],
+  "size_m": [
+    1.66,
+    4.0725,
+    4.6629
+  ],
+  "bounds": {
+    "min": [
+      -0.83,
+      0.0,
+      -4.571433
+    ],
+    "max": [
+      0.83,
+      4.072549,
+      0.091433
+    ]
+  },
+  "sockets": {
+    "socket_floor_above": [
+      0.0,
+      3.2,
+      -4.48
+    ]
+  },
+  "pivots": {},
+  "skins": 0,
+  "animations": [],
+  "bytes": 24800,
+  "sha256": "235ae50b25ef3755c7739e6186fbdb4c38404dc1e6360f7037aea13b179a462d",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}
