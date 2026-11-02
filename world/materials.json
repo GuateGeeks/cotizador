@@ -1,0 +1,18 @@
+{
+  "GG_PurplePrimary": {"color": "#6942A1", "roughness": 0.48, "coat": 0.15},
+  "GG_PurpleDark": {"color": "#321853", "roughness": 0.50},
+  "GG_OrangeAccent": {"color": "#FF9D38", "roughness": 0.42, "coat": 0.15},
+  "GG_TurquoiseAccent": {"color": "#25C2C6", "roughness": 0.40, "coat": 0.15},
+  "GG_IvorySoft": {"color": "#FFF8EC", "roughness": 0.62},
+  "GG_NavyFabric": {"color": "#33438A", "roughness": 0.80},
+  "GG_GreenFoliage": {"color": "#7CCB6B", "roughness": 0.72},
+  "GG_GreenDark": {"color": "#3E9A5E", "roughness": 0.72},
+  "GG_WarmSkin": {"color": "#E9B48C", "roughness": 0.68},
+  "GG_GlassSoft": {"color": "#7FE3E0", "roughness": 0.15, "alpha": 0.30},
+  "GG_ScreenEmissive": {"color": "#25C2C6", "roughness": 0.40, "emissive": 1.2},
+  "GG_YellowAccent": {"color": "#FFC93C", "roughness": 0.42, "coat": 0.15},
+  "GG_Wood": {"color": "#9A6548", "roughness": 0.70},
+  "GG_WarmInterior": {"color": "#FFD9A8", "roughness": 0.70},
+  "GG_LightWarm": {"color": "#FFF0C8", "roughness": 0.50, "emissive": 3.5},
+  "GG_ShirtWhite": {"color": "#FFFFFF", "roughness": 0.70}
+}

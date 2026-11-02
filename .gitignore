@@ -7,3 +7,4 @@ dist/
 .local/
 poc-review/
 assets/sources/meshy/poc/*_base_color.png
+.superpowers/

@@ -1,0 +1,19 @@
+{
+  "bay": [6.0, 5.0],
+  "base": 0.2,
+  "wall": 3.0,
+  "floor": 3.2,
+  "studentHeight": 1.35,
+  "wallThickness": 0.25,
+  "palette": {
+    "primaryViolet": "#6942A1",
+    "deepViolet": "#321853",
+    "orange": "#FF9D38",
+    "turquoise": "#25C2C6",
+    "navy": "#33438A",
+    "ivory": "#FFF8EC",
+    "lightGreen": "#7CCB6B",
+    "darkGreen": "#3E9A5E",
+    "stage": "#F4F1F6"
+  }
+}
