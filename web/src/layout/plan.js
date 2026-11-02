@@ -85,7 +85,7 @@ export function planWorld(data) {
   for (let column = 0; column <= lastColumn; column += 1) add(`garden:${column}`, 'garden', 'arch-terrain-tile', column, 0, -BAY_D - .1);
   if (rooms >= 3) {
     add('tree:front:0', 'tree', 'veg-tree-large', -1.3, 0, front + 2.2);
-    add('tree:front:1', 'tree', 'veg-tree-large-alt', lastColumn + .3, 0, front + 2.2);
+    add(`tree:front:east:${lastColumn}`, 'tree', 'veg-tree-large-alt', lastColumn + .3, 0, front + 2.2);
   }
   for (let i = 0; i < Math.min(lastColumn + 2, 1 + rooms); i += 1) add(`tree:${i}`, 'tree', i % 2 ? 'veg-tree-large-alt' : 'veg-tree-large', i - .5, 0, -BAY_D / 2 - 2.4, { seedScale: .75 + (i % 3) * .15 });
   for (let i = 0; i <= lastColumn; i += 1) if (rooms >= 2) add(`planter:${i}`, 'planter', 'arch-planter', i + .22, 0, BAY_D / 2 + .7, uppers.includes(i) ? { hidden: true } : {});
