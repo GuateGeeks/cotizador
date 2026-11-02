@@ -1,0 +1,41 @@
+{
+  "id": "arch-gallery",
+  "triangles": 368,
+  "budget": 2000,
+  "materials": [
+    "GG_IvorySoft",
+    "GG_PurplePrimary",
+    "GG_TurquoiseAccent"
+  ],
+  "size_m": [
+    1.4,
+    3.375,
+    3.9
+  ],
+  "bounds": {
+    "min": [
+      -0.7,
+      -3.18,
+      -1.95
+    ],
+    "max": [
+      0.7,
+      0.195,
+      1.95
+    ]
+  },
+  "sockets": {},
+  "pivots": {},
+  "skins": 0,
+  "animations": [],
+  "bytes": 9300,
+  "sha256": "53c00bce0e0a9f9f1ee3bd65d975acff95e01bedc7742ab44275cfdf25a96259",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

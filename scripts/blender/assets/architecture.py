@@ -1,6 +1,7 @@
 """Modular school kit. Every dimension comes from the shared contract."""
 import json, math, pathlib
 
+import bmesh
 import bpy
 
 from gg import geometry
@@ -56,11 +57,117 @@ def classroom_shell(left_open=True, right_open=True, accent='GG_PurplePrimary', 
 def classroom_standard():
     classroom_shell()
 
+def roof_plate(color='GG_PurplePrimary'):
+    box('roof', (W, D + .5, .34), (0, 0, .17), color, r=.08)
+    add_socket('floor_below', (0, 0, 0))
+
 @register('arch-roof', budget=2000)
 def roof():
-    box('roof', (W, D + .5, .34), (0, 0, .17), 'GG_PurplePrimary', r=.08)
+    roof_plate()
     box('deck', (W - .5, D - .4, .05), (0, 0, .355), 'GG_PurpleDark', r=.02, corner=.2)
-    add_socket('floor_below', (0, 0, 0))
+
+@register('arch-roof-flat', budget=1500)
+def roof_flat():
+    roof()
+
+def extruded(name, profile, d, z, mat, r=.07, seg=2):
+    """Soft roof form: one closed XZ profile extruded along Y."""
+    bm = bmesh.new()
+    front = [bm.verts.new((x, -d / 2, y)) for x, y in profile]
+    back = [bm.verts.new((x, d / 2, y)) for x, y in profile]
+    bm.faces.new(front[::-1])
+    bm.faces.new(back)
+    n = len(profile)
+    for i in range(n):
+        bm.faces.new((front[i], front[(i + 1) % n], back[(i + 1) % n], back[i]))
+    bm.edges.ensure_lookup_table()
+    rims = [e for e in bm.edges if abs(e.verts[0].co.y - e.verts[1].co.y) < 1e-6]
+    geometry.bevel(bm, rims, r, seg)
+    return geometry.finish(bm, name, mat, (0, 0, z))
+
+def gable(w, d, h, z, mat):
+    half, soft = w / 2, h * .22
+    return extruded('gable', [(-half, 0), (-half, soft), (-half * .16, h), (half * .16, h), (half, soft), (half, 0)], d, z, mat)
+
+@register('arch-roof-pitched', budget=1500)
+def roof_pitched():
+    roof_plate()
+    gable(W - .1, D + .2, 1.5, .3, 'GG_OrangeAccent')
+
+@register('arch-roof-barrel', budget=1500)
+def roof_barrel():
+    roof_plate()
+    half, rise = (W - .2) / 2, 1.3
+    arc = [(half * math.cos(math.pi * i / 14), rise * math.sin(math.pi * i / 14)) for i in range(15)]
+    extruded('vault', arc, D + .2, .34, 'GG_TurquoiseAccent', r=.04, seg=1)
+    box('vault_base', (W - .1, D + .3, .16), (0, 0, .36), 'GG_IvorySoft', r=.05)
+
+@register('arch-roof-tower', budget=1500)
+def roof_tower():
+    roof_plate()
+    box('tower', (2.4, 2.4, 1.7), (0, 0, 1.15), 'GG_IvorySoft', r=.14, corner=.3)
+    for s in (-1, 1):
+        box('tower_window', (.7, .08, .9), (s * .55, -1.2, 1.2), 'GG_GlassSoft', r=.02, seg=1)
+    box('tower_band', (2.6, 2.6, .2), (0, 0, 2.05), 'GG_PurplePrimary', r=.07, corner=.32)
+    cyl('tower_cap', 1.5, .1, 1.1, (0, 0, 2.15), 'GG_OrangeAccent', seg=24, bev=.06, bev_seg=2)
+
+def rail_ring(colour_y):
+    for y in colour_y:
+        box('rail_glass', (W - 1, .05, .6), (0, y, .68), 'GG_GlassSoft', r=.01, seg=1)
+        box('rail', (W - .9, .08, .08), (0, y, 1.0), 'GG_IvorySoft', r=.03)
+
+@register('arch-roof-terrace', budget=1500)
+def roof_terrace():
+    roof_plate()
+    box('deck', (W - .4, D - .1, .06), (0, 0, .36), 'GG_WarmInterior', r=.02, corner=.2)
+    rail_ring((-D / 2 + .2,))
+    box('planter', (1.5, .5, .4), (-1.7, 1.7, .58), 'GG_IvorySoft', r=.04, corner=.07)
+    for i in range(3):
+        ball('shrub', (.2,) * 3, (-2.1 + i * .4, 1.7, .84), 'GG_GreenFoliage', sub=2, wobble=.05, seed=i)
+    box('bench', (1.5, .36, .1), (1.4, 1.7, .62), 'GG_OrangeAccent', r=.03)
+    for s in (-1, 1):
+        box('bench_end', (.2, .36, .26), (1.4 + s * .6, 1.7, .49), 'GG_PurplePrimary', r=.04)
+
+@register('arch-roof-garden', budget=1500)
+def roof_garden():
+    roof_plate()
+    box('soil', (W - .4, D - .1, .08), (0, 0, .37), 'GG_GreenFoliage', r=.03, corner=.25)
+    for i, (x, y, r) in enumerate(((-1.9, 1.2, .46), (1.8, -1.1, .4), (-.5, -1.3, .3), (1.1, 1.3, .34))):
+        ball('bush', (r, r, r * .85), (x, y, .36 + r * .7), 'GG_GreenDark' if i % 2 else 'GG_GreenFoliage', sub=2, wobble=.05, seed=i)
+
+@register('arch-archway', budget=2000)
+def archway():
+    arch('arch', 4.6, 2.9, .5, .45, .9, (0, 0, 0), 'GG_IvorySoft')
+
+@register('arch-pocket-garden', budget=2000)
+def pocket_garden():
+    box('pad', (3.4, 1.7, .12), (0, 0, .06), 'GG_GreenFoliage', r=.04, corner=.3)
+    box('edge', (3.5, 1.8, .06), (0, 0, .03), 'GG_IvorySoft', r=.02, corner=.32)
+    for i, (x, y, r) in enumerate(((-1.1, .1, .36), (.9, -.2, .3), (0, .3, .24))):
+        ball('bush', (r, r, r), (x, y, .12 + r * .8), 'GG_GreenDark' if i == 1 else 'GG_GreenFoliage', sub=2, wobble=.05, seed=i)
+
+@register('arch-roof-trim', budget=2000)
+def roof_trim():
+    box('trim', (.3, D + 2.9, .46), (0, 0, .2), 'GG_TurquoiseAccent', r=.08)
+
+@register('arch-gallery', budget=2000)
+def gallery():
+    length = 3.9
+    box('deck', (1.4, length, BASE - .01), (0, 0, (BASE - .01) / 2), 'GG_IvorySoft', r=.03)
+    box('walk', (1.3, length - .1, .02), (0, 0, BASE - .015), 'GG_TurquoiseAccent', r=.005, seg=1)
+    for s in (-1, 1):
+        box('post', (.2, .2, FLOOR), (s * .55, -length / 2 + .2, -FLOOR / 2 + .02), 'GG_PurplePrimary', r=.04)
+
+@register('arch-stairs-upper', budget=2000)
+def stairs_upper():
+    stairs_flight(1.1)
+
+@register('arch-courtyard-tree', budget=2000)
+def courtyard_tree():
+    cyl('bed', 1, 1.1, .3, (0, 0, 0), 'GG_IvorySoft', seg=24, bev=.05)
+    cyl('soil', .85, .85, .32, (0, 0, .02), 'GG_GreenFoliage', seg=20, bev=.02)
+    cyl('trunk', .16, .1, 1.5, (0, 0, .3), 'GG_Wood', seg=10, bev=.02)
+    ball('crown', (.95, .95, .85), (0, 0, 2.3), 'GG_GreenFoliage', sub=3, wobble=.06, seed=4)
 
 @register('arch-entrance', budget=8000)
 def entrance():
@@ -153,17 +260,20 @@ def bridge():
     balcony_deck(back_rail=True)
 
 @register('arch-stairs', budget=8000)
-def stairs(steps=14):
+def stairs():
+    stairs_flight(1.5)
+
+def stairs_flight(width, steps=14):
     run, rise = .32, TOP / steps
     for i in range(steps):
         h = rise * (i + 1)
-        box('step', (1.5, run, h), (0, i * run + run / 2, h / 2), 'GG_TurquoiseAccent', r=.015, seg=1)
+        box('step', (width, run, h), (0, i * run + run / 2, h / 2), 'GG_TurquoiseAccent', r=.015, seg=1)
     length = steps * run
     tilt = math.atan2(TOP, length)
     slope = length / math.cos(tilt)
     for s in (-1, 1):
-        box('rail_glass', (.05, slope * .95, .7), (s * .78, length / 2, TOP / 2 + .46), 'GG_GlassSoft', r=.01, seg=1, rot=(tilt, 0, 0))
-        box('rail', (.1, slope, .08), (s * .78, length / 2, TOP / 2 + .84), 'GG_IvorySoft', r=.035, rot=(tilt, 0, 0))
+        box('rail_glass', (.05, slope * .95, .7), (s * (width / 2 + .03), length / 2, TOP / 2 + .46), 'GG_GlassSoft', r=.01, seg=1, rot=(tilt, 0, 0))
+        box('rail', (.1, slope, .08), (s * (width / 2 + .03), length / 2, TOP / 2 + .84), 'GG_IvorySoft', r=.035, rot=(tilt, 0, 0))
     add_socket('floor_above', (0, length, TOP))
 
 @register('arch-terrain-tile', budget=2000)

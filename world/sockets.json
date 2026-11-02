@@ -15,6 +15,8 @@
     ["arch-classroom-upper", "socket_east", "arch-classroom-upper", "socket_west"],
     ["arch-balcony", "socket_east", "arch-balcony", "socket_west"],
     ["arch-balcony", "socket_east", "arch-bridge", "socket_west"],
+    ["arch-classroom-standard", "socket_floor_above", "arch-roof-pitched", "socket_floor_below"],
+    ["arch-classroom-standard", "socket_floor_above", "arch-roof-tower", "socket_floor_below"],
     ["arch-pathway", "socket_east", "arch-pathway", "socket_west"],
     ["arch-terrain-tile", "socket_east", "arch-terrain-tile", "socket_west"]
   ]

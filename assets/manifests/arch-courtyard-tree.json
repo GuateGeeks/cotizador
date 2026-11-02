@@ -1,0 +1,41 @@
+{
+  "id": "arch-courtyard-tree",
+  "triangles": 740,
+  "budget": 2000,
+  "materials": [
+    "GG_GreenFoliage",
+    "GG_IvorySoft",
+    "GG_Wood"
+  ],
+  "size_m": [
+    2.1684,
+    3.1603,
+    2.1684
+  ],
+  "bounds": {
+    "min": [
+      -1.084175,
+      0.0,
+      -1.084175
+    ],
+    "max": [
+      1.084175,
+      3.160286,
+      1.084175
+    ]
+  },
+  "sockets": {},
+  "pivots": {},
+  "skins": 0,
+  "animations": [],
+  "bytes": 17332,
+  "sha256": "666d2f42f0d556f0bbabf0bbac1da7c79de377fd3d98f8ec433d129a765b7aeb",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

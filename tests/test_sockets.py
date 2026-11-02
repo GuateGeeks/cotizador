@@ -50,5 +50,32 @@ class FullKit(unittest.TestCase):
     def test_stairs_reach_exactly_one_floor(self):
         self.assertAlmostEqual(self.kit['arch-stairs']['sockets']['socket_floor_above'][1], 3.2, places=3)
 
+class Skyline(unittest.TestCase):
+    ROOFS = ('flat', 'pitched', 'barrel', 'tower', 'terrace', 'garden')
+
+    @classmethod
+    def setUpClass(cls):
+        cls.room = build('arch-classroom-standard', 'sky')
+        cls.parts = {name: build(f'arch-{name}', 'sky') for name in [f'roof-{r}' for r in cls.ROOFS] + ['archway', 'pocket-garden', 'roof-trim', 'gallery', 'stairs-upper', 'courtyard-tree']}
+
+    def test_roofs_fit_the_bay_budget_and_sit_on_the_room(self):
+        for roof in self.ROOFS:
+            m = self.parts[f'roof-{roof}']
+            self.assertLessEqual(m['triangles'], 1500, roof)
+            self.assertEqual(m['islands'], 1, roof)
+            self.assertLessEqual(m['size_m'][0], 6.0, roof)
+            self.assertLessEqual(check_pair(self.room, 'socket_floor_above', m, 'socket_floor_below'), .001, roof)
+
+    def test_details_are_connected_and_light(self):
+        for name in ('archway', 'pocket-garden', 'roof-trim', 'gallery', 'stairs-upper', 'courtyard-tree'):
+            self.assertLessEqual(self.parts[name]['triangles'], 2000, name)
+            self.assertEqual(self.parts[name]['islands'], 1, name)
+
+    def test_gallery_spans_the_stagger(self):
+        self.assertAlmostEqual(self.parts['gallery']['size_m'][2], 3.9, places=2)
+
+    def test_upper_stairs_rise_one_floor(self):
+        self.assertAlmostEqual(self.parts['stairs-upper']['sockets']['socket_floor_above'][1], 3.2, places=3)
+
 if __name__ == '__main__':
     unittest.main()

@@ -1,0 +1,50 @@
+{
+  "id": "arch-roof-terrace",
+  "triangles": 1392,
+  "budget": 1500,
+  "materials": [
+    "GG_GlassSoft",
+    "GG_GreenFoliage",
+    "GG_IvorySoft",
+    "GG_OrangeAccent",
+    "GG_PurplePrimary",
+    "GG_WarmInterior"
+  ],
+  "size_m": [
+    6.0,
+    1.0423,
+    5.5
+  ],
+  "bounds": {
+    "min": [
+      -3.0,
+      0.0,
+      -2.75
+    ],
+    "max": [
+      3.0,
+      1.042253,
+      2.75
+    ]
+  },
+  "sockets": {
+    "socket_floor_below": [
+      0,
+      0,
+      0
+    ]
+  },
+  "pivots": {},
+  "skins": 0,
+  "animations": [],
+  "bytes": 31236,
+  "sha256": "e261d72dca89eee9c10110b1636912b579cee176a948b6de56e9622492ccf245",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

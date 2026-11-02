@@ -1,0 +1,39 @@
+{
+  "id": "arch-archway",
+  "triangles": 636,
+  "budget": 2000,
+  "materials": [
+    "GG_IvorySoft"
+  ],
+  "size_m": [
+    4.6,
+    2.9,
+    0.5
+  ],
+  "bounds": {
+    "min": [
+      -2.3,
+      0.0,
+      -0.25
+    ],
+    "max": [
+      2.3,
+      2.9,
+      0.25
+    ]
+  },
+  "sockets": {},
+  "pivots": {},
+  "skins": 0,
+  "animations": [],
+  "bytes": 12696,
+  "sha256": "bd1f618ca30837958277c4262a43c2bd31e32207752dcd61f4b9d7e241df466d",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

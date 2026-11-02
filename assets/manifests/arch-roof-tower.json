@@ -1,0 +1,48 @@
+{
+  "id": "arch-roof-tower",
+  "triangles": 1048,
+  "budget": 1500,
+  "materials": [
+    "GG_GlassSoft",
+    "GG_IvorySoft",
+    "GG_OrangeAccent",
+    "GG_PurplePrimary"
+  ],
+  "size_m": [
+    6.0,
+    3.25,
+    5.5
+  ],
+  "bounds": {
+    "min": [
+      -3.0,
+      0.0,
+      -2.75
+    ],
+    "max": [
+      3.0,
+      3.25,
+      2.75
+    ]
+  },
+  "sockets": {
+    "socket_floor_below": [
+      0,
+      0,
+      0
+    ]
+  },
+  "pivots": {},
+  "skins": 0,
+  "animations": [],
+  "bytes": 24628,
+  "sha256": "375861fe972d1fc12b940255144cd377a1784d731d74b1f9127487a87f3f8f3b",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}
