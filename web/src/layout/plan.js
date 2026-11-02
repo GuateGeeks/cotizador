@@ -12,6 +12,7 @@
  * A level gains an upper room at 90 students or 4 sections, as the cotizador's planner does.
  */
 import constants from '../../../world/constants.json';
+import { applyNeighbours } from './neighbours.js';
 import { LEVEL_IDS } from './normalize.js';
 
 const [BAY_W, BAY_D] = constants.bay;
@@ -122,5 +123,5 @@ export function planWorld(data) {
   const depthBack = -deepest * ROW_STEP - BAY_D - 3.4;
   const island = { x: (west + eastEdge) / 2, z: (depthFront + depthBack) / 2, width: eastEdge - west, depth: depthFront - depthBack, height: 1.3 };
   const walk = { x0: west + 3, x1: eastEdge - 3, z: front };
-  return { modules: modules.filter(m => !m.hidden), island, walk, levels: LEVEL_IDS.filter(id => levels.includes(id)) };
+  return { modules: applyNeighbours(modules.filter(m => !m.hidden), { bayDepth: BAY_D, floor: FLOOR }), island, walk, levels: LEVEL_IDS.filter(id => levels.includes(id)) };
 }
