@@ -1,0 +1,7 @@
+*.blend
+*.blend1
+*.glb
+runs/
+node_modules/
+dist/
+.local/
