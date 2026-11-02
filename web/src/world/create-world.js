@@ -301,6 +301,12 @@ export function createWorld(container, opts = {}) {
     group.rotation.y = module.rot;
     group.userData.entity = module;
     const shell = placeIn(group, kit.get(module.asset), 0, 0, 0);
+    if (module.floor >= 2 && (module.type === 'balcony' || module.type === 'gallery')) {
+      // Upper walkways hang from the building; posts would stack on the deck below.
+      const posts = [];
+      shell.traverse(node => { if (node.name.startsWith('post')) posts.push(node); });
+      for (const post of posts) post.removeFromParent();
+    }
     if (module.seedScale) shell.scale.setScalar(module.seedScale);
     entity.extra = new Group();
     entity.extra.visible = lod === 'close';
