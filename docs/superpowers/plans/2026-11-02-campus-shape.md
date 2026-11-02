@@ -80,7 +80,7 @@
 
 **Interfaces:** `ROOM_DETAIL` constant; `getDiagnostics().roomDetail`.
 
-- [ ] Add to the parity test: frame rate at least 58 fps measured over 4 s (60 fps display noise allowed, recorded as measured), plus the existing draw-call check and at most 500,000 triangles.
+- [ ] Add to the parity test: frame rate at least 59 fps measured over 4 s (the display caps at 60, so 59 is the measurable pass), plus the existing draw-call check and at most 500,000 triangles.
 - [ ] Measure before changes in a new run and record it.
 - [ ] Implement lighter room contents: tables and chairs are dropped from rooms hidden behind the upper floors' balconies at campus distance, and shelves and storage are merged out. Restore them at close view.
 - [ ] Run; expect PASS. Commit.
