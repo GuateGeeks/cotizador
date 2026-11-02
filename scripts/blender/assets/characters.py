@@ -65,6 +65,51 @@ def author_clips(arm):
     clip(arm, 'interact', [(1, merged(ARMS_DOWN, FOREARMS, tap_a), 0), (13, merged(ARMS_DOWN, FOREARMS, tap_b), 0), (25, merged(ARMS_DOWN, FOREARMS, tap_a), 0)])
     seated = merged(ARMS_DOWN, FOREARMS, SIT_LEGS, tap_a)
     clip(arm, 'sit', [(1, seated, -9), (25, merged(ARMS_DOWN, FOREARMS, SIT_LEGS, tap_b), -9), (49, seated, -9)])
+    # Using VR: controllers held in front, the head looks around while one hand and then the other reaches,
+    # then both arms sweep out. Arms stay below the shoulders so the controllers never cross the headset.
+    holding = merged(ARMS_DOWN, {'LeftForeArm': [(X, -60)], 'RightForeArm': [(X, -60)]})
+    clip(arm, 'vr', [(1, holding, 0),
+                     (19, merged(holding, {'Head': [(Z, 35)], 'RightArm': [(X, -40)]}), 0),
+                     (37, merged(holding, {'Head': [(Z, -35), (X, 8)], 'LeftArm': [(X, -40)]}), 0),
+                     (55, merged(holding, {'Head': [(X, -6)], 'LeftArm': [(Y, -35)], 'RightArm': [(Y, 35)]}), -.3),
+                     (73, holding, 0)])
+
+def rest_vertices(arm, mesh, groups):
+    """World positions at rest of the vertices whose strongest weight is one of the named bones."""
+    arm.data.pose_position = 'REST'
+    bpy.context.view_layer.update()
+    index = {g.index for g in mesh.vertex_groups if g.name in groups}
+    evaluated = mesh.evaluated_get(bpy.context.evaluated_depsgraph_get())
+    data = evaluated.to_mesh()
+    points = [evaluated.matrix_world @ data.vertices[v.index].co for v in mesh.data.vertices
+              if v.groups and max(v.groups, key=lambda g: g.weight).group in index]
+    evaluated.to_mesh_clear()
+    return points
+
+def fitting_point(arm, bone, name, at, scale):
+    """An empty riding on a bone; its world scale sizes gear authored for the reference size."""
+    empty = bpy.data.objects.new(name, None)
+    geometry.current().coll.objects.link(empty)
+    empty.parent, empty.parent_type, empty.parent_bone = arm, 'BONE', bone
+    bpy.context.view_layer.update()
+    empty.matrix_world = Matrix.Translation(at) @ Matrix.Scale(scale, 4)
+    return empty
+
+def add_fitting(arm, mesh):
+    """Points where VR gear goes: over the eyes, and in each palm."""
+    head = rest_vertices(arm, mesh, {'Head', 'head_end', 'headfront'})
+    low, high = min(p.z for p in head), max(p.z for p in head)
+    eye = low + (high - low) * .45
+    face = [p for p in head if abs(p.z - eye) < .02]
+    centre = (min(p.x for p in head) + max(p.x for p in head)) / 2
+    fitting_point(arm, 'Head', 'vr_eyes', Vector((centre, min(p.y for p in face), eye)),
+                  (max(p.x for p in head) - min(p.x for p in head)) / .2 * .95)
+    for side, bone in (('l', 'LeftHand'), ('r', 'RightHand')):
+        hand = rest_vertices(arm, mesh, {bone})
+        span = max(max(p[i] for p in hand) - min(p[i] for p in hand) for i in range(3))
+        fitting_point(arm, bone, f'vr_grip_{side}', sum(hand, Vector()) / len(hand), span / .14)
+    arm.data.pose_position = 'POSE'
+    bpy.context.view_layer.update()
 
 def height_at_rest(arm, mesh):
     arm.data.pose_position = 'REST'
@@ -363,4 +408,5 @@ def student(target, source, target_height, record):
     walk.name = 'walk'
     author_clips(arm)
     arm.animation_data.action = walk
-    return {'source': record or 'assets/sources/meshy/variants/PROVENANCE.json', 'source_triangles': triangles, **bake, 'clips': ['idle', 'walk', 'sit', 'interact'], 'armature': arm.name}
+    add_fitting(arm, mesh)
+    return {'source': record or 'assets/sources/meshy/variants/PROVENANCE.json', 'source_triangles': triangles, **bake, 'clips': ['idle', 'walk', 'sit', 'interact', 'vr'], 'armature': arm.name}

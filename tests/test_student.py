@@ -1,6 +1,8 @@
 import unittest
 from tests.test_slice_assets import build
 
+CLIPS = ['idle', 'interact', 'sit', 'vr', 'walk']
+
 class Student(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -13,14 +15,14 @@ class Student(unittest.TestCase):
         self.assertAlmostEqual(self.m['size_m'][1], 1.35, delta=.01)
 
     def test_has_all_clips_on_one_skeleton(self):
-        self.assertEqual(sorted(self.m['animations']), ['idle', 'interact', 'sit', 'walk'])
+        self.assertEqual(sorted(self.m['animations']), CLIPS)
         self.assertEqual(self.m['skins'], 1)
 
 class StudentLod(unittest.TestCase):
     def test_campus_distance_model_shares_clips_and_height(self):
         m = build('char-student-primary-lod1')
         self.assertLessEqual(m['triangles'], 1500)
-        self.assertEqual(sorted(m['animations']), ['idle', 'interact', 'sit', 'walk'])
+        self.assertEqual(sorted(m['animations']), CLIPS)
         self.assertAlmostEqual(m['size_m'][1], 1.35, delta=.02)
 
 class Variants(unittest.TestCase):
@@ -32,7 +34,7 @@ class Variants(unittest.TestCase):
                 m = build(asset + suffix)
                 self.assertLessEqual(m['triangles'], budget, asset + suffix)
                 self.assertAlmostEqual(m['size_m'][1], height, delta=.02, msg=asset + suffix)
-                self.assertEqual(sorted(m['animations']), ['idle', 'interact', 'sit', 'walk'], asset + suffix)
+                self.assertEqual(sorted(m['animations']), CLIPS, asset + suffix)
                 self.assertEqual(m['skins'], 1, asset + suffix)
 
 class BakedColour(unittest.TestCase):
@@ -45,6 +47,21 @@ class BakedColour(unittest.TestCase):
         # Long thin faces in the coarse reduction used to cast their rays the wrong way and stay black.
         for asset in ('char-teacher-lod1', 'char-student-bach-lod1'):
             self.assertLess(build(asset)['bake_gaps'], .003, asset)
+
+class VrFitting(unittest.TestCase):
+    def test_each_character_carries_eyes_and_grips_for_vr_gear(self):
+        for asset, height in Variants.HEIGHTS.items():
+            for suffix in ('', '-lod1'):
+                m = build(asset + suffix)
+                pivots = m['pivots']
+                for name in ('vr_eyes', 'vr_grip_l', 'vr_grip_r'):
+                    self.assertIn(name, pivots, asset + suffix)
+                eyes = pivots['vr_eyes']['position']
+                self.assertGreater(eyes[1], height * .7, asset + suffix)  # glTF Y up
+                self.assertLess(eyes[1], height * .97, asset + suffix)
+                self.assertGreater(eyes[2], 0, asset + suffix)  # in front of the body (+Z)
+                left, right = pivots['vr_grip_l']['position'], pivots['vr_grip_r']['position']
+                self.assertGreater(abs(left[0] - right[0]), .5, asset + suffix)  # hands apart in T-pose
 
 if __name__ == '__main__':
     unittest.main()

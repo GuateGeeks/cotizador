@@ -1,7 +1,7 @@
 """Dependency-free GLB reader, usable both from the CLI and inside Blender's Python."""
 import json, pathlib, struct
 
-PIVOT_PREFIXES = ('wheel_', 'rotor_', 'joint_', 'head', 'lid')
+PIVOT_PREFIXES = ('wheel_', 'rotor_', 'joint_', 'head', 'lid', 'vr_')
 IDENTITY = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
 
 def multiply(a, b):

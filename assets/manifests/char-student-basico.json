@@ -24,6 +24,13 @@
   },
   "sockets": {},
   "pivots": {
+    "vr_grip_l": {
+      "position": [
+        0.621545,
+        0.863961,
+        0.018337
+      ]
+    },
     "head_end": {
       "position": [
         0.016218,
@@ -37,6 +44,20 @@
         1.013679,
         0.240529
       ]
+    },
+    "vr_eyes": {
+      "position": [
+        -0.000293,
+        1.187994,
+        0.234252
+      ]
+    },
+    "vr_grip_r": {
+      "position": [
+        -0.622228,
+        0.863704,
+        0.016803
+      ]
     }
   },
   "skins": 1,
@@ -44,10 +65,11 @@
     "idle",
     "interact",
     "sit",
+    "vr",
     "walk"
   ],
-  "bytes": 539660,
-  "sha256": "0fccc23e2bb9818612819c15214e22b3bf5afc51a72b200c7fc49fb253ceecd0",
+  "bytes": 557492,
+  "sha256": "4ed8dcff738aac7e709bc1d3d6116a86511b3b03dab4319936163c984d0fa05e",
   "blender": "5.2.3 LTS",
   "verdicts": {
     "technical": "PASS",
@@ -65,7 +87,8 @@
     "idle",
     "walk",
     "sit",
-    "interact"
+    "interact",
+    "vr"
   ],
   "armature": "Armature",
   "islands": 1
