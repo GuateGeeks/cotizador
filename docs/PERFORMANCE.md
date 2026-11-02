@@ -16,6 +16,14 @@ Draw calls fell from 4,536 by merging each entity's static parts, then batching 
 draw per material. During a transition the batch is off, and draw calls rise to about 600 until it rebuilds.
 Characters swap to a 1,400-triangle model at campus distance. `InstancedMesh` was not needed.
 
+## 2026-11-02 VR room
+
+With the immersive room as a VR space (three students in the `vr` loop wearing headsets, controllers in
+close view), the largest campus measured 59 fps, 139 draw calls and 377,945 triangles including the shadow
+pass (`runs/vr-17-parity/bench.json`; before: 135 draw calls). Each gear piece is one vertex-coloured mesh
+that casts no shadow; distance models wear only the headset. Three students fit, so the fallback to two
+was not needed.
+
 ## 2026-11-02 skyline pass
 
 The V-shaped campus with roofs, terraces and details measured better than the old bar, because two

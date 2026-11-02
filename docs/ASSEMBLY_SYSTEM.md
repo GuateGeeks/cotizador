@@ -15,6 +15,14 @@ terrace below a taller neighbour, barrel on project stacks, and pitched, flat or
 It adds archways under spans, pocket gardens in gaps, trims between equal stacks and a courtyard
 tree and bench from three ground rooms. Rooms are never moved or rebuilt by these rules.
 
+The immersive program room is a VR space (`web/src/world/vr-room.js`): no tables, three play zones
+(`equip-vr-zone`) in the room's front strip, where the roof and front beam leave students in view, spare
+`equip-vr-set`s on the shelf, `equip-screen-vr` and the teacher at the back. Its students play the `vr`
+clip and wear gear (`web/src/world/gear.js`): every character carries the empties `vr_eyes`, `vr_grip_l`
+and `vr_grip_r`, placed per character at build time with a world scale that sizes gear authored at the
+reference size (headset 0.2 m wide, controller 0.1 m tall), so gear is parented with an identity
+transform. Gear meshes are marked `userData.separate` so room merging leaves them on the body.
+
 Floor 2 is reached by `stairs:upper`: a floor-1 landing (`arch-stair-landing`) at the open west end
 of the column-0 walkway, a flight running east just in front of that walkway, and a top platform on
 posts that meets `gallery:0:2`. The walkway itself stays clear.
