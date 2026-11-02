@@ -48,6 +48,13 @@ def build(args):
         run_blender('build', asset, native(run), *extra, log=run / f'{asset}.log')
         print('built', asset)
 
+def publish(args):
+    target = ROOT / 'web/public/models'
+    target.mkdir(parents=True, exist_ok=True)
+    for glb in (ROOT / args.run).glob('*.glb'):
+        shutil.copy2(glb, target / glb.name)
+        print('published', glb.name)
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(required=True)
@@ -57,6 +64,9 @@ def main():
     b.add_argument('--run', required=True, help='new run directory, relative to the repo root')
     b.add_argument('--no-preview', action='store_true')
     b.set_defaults(fn=build)
+    p = commands.add_parser('publish', help='copy a run\'s GLBs into the web app')
+    p.add_argument('--run', required=True)
+    p.set_defaults(fn=publish)
     args = parser.parse_args()
     args.fn(args)
 

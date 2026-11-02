@@ -34,15 +34,16 @@
     ]
   },
   "pivots": {},
+  "skins": 0,
   "animations": [],
   "bytes": 37340,
-  "sha256": "960c4836b01a231820f81a6fe3fb1572607b0ddbf2e30dcd4ef98d95a7312e1b",
+  "sha256": "206877cb5682b9808bd2499e64a7d648dbd5057a0507a40c3d9f8756ae4fb19e",
   "blender": "5.2.3 LTS",
   "verdicts": {
     "technical": "PASS",
-    "visual": "NOT_RUN",
+    "visual": "PASS",
     "content": "NOT_RUN",
-    "provenance": "NOT_RUN"
+    "provenance": "PASS"
   },
   "islands": 1
 }

@@ -69,8 +69,14 @@ def entrance():
     box('door_frame', (w - .95, .06, 2.65), (0, -D / 2 + 1.03, BASE + 1.32), 'GG_PurplePrimary', r=.02)
     for s in (-1, 1):
         box('door', (.95, .06, 2.45), (s * .5, -D / 2 + .96, BASE + 1.23), 'GG_GlassSoft', r=.02, seg=1)
-        box('door_glow', (.9, .01, 2.4), (s * .5, -D / 2 + .995, BASE + 1.2), 'GG_LightWarm', r=.005, seg=1)
+        box('door_glow', (.9, .01, 2.4), (s * .5, -D / 2 + .98, BASE + 1.2), 'GG_LightWarm', r=.005, seg=1)
         box('handle', (.03, .03, .55), (s * .07, -D / 2 + .9, BASE + 1.2), 'GG_IvorySoft', r=.012)
     box('step', (w - .5, .55, .1), (0, -D / 2 - .25, .05), 'GG_IvorySoft', r=.03)
     box('roof', (w, D - .5, .34), (0, .5, TOP + .17), 'GG_PurplePrimary', r=.08)
     add_socket('east', (w / 2, 0, 0))
+
+@register('arch-island-slice', budget=8000)
+def island_slice():
+    w, d, h = 17.0, 12.5, 1.3
+    box('island', (w, d, h), (0, 0, -h / 2 - .12), 'GG_PurplePrimary', r=.35, corner=d * .2, seg=5, cseg=20)
+    box('top', (w - .55, d - .55, .13), (0, 0, -.065), 'GG_IvorySoft', r=.05, corner=d * .18, cseg=20)

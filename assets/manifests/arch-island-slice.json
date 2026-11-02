@@ -1,0 +1,40 @@
+{
+  "id": "arch-island-slice",
+  "triangles": 3016,
+  "budget": 8000,
+  "materials": [
+    "GG_IvorySoft",
+    "GG_PurplePrimary"
+  ],
+  "size_m": [
+    17.0,
+    1.42,
+    12.5
+  ],
+  "bounds": {
+    "min": [
+      -8.5,
+      -1.42,
+      -6.25
+    ],
+    "max": [
+      8.5,
+      0.0,
+      6.25
+    ]
+  },
+  "sockets": {},
+  "pivots": {},
+  "skins": 0,
+  "animations": [],
+  "bytes": 56652,
+  "sha256": "92bc1dfa39bd07ca2fb9b7b49aaa11e89c3b82af6178a19b6e9d1595df68ca5b",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "PASS",
+    "content": "NOT_RUN",
+    "provenance": "PASS"
+  },
+  "islands": 1
+}

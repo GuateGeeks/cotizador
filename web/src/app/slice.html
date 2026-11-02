@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GuateGeeks World</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #F4F1F6; font-family: system-ui, sans-serif; color: #321853; }
+  #stage { position: fixed; inset: 0; }
+  canvas { display: block; width: 100%; height: 100%; }
+  nav { position: fixed; top: 16px; right: 16px; display: flex; gap: 8px; }
+  button { min-height: 44px; padding: 0 14px; border: 1px solid #32185330; border-radius: 12px; background: #ffffffcc; color: inherit; font: inherit; cursor: pointer; }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<nav aria-label="Vista">
+  <button id="overview">Vista general</button>
+  <button id="room">Aula</button>
+  <button id="pause" aria-pressed="false">Pausar</button>
+</nav>
+<script type="module">
+  import { createWorld } from '../world/create-world.js';
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const world = window.world = createWorld(document.querySelector('#stage'), { reduceMotion, base: '/models/', onError: error => console.warn('world', error) });
+  document.querySelector('#overview').onclick = () => world.setFocus(null);
+  document.querySelector('#room').onclick = () => world.setFocus({ kind: 'room' });
+  const pause = document.querySelector('#pause');
+  pause.onclick = () => {
+    const next = pause.getAttribute('aria-pressed') !== 'true';
+    pause.setAttribute('aria-pressed', next);
+    pause.textContent = next ? 'Reanudar' : 'Pausar';
+    world.setPaused(next);
+  };
+</script>
+</body>
+</html>

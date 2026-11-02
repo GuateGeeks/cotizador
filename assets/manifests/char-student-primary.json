@@ -46,14 +46,14 @@
     "sit",
     "walk"
   ],
-  "bytes": 562660,
-  "sha256": "a46c353b2b35ebd395215baa956d0e4d005a6875ab2968a39cc680544fe749b7",
+  "bytes": 562672,
+  "sha256": "ecd7188c45c4350f4a5d2c316f2912fe724b4a292ee05ab3e3d94ec41a954e77",
   "blender": "5.2.3 LTS",
   "verdicts": {
     "technical": "PASS",
-    "visual": "NOT_RUN",
+    "visual": "FAIL",
     "content": "NOT_RUN",
-    "provenance": "NOT_RUN"
+    "provenance": "PASS"
   },
   "source": "assets/sources/meshy/poc/PROVENANCE.json",
   "source_triangles": 20444,
@@ -64,5 +64,6 @@
     "interact"
   ],
   "armature": "Armature",
-  "islands": 1
+  "islands": 1,
+  "visual_note": "Passes at campus scale; close-up shows specks and jagged colour edges from the bake."
 }
