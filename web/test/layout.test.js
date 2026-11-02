@@ -104,6 +104,25 @@ describe('planWorld', () => {
       }
     }
   });
+  it('starts the upper flight on its own landing, clear of the floor-1 walkway', () => {
+    for (const input of [scope(LEVEL_IDS, PROGRAM_IDS, 150), { programs: ['spike'] }, scope(['pre'], ['immersive'])]) {
+      const result = byKey(plan(input));
+      const flight = result.get('stairs:upper'), landing = result.get('landing:upper'), walk = result.get('bridge:0:1') || result.get('balcony:0:1');
+      expect(landing?.floor, 'landing').toBe(1);
+      // The flight is .9 m wide with its stringers and runs east from its origin; the walkway is 1.4 m deep.
+      expect(flight.z - .45, 'flight over the walkway').toBeGreaterThanOrEqual(walk.z + .7 - 1e-6);
+      expect(Math.abs(landing.x + landing.size[0] / 2 - flight.x), 'flight starts at the landing edge').toBeLessThan(1e-6);
+      expect(Math.abs(landing.z - landing.size[1] / 2 - (walk.z + .7)), 'landing meets the walkway').toBeLessThan(1e-6);
+      // The walkway's front rail leaves its last .95 m open; the landing must reach into that gap.
+      expect(landing.x - landing.size[0] / 2, 'landing at the open end').toBeLessThanOrEqual(walk.x - 2.05);
+      expect(Math.abs(flight.x + 4.48 + 1.52 - (result.get('gallery:0:2').x + .7)), 'top platform reaches the gallery').toBeLessThan(1e-6);
+    }
+  });
+  it('keeps the upper stair posts off the front stairs', () => {
+    const result = byKey(plan(scope(LEVEL_IDS, PROGRAM_IDS, 150)));
+    const front = result.get('stairs:front'), post = result.get('stairs:upper').x + 5.9;
+    expect(post - .1).toBeGreaterThan(front.x + .75 + .03);
+  });
   it('fills gaps in the row so the school stays connected', () => {
     const result = byKey(plan(scope(['pre', 'bach'])));
     expect(result.has('corridor:1') && result.has('corridor:2') && result.has('corridor:3')).toBe(true);

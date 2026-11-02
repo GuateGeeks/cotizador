@@ -160,7 +160,7 @@ def gallery():
 
 @register('arch-stairs-upper', budget=2000)
 def stairs_upper():
-    # Open treads on two stringers, so the walkway underneath stays visible and passable.
+    # Open treads on two stringers, running just in front of the floor-1 walkway so its cutaway stays visible.
     width, steps, run = .8, 14, .32
     rise = TOP / steps
     length = steps * run
@@ -173,7 +173,31 @@ def stairs_upper():
         box('rail', (.06, slope, .06), (s * (width / 2 + .04), length / 2, TOP / 2 + .8), 'GG_IvorySoft', r=.025, rot=(tilt, 0, 0))
         box('rail_post', (.05, .05, .8), (s * (width / 2 + .04), length - .2, TOP + .4 - .1), 'GG_IvorySoft', r=.02)
         box('rail_post', (.05, .05, .8), (s * (width / 2 + .04), .3, .5), 'GG_IvorySoft', r=.02)
+    # Top platform: carries the flight past the front stairs to the floor-2 gallery, on posts to the ground.
+    deck, span = width + .1, 1.52
+    box('platform', (deck, span, BASE), (0, length + span / 2, TOP + BASE / 2), 'GG_IvorySoft', r=.03, seg=1)
+    box('platform_walk', (deck - .1, span - .1, .02), (0, length + span / 2, TOP + BASE + .005), 'GG_TurquoiseAccent', r=.005, seg=1)
+    box('platform_rail', (.06, span, .06), (deck / 2 - .04, length + span / 2, TOP + BASE + .85), 'GG_IvorySoft', r=.025, seg=1)
+    box('platform_rail', (deck, .06, .06), (0, length + span - .04, TOP + BASE + .85), 'GG_IvorySoft', r=.025, seg=1)
+    box('platform_rail_post', (.05, .05, .85), (deck / 2 - .04, length + .1, TOP + BASE + .42), 'GG_IvorySoft', r=.02, seg=1)
+    for s in (-1, 1):
+        box('platform_post', (.18, .18, TOP + FLOOR + .1), (s * (deck / 2 - .1), length + span - .1, (TOP + .1 - FLOOR) / 2), 'GG_PurplePrimary', r=.04, seg=1)
     add_socket('floor_above', (0, length, TOP))
+    add_socket('platform_end', (0, length + span, TOP + BASE))
+
+@register('arch-stair-landing', budget=2000)
+def stair_landing():
+    # Floor-1 landing at the walkway's open west end; the upper flight starts from its east edge.
+    w, d = 1.4, 1.0
+    box('deck', (w, d, BASE), (0, 0, BASE / 2), 'GG_IvorySoft', r=.03, seg=1)
+    box('walk', (w - .1, d - .1, .02), (0, 0, BASE + .005), 'GG_TurquoiseAccent', r=.005, seg=1)
+    box('rail_glass', (.05, d - .12, .78), (-w / 2 + .06, 0, BASE + .4), 'GG_GlassSoft', r=.01, seg=1)
+    box('rail', (.09, d - .04, .08), (-w / 2 + .06, 0, BASE + .82), 'GG_IvorySoft', r=.035, seg=1)
+    box('rail_glass', (w - .12, .05, .78), (0, -d / 2 + .06, BASE + .4), 'GG_GlassSoft', r=.01, seg=1)
+    box('rail', (w - .04, .09, .08), (0, -d / 2 + .06, BASE + .82), 'GG_IvorySoft', r=.035, seg=1)
+    for x in (-w / 2 + .12, w / 2 - .12):
+        box('post', (.2, .2, FLOOR + .1), (x, -d / 2 + .12, -FLOOR / 2 + .05), 'GG_PurplePrimary', r=.04, seg=1)
+    add_socket('deck', (0, 0, BASE))
 
 @register('arch-courtyard-tree', budget=2000)
 def courtyard_tree():

@@ -56,7 +56,7 @@ class Skyline(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.room = build('arch-classroom-standard', 'sky')
-        cls.parts = {name: build(f'arch-{name}', 'sky') for name in [f'roof-{r}' for r in cls.ROOFS] + ['archway', 'pocket-garden', 'roof-trim', 'gallery', 'stairs-upper', 'courtyard-tree']}
+        cls.parts = {name: build(f'arch-{name}', 'sky') for name in [f'roof-{r}' for r in cls.ROOFS] + ['archway', 'pocket-garden', 'roof-trim', 'gallery', 'stairs-upper', 'courtyard-tree', 'stair-landing']}
 
     def test_roofs_fit_the_bay_budget_and_sit_on_the_room(self):
         for roof in self.ROOFS:
@@ -67,7 +67,7 @@ class Skyline(unittest.TestCase):
             self.assertLessEqual(check_pair(self.room, 'socket_floor_above', m, 'socket_floor_below'), .001, roof)
 
     def test_details_are_connected_and_light(self):
-        for name in ('archway', 'pocket-garden', 'roof-trim', 'gallery', 'stairs-upper', 'courtyard-tree'):
+        for name in ('archway', 'pocket-garden', 'roof-trim', 'gallery', 'stairs-upper', 'courtyard-tree', 'stair-landing'):
             self.assertLessEqual(self.parts[name]['triangles'], 2000, name)
             self.assertEqual(self.parts[name]['islands'], 1, name)
 
@@ -76,6 +76,20 @@ class Skyline(unittest.TestCase):
 
     def test_upper_stairs_rise_one_floor(self):
         self.assertAlmostEqual(self.parts['stairs-upper']['sockets']['socket_floor_above'][1], 3.2, places=3)
+
+    def test_upper_stairs_end_on_a_platform_that_stands_on_the_ground(self):
+        stairs = self.parts['stairs-upper']
+        # The platform reaches 6 m along the flight, where the floor-2 gallery begins, level with the gallery deck.
+        self.assertAlmostEqual(stairs['sockets']['socket_platform_end'][2], -6.0, places=3)
+        self.assertAlmostEqual(stairs['sockets']['socket_platform_end'][1], 3.4, places=3)
+        self.assertAlmostEqual(stairs['bounds']['min'][1], -3.2, places=2)
+
+    def test_landing_is_flush_with_the_walkway_and_stands_on_the_ground(self):
+        landing = self.parts['stair-landing']
+        self.assertAlmostEqual(landing['size_m'][0], 1.4, places=2)
+        self.assertAlmostEqual(landing['size_m'][2], 1.0, places=2)
+        self.assertAlmostEqual(landing['bounds']['min'][1], -3.2, places=2)
+        self.assertAlmostEqual(landing['sockets']['socket_deck'][1], 0.2, places=3)
 
 if __name__ == '__main__':
     unittest.main()

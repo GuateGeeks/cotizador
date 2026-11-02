@@ -14,3 +14,7 @@ Roofs are exactly one bay wide so neighbours do not overlap. Rounded end caps co
 terrace below a taller neighbour, barrel on project stacks, and pitched, flat or garden by key hash.
 It adds archways under spans, pocket gardens in gaps, trims between equal stacks and a courtyard
 tree and bench from three ground rooms. Rooms are never moved or rebuilt by these rules.
+
+Floor 2 is reached by `stairs:upper`: a floor-1 landing (`arch-stair-landing`) at the open west end
+of the column-0 walkway, a flight running east just in front of that walkway, and a top platform on
+posts that meets `gallery:0:2`. The walkway itself stays clear.

@@ -32,9 +32,10 @@ The swap (M6) needs separate approval. **Status: not ready.**
 
 - Teacher vest keeps pale marks at the waist after baking; the other five are clean at close view.
 - Only the primary student's walk has had a full-size check; other clips were reviewed as small renders.
-- Frame rate is 57 fps with no spare draw-call or triangle margin; adding detail needs new savings.
+- Frame rate is 60 fps at 135 draw calls and about 384k triangles; little draw-call margin is left.
 - Character GLBs depend on Meshy downloads that are git-ignored.
 - Bridge back rail stands on the adjoining roof's front edge.
-- The upper stair flight passes over the preprimary terrace rail.
+- The upper stair flight runs in front of the floor-1 walkway, from its own landing to a platform beside
+  the floor-2 gallery. It still reads close to the preprimary terrace rail from the default camera.
 - Only `world.html`'s six state presets drive the demo; real quote wiring happens in M6.
 - Sit and interact clips were checked as small renders only, and at campus scale in the scene.

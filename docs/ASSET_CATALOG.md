@@ -29,7 +29,8 @@ Generated from `assets/manifests/` by `python3 scripts/world.py catalog`.
 | arch-roof-tower | 1048 | 6.00 x 3.25 x 5.50 | 24628 | PASS | NOT_RUN |
 | arch-roof-trim | 108 | 0.30 x 0.46 x 7.90 | 3340 | PASS | NOT_RUN |
 | arch-roof | 392 | 6.00 x 0.38 x 5.50 | 9404 | PASS | PASS |
-| arch-stairs-upper | 920 | 1.26 x 4.07 x 4.66 | 25172 | PASS | NOT_RUN |
+| arch-stair-landing | 352 | 1.40 x 4.26 x 1.00 | 11344 | PASS | NOT_RUN |
+| arch-stairs-upper | 1788 | 0.96 x 7.48 x 6.05 | 42800 | PASS | NOT_RUN |
 | arch-stairs | 920 | 1.66 x 4.07 x 4.66 | 24800 | PASS | PASS |
 | arch-support | 1852 | 6.00 x 3.20 x 5.00 | 35136 | PASS | PASS |
 | arch-terrain-tile | 392 | 6.00 x 0.14 x 5.00 | 9460 | PASS | PASS |

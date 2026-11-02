@@ -25,6 +25,7 @@ const UPPER_STUDENTS = 90, UPPER_SECTIONS = 4;
 const ENTRANCE_W = 3.2;
 const BALCONY_D = 1.4;
 const STAIR_LENGTH = 4.48;
+const LANDING = [1.4, 1];
 const FOOTPRINT = [BAY_W, BAY_D];
 
 const columnX = column => column * BAY_W;
@@ -100,7 +101,11 @@ export function planWorld(data) {
   if (reachOf(2) >= 0) {
     walkway(1, reachOf(2), 2);
     gallery(0, 2);
-    add('stairs:upper', 'stairs', 'arch-stairs-upper', -.25, 1, balconyZ(0) + .25, { rot: -Math.PI / 2 }); // Front edge, leaving a passage behind.
+    // The flight runs east just in front of the floor-1 walkway, from a landing at the walkway's open west end
+    // up to its own platform beside the floor-2 gallery, so the walkway stays clear.
+    const walkFront = balconyZ(0) + BALCONY_D / 2;
+    add('landing:upper', 'landing', 'arch-stair-landing', (-BAY_W / 2 + LANDING[0] / 2) / BAY_W, 1, walkFront + LANDING[1] / 2, { size: LANDING });
+    add('stairs:upper', 'stairs', 'arch-stairs-upper', (-BAY_W / 2 + LANDING[0]) / BAY_W, 1, walkFront + .45, { rot: -Math.PI / 2 });
   }
   const walkwayColumns = new Set(modules.filter(m => m.type === 'balcony').map(m => m.column));
 
