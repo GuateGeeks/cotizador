@@ -1,0 +1,68 @@
+{
+  "id": "char-student-bach",
+  "triangles": 5799,
+  "budget": 6000,
+  "materials": [
+    "Material_0.001"
+  ],
+  "size_m": [
+    1.3577,
+    1.58,
+    0.6178
+  ],
+  "bounds": {
+    "min": [
+      -0.679558,
+      -0.0,
+      -0.309194
+    ],
+    "max": [
+      0.678123,
+      1.58,
+      0.308556
+    ]
+  },
+  "sockets": {},
+  "pivots": {
+    "head_end": {
+      "position": [
+        0.024162,
+        1.43599,
+        0.041292
+      ]
+    },
+    "headfront": {
+      "position": [
+        0.003408,
+        0.914224,
+        0.268065
+      ]
+    }
+  },
+  "skins": 1,
+  "animations": [
+    "idle",
+    "interact",
+    "sit",
+    "walk"
+  ],
+  "bytes": 574996,
+  "sha256": "12d9767237930dcea8440b22d1c0d938c13d7a8a9bc5936f19747442dfe9503d",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "PASS",
+    "content": "NOT_RUN",
+    "provenance": "PASS"
+  },
+  "source": "assets/sources/meshy/variants/PROVENANCE.json",
+  "source_triangles": 20549,
+  "clips": [
+    "idle",
+    "walk",
+    "sit",
+    "interact"
+  ],
+  "armature": "Armature",
+  "islands": 1
+}

@@ -1,0 +1,68 @@
+{
+  "id": "char-student-bach-lod1",
+  "triangles": 1399,
+  "budget": 1500,
+  "materials": [
+    "Material_0.001"
+  ],
+  "size_m": [
+    1.3567,
+    1.58,
+    0.6173
+  ],
+  "bounds": {
+    "min": [
+      -0.678617,
+      -0.0,
+      -0.308944
+    ],
+    "max": [
+      0.678095,
+      1.58,
+      0.30834
+    ]
+  },
+  "sockets": {},
+  "pivots": {
+    "head_end": {
+      "position": [
+        0.024219,
+        1.437202,
+        0.041388
+      ]
+    },
+    "headfront": {
+      "position": [
+        0.003416,
+        0.914224,
+        0.268687
+      ]
+    }
+  },
+  "skins": 1,
+  "animations": [
+    "idle",
+    "interact",
+    "sit",
+    "walk"
+  ],
+  "bytes": 351116,
+  "sha256": "c79d22473c3dfc3986dd3f2b9b70a722e9808a02f5845a3ee48021dee8f4bc2a",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "PASS",
+    "content": "NOT_RUN",
+    "provenance": "PASS"
+  },
+  "source": "assets/sources/meshy/variants/PROVENANCE.json",
+  "source_triangles": 20549,
+  "clips": [
+    "idle",
+    "walk",
+    "sit",
+    "interact"
+  ],
+  "armature": "Armature",
+  "islands": 1
+}

@@ -46,12 +46,12 @@
     "sit",
     "walk"
   ],
-  "bytes": 562672,
-  "sha256": "ecd7188c45c4350f4a5d2c316f2912fe724b4a292ee05ab3e3d94ec41a954e77",
+  "bytes": 564876,
+  "sha256": "14878a450a28685e3c3a8114f246f71ebf98cb5cfd9650ab6a8705bf120fc078",
   "blender": "5.2.3 LTS",
   "verdicts": {
     "technical": "PASS",
-    "visual": "FAIL",
+    "visual": "PASS",
     "content": "NOT_RUN",
     "provenance": "PASS"
   },

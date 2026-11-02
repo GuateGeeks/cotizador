@@ -22,6 +22,7 @@ await page.evaluate(input => window.world.update(input), full);
 await settled();
 const d = await diag();
 for (const program of full.programs) expect(d.animatedPrograms.includes(program), `${program} not visible`);
+for (const id of ['char-student-pre', 'char-student-primary', 'char-student-primary-boy', 'char-student-basico', 'char-student-bach', 'char-teacher']) expect(d.characters.includes(id), `${id} not in the scene`);
 
 const fps = await page.evaluate(() => new Promise(done => {
   let frames = 0; const start = performance.now();

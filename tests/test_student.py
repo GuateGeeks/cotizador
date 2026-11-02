@@ -23,5 +23,17 @@ class StudentLod(unittest.TestCase):
         self.assertEqual(sorted(m['animations']), ['idle', 'interact', 'sit', 'walk'])
         self.assertAlmostEqual(m['size_m'][1], 1.35, delta=.02)
 
+class Variants(unittest.TestCase):
+    HEIGHTS = {'char-student-pre': 1.1, 'char-student-primary-boy': 1.35, 'char-student-basico': 1.5, 'char-student-bach': 1.58, 'char-teacher': 1.75}
+
+    def test_each_variant_is_in_budget_at_height_with_all_clips(self):
+        for asset, height in self.HEIGHTS.items():
+            for suffix, budget in (('', 6000), ('-lod1', 1500)):
+                m = build(asset + suffix)
+                self.assertLessEqual(m['triangles'], budget, asset + suffix)
+                self.assertAlmostEqual(m['size_m'][1], height, delta=.02, msg=asset + suffix)
+                self.assertEqual(sorted(m['animations']), ['idle', 'interact', 'sit', 'walk'], asset + suffix)
+                self.assertEqual(m['skins'], 1, asset + suffix)
+
 if __name__ == '__main__':
     unittest.main()

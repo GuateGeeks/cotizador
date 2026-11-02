@@ -46,8 +46,8 @@
     "sit",
     "walk"
   ],
-  "bytes": 368512,
-  "sha256": "58251bb5089a9e1b5aa2bc5bc5557a3970a4f7eab4647ce6c8935d2314efd35b",
+  "bytes": 361700,
+  "sha256": "f40062cbb11248d209b0c5dd73cd4413eadc6b32ac3fed6ccda7019ec0ee0ded",
   "blender": "5.2.3 LTS",
   "verdicts": {
     "technical": "PASS",

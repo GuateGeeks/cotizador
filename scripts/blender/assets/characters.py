@@ -126,7 +126,7 @@ def bake_reduced(arm, mesh, triangles, target):
     mesh.select_set(True)
     view.objects.active = mesh
     bpy.ops.object.bake(type='DIFFUSE', pass_filter={'COLOR'}, use_selected_to_active=True,
-                        cage_extrusion=.03, max_ray_distance=.08, margin=8)
+                        cage_extrusion=.06, max_ray_distance=.16, margin=16)
     baked.pack()
     material.node_tree.links.new(target.outputs['Color'], principled.inputs['Base Color'])
     for node in [n for n in material.node_tree.nodes if n.type == 'TEX_IMAGE' and n.image != baked]:
@@ -136,16 +136,22 @@ def bake_reduced(arm, mesh, triangles, target):
     arm.data.pose_position = 'POSE'
     scene.render.engine, scene.cycles.samples = engine, samples
 
-@register('char-student-primary', budget=6000)
-def student_primary():
-    return student(TARGET_TRIANGLES)
+PRIMARY = 'assets/sources/meshy/poc/student-walk.glb'
+VARIANTS = {
+    'char-student-primary': (PRIMARY, C['studentHeight'], 'assets/sources/meshy/poc/PROVENANCE.json'),
+    'char-student-pre': ('assets/sources/meshy/variants/pre-walk.glb', 1.1, None),
+    'char-student-primary-boy': ('assets/sources/meshy/variants/boy-walk.glb', 1.35, None),
+    'char-student-basico': ('assets/sources/meshy/variants/basico-walk.glb', 1.5, None),
+    'char-student-bach': ('assets/sources/meshy/variants/bach-walk.glb', 1.58, None),
+    'char-teacher': ('assets/sources/meshy/variants/teacher-walk.glb', 1.75, None),
+}
 
-@register('char-student-primary-lod1', budget=1500)
-def student_lod():
-    return student(1400)
+for _asset, (_source, _height, _record) in VARIANTS.items():
+    register(_asset, budget=6000)(lambda s=_source, h=_height, r=_record: student(TARGET_TRIANGLES, s, h, r))
+    register(f'{_asset}-lod1', budget=1500)(lambda s=_source, h=_height, r=_record: student(1400, s, h, r))
 
-def student(target):
-    source = ROOT / 'assets/sources/meshy/poc/student-walk.glb'
+def student(target, source, target_height, record):
+    source = ROOT / source
     before = set(bpy.data.objects)
     bpy.ops.import_scene.gltf(filepath=str(source))
     imported = set(bpy.data.objects) - before
@@ -163,11 +169,11 @@ def student(target):
     triangles = sum(len(p.vertices) - 2 for p in mesh.data.polygons)
     bake_reduced(arm, mesh, triangles, target)
     height, floor = height_at_rest(arm, mesh)
-    arm.scale = arm.scale * (C['studentHeight'] / height)
+    arm.scale = arm.scale * (target_height / height)
     bpy.context.view_layer.update()
     arm.location.z -= height_at_rest(arm, mesh)[1]
     walk = arm.animation_data.action
     walk.name = 'walk'
     author_clips(arm)
     arm.animation_data.action = walk
-    return {'source': 'assets/sources/meshy/poc/PROVENANCE.json', 'source_triangles': triangles, 'clips': ['idle', 'walk', 'sit', 'interact'], 'armature': arm.name}
+    return {'source': record or 'assets/sources/meshy/variants/PROVENANCE.json', 'source_triangles': triangles, 'clips': ['idle', 'walk', 'sit', 'interact'], 'armature': arm.name}

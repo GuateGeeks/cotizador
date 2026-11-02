@@ -1,0 +1,68 @@
+{
+  "id": "char-student-primary-boy-lod1",
+  "triangles": 1398,
+  "budget": 1500,
+  "materials": [
+    "Material_0.001"
+  ],
+  "size_m": [
+    1.1709,
+    1.35,
+    0.5731
+  ],
+  "bounds": {
+    "min": [
+      -0.584542,
+      0.0,
+      -0.288069
+    ],
+    "max": [
+      0.586348,
+      1.35,
+      0.285048
+    ]
+  },
+  "sockets": {},
+  "pivots": {
+    "head_end": {
+      "position": [
+        0.017791,
+        1.292893,
+        0.020404
+      ]
+    },
+    "headfront": {
+      "position": [
+        0.002917,
+        0.819627,
+        0.240207
+      ]
+    }
+  },
+  "skins": 1,
+  "animations": [
+    "idle",
+    "interact",
+    "sit",
+    "walk"
+  ],
+  "bytes": 361416,
+  "sha256": "ca9656a8493f888e87ca4efeea23a6a1e0c0aeb1501cf49bd689f926752d0ca7",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "PASS",
+    "content": "NOT_RUN",
+    "provenance": "PASS"
+  },
+  "source": "assets/sources/meshy/variants/PROVENANCE.json",
+  "source_triangles": 20646,
+  "clips": [
+    "idle",
+    "walk",
+    "sit",
+    "interact"
+  ],
+  "armature": "Armature",
+  "islands": 1
+}

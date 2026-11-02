@@ -1,0 +1,68 @@
+{
+  "id": "char-teacher-lod1",
+  "triangles": 1397,
+  "budget": 1500,
+  "materials": [
+    "Material_0.001"
+  ],
+  "size_m": [
+    1.6552,
+    1.75,
+    0.5051
+  ],
+  "bounds": {
+    "min": [
+      -0.825671,
+      0.0,
+      -0.253242
+    ],
+    "max": [
+      0.829501,
+      1.75,
+      0.251885
+    ]
+  },
+  "sockets": {},
+  "pivots": {
+    "head_end": {
+      "position": [
+        0.027342,
+        1.742517,
+        -0.017872
+      ]
+    },
+    "headfront": {
+      "position": [
+        0.007562,
+        1.271947,
+        0.165071
+      ]
+    }
+  },
+  "skins": 1,
+  "animations": [
+    "idle",
+    "interact",
+    "sit",
+    "walk"
+  ],
+  "bytes": 360760,
+  "sha256": "ce634fa6772db965e3f00a5219fd6f001c70c262ae121380459fa79da76ae676",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "PASS",
+    "content": "NOT_RUN",
+    "provenance": "PASS"
+  },
+  "source": "assets/sources/meshy/variants/PROVENANCE.json",
+  "source_triangles": 20477,
+  "clips": [
+    "idle",
+    "walk",
+    "sit",
+    "interact"
+  ],
+  "armature": "Armature",
+  "islands": 1
+}

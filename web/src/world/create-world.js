@@ -14,9 +14,11 @@ import { buildBatch, clearBatch, mergeStatic } from './merge.js';
 
 const BASE = constants.base;
 const ENTER_MS = 520, LEAVE_MS = 220;
-const STUDENT = 'char-student-primary', STUDENT_LOD = 'char-student-primary-lod1';
-const ROOM_ASSETS = ['furn-table-four', 'furn-chair-orange', 'furn-chair-turquoise', 'furn-shelves', 'equip-kit-storage', STUDENT, STUDENT_LOD];
-const LEVEL_SCALE = { pre: .82, prim: 1, bas: 1.1, bach: 1.18 }; // Stand-ins until each level has its own approved character.
+const ROOM_ASSETS = ['furn-table-four', 'furn-chair-orange', 'furn-chair-turquoise', 'furn-shelves', 'equip-kit-storage'];
+const ROSTER = { pre: ['char-student-pre'], prim: ['char-student-primary', 'char-student-primary-boy'], bas: ['char-student-basico'], bach: ['char-student-bach'] };
+const TEACHER = 'char-teacher';
+const withLod = id => [id, `${id}-lod1`];
+const rosterFor = module => module.levelId ? ROSTER[module.levelId] : ['char-student-basico', 'char-student-bach'];
 const CLOSE_VIEW = 7;
 const TOP = BASE + .608;
 // Hero equipment is enlarged so a program reads at campus distance. [asset, x, y, z, rotation, scale]
@@ -223,12 +225,11 @@ export function createWorld(container, opts = {}) {
     return object;
   }
 
-  function character(entity, kit, clipName, x, y, z, rotation, time = 0, scale = 1) {
+  function character(entity, kit, id, clipName, x, y, z, rotation, time = 0) {
     const make = (asset, visible) => {
       const object = cloneSkinned(asset.scene);
       object.position.set(x, y, z);
       object.rotation.y = rotation;
-      object.scale.setScalar(scale);
       object.visible = visible;
       entity.group.add(object);
       const mixer = new AnimationMixer(object);
@@ -238,7 +239,8 @@ export function createWorld(container, opts = {}) {
       return object;
     };
     const castsShadow = entity.key.startsWith('walker:');
-    const pair = { high: make(kit.get(STUDENT), lod === 'close'), low: make(kit.get(STUDENT_LOD), lod !== 'close') };
+    entity.characters.push(id);
+    const pair = { high: make(kit.get(id), lod === 'close'), low: make(kit.get(`${id}-lod1`), lod !== 'close') };
     pair.low.traverse(node => { if (node.isMesh) node.castShadow = castsShadow; });
     entity.pairs.push(pair);
     return pair;
@@ -273,16 +275,17 @@ export function createWorld(container, opts = {}) {
 
   function seat(entity, module, kit) {
     const seats = [[.47, -.2, Math.PI / 2, 'sit'], [2.4, 1, -.6, 'idle'], [-2.2, 1.1, .5, 'idle'], [-.9, 1.2, .2, 'interact']];
-    const scale = LEVEL_SCALE[module.levelId] ?? 1.1;
+    const roster = rosterFor(module);
     for (let i = 0; i < (module.population || 1); i += 1) {
       const [x, z, rotation, clip] = seats[i];
-      character(entity, kit, clip, x, BASE + (clip === 'sit' ? .02 : 0), z, rotation, i * .4, scale);
+      character(entity, kit, roster[i % roster.length], clip, x, BASE + (clip === 'sit' ? .02 : 0), z, rotation, i * .4);
     }
+    if (module.programId || (module.population || 1) >= 3) character(entity, kit, TEACHER, 'interact', 2.2, BASE, -.6, -.8, .2);
   }
 
   function needs(module) {
     const ids = [module.asset];
-    if (module.type === 'room') ids.push(...ROOM_ASSETS);
+    if (module.type === 'room') ids.push(...ROOM_ASSETS, ...rosterFor(module).flatMap(withLod), ...withLod(TEACHER));
     if (LEVEL_TABLE_ITEM[module.levelId]) ids.push(LEVEL_TABLE_ITEM[module.levelId]);
     for (const [asset] of PROGRAM_SETUP[module.programId] || []) ids.push(asset);
     if (module.type === 'patio') ids.push('equip-drone');
@@ -291,7 +294,7 @@ export function createWorld(container, opts = {}) {
 
   function build(module, kit) {
     const group = new Group();
-    const entity = { key: module.key, signature: signatureOf(module), group, mixers: [], spinners: [], walkers: [], hovers: [], pairs: [], owned: [], home: { y: module.y }, enter: reduced ? null : 0 };
+    const entity = { key: module.key, signature: signatureOf(module), group, mixers: [], spinners: [], walkers: [], hovers: [], pairs: [], owned: [], characters: [], home: { y: module.y }, enter: reduced ? null : 0 };
     group.position.set(module.x, module.y, module.z);
     group.rotation.y = module.rot;
     group.userData.entity = module;
@@ -361,14 +364,15 @@ export function createWorld(container, opts = {}) {
   }
 
   function syncWalkers(wanted, kit) {
-    if (!kit.get(STUDENT) || !kit.get(STUDENT_LOD)) return;
+    const roster = plan.levels.flatMap(level => ROSTER[level]).filter(id => kit.get(id) && kit.get(`${id}-lod1`));
+    if (!roster.length) return;
     while (walkers.length > wanted) discard(walkers.pop().key);
     for (let i = walkers.length; i < wanted; i += 1) {
       const key = `walker:${i}`;
       const group = new Group();
-      const entity = { key, signature: key, group, mixers: [], spinners: [], walkers: [], hovers: [], pairs: [], owned: [], home: { y: 0 }, enter: null };
+      const entity = { key, signature: key, group, mixers: [], spinners: [], walkers: [], hovers: [], pairs: [], owned: [], characters: [], home: { y: 0 }, enter: null };
       root.add(group);
-      const { high, low } = character(entity, kit, 'walk', 0, 0, 0, 0, i * .3, i % 3 ? 1 : .9);
+      const { high, low } = character(entity, kit, roster[i % roster.length], 'walk', 0, 0, 0, 0, i * .3);
       const walker = { key, objects: [high, low], phase: (i * .37) % 1, lane: i % 2 ? .4 : -.4 };
       entity.walkers.push(walker);
       walkers.push(walker);
@@ -386,7 +390,7 @@ export function createWorld(container, opts = {}) {
     const current = new Map([...entities].filter(([key]) => !key.startsWith('walker:')));
     const { add, remove } = diffEntities(current, entries);
     for (const key of remove) discard(key);
-    const ids = new Set(add.flatMap(needs).concat(STUDENT, STUDENT_LOD));
+    const ids = new Set(add.flatMap(needs).concat(plan.levels.flatMap(level => ROSTER[level]).flatMap(withLod)));
     pendingLoads += 1;
     Promise.allSettled([...ids].map(id => loadAsset(id, opts.base).then(asset => [id, asset]))).then(results => {
       pendingLoads -= 1;
@@ -507,6 +511,7 @@ export function createWorld(container, opts = {}) {
       return { ready, errors: [...errors], paused, yaw: goal.yaw, triangles: renderer.info.render.triangles, drawCalls: renderer.info.render.calls,
         geometries: disposed ? 0 : renderer.info.memory.geometries, frames, geometriesBeforeDispose, entityKeys: keys, entityIds: Object.fromEntries(keys.map(key => [key, entities.get(key).group.uuid])),
         pendingLoads, transitionsActive: reduced ? 0 : moving() ? 1 : 0, framePending: !!frame, loaded: entities.size, lod, focused: handle.focused, contextLost, view: viewMode, lastGesture,
+        characters: [...new Set([...entities.values()].flatMap(entity => entity.characters))],
         animatedPrograms: [...new Set((plan?.modules || []).filter(m => m.programId).map(m => m.programId))] };
     },
     dispose() {

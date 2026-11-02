@@ -1,0 +1,16 @@
+{
+  "created": "2026-11-02",
+  "credits": {"approved": 220, "consumed": 220, "balance_before": 806},
+  "style_reference": "assets/sources/meshy/poc/student-concept.png",
+  "reference_sheet": "assets/references/brief-20261101/3.webp",
+  "image_model": "nano-banana-pro",
+  "model": "meshy-7.1",
+  "params": {"pose_mode": "t-pose", "should_remesh": true, "target_polycount": 20000, "topology": "triangle"},
+  "variants": {
+    "pre": {"height_m": 1.1, "concept_task": "01a19ac1-1129-74b9-89eb-f949a5f59875", "model_task": "01a19ac2-cbda-7024-8542-96e5a76c1eb1", "rig_task": "01a19ac4-6dab-72fd-999f-7b90ed08283f"},
+    "boy": {"height_m": 1.35, "concept_task": "01a19ac1-1587-7587-85a5-7d43881eb348", "model_task": "01a19ac2-ce9a-7266-81a5-7a5e5e90595d", "rig_task": "01a19ac4-7770-738c-b8e7-6b584f868716"},
+    "basico": {"height_m": 1.5, "concept_task": "01a19ac1-1855-769a-a702-ec028c93a2a4", "model_task": "01a19ac2-d12c-74e2-a1e5-263976a9eaff", "rig_task": "01a19ac4-7fb9-71aa-86eb-7a5bf5931ece"},
+    "bach": {"height_m": 1.58, "concept_task": "01a19ac1-1bb9-7648-80c9-a8e393fa682c", "model_task": "01a19ac2-d3d5-7579-8899-e1c215351d0e", "rig_task": "01a19ac4-88e7-7381-9cf5-507245b69679"},
+    "teacher": {"height_m": 1.75, "concept_task": "01a19ac1-1ed9-76af-b272-f0488bb83957", "model_task": "01a19ac2-d6de-7290-98db-a494a6edc4da", "rig_task": "01a19ac4-9224-755d-9377-2522c40dbccc"}
+  }
+}

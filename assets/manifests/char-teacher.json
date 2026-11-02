@@ -1,0 +1,68 @@
+{
+  "id": "char-teacher",
+  "triangles": 5797,
+  "budget": 6000,
+  "materials": [
+    "Material_0.001"
+  ],
+  "size_m": [
+    1.6558,
+    1.75,
+    0.5025
+  ],
+  "bounds": {
+    "min": [
+      -0.828105,
+      0.0,
+      -0.251254
+    ],
+    "max": [
+      0.827671,
+      1.75,
+      0.251217
+    ]
+  },
+  "sockets": {},
+  "pivots": {
+    "head_end": {
+      "position": [
+        0.027291,
+        1.738896,
+        -0.017839
+      ]
+    },
+    "headfront": {
+      "position": [
+        0.007548,
+        1.26921,
+        0.164761
+      ]
+    }
+  },
+  "skins": 1,
+  "animations": [
+    "idle",
+    "interact",
+    "sit",
+    "walk"
+  ],
+  "bytes": 567628,
+  "sha256": "745b39eb08017d4925bb1e894e1dd3dfbc916ca46c6f06797612684e410f565f",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "FAIL",
+    "content": "NOT_RUN",
+    "provenance": "PASS"
+  },
+  "source": "assets/sources/meshy/variants/PROVENANCE.json",
+  "source_triangles": 20477,
+  "clips": [
+    "idle",
+    "walk",
+    "sit",
+    "interact"
+  ],
+  "armature": "Armature",
+  "islands": 1
+}
