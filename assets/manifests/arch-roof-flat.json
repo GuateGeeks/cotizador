@@ -1,0 +1,46 @@
+{
+  "id": "arch-roof-flat",
+  "triangles": 392,
+  "budget": 1500,
+  "materials": [
+    "GG_PurpleDark",
+    "GG_PurplePrimary"
+  ],
+  "size_m": [
+    6.0,
+    0.38,
+    5.5
+  ],
+  "bounds": {
+    "min": [
+      -3.0,
+      0.0,
+      -2.75
+    ],
+    "max": [
+      3.0,
+      0.38,
+      2.75
+    ]
+  },
+  "sockets": {
+    "socket_floor_below": [
+      0,
+      0,
+      0
+    ]
+  },
+  "pivots": {},
+  "skins": 0,
+  "animations": [],
+  "bytes": 9408,
+  "sha256": "25751a7db9a4d926f253989978aec02ecbf47e638ad9c1ef81560615fc5657bb",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

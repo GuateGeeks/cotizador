@@ -1,0 +1,39 @@
+{
+  "id": "arch-roof-trim",
+  "triangles": 108,
+  "budget": 2000,
+  "materials": [
+    "GG_TurquoiseAccent"
+  ],
+  "size_m": [
+    0.3,
+    0.46,
+    7.9
+  ],
+  "bounds": {
+    "min": [
+      -0.15,
+      -0.03,
+      -3.95
+    ],
+    "max": [
+      0.15,
+      0.43,
+      3.95
+    ]
+  },
+  "sockets": {},
+  "pivots": {},
+  "skins": 0,
+  "animations": [],
+  "bytes": 3340,
+  "sha256": "5bb5e5a22ce4a23f92346c2ecff91495b05d323e2b4008d1916bdcc2347bcf4a",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

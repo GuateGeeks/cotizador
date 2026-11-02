@@ -1,0 +1,41 @@
+{
+  "id": "arch-pocket-garden",
+  "triangles": 808,
+  "budget": 2000,
+  "materials": [
+    "GG_GreenDark",
+    "GG_GreenFoliage",
+    "GG_IvorySoft"
+  ],
+  "size_m": [
+    3.5,
+    0.7513,
+    1.8
+  ],
+  "bounds": {
+    "min": [
+      -1.75,
+      0.0,
+      -0.9
+    ],
+    "max": [
+      1.75,
+      0.751253,
+      0.9
+    ]
+  },
+  "sockets": {},
+  "pivots": {},
+  "skins": 0,
+  "animations": [],
+  "bytes": 18264,
+  "sha256": "5dfdfd01440eccbd1cae556fa59bafa905773a50935a30ca3ea8259f116bb141",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

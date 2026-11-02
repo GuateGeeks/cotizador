@@ -1,0 +1,47 @@
+{
+  "id": "arch-roof-barrel",
+  "triangles": 332,
+  "budget": 1500,
+  "materials": [
+    "GG_IvorySoft",
+    "GG_PurplePrimary",
+    "GG_TurquoiseAccent"
+  ],
+  "size_m": [
+    6.0,
+    1.64,
+    5.5
+  ],
+  "bounds": {
+    "min": [
+      -3.0,
+      0.0,
+      -2.75
+    ],
+    "max": [
+      3.0,
+      1.64,
+      2.75
+    ]
+  },
+  "sockets": {
+    "socket_floor_below": [
+      0,
+      0,
+      0
+    ]
+  },
+  "pivots": {},
+  "skins": 0,
+  "animations": [],
+  "bytes": 8624,
+  "sha256": "20e8856470fce62b19feac08ee3ae7488c987abf87a36e9464f2c0ca3345ec1e",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

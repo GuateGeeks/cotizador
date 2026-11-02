@@ -29,8 +29,8 @@
   "pivots": {},
   "skins": 0,
   "animations": [],
-  "bytes": 38320,
-  "sha256": "c239268843b4911964e620ec5efb0a2c0bb18a008b85ce01bb3a4f120816c149",
+  "bytes": 40156,
+  "sha256": "788e1f3cf90279e8d96536793330da730e26e09c98c1ccc55ccfd621400a7b51",
   "blender": "5.2.3 LTS",
   "verdicts": {
     "technical": "PASS",

@@ -1,0 +1,47 @@
+{
+  "id": "arch-roof-garden",
+  "triangles": 712,
+  "budget": 1500,
+  "materials": [
+    "GG_GreenDark",
+    "GG_GreenFoliage",
+    "GG_PurplePrimary"
+  ],
+  "size_m": [
+    6.0,
+    1.0548,
+    5.5
+  ],
+  "bounds": {
+    "min": [
+      -3.0,
+      0.0,
+      -2.75
+    ],
+    "max": [
+      3.0,
+      1.054811,
+      2.75
+    ]
+  },
+  "sockets": {
+    "socket_floor_below": [
+      0,
+      0,
+      0
+    ]
+  },
+  "pivots": {},
+  "skins": 0,
+  "animations": [],
+  "bytes": 16744,
+  "sha256": "cce870b1f61e25a7af7021cbe0786ae73dd9ef4497035d4089c9791227e25278",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

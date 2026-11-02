@@ -7,7 +7,9 @@ const plan = input => planWorld(normalizeWorldInput(input));
 const keys = result => result.modules.map(m => m.key);
 const byKey = result => new Map(result.modules.map(m => [m.key, m]));
 const scope = (levels, programs = [], students = 30) => ({ levels, programs, students: students * levels.length });
-const stacked = plan({ levels: ['pre', 'prim'], enrollment: Array.from({ length: 5 }, (_, i) => ({ id: `p${i}`, levelId: 'prim', students: 24 })) });
+const stackedInput = { levels: ['pre', 'prim'], enrollment: Array.from({ length: 5 }, (_, i) => ({ id: `p${i}`, levelId: 'prim', students: 24 })) };
+const stacked = plan(stackedInput);
+const ROWS = [0, 1, 2, 1, 0];
 
 describe('normalizeWorldInput', () => {
   it('matches the cotizador on every recorded input', () => {
@@ -55,23 +57,56 @@ describe('planWorld', () => {
     }
   });
   it('supports every upper module and roofs every stack', () => {
-    const result = plan(scope(['bach'], ['spike'], 120));
-    const modules = result.modules;
-    for (const upper of modules.filter(m => m.floor === 1 && m.footprint)) {
-      expect(modules.some(m => m.floor === 0 && m.x === upper.x && m.z === upper.z && m.footprint), upper.key).toBe(true);
-      expect(modules.some(m => m.type === 'roof' && m.x === upper.x && m.floor === 2), upper.key).toBe(true);
+    const modules = plan(scope(['bach'], ['spike'], 120)).modules;
+    for (const upper of modules.filter(m => m.floor >= 1 && m.footprint)) {
+      expect(modules.some(m => m.floor === upper.floor - 1 && m.x === upper.x && m.z === upper.z && m.footprint), upper.key).toBe(true);
+    }
+    for (const top of modules.filter(m => m.footprint && m.type !== 'entrance' && !modules.some(o => o.footprint && o.floor === m.floor + 1 && o.x === m.x))) {
+      expect(modules.some(m => m.type === 'roof' && m.x === top.x && m.floor === top.floor + 1), top.key).toBe(true);
     }
   });
-  it('stairs reach the balcony that serves the upper floor', () => {
-    const result = byKey(stacked);
-    expect(result.has('upper:prim:0') && result.has('stairs:front')).toBe(true);
-    expect(result.has('balcony:1')).toBe(true);
-    expect(result.has('bridge:0')).toBe(true);
-    expect(byKey(plan(scope(['pre']))).has('stairs:front')).toBe(false);
+  it('lifts spike alone onto supports', () => {
+    const result = byKey(plan({ programs: ['spike'] }));
+    expect(result.get('project:spike').floor).toBe(2);
+    expect(result.has('support:1:0') && result.has('support:1:1')).toBe(true);
+  });
+  it('steps the campus into a V no wider than five columns', () => {
+    const result = byKey(plan(scope(LEVEL_IDS, PROGRAM_IDS, 150)));
+    expect(result.get('room:pre:0').z).toBe(0);
+    expect(result.get('room:prim:0').z).toBe(-2.5);
+    expect(result.get('project:tale').z).toBe(-5);
+    expect(result.get('room:bas:0').z).toBe(-2.5);
+    expect(result.get('room:bach:0').z).toBe(0);
+    expect(result.get('project:immersive').floor).toBe(2);
+    expect(Math.max(...[...result.values()].filter(m => m.footprint).map(m => m.column))).toBe(4);
+  });
+  it('gives every upper room an unbroken route to the ground', () => {
+    for (const input of [scope(LEVEL_IDS, PROGRAM_IDS, 150), stackedInput, { programs: ['electronics'] }, scope(['bach'], ['immersive'], 120)]) {
+      const result = byKey(plan(input));
+      const walkway = (column, floor) => result.has(`balcony:${column}:${floor}`) || result.has(`bridge:${column}:${floor}`);
+      expect(result.has('stairs:front')).toBe(true);
+      for (const room of [...result.values()].filter(m => m.type === 'room' && m.floor >= 1)) {
+        const start = room.floor === 2 ? 1 : 0;
+        if (room.floor === 2) expect(result.has('stairs:upper') && result.has('gallery:0:2'), room.key).toBe(true);
+        for (let column = start; column <= room.column; column += 1) {
+          expect(walkway(column, room.floor), `${room.key} column ${column}`).toBe(true);
+          if (column < room.column && Math.abs(result.get(`balcony:${column}:${room.floor}`)?.row ?? 0) >= 0 && ROWS[column] !== ROWS[column + 1]) expect(result.has(`gallery:${column}:${room.floor}`), `${room.key} link ${column}`).toBe(true);
+        }
+      }
+    }
+  });
+  it('only hangs upper walkways from a room; other spans stand on the walkway below', () => {
+    for (const input of [{ levels: ['pre', 'prim'], programs: ['electronics'] }, scope(LEVEL_IDS, PROGRAM_IDS, 150)]) {
+      const result = byKey(plan(input));
+      for (const walk of [...result.values()].filter(m => (m.type === 'balcony' || m.type === 'gallery') && m.floor === 2)) {
+        if (walk.hanging) expect(walk.type === 'balcony' && result.get(`balcony:${walk.column}:2`) === walk && [...result.values()].some(m => m.type === 'room' && m.floor === 2 && m.column === walk.column), walk.key).toBe(true);
+        else expect([...result.values()].some(m => m.type === 'balcony' && m.floor === 1 && Math.abs(m.x - walk.x) <= 3.5), walk.key).toBe(true);
+      }
+    }
   });
   it('fills gaps in the row so the school stays connected', () => {
     const result = byKey(plan(scope(['pre', 'bach'])));
-    expect(result.has('corridor:1') && result.has('corridor:2')).toBe(true);
+    expect(result.has('corridor:1') && result.has('corridor:2') && result.has('corridor:3')).toBe(true);
   });
   it('grows the island with the scope and always contains the school', () => {
     const small = plan(scope(['pre'])), large = plan(scope(LEVEL_IDS, PROGRAM_IDS, 150));

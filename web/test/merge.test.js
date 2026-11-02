@@ -41,3 +41,26 @@ describe('buildBatch', () => {
     expect(parent.children).toHaveLength(2);
   });
 });
+
+describe('mergeStatic shadows', () => {
+  it('can merge ground pieces without casting shadows', () => {
+    const group = new Group();
+    group.add(new Mesh(new BoxGeometry(1, 1, 1), a));
+    mergeStatic(group, false);
+    expect(group.children[0].castShadow).toBe(false);
+  });
+});
+
+describe('mergeStatic groups', () => {
+  it('leaves a separately merged group alone', () => {
+    const group = new Group();
+    const inside = new Group();
+    inside.userData.separate = true;
+    inside.add(new Mesh(new BoxGeometry(1, 1, 1), b));
+    group.add(new Mesh(new BoxGeometry(1, 1, 1), a), inside);
+    mergeStatic(inside, false);
+    mergeStatic(group, true);
+    expect(inside.children).toHaveLength(1);
+    expect(inside.children[0].castShadow).toBe(false);
+  });
+});

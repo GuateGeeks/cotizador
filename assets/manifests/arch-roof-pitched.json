@@ -1,0 +1,46 @@
+{
+  "id": "arch-roof-pitched",
+  "triangles": 176,
+  "budget": 1500,
+  "materials": [
+    "GG_OrangeAccent",
+    "GG_PurplePrimary"
+  ],
+  "size_m": [
+    6.0,
+    1.8,
+    5.5
+  ],
+  "bounds": {
+    "min": [
+      -3.0,
+      0.0,
+      -2.75
+    ],
+    "max": [
+      3.0,
+      1.8,
+      2.75
+    ]
+  },
+  "sockets": {
+    "socket_floor_below": [
+      0,
+      0,
+      0
+    ]
+  },
+  "pivots": {},
+  "skins": 0,
+  "animations": [],
+  "bytes": 5548,
+  "sha256": "a1634a92f4adc76319cd9a842ae72066a1d51a3b96dbb97b9d48aa7d3938a44d",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

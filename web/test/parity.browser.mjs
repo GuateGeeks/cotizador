@@ -70,6 +70,8 @@ const result = { date: new Date().toISOString().slice(0, 10), gpu, fps: Math.rou
 writeFileSync(`${out}/bench.json`, JSON.stringify(result, null, 2));
 console.log(JSON.stringify(result));
 expect(measured.drawCalls <= 150, `draw calls ${measured.drawCalls} over 150`);
+expect(measured.triangles <= 500000, `triangles ${measured.triangles} over 500,000`);
+expect(fps >= 59, `frame rate ${Math.round(fps)} under 59`);
 expect(measured.lod === 'campus', 'campus view should use light students');
 expect(problems.length === 0, `page problems: ${problems.slice(0, 3).join(' | ')}`);
 await browser.close();

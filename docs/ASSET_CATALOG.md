@@ -4,6 +4,7 @@ Generated from `assets/manifests/` by `python3 scripts/world.py catalog`.
 
 | Asset | Triangles | Size (m) | Bytes | Technical | Visual |
 | --- | ---: | --- | ---: | --- | --- |
+| arch-archway | 636 | 4.60 x 2.90 x 0.50 | 12696 | PASS | NOT_RUN |
 | arch-balcony | 872 | 6.00 x 4.24 x 1.40 | 20700 | PASS | PASS |
 | arch-bridge | 1024 | 6.00 x 4.24 x 1.40 | 23772 | PASS | PASS |
 | arch-classroom-corner | 2040 | 6.00 x 3.20 x 5.00 | 43756 | PASS | PASS |
@@ -12,14 +13,25 @@ Generated from `assets/manifests/` by `python3 scripts/world.py catalog`.
 | arch-classroom-standard | 2624 | 6.00 x 3.20 x 5.00 | 54044 | PASS | PASS |
 | arch-classroom-upper | 2624 | 6.00 x 3.20 x 5.00 | 54332 | PASS | PASS |
 | arch-corridor | 1064 | 6.00 x 3.20 x 5.00 | 23736 | PASS | PASS |
-| arch-courtyard | 1964 | 8.00 x 0.80 x 5.00 | 38320 | PASS | PASS |
+| arch-courtyard-tree | 740 | 2.17 x 3.16 x 2.17 | 17332 | PASS | NOT_RUN |
+| arch-courtyard | 1964 | 8.00 x 0.80 x 5.00 | 40156 | PASS | PASS |
 | arch-entrance | 1744 | 3.20 x 3.70 x 5.78 | 37340 | PASS | PASS |
+| arch-gallery | 368 | 1.40 x 3.38 x 3.90 | 9300 | PASS | NOT_RUN |
 | arch-island-slice | 3016 | 17.00 x 1.42 x 12.50 | 56652 | PASS | PASS |
 | arch-pathway | 264 | 6.00 x 0.04 x 1.60 | 8224 | PASS | PASS |
 | arch-planter | 968 | 1.60 x 0.80 x 0.62 | 21864 | PASS | PASS |
+| arch-pocket-garden | 808 | 3.50 x 0.75 x 1.80 | 18264 | PASS | NOT_RUN |
+| arch-roof-barrel | 332 | 6.00 x 1.64 x 5.50 | 8624 | PASS | NOT_RUN |
+| arch-roof-flat | 392 | 6.00 x 0.38 x 5.50 | 9408 | PASS | NOT_RUN |
+| arch-roof-garden | 712 | 6.00 x 1.05 x 5.50 | 16744 | PASS | NOT_RUN |
+| arch-roof-pitched | 176 | 6.00 x 1.80 x 5.50 | 5548 | PASS | NOT_RUN |
+| arch-roof-terrace | 1392 | 6.00 x 1.04 x 5.50 | 31236 | PASS | NOT_RUN |
+| arch-roof-tower | 1048 | 6.00 x 3.25 x 5.50 | 24628 | PASS | NOT_RUN |
+| arch-roof-trim | 108 | 0.30 x 0.46 x 7.90 | 3340 | PASS | NOT_RUN |
 | arch-roof | 392 | 6.00 x 0.38 x 5.50 | 9404 | PASS | PASS |
+| arch-stairs-upper | 920 | 1.26 x 4.07 x 4.66 | 25172 | PASS | NOT_RUN |
 | arch-stairs | 920 | 1.66 x 4.07 x 4.66 | 24800 | PASS | PASS |
-| arch-support | 1852 | 6.00 x 3.20 x 5.00 | 35140 | PASS | PASS |
+| arch-support | 1852 | 6.00 x 3.20 x 5.00 | 35136 | PASS | PASS |
 | arch-terrain-tile | 392 | 6.00 x 0.14 x 5.00 | 9460 | PASS | PASS |
 | char-student-bach-lod1 | 1399 | 1.36 x 1.58 x 0.62 | 351116 | PASS | PASS |
 | char-student-bach | 5799 | 1.36 x 1.58 x 0.62 | 574996 | PASS | PASS |
