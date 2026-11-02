@@ -1,0 +1,13 @@
+{
+  "spike": true,
+  "created": "2026-11-01",
+  "reference_sheets": "assets/references/brief-20261101 (SHA256SUMS)",
+  "note": "Student input derived from sheet 3 and rover input from sheet 1; both are user-supplied concept images.",
+  "credits": {"approved": 74, "cap": 100, "consumed": 74},
+  "tasks": [
+    {"id": "01a19a63-2a2c-7408-91d5-a62393ad5e7e", "type": "image-to-image", "model": "nano-banana-pro", "input": "student-crop.png", "output": "student-concept.png", "credits": 9},
+    {"id": "01a19a63-2d2c-74a8-85b9-d4915bbbdb4d", "type": "image-to-3d", "model": "meshy-7.1", "input": "rover-crop.png", "params": {"should_remesh": true, "target_polycount": 20000, "topology": "triangle"}, "output": "rover.glb", "credits": 30},
+    {"id": "01a19a65-3dfa-7332-96b8-63a4e98b7f61", "type": "image-to-3d", "model": "meshy-7.1", "input": "student-concept.png", "params": {"pose_mode": "t-pose", "should_remesh": true, "target_polycount": 20000, "topology": "triangle"}, "output": "student.glb", "credits": 30},
+    {"id": "01a19a67-1de9-775c-a365-f55c372194f9", "type": "rigging", "params": {"height_meters": 1.35}, "output": "student-walk.glb", "credits": 5}
+  ]
+}
