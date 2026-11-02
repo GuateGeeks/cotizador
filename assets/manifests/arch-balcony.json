@@ -45,9 +45,9 @@
   "blender": "5.2.3 LTS",
   "verdicts": {
     "technical": "PASS",
-    "visual": "NOT_RUN",
+    "visual": "PASS",
     "content": "NOT_RUN",
-    "provenance": "NOT_RUN"
+    "provenance": "PASS"
   },
   "islands": 1
 }

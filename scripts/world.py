@@ -55,6 +55,16 @@ def publish(args):
         shutil.copy2(glb, target / glb.name)
         print('published', glb.name)
 
+def catalog(_):
+    rows = ['# Asset catalog', '', 'Generated from `assets/manifests/` by `python3 scripts/world.py catalog`.', '',
+            '| Asset | Triangles | Size (m) | Bytes | Technical | Visual |', '| --- | ---: | --- | ---: | --- | --- |']
+    for path in sorted((ROOT / 'assets/manifests').glob('*.json')):
+        m = json.loads(path.read_text())
+        size = ' x '.join(f'{v:.2f}' for v in m['size_m'])
+        rows.append(f"| {m['id']} | {m['triangles']} | {size} | {m['bytes']} | {m['verdicts']['technical']} | {m['verdicts']['visual']} |")
+    (ROOT / 'docs/ASSET_CATALOG.md').write_text('\n'.join(rows) + '\n')
+    print('catalogued', len(rows) - 6)
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(required=True)
@@ -67,6 +77,7 @@ def main():
     p = commands.add_parser('publish', help='copy a run\'s GLBs into the web app')
     p.add_argument('--run', required=True)
     p.set_defaults(fn=publish)
+    commands.add_parser('catalog').set_defaults(fn=catalog)
     args = parser.parse_args()
     args.fn(args)
 

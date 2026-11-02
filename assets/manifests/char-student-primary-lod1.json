@@ -51,9 +51,9 @@
   "blender": "5.2.3 LTS",
   "verdicts": {
     "technical": "PASS",
-    "visual": "NOT_RUN",
+    "visual": "PASS",
     "content": "NOT_RUN",
-    "provenance": "NOT_RUN"
+    "provenance": "PASS"
   },
   "source": "assets/sources/meshy/poc/PROVENANCE.json",
   "source_triangles": 20444,

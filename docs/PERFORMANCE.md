@@ -1,11 +1,17 @@
 # Performance
 
-Planning targets are not results. Measurements below are real and will grow with the campus.
+Planning targets are not results. Largest campus: 62 entities, 4 levels, 6 programs, 8 walkers.
+Measured 2026-11-02 at 1400 x 880 on an RTX 3060 Ti through WSL's d3d12 layer.
+Evidence: `runs/web-parity-04/bench.json`.
 
-| Measure (slice scene, 2026-11-01, RTX 3060 Ti via WSL d3d12) | Result | Target |
-| --- | --- | --- |
-| Triangles rendered per frame, including shadow pass | 97,224 | 500,000 at largest campus |
-| Draw calls, including shadow pass | 502 | 150 at largest campus: **FAIL for now** |
-| GLB download for the slice kit | under 1 MB | 8 MB |
+| Measure | Result | Target | Verdict |
+| --- | ---: | ---: | --- |
+| Frame rate | 59 fps | 60 fps | PASS, within measurement noise |
+| Draw calls, including shadow pass | 140 | 150 | PASS |
+| Triangles per frame, including shadow pass | 486,704 | 500,000 | PASS |
+| Compressed kit | 1.30 MB | 8 MB | PASS |
+| Mid-range phone | not measured | 30 fps | BLOCKED: no device attached |
 
-Draw calls fail because instancing and merging belong to Task 18. Frame rate and phones are `NOT_RUN`.
+Draw calls fell from 4,536 by merging each entity's static parts, then batching settled entities into one
+draw per material. During a transition the batch is off, and draw calls rise to about 590 until it rebuilds.
+Students swap to a 1,400-triangle model at campus distance. `InstancedMesh` was not needed.

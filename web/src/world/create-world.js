@@ -86,6 +86,10 @@ export function createWorld(container, opts = {}) {
   sun.shadow.bias = -.0004;
   sun.shadow.normalBias = .04;
   scene.add(sun, sun.target);
+  // Warm, shadowless fill through the open fronts, so roofs do not leave interiors grey.
+  const fill = new DirectionalLight(0xffcf96, 1.5);
+  fill.position.set(-4, 4, 20);
+  scene.add(fill);
 
   const camera = new OrthographicCamera(-1, 1, 1, -1, .1, 400);
   const view = { yaw: -.54, pitch: .55, target: new Vector3(0, 1, 0), half: 11 };

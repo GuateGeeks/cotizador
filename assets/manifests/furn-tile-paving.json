@@ -28,13 +28,13 @@
   "skins": 0,
   "animations": [],
   "bytes": 12572,
-  "sha256": "f16cdbdbdd2e9b0149bc0beddc95fe6518b0f142c85a375101397b46c5ecbaae",
+  "sha256": "633097f20bf72c403769565db306d7705f5823e8a581f6852d13fb68c4aed089",
   "blender": "5.2.3 LTS",
   "verdicts": {
     "technical": "PASS",
-    "visual": "NOT_RUN",
+    "visual": "PASS",
     "content": "NOT_RUN",
-    "provenance": "NOT_RUN"
+    "provenance": "PASS"
   },
   "islands": 1
 }
