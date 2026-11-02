@@ -1,6 +1,6 @@
 # GuateGeeks World: design
 
-Status: awaiting approval. Date: 2026-11-01.
+Status: approved by the user ("proceed with the full implementation"). Date: 2026-11-01.
 Source brief: "GuateGeeks 3D World Production System" (supplied in conversation) and
 the five reference sheets in `assets/references/brief-20261101/`. The brief remains
 authoritative for art direction, material values, module lists and deliverables; this
@@ -72,8 +72,8 @@ cotizador is not touched until the new world proves itself.
 - Approach 3: new scene and layout engine.
 - Separate project: new private sibling repo `../guategeeks-world`.
 
-Everything below is a proposal until this document is approved. Choices marked as
-targets are the author's calls.
+The user approved the sections below on 2026-11-01. Choices marked as targets remain
+the author's calls.
 
 ## 6. Project shape
 
@@ -137,8 +137,8 @@ exit check.
 | Route | Assets | Notes |
 | --- | --- | --- |
 | Blender procedural | Architecture, furniture, trees, terrain, sockets | Python generators with parameters and seeds |
-| Meshy + Blender | Characters, SPIKE-inspired rover, dinosaur, drone, VR headset | Blender rebuilds or separates moving parts |
-| Blender first, Meshy if needed | Printer, laptop, screen, arm | These references are simple enough to model precisely |
+| Meshy + Blender | Characters | Clean concept image, then 3D, rig, reduction and pose inspection |
+| Blender first, Meshy only as shape reference | Rover, dinosaur, drone, VR headset, printer, laptop, screen, arm | Changed by the POC: the Meshy rover was noisy and fused into one mesh |
 
 Meshy output is judged before optimisation; wrong results are regenerated, not patched.
 Parameters, references and task IDs are kept. Textures are removed where regions can
@@ -148,6 +148,17 @@ ceiling for M2: 200 credits of the 880 available, stopping to ask before exceedi
 
 Geometry compression uses meshopt (the cotizador already carries `meshoptimizer`), with
 the decoder bundled locally; no external CDN at runtime.
+
+### POC findings (2026-11-01)
+
+Evidence: `runs/poc-03`, `runs/poc-meshy-01`, `runs/poc-meshy-04`; spike code in
+`scripts/blender/poc_*.py` is reference only.
+
+- The procedural kit reads as one rounded world, and sockets snapped with a 0.0 gap.
+- Concept image, Meshy 3D, then auto-rig produced a strong student whose walk holds up at
+  shoulders, hips and knees. Skirt and backpack stretch, and height needs normalising.
+- Both Meshy models are about 20,000 triangles, so character reduction is an open risk.
+- Floor-to-floor height is 3.2 m (0.2 m base plus 3.0 m walls), replacing the 3.4 m estimate.
 
 ## 10. Runtime
 
