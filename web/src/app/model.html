@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GuateGeeks World model</title>
+<style>html, body { margin: 0; height: 100%; } canvas { display: block; }</style>
+</head>
+<body>
+<script type="module">
+  // Review viewer: one published model, with the scene's materials and lights, framed from the scene's
+  // default angle. `?id=<asset>&yaw=<radians>`; sets `window.modelReady` once drawn.
+  import { AmbientLight, Box3, Color, DirectionalLight, HemisphereLight, OrthographicCamera, Scene, SRGBColorSpace, Vector3, WebGLRenderer } from 'three';
+  import constants from '../../../world/constants.json';
+  import { loadAsset } from '../world/assets.js';
+
+  const params = new URLSearchParams(location.search);
+  const yaw = Number(params.get('yaw') ?? -.54), pitch = .55;
+  const renderer = new WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+  renderer.outputColorSpace = SRGBColorSpace;
+  renderer.setSize(innerWidth, innerHeight);
+  renderer.shadowMap.enabled = true;
+  document.body.append(renderer.domElement);
+  const scene = new Scene();
+  scene.background = new Color(constants.palette.stage);
+  scene.add(new HemisphereLight(0xffffff, 0xe6dcef, 1.7), new AmbientLight(0xffffff, .45));
+  const sun = new DirectionalLight(0xfff4e6, 2);
+  sun.position.set(8, 14, 10);
+  const fill = new DirectionalLight(0xffcf96, 1.5);
+  fill.position.set(-4, 4, 20);
+  scene.add(sun, fill);
+
+  const { scene: model } = await loadAsset(params.get('id'), '/models/');
+  scene.add(model);
+  model.updateMatrixWorld(true);
+  const box = new Box3().setFromObject(model), centre = box.getCenter(new Vector3()), size = box.getSize(new Vector3());
+  const half = Math.max(size.x, size.y, size.z) * .62 + .05, aspect = innerWidth / innerHeight;
+  const camera = new OrthographicCamera(-half * aspect, half * aspect, half, -half, .01, 500);
+  camera.position.copy(centre).add(new Vector3(Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), Math.cos(yaw) * Math.cos(pitch)).multiplyScalar(60));
+  camera.lookAt(centre);
+  renderer.render(scene, camera);
+  window.modelReady = { size: size.toArray().map(v => +v.toFixed(3)) };
+</script>
+</body>
+</html>
