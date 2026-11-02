@@ -4,7 +4,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 const MOVING = /^(wheel_|rotor_)/; // Only parts the runtime animates; other pivots stay available in the GLB.
 
-function plain(mesh, relative) {
+export function plain(mesh, relative) {
   const geometry = mesh.geometry.clone();
   for (const name of Object.keys(geometry.attributes)) if (name !== 'position' && name !== 'normal') geometry.deleteAttribute(name);
   // Compressed GLBs use quantized attributes, which cannot hold transformed values.
