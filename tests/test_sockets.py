@@ -30,7 +30,7 @@ class Sockets(unittest.TestCase):
 
 class FullKit(unittest.TestCase):
     MODULES = ('terrain-tile', 'classroom-standard', 'classroom-expandable', 'classroom-corner', 'classroom-end', 'classroom-upper',
-               'roof', 'support', 'entrance', 'corridor', 'stairs', 'bridge', 'courtyard', 'planter', 'pathway', 'balcony')
+               'roof', 'support', 'entrance', 'corridor', 'stairs', 'bridge', 'courtyard', 'planter', 'pathway', 'balcony', 'roof-pitched', 'roof-tower')
 
     @classmethod
     def setUpClass(cls):

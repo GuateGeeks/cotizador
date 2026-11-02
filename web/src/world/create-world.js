@@ -138,7 +138,12 @@ export function createWorld(container, opts = {}) {
     const next = view.half < CLOSE_VIEW ? 'close' : 'campus';
     if (next === lod) return;
     lod = next;
-    for (const entity of entities.values()) for (const pair of entity.pairs) { pair.high.visible = lod === 'close'; pair.low.visible = lod !== 'close'; }
+    for (const entity of entities.values()) {
+      for (const pair of entity.pairs) { pair.high.visible = lod === 'close'; pair.low.visible = lod !== 'close'; }
+      if (entity.extra) entity.extra.visible = lod === 'close';
+    }
+    unbatch();
+    scheduleBatch();
   }
 
   function draw() {
@@ -247,26 +252,22 @@ export function createWorld(container, opts = {}) {
   }
 
   function furnish(entity, module, kit) {
-    const group = entity.group;
+    const group = entity.inside;
+    const extra = entity.extra; // Chairs, shelves and storage: dropped at campus distance to pay for the skyline.
     const table = kit.get('furn-table-four'), orange = kit.get('furn-chair-orange'), teal = kit.get('furn-chair-turquoise');
     placeIn(group, table, -1.05, BASE, -.2);
     placeIn(group, table, 1.35, BASE, -.2);
     for (const [cx, first, second] of [[-1.05, orange, teal], [1.35, teal, orange]]) {
-      placeIn(group, second, cx - .4, BASE, -.94);
-      placeIn(group, first, cx + .4, BASE, -.94);
+      placeIn(extra, second, cx - .4, BASE, -.94);
+      placeIn(extra, first, cx + .4, BASE, -.94);
     }
-    placeIn(group, orange, .47, BASE, -.2, Math.PI / 2);
-    placeIn(group, kit.get('furn-shelves'), 2.1, BASE, -1.95);
-    placeIn(group, kit.get('equip-kit-storage'), -2.1, BASE, -1.95);
+    placeIn(extra, orange, .47, BASE, -.2, Math.PI / 2);
+    placeIn(extra, kit.get('furn-shelves'), 2.1, BASE, -1.95);
+    placeIn(extra, kit.get('equip-kit-storage'), -2.1, BASE, -1.95);
     for (const [asset, x, y, z, rotation, scale] of PROGRAM_SETUP[module.programId] || []) {
       const object = placeIn(group, kit.get(asset), x, y, z, rotation);
       object.scale.setScalar(scale);
-      const hero = scale > 1.5; // Only the enlarged rover turns its wheels; table models merge into the room.
-      object.traverse(node => {
-        if (!/^wheel_/.test(node.name)) return;
-        if (hero) entity.spinners.push({ node, axis: 'x', speed: 2 });
-        else node.name = `still_${node.name}`;
-      });
+      object.traverse(node => { if (/^wheel_/.test(node.name)) node.name = `still_${node.name}`; }); // Parked rovers: their wheels merge with the room.
       object.traverse(node => { if (node.isMesh) node.castShadow = false; });
     }
     const item = kit.get(LEVEL_TABLE_ITEM[module.levelId]);
@@ -286,6 +287,7 @@ export function createWorld(container, opts = {}) {
   function needs(module) {
     const ids = [module.asset];
     if (module.type === 'room') ids.push(...ROOM_ASSETS, ...rosterFor(module).flatMap(withLod), ...withLod(TEACHER));
+    if (module.terraceStudents) ids.push(...plan.levels.flatMap(level => ROSTER[level]).flatMap(withLod));
     if (LEVEL_TABLE_ITEM[module.levelId]) ids.push(LEVEL_TABLE_ITEM[module.levelId]);
     for (const [asset] of PROGRAM_SETUP[module.programId] || []) ids.push(asset);
     if (module.type === 'patio') ids.push('equip-drone');
@@ -300,9 +302,23 @@ export function createWorld(container, opts = {}) {
     group.userData.entity = module;
     const shell = placeIn(group, kit.get(module.asset), 0, 0, 0);
     if (module.seedScale) shell.scale.setScalar(module.seedScale);
+    entity.extra = new Group();
+    entity.extra.visible = lod === 'close';
+    entity.inside = new Group();
+    entity.extra.userData.separate = entity.inside.userData.separate = true;
+    group.add(entity.extra, entity.inside);
     if (module.type === 'room') furnish(entity, module, kit);
-    entity.owned = mergeStatic(group);
-    entity.staticMeshes = group.children.filter(child => child.isMesh);
+    entity.owned = [...mergeStatic(entity.extra, false), ...mergeStatic(entity.inside, true), ...mergeStatic(group, true)];
+    entity.staticMeshes = [...group.children, ...entity.inside.children].filter(child => child.isMesh);
+    entity.extraMeshes = entity.extra.children.filter(child => child.isMesh);
+    if (module.terraceStudents) {
+      const roster = plan.levels.flatMap(level => ROSTER[level]);
+      const spots = [[-.6, .9, .4, 'idle'], [.9, .5, -.5, 'interact']];
+      for (let i = 0; i < module.terraceStudents && roster.length; i += 1) {
+        const [x, z, rotation, clip] = spots[i];
+        character(entity, kit, roster[i % roster.length], clip, x, .39, z, rotation, i * .5);
+      }
+    }
     if (module.type === 'room') seat(entity, module, kit);
     if (module.type === 'patio') {
       const drone = placeIn(group, kit.get('equip-drone'), 0, 2.4, 0);
@@ -328,7 +344,7 @@ export function createWorld(container, opts = {}) {
     batchTimer = setTimeout(() => {
       if (disposed || moving() || pendingLoads) return scheduleBatch();
       clearBatch(batched);
-      const settled = [...entities.values()].filter(entity => entity.group.visible).flatMap(entity => entity.staticMeshes || []);
+      const settled = [...entities.values()].filter(entity => entity.group.visible).flatMap(entity => [...(entity.staticMeshes || []), ...(entity.extra?.visible ? entity.extraMeshes : [])]);
       batched = buildBatch(settled, root);
       invalidate();
     }, 300);
@@ -505,12 +521,25 @@ export function createWorld(container, opts = {}) {
       goal.half = 4.6;
       invalidate();
     },
+    breakdown() {
+      const out = {};
+      const count = node => { let n = 0; node.traverseVisible(o => { if (o.isMesh) n += (o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count) / 3 * (o.castShadow ? 2 : 1); }); return n; };
+      for (const entity of entities.values()) { const type = entity.key.split(':')[0]; out[type] = (out[type] || 0) + count(entity.group); }
+      out.batch = (batched?.batch || []).reduce((n, mesh) => n + (mesh.geometry.attributes.position.count / 3) * (mesh.castShadow ? 2 : 1), 0);
+      out.island = count(islandBody) + count(islandTop);
+      return out;
+    },
+    planKeys(input) { return planWorld(normalizeWorldInput(input)).modules.map(m => m.key); },
     capture() { draw(); return renderer.domElement.toDataURL('image/png'); },
     getDiagnostics() {
       const keys = [...entities.keys()];
       return { ready, errors: [...errors], paused, yaw: goal.yaw, triangles: renderer.info.render.triangles, drawCalls: renderer.info.render.calls,
         geometries: disposed ? 0 : renderer.info.memory.geometries, frames, geometriesBeforeDispose, entityKeys: keys, entityIds: Object.fromEntries(keys.map(key => [key, entities.get(key).group.uuid])),
         pendingLoads, transitionsActive: reduced ? 0 : moving() ? 1 : 0, framePending: !!frame, loaded: entities.size, lod, focused: handle.focused, contextLost, view: viewMode, lastGesture,
+        roofVariants: [...new Set((plan?.modules || []).filter(m => m.type === 'roof').map(m => m.variant))],
+        visibleRoofs: [...entities.values()].filter(entity => entity.key.startsWith('roof:') && entity.group.visible).length,
+        roomDetail: lod === 'close' ? 'full' : 'light',
+        batched: !!batched,
         characters: [...new Set([...entities.values()].flatMap(entity => entity.characters))],
         animatedPrograms: [...new Set((plan?.modules || []).filter(m => m.programId).map(m => m.programId))] };
     },

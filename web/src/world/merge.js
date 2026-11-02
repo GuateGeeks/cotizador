@@ -20,12 +20,12 @@ function plain(mesh, relative) {
   return expanded;
 }
 
-export function mergeStatic(root) {
+export function mergeStatic(root, castShadow = true) {
   root.updateWorldMatrix(true, true);
   const inverse = new Matrix4().copy(root.matrixWorld).invert();
   const groups = new Map();
   const visit = node => {
-    if (node !== root && MOVING.test(node.name)) return;
+    if (node !== root && (MOVING.test(node.name) || node.userData.separate)) return;
     if (node.isMesh && !node.isSkinnedMesh) {
       if (!groups.has(node.material)) groups.set(node.material, []);
       groups.get(node.material).push(node);
@@ -38,7 +38,7 @@ export function mergeStatic(root) {
     const geometry = mergeGeometries(meshes.map(mesh => plain(mesh, new Matrix4().multiplyMatrices(inverse, mesh.matrixWorld))));
     for (const mesh of meshes) mesh.removeFromParent();
     const merged = new Mesh(geometry, material);
-    merged.castShadow = !material.transparent;
+    merged.castShadow = castShadow && !material.transparent;
     merged.receiveShadow = true;
     root.add(merged);
     owned.push(geometry);
@@ -54,14 +54,16 @@ export function buildBatch(meshes, parent) {
   const inverse = new Matrix4().copy(parent.matrixWorld).invert();
   for (const mesh of meshes) {
     mesh.updateWorldMatrix(true, false);
-    if (!groups.has(mesh.material)) groups.set(mesh.material, []);
-    groups.get(mesh.material).push(mesh);
+    const id = `${mesh.material.uuid}|${mesh.castShadow}`;
+    if (!groups.has(id)) groups.set(id, []);
+    groups.get(id).push(mesh);
   }
   const batch = [];
-  for (const [material, list] of groups) {
+  for (const list of groups.values()) {
+    const material = list[0].material;
     const geometry = mergeGeometries(list.map(mesh => mesh.geometry.clone().applyMatrix4(new Matrix4().multiplyMatrices(inverse, mesh.matrixWorld))));
     const merged = new Mesh(geometry, material);
-    merged.castShadow = !material.transparent;
+    merged.castShadow = list[0].castShadow;
     merged.receiveShadow = true;
     merged.userData.batch = true;
     parent.add(merged);
