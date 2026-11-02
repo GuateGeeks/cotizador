@@ -7,7 +7,7 @@ import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
 import constants from '../../../world/constants.json';
 import { normalizeWorldInput } from '../layout/normalize.js';
 import { planWorld } from '../layout/plan.js';
-import { clearAssets, loadAsset } from './assets.js';
+import { clearAssets, clipNamed, loadAsset } from './assets.js';
 import { diffEntities, signatureOf } from './entities.js';
 import { disposeMaterials, materialFor } from './materials.js';
 import { buildBatch, clearBatch, mergeStatic } from './merge.js';
@@ -240,7 +240,7 @@ export function createWorld(container, opts = {}) {
       object.visible = visible;
       entity.group.add(object);
       const mixer = new AnimationMixer(object);
-      mixer.clipAction(asset.animations.find(item => item.name === clipName)).setLoop(LoopRepeat).play();
+      mixer.clipAction(clipNamed(asset.animations, clipName)).setLoop(LoopRepeat).play();
       mixer.setTime(time);
       entity.mixers.push(mixer);
       return object;

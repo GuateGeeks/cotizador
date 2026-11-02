@@ -29,3 +29,8 @@ export function loadAsset(id, base = 'models/') {
 export function clearAssets() {
   pending.clear();
 }
+
+// A character exported before a clip existed plays idle instead of failing the whole room.
+export function clipNamed(animations, name) {
+  return animations.find(clip => clip.name === name) || animations.find(clip => clip.name === 'idle') || animations[0];
+}
