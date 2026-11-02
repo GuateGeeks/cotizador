@@ -1,0 +1,43 @@
+{
+  "id": "furn-shelves",
+  "triangles": 824,
+  "budget": 1000,
+  "materials": [
+    "GG_IvorySoft",
+    "GG_OrangeAccent",
+    "GG_PurplePrimary",
+    "GG_TurquoiseAccent",
+    "GG_Wood"
+  ],
+  "size_m": [
+    1.05,
+    1.2,
+    0.325
+  ],
+  "bounds": {
+    "min": [
+      -0.525,
+      0.0,
+      -0.165
+    ],
+    "max": [
+      0.525,
+      1.2,
+      0.16
+    ]
+  },
+  "sockets": {},
+  "pivots": {},
+  "skins": 0,
+  "animations": [],
+  "bytes": 19000,
+  "sha256": "090cb28ba98291edae909c51cf2f00e1d10a7ae054517f129e39c19bbf2c80b3",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

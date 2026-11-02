@@ -1,0 +1,50 @@
+{
+  "id": "equip-laptop",
+  "triangles": 524,
+  "budget": 5000,
+  "materials": [
+    "GG_IvorySoft",
+    "GG_PurplePrimary",
+    "GG_ScreenEmissive",
+    "GG_TurquoiseAccent"
+  ],
+  "size_m": [
+    0.34,
+    0.2419,
+    0.2687
+  ],
+  "bounds": {
+    "min": [
+      -0.17,
+      0.0,
+      -0.148727
+    ],
+    "max": [
+      0.17,
+      0.2419,
+      0.12
+    ]
+  },
+  "sockets": {},
+  "pivots": {
+    "lid": {
+      "position": [
+        0.0,
+        0.018,
+        -0.12
+      ]
+    }
+  },
+  "skins": 0,
+  "animations": [],
+  "bytes": 14248,
+  "sha256": "f1a42e97304b2e66c98428766e59a0bafc15ca7f96d1f54a4ffccaae6c71db6c",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

@@ -1,0 +1,40 @@
+{
+  "id": "veg-shrub",
+  "triangles": 240,
+  "budget": 500,
+  "materials": [
+    "GG_GreenDark",
+    "GG_GreenFoliage"
+  ],
+  "size_m": [
+    1.0252,
+    0.628,
+    0.6857
+  ],
+  "bounds": {
+    "min": [
+      -0.500461,
+      -0.014006,
+      -0.343053
+    ],
+    "max": [
+      0.524722,
+      0.613974,
+      0.342687
+    ]
+  },
+  "sockets": {},
+  "pivots": {},
+  "skins": 0,
+  "animations": [],
+  "bytes": 6292,
+  "sha256": "1baa80504303b7e348ccb612ca4bad2749fc2fafb8a5e0b6a07f1dcaa7612986",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

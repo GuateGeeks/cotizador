@@ -1,0 +1,42 @@
+{
+  "id": "equip-vr-set",
+  "triangles": 1540,
+  "budget": 5000,
+  "materials": [
+    "GG_IvorySoft",
+    "GG_PurpleDark",
+    "GG_PurplePrimary",
+    "GG_TurquoiseAccent"
+  ],
+  "size_m": [
+    0.5,
+    0.135,
+    0.3125
+  ],
+  "bounds": {
+    "min": [
+      -0.25,
+      0.0,
+      -0.1425
+    ],
+    "max": [
+      0.25,
+      0.135,
+      0.17
+    ]
+  },
+  "sockets": {},
+  "pivots": {},
+  "skins": 0,
+  "animations": [],
+  "bytes": 30504,
+  "sha256": "dbd22febb3213d93247de7d8010210d970c7a34086b8a88bc970e27f5edbf611",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

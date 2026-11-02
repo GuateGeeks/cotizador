@@ -1,0 +1,71 @@
+{
+  "id": "equip-dino",
+  "triangles": 2644,
+  "budget": 5000,
+  "materials": [
+    "GG_GreenDark",
+    "GG_GreenFoliage",
+    "GG_IvorySoft",
+    "GG_OrangeAccent",
+    "GG_PurpleDark",
+    "GG_PurplePrimary"
+  ],
+  "size_m": [
+    0.26,
+    0.49,
+    0.7658
+  ],
+  "bounds": {
+    "min": [
+      -0.13,
+      0.005,
+      -0.405789
+    ],
+    "max": [
+      0.13,
+      0.495,
+      0.36
+    ]
+  },
+  "sockets": {},
+  "pivots": {
+    "joint_neck": {
+      "position": [
+        0.0,
+        0.29,
+        0.14
+      ]
+    },
+    "head": {
+      "position": [
+        0.0,
+        0.43,
+        0.25
+      ],
+      "centre": [
+        0.0,
+        0.43,
+        0.25
+      ]
+    },
+    "joint_tail": {
+      "position": [
+        0.0,
+        0.25,
+        -0.18
+      ]
+    }
+  },
+  "skins": 0,
+  "animations": [],
+  "bytes": 55208,
+  "sha256": "0760b28f9cd9a9f9a560d2876bb5fa1f5e900fa67ddd0dab02d486af024a397c",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

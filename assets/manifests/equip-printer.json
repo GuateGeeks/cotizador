@@ -1,0 +1,52 @@
+{
+  "id": "equip-printer",
+  "triangles": 1332,
+  "budget": 5000,
+  "materials": [
+    "GG_IvorySoft",
+    "GG_OrangeAccent",
+    "GG_PurpleDark",
+    "GG_PurplePrimary",
+    "GG_TurquoiseAccent",
+    "GG_YellowAccent"
+  ],
+  "size_m": [
+    0.45,
+    0.49,
+    0.4
+  ],
+  "bounds": {
+    "min": [
+      -0.24,
+      0.0,
+      -0.2
+    ],
+    "max": [
+      0.21,
+      0.49,
+      0.2
+    ]
+  },
+  "sockets": {},
+  "pivots": {
+    "head_printer": {
+      "position": [
+        0.0,
+        0.34,
+        0.0
+      ]
+    }
+  },
+  "skins": 0,
+  "animations": [],
+  "bytes": 29760,
+  "sha256": "2ab9755f38120493170aec151fc421426243fe7135fd77267359a73f3d5394a4",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

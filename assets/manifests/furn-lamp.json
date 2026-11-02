@@ -1,0 +1,40 @@
+{
+  "id": "furn-lamp",
+  "triangles": 548,
+  "budget": 1000,
+  "materials": [
+    "GG_LightWarm",
+    "GG_PurplePrimary"
+  ],
+  "size_m": [
+    0.3579,
+    1.93,
+    0.3579
+  ],
+  "bounds": {
+    "min": [
+      -0.178935,
+      0.0,
+      -0.178935
+    ],
+    "max": [
+      0.178935,
+      1.93,
+      0.178935
+    ]
+  },
+  "sockets": {},
+  "pivots": {},
+  "skins": 0,
+  "animations": [],
+  "bytes": 11632,
+  "sha256": "b7053c13ada0acc792ce7a9cb3a6f1a0bc1808a838a9a167ef761ef0e0c911f2",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

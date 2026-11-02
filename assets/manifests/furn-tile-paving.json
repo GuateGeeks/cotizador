@@ -1,0 +1,40 @@
+{
+  "id": "furn-tile-paving",
+  "triangles": 568,
+  "budget": 1000,
+  "materials": [
+    "GG_IvorySoft",
+    "GG_PurplePrimary"
+  ],
+  "size_m": [
+    2.0,
+    0.115,
+    2.0
+  ],
+  "bounds": {
+    "min": [
+      -1.0,
+      0.0,
+      -1.0
+    ],
+    "max": [
+      1.0,
+      0.115,
+      1.0
+    ]
+  },
+  "sockets": {},
+  "pivots": {},
+  "skins": 0,
+  "animations": [],
+  "bytes": 12572,
+  "sha256": "f16cdbdbdd2e9b0149bc0beddc95fe6518b0f142c85a375101397b46c5ecbaae",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

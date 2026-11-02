@@ -33,6 +33,28 @@ class Connected(unittest.TestCase):
         for asset in ('furn-chair-orange', 'equip-rover-spike'):
             self.assertEqual(build(asset).get('islands'), 1, asset)
 
+class Library(unittest.TestCase):
+    EQUIPMENT = {'equip-rover-programmable': ('wheel_l', 'wheel_r'), 'equip-dino': ('joint_neck', 'joint_tail'), 'equip-electronics-kit': (),
+                 'equip-drone': ('rotor_1', 'rotor_2', 'rotor_3', 'rotor_4'), 'equip-vr-set': (), 'equip-printer': ('head_printer',),
+                 'equip-laptop': ('lid',), 'equip-screen': (), 'equip-arm': ('joint_base', 'joint_shoulder', 'joint_elbow'),
+                 'equip-organizer': (), 'equip-kit-storage': ()}
+
+    def test_equipment_budgets_and_pivots(self):
+        for asset, pivots in self.EQUIPMENT.items():
+            m = build(asset, 'lib')
+            self.assertLessEqual(m['triangles'], 5000, asset)
+            self.assertEqual(m['islands'], 1, asset)
+            for pivot in pivots:
+                self.assertIn(pivot, m['pivots'], asset)
+
+    def test_furniture_and_vegetation(self):
+        budgets = {'furn-shelves': 1000, 'furn-whiteboard': 1000, 'furn-laptop-desk': 1000, 'furn-equipment-table': 1000, 'furn-bench': 1000,
+                   'furn-lamp': 1000, 'furn-tile-paving': 1000, 'veg-tree-small': 1500, 'veg-shrub': 500, 'veg-flowers': 500}
+        for asset, budget in budgets.items():
+            m = build(asset, 'lib')
+            self.assertLessEqual(m['triangles'], budget, asset)
+            self.assertEqual(m['islands'], 1, asset)
+
 class Rover(unittest.TestCase):
     def test_rover_budget_and_pivots(self):
         manifest = build('equip-rover-spike')

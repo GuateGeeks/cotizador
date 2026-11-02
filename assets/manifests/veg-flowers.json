@@ -1,0 +1,42 @@
+{
+  "id": "veg-flowers",
+  "triangles": 160,
+  "budget": 500,
+  "materials": [
+    "GG_GreenFoliage",
+    "GG_OrangeAccent",
+    "GG_PurplePrimary",
+    "GG_YellowAccent"
+  ],
+  "size_m": [
+    0.6162,
+    0.2576,
+    0.5225
+  ],
+  "bounds": {
+    "min": [
+      -0.304531,
+      -0.017607,
+      -0.26293
+    ],
+    "max": [
+      0.311671,
+      0.24,
+      0.259528
+    ]
+  },
+  "sockets": {},
+  "pivots": {},
+  "skins": 0,
+  "animations": [],
+  "bytes": 7560,
+  "sha256": "aa3a2f50b142425ac5eea79e628b6ab4bb67501bd18541e6450ffdfb02e702c5",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

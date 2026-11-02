@@ -1,0 +1,41 @@
+{
+  "id": "equip-screen",
+  "triangles": 924,
+  "budget": 5000,
+  "materials": [
+    "GG_IvorySoft",
+    "GG_PurplePrimary",
+    "GG_ScreenEmissive"
+  ],
+  "size_m": [
+    1.5,
+    1.55,
+    0.36
+  ],
+  "bounds": {
+    "min": [
+      -0.75,
+      0.0,
+      -0.18
+    ],
+    "max": [
+      0.75,
+      1.55,
+      0.18
+    ]
+  },
+  "sockets": {},
+  "pivots": {},
+  "skins": 0,
+  "animations": [],
+  "bytes": 20836,
+  "sha256": "2e6de33e5081705c52784ec1f953b6b60edc647e1168ac0b1438bcbbcb019dde",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

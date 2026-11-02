@@ -1,0 +1,45 @@
+{
+  "id": "equip-electronics-kit",
+  "triangles": 1260,
+  "budget": 5000,
+  "materials": [
+    "GG_IvorySoft",
+    "GG_LightWarm",
+    "GG_OrangeAccent",
+    "GG_PurpleDark",
+    "GG_PurplePrimary",
+    "GG_TurquoiseAccent",
+    "GG_YellowAccent"
+  ],
+  "size_m": [
+    0.36,
+    0.05,
+    0.26
+  ],
+  "bounds": {
+    "min": [
+      -0.18,
+      0.0,
+      -0.13
+    ],
+    "max": [
+      0.18,
+      0.05,
+      0.13
+    ]
+  },
+  "sockets": {},
+  "pivots": {},
+  "skins": 0,
+  "animations": [],
+  "bytes": 34084,
+  "sha256": "7e44341d3d4446b27a371daad41d3ac8ed925439702c26977ced5cddd9a2c9cf",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

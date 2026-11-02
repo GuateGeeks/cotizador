@@ -22,3 +22,18 @@ def tree_large():
 @register('veg-tree-large-alt', budget=1500)
 def tree_large_alt():
     tree(7)
+
+@register('veg-tree-small', budget=1500)
+def tree_small():
+    tree(11, .55)
+
+@register('veg-shrub', budget=500)
+def shrub():
+    for i, (x, y, r) in enumerate(((0, 0, .34), (-.28, .05, .24), (.27, -.03, .26))):
+        ball('leaf', (r, r, r * .95), (x, y, r * .9), 'GG_GreenDark' if i else 'GG_GreenFoliage', sub=2, wobble=.05, seed=i)
+
+@register('veg-flowers', budget=500)
+def flowers():
+    ball('leaves', (.32, .26, .12), (0, 0, .1), 'GG_GreenFoliage', sub=2, wobble=.04, seed=2)
+    for i, (x, y, mat) in enumerate(((-.16, 0, 'GG_OrangeAccent'), (.14, .08, 'GG_PurplePrimary'), (.02, -.1, 'GG_YellowAccent'), (.2, -.1, 'GG_OrangeAccent'))):
+        ball('bloom', (.055, .055, .04), (x, y, .2), mat, sub=1)

@@ -1,0 +1,64 @@
+{
+  "id": "equip-arm",
+  "triangles": 1120,
+  "budget": 5000,
+  "materials": [
+    "GG_IvorySoft",
+    "GG_OrangeAccent",
+    "GG_TurquoiseAccent",
+    "GG_YellowAccent"
+  ],
+  "size_m": [
+    0.3,
+    0.41,
+    0.4059
+  ],
+  "bounds": {
+    "min": [
+      -0.15,
+      0.0,
+      -0.15
+    ],
+    "max": [
+      0.15,
+      0.41,
+      0.255891
+    ]
+  },
+  "sockets": {},
+  "pivots": {
+    "joint_base": {
+      "position": [
+        0.0,
+        0.12,
+        0.0
+      ]
+    },
+    "joint_shoulder": {
+      "position": [
+        0.0,
+        0.15,
+        0.0
+      ]
+    },
+    "joint_elbow": {
+      "position": [
+        0.0,
+        0.37,
+        0.0
+      ]
+    }
+  },
+  "skins": 0,
+  "animations": [],
+  "bytes": 24856,
+  "sha256": "1558ef5ca8ee0977dc614b9a418d992ddc7985a46797318a7dd771297ec11b9e",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

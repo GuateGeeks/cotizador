@@ -1,0 +1,42 @@
+{
+  "id": "equip-kit-storage",
+  "triangles": 728,
+  "budget": 5000,
+  "materials": [
+    "GG_IvorySoft",
+    "GG_OrangeAccent",
+    "GG_PurplePrimary",
+    "GG_TurquoiseAccent"
+  ],
+  "size_m": [
+    0.8,
+    0.94,
+    0.42
+  ],
+  "bounds": {
+    "min": [
+      -0.4,
+      0.0,
+      -0.2
+    ],
+    "max": [
+      0.4,
+      0.94,
+      0.22
+    ]
+  },
+  "sockets": {},
+  "pivots": {},
+  "skins": 0,
+  "animations": [],
+  "bytes": 16096,
+  "sha256": "f1d63a57ed40ea2d1d36b8d3551cfd21404a4059d62d9c39a25a64b197225636",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

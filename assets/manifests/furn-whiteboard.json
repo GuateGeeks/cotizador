@@ -1,0 +1,41 @@
+{
+  "id": "furn-whiteboard",
+  "triangles": 756,
+  "budget": 1000,
+  "materials": [
+    "GG_IvorySoft",
+    "GG_PurplePrimary",
+    "GG_YellowAccent"
+  ],
+  "size_m": [
+    1.26,
+    1.42,
+    0.36
+  ],
+  "bounds": {
+    "min": [
+      -0.63,
+      0.01,
+      -0.18
+    ],
+    "max": [
+      0.63,
+      1.43,
+      0.18
+    ]
+  },
+  "sockets": {},
+  "pivots": {},
+  "skins": 0,
+  "animations": [],
+  "bytes": 15404,
+  "sha256": "d3e2abc7c99a3341f0a179d1942a7484dbe6692052bebae5ee983303016ae1d9",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

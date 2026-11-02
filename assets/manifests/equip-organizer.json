@@ -1,0 +1,42 @@
+{
+  "id": "equip-organizer",
+  "triangles": 608,
+  "budget": 5000,
+  "materials": [
+    "GG_OrangeAccent",
+    "GG_PurplePrimary",
+    "GG_TurquoiseAccent",
+    "GG_YellowAccent"
+  ],
+  "size_m": [
+    0.6,
+    0.13,
+    0.34
+  ],
+  "bounds": {
+    "min": [
+      -0.3,
+      0.0,
+      -0.17
+    ],
+    "max": [
+      0.3,
+      0.13,
+      0.17
+    ]
+  },
+  "sockets": {},
+  "pivots": {},
+  "skins": 0,
+  "animations": [],
+  "bytes": 14016,
+  "sha256": "1a1e46ac0755cf226eed1766fa3f2c44c0b3dbf5036c19dcb29c82607520f8f3",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

@@ -1,0 +1,93 @@
+{
+  "id": "equip-rover-programmable",
+  "triangles": 3628,
+  "budget": 5000,
+  "materials": [
+    "GG_IvorySoft",
+    "GG_LightWarm",
+    "GG_OrangeAccent",
+    "GG_PurpleDark",
+    "GG_TurquoiseAccent",
+    "GG_YellowAccent"
+  ],
+  "size_m": [
+    0.33,
+    0.22,
+    0.304
+  ],
+  "bounds": {
+    "min": [
+      -0.165,
+      -0.0,
+      -0.152
+    ],
+    "max": [
+      0.165,
+      0.22,
+      0.152
+    ]
+  },
+  "sockets": {},
+  "pivots": {
+    "wheel_l": {
+      "position": [
+        -0.14,
+        0.062,
+        0.09
+      ],
+      "centre": [
+        -0.14,
+        0.062,
+        0.09
+      ]
+    },
+    "wheel_r": {
+      "position": [
+        0.14,
+        0.062,
+        0.09
+      ],
+      "centre": [
+        0.14,
+        0.062,
+        0.09
+      ]
+    },
+    "wheel_rl": {
+      "position": [
+        -0.14,
+        0.062,
+        -0.09
+      ],
+      "centre": [
+        -0.14,
+        0.062,
+        -0.09
+      ]
+    },
+    "wheel_rr": {
+      "position": [
+        0.14,
+        0.062,
+        -0.09
+      ],
+      "centre": [
+        0.14,
+        0.062,
+        -0.09
+      ]
+    }
+  },
+  "skins": 0,
+  "animations": [],
+  "bytes": 63920,
+  "sha256": "99ae38f54f4c45cfadfcb671478f7de9ad2dbe778f0bed11fc5cf3136f80c7db",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

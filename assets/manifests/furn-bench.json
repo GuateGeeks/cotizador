@@ -1,0 +1,40 @@
+{
+  "id": "furn-bench",
+  "triangles": 564,
+  "budget": 1000,
+  "materials": [
+    "GG_OrangeAccent",
+    "GG_PurplePrimary"
+  ],
+  "size_m": [
+    1.5,
+    0.43,
+    0.44
+  ],
+  "bounds": {
+    "min": [
+      -0.75,
+      0.0,
+      -0.22
+    ],
+    "max": [
+      0.75,
+      0.43,
+      0.22
+    ]
+  },
+  "sockets": {},
+  "pivots": {},
+  "skins": 0,
+  "animations": [],
+  "bytes": 10832,
+  "sha256": "d7f204eee431688d165dbf13a6fcb96890ade9fd9f2d44c953bafcb52c95f360",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

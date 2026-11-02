@@ -1,0 +1,41 @@
+{
+  "id": "furn-equipment-table",
+  "triangles": 696,
+  "budget": 1000,
+  "materials": [
+    "GG_IvorySoft",
+    "GG_PurplePrimary",
+    "GG_TurquoiseAccent"
+  ],
+  "size_m": [
+    1.6,
+    0.605,
+    0.8
+  ],
+  "bounds": {
+    "min": [
+      -0.8,
+      0.0,
+      -0.4
+    ],
+    "max": [
+      0.8,
+      0.605,
+      0.4
+    ]
+  },
+  "sockets": {},
+  "pivots": {},
+  "skins": 0,
+  "animations": [],
+  "bytes": 16456,
+  "sha256": "b39e6d3d7841431dadac0a17700ef4909f2a6269512f23aecbe24eae737e6ef7",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

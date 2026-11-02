@@ -1,0 +1,72 @@
+{
+  "id": "equip-drone",
+  "triangles": 1984,
+  "budget": 5000,
+  "materials": [
+    "GG_IvorySoft",
+    "GG_PurpleDark",
+    "GG_ScreenEmissive",
+    "GG_TurquoiseAccent",
+    "GG_YellowAccent"
+  ],
+  "size_m": [
+    0.58,
+    0.091,
+    0.54
+  ],
+  "bounds": {
+    "min": [
+      -0.29,
+      0.05,
+      -0.27
+    ],
+    "max": [
+      0.29,
+      0.141,
+      0.27
+    ]
+  },
+  "sockets": {},
+  "pivots": {
+    "rotor_1": {
+      "position": [
+        -0.19,
+        0.13,
+        0.17
+      ]
+    },
+    "rotor_2": {
+      "position": [
+        0.19,
+        0.13,
+        0.17
+      ]
+    },
+    "rotor_3": {
+      "position": [
+        -0.19,
+        0.13,
+        -0.17
+      ]
+    },
+    "rotor_4": {
+      "position": [
+        0.19,
+        0.13,
+        -0.17
+      ]
+    }
+  },
+  "skins": 0,
+  "animations": [],
+  "bytes": 44516,
+  "sha256": "380139d15f4d89285f6b4ce5ac86d0e053539ad6a82c117ef622b560c1c80235",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}
