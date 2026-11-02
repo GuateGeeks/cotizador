@@ -30,7 +30,7 @@ The swap (M6) needs separate approval. **Status: not ready.**
 
 ## Open items
 
-- Teacher vest keeps pale marks at the waist after baking; the other five are clean at close view.
+- Characters are clean at close view. The teacher vest's waist marks came from hidden shirt pieces inside the Meshy mesh; the bake now drops enclosed loose parts and records `bake_mismatch` (teacher 2.0%, students 0.9-1.5%). The campus-distance models (`-lod1`) of every character still show dark bake gaps on hair and chest.
 - Only the primary student's walk has had a full-size check; other clips were reviewed as small renders.
 - Frame rate is 60 fps at 135 draw calls and about 384k triangles; little draw-call margin is left.
 - Character GLBs depend on Meshy downloads that are git-ignored.

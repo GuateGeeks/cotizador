@@ -1,41 +1,41 @@
 {
   "id": "char-teacher-lod1",
-  "triangles": 1397,
+  "triangles": 1399,
   "budget": 1500,
   "materials": [
     "Material_0.001"
   ],
   "size_m": [
-    1.6552,
+    1.6516,
     1.75,
-    0.5051
+    0.504
   ],
   "bounds": {
     "min": [
-      -0.825671,
+      -0.823895,
       0.0,
-      -0.253242
+      -0.252697
     ],
     "max": [
-      0.829501,
+      0.827716,
       1.75,
-      0.251885
+      0.251343
     ]
   },
   "sockets": {},
   "pivots": {
     "head_end": {
       "position": [
-        0.027342,
-        1.742517,
-        -0.017872
+        0.027283,
+        1.738767,
+        -0.017834
       ]
     },
     "headfront": {
       "position": [
-        0.007562,
-        1.271947,
-        0.165071
+        0.007546,
+        1.26921,
+        0.164715
       ]
     }
   },
@@ -46,8 +46,8 @@
     "sit",
     "walk"
   ],
-  "bytes": 360760,
-  "sha256": "ce634fa6772db965e3f00a5219fd6f001c70c262ae121380459fa79da76ae676",
+  "bytes": 360852,
+  "sha256": "aa7b077c3d1f0cf4acfdbe9bc484c4b0577fba426a17081db51e9c69bf928dd8",
   "blender": "5.2.3 LTS",
   "verdicts": {
     "technical": "PASS",
@@ -57,6 +57,8 @@
   },
   "source": "assets/sources/meshy/variants/PROVENANCE.json",
   "source_triangles": 20477,
+  "bake_mismatch": 0.0579,
+  "hidden_parts": 3,
   "clips": [
     "idle",
     "walk",

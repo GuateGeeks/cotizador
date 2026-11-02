@@ -3,7 +3,9 @@ import json, math, pathlib
 
 import bmesh
 import bpy
-from mathutils import Matrix, Vector
+import numpy
+from mathutils import Matrix, Vector, interpolate
+from mathutils.bvhtree import BVHTree
 
 from gg import geometry
 from gg.sockets import register
@@ -74,7 +76,95 @@ def height_at_rest(arm, mesh):
     arm.data.pose_position = 'POSE'
     return max(heights) - min(heights), min(heights)
 
-def bake_reduced(arm, mesh, triangles, target):
+def weld(bm):
+    # Meshy splits vertices along UV seams; welding first stops reduction opening them as cracks.
+    extent = max(v.co.z for v in bm.verts) - min(v.co.z for v in bm.verts)
+    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=extent * .0004)
+
+def loose_parts(bm):
+    """Faces grouped into loose parts, largest first."""
+    bm.faces.ensure_lookup_table()
+    seen, parts = set(), []
+    for face in bm.faces:
+        if face.index in seen:
+            continue
+        seen.add(face.index)
+        part, stack = [], [face]
+        while stack:
+            f = stack.pop()
+            part.append(f)
+            for e in f.edges:
+                for g in e.link_faces:
+                    if g.index not in seen:
+                        seen.add(g.index)
+                        stack.append(g)
+        parts.append(part)
+    return sorted(parts, key=len, reverse=True)
+
+def drop_hidden_parts(bm):
+    """Delete loose parts enclosed by the main surface and return how many there were.
+
+    Meshy can leave fragments of an inner layer (the teacher's shirt under the vest); nothing sees them,
+    but the bake's rays hit them and paint their colour onto the surface above.
+    """
+    parts = loose_parts(bm)
+    tree = BVHTree.FromPolygons([v.co for v in bm.verts], [[v.index for v in f.verts] for f in parts[0]])
+    ray = Vector((1, .013, .007)).normalized()
+    def inside(part):
+        at, crossings = sum((f.calc_center_median() for f in part), Vector()) / len(part), 0
+        while (hit := tree.ray_cast(at, ray))[0] is not None:
+            crossings, at = crossings + 1, hit[0] + ray * 1e-5
+        return crossings % 2 == 1
+    hidden = [part for part in parts[1:] if inside(part)]
+    bmesh.ops.delete(bm, geom=[f for part in hidden for f in part], context='FACES')
+    return len(hidden)
+
+def shell_bmesh(ob):
+    """The object's welded surface in world space, split into its loose parts, largest first."""
+    bm = bmesh.new()
+    bm.from_mesh(ob.evaluated_get(bpy.context.evaluated_depsgraph_get()).to_mesh())
+    bm.transform(ob.matrix_world)
+    weld(bm)
+    return bm, loose_parts(bm)
+
+def pixels(image):
+    values = numpy.empty(image.size[0] * image.size[1] * 4, numpy.float32)
+    image.pixels.foreach_get(values)
+    return values.reshape(image.size[1], image.size[0], 4)
+
+def sample(texels, uv):
+    h, w = texels.shape[:2]
+    return texels[min(int(uv.y % 1 * h), h - 1), min(int(uv.x % 1 * w), w - 1), :3]
+
+def bake_mismatch(mesh, high, source):
+    """Share of the reduced surface whose baked colour matches no visible source colour under it.
+
+    A face is checked against the source at its centre and its corners, so one that straddles a colour
+    border may take either colour; what counts is colour that appears nowhere nearby.
+    """
+    bm, parts = shell_bmesh(high)
+    visible = parts[0]
+    uv = bm.loops.layers.uv.active
+    tree = BVHTree.FromPolygons([v.co for v in bm.verts], [[v.index for v in f.verts] for f in visible])
+    original, baked = pixels(source), pixels(mesh.data.materials[0].node_tree.nodes.active.image)
+    low = mesh.evaluated_get(bpy.context.evaluated_depsgraph_get()).to_mesh()
+    low_uv = low.uv_layers['baked'].data
+
+    def source_colour(point):
+        face = visible[tree.find_nearest(point)[2]]
+        weights = interpolate.poly_3d_calc([v.co for v in face.verts], point)
+        return sample(original, sum((l[uv].uv * w for l, w in zip(face.loops, weights)), Vector((0, 0))))
+
+    wrong = 0
+    for p in low.polygons:
+        at = sum((low_uv[i].uv for i in p.loop_indices), Vector((0, 0))) / p.loop_total
+        points = [mesh.matrix_world @ p.center] + [mesh.matrix_world @ low.vertices[i].co for i in p.vertices]
+        colour = sample(baked, at)
+        wrong += min(numpy.abs(colour - source_colour(q)).max() for q in points) > .2
+    bm.free()
+    return round(wrong / len(low.polygons), 4)
+
+def bake_reduced(arm, mesh, target):
     """Reduce, unwrap afresh and bake colour from the original.
 
     Decimating alone tears the texture across UV seams, so the old UVs are never reused.
@@ -83,24 +173,24 @@ def bake_reduced(arm, mesh, triangles, target):
     engine, samples = scene.render.engine, scene.cycles.samples
     scene.render.engine, scene.cycles.samples = 'CYCLES', 16
     arm.data.pose_position = 'REST'
+    sealed = bmesh.new()
+    sealed.from_mesh(mesh.data)
+    before = len(sealed.verts)
+    weld(sealed)
+    hidden = drop_hidden_parts(sealed)
+    sealed.to_mesh(mesh.data)
+    sealed.free()
+    print('WELDED', before, '->', len(mesh.data.vertices), 'hidden parts', hidden)
     high = mesh.copy()
     high.data = mesh.data.copy()
     mesh.users_collection[0].objects.link(high)
     view = bpy.context.view_layer
     view.objects.active = mesh
-    # Meshy splits vertices along UV seams; welding first stops reduction opening them as cracks.
-    sealed = bmesh.new()
-    sealed.from_mesh(mesh.data)
-    extent = max(v.co.z for v in sealed.verts) - min(v.co.z for v in sealed.verts)
-    bmesh.ops.remove_doubles(sealed, verts=sealed.verts, dist=extent * .0004)
-    sealed.to_mesh(mesh.data)
-    sealed.free()
-    print('WELDED', len(high.data.vertices), '->', len(mesh.data.vertices))
     for name in ('custom_normal', 'sharp_face', 'sharp_edge'):
         if name in mesh.data.attributes:
             mesh.data.attributes.remove(mesh.data.attributes[name])
     reduce = mesh.modifiers.new('reduce', 'DECIMATE')
-    reduce.ratio = target / triangles
+    reduce.ratio = target / sum(len(p.vertices) - 2 for p in mesh.data.polygons)
     mesh.modifiers.move(len(mesh.modifiers) - 1, 0)
     with bpy.context.temp_override(object=mesh, active_object=mesh):
         bpy.ops.object.modifier_apply(modifier='reduce')
@@ -119,6 +209,7 @@ def bake_reduced(arm, mesh, triangles, target):
     material = data.materials[0].copy()
     data.materials[0] = material
     principled = next(n for n in material.node_tree.nodes if n.type == 'BSDF_PRINCIPLED')
+    source = next(n.image for n in material.node_tree.nodes if n.type == 'TEX_IMAGE')
     target = material.node_tree.nodes.new('ShaderNodeTexImage')
     target.image = baked
     material.node_tree.nodes.active = target
@@ -131,10 +222,12 @@ def bake_reduced(arm, mesh, triangles, target):
     material.node_tree.links.new(target.outputs['Color'], principled.inputs['Base Color'])
     for node in [n for n in material.node_tree.nodes if n.type == 'TEX_IMAGE' and n.image != baked]:
         material.node_tree.nodes.remove(node)
+    mismatch = bake_mismatch(mesh, high, source)
     data.uv_layers.remove(data.uv_layers[old_uv])
     bpy.data.objects.remove(high)
     arm.data.pose_position = 'POSE'
     scene.render.engine, scene.cycles.samples = engine, samples
+    return mismatch, hidden
 
 PRIMARY = 'assets/sources/meshy/poc/student-walk.glb'
 VARIANTS = {
@@ -167,7 +260,7 @@ def student(target, source, target_height, record):
             bpy.data.objects.remove(o)
     arm.parent = b.root
     triangles = sum(len(p.vertices) - 2 for p in mesh.data.polygons)
-    bake_reduced(arm, mesh, triangles, target)
+    mismatch, hidden = bake_reduced(arm, mesh, target)
     height, floor = height_at_rest(arm, mesh)
     arm.scale = arm.scale * (target_height / height)
     bpy.context.view_layer.update()
@@ -176,4 +269,4 @@ def student(target, source, target_height, record):
     walk.name = 'walk'
     author_clips(arm)
     arm.animation_data.action = walk
-    return {'source': record or 'assets/sources/meshy/variants/PROVENANCE.json', 'source_triangles': triangles, 'clips': ['idle', 'walk', 'sit', 'interact'], 'armature': arm.name}
+    return {'source': record or 'assets/sources/meshy/variants/PROVENANCE.json', 'source_triangles': triangles, 'bake_mismatch': mismatch, 'hidden_parts': hidden, 'clips': ['idle', 'walk', 'sit', 'interact'], 'armature': arm.name}

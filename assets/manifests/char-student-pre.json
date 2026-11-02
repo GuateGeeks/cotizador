@@ -1,6 +1,6 @@
 {
   "id": "char-student-pre",
-  "triangles": 5797,
+  "triangles": 5799,
   "budget": 6000,
   "materials": [
     "Material_0.001"
@@ -46,8 +46,8 @@
     "sit",
     "walk"
   ],
-  "bytes": 555020,
-  "sha256": "762af08b3e5b3d863b89f567ac570d1dcf0368619fe900ee63aa1fd3a916f729",
+  "bytes": 556132,
+  "sha256": "684817c9dd304addbf4064f962558f5d05661f876eef0218c64abef6615768c3",
   "blender": "5.2.3 LTS",
   "verdicts": {
     "technical": "PASS",
@@ -57,6 +57,8 @@
   },
   "source": "assets/sources/meshy/variants/PROVENANCE.json",
   "source_triangles": 20481,
+  "bake_mismatch": 0.0119,
+  "hidden_parts": 0,
   "clips": [
     "idle",
     "walk",

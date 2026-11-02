@@ -1,6 +1,6 @@
 {
   "id": "char-student-primary-boy",
-  "triangles": 5796,
+  "triangles": 5798,
   "budget": 6000,
   "materials": [
     "Material_0.001"
@@ -46,8 +46,8 @@
     "sit",
     "walk"
   ],
-  "bytes": 551628,
-  "sha256": "9430db0bb5c3b40dab785d36ffe4f3e086d3590d6f12a06e41fe3cea88fd0b1a",
+  "bytes": 551748,
+  "sha256": "d4d4db67bc0b0daf562c693f864e09594f7409b338567512615348e927b9acb7",
   "blender": "5.2.3 LTS",
   "verdicts": {
     "technical": "PASS",
@@ -57,6 +57,8 @@
   },
   "source": "assets/sources/meshy/variants/PROVENANCE.json",
   "source_triangles": 20646,
+  "bake_mismatch": 0.0088,
+  "hidden_parts": 0,
   "clips": [
     "idle",
     "walk",

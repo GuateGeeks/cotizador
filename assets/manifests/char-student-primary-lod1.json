@@ -1,6 +1,6 @@
 {
   "id": "char-student-primary-lod1",
-  "triangles": 1398,
+  "triangles": 1399,
   "budget": 1500,
   "materials": [
     "Material_0.001"
@@ -46,8 +46,8 @@
     "sit",
     "walk"
   ],
-  "bytes": 361700,
-  "sha256": "f40062cbb11248d209b0c5dd73cd4413eadc6b32ac3fed6ccda7019ec0ee0ded",
+  "bytes": 363448,
+  "sha256": "1c7ed82bf17cf7090451a91214e2928c79594c76f3fcc1717a8a4b2328406821",
   "blender": "5.2.3 LTS",
   "verdicts": {
     "technical": "PASS",
@@ -57,6 +57,8 @@
   },
   "source": "assets/sources/meshy/poc/PROVENANCE.json",
   "source_triangles": 20444,
+  "bake_mismatch": 0.0471,
+  "hidden_parts": 1,
   "clips": [
     "idle",
     "walk",

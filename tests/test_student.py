@@ -35,5 +35,11 @@ class Variants(unittest.TestCase):
                 self.assertEqual(sorted(m['animations']), ['idle', 'interact', 'sit', 'walk'], asset + suffix)
                 self.assertEqual(m['skins'], 1, asset + suffix)
 
+class BakedColour(unittest.TestCase):
+    def test_teacher_vest_keeps_the_colour_of_the_visible_source_surface(self):
+        # Meshy left hidden shirt pieces inside the teacher's waist; the bake must not paint them onto the vest.
+        # The clean students measure 0.9-1.5%; the teacher measured 6.5% before the fix and 1.9% after it.
+        self.assertLess(build('char-teacher')['bake_mismatch'], .03)
+
 if __name__ == '__main__':
     unittest.main()
