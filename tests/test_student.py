@@ -38,8 +38,13 @@ class Variants(unittest.TestCase):
 class BakedColour(unittest.TestCase):
     def test_teacher_vest_keeps_the_colour_of_the_visible_source_surface(self):
         # Meshy left hidden shirt pieces inside the teacher's waist; the bake must not paint them onto the vest.
-        # The clean students measure 0.9-1.5%; the teacher measured 6.5% before the fix and 1.9% after it.
+        # The clean students measure 0.8-1.1%; the teacher measured 6.5% before the fix and 1.6% after it.
         self.assertLess(build('char-teacher')['bake_mismatch'], .03)
+
+    def test_distance_models_have_no_unbaked_faces(self):
+        # Long thin faces in the coarse reduction used to cast their rays the wrong way and stay black.
+        for asset in ('char-teacher-lod1', 'char-student-bach-lod1'):
+            self.assertLess(build(asset)['bake_gaps'], .003, asset)
 
 if __name__ == '__main__':
     unittest.main()

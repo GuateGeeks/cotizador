@@ -30,7 +30,7 @@ The swap (M6) needs separate approval. **Status: not ready.**
 
 ## Open items
 
-- Characters are clean at close view. The teacher vest's waist marks came from hidden shirt pieces inside the Meshy mesh; the bake now drops enclosed loose parts and records `bake_mismatch` (teacher 2.0%, students 0.9-1.5%). The campus-distance models (`-lod1`) of every character still show dark bake gaps on hair and chest.
+- Characters are clean at close view. The teacher vest's waist marks came from hidden shirt pieces inside the Meshy mesh; the bake now drops enclosed loose parts and records `bake_mismatch` (teacher 1.6%, students 0.8-1.1%; distance models 2.4-3.9%). The campus-distance models (`-lod1`) no longer show black bake gaps: texels the bake's rays miss (long thin faces across curves) are filled from the nearest visible source point and padded, and partly hit texels are restored to full strength (`bake_gaps` 0 for all twelve). At close view the distance models still carry small colour slips, such as navy from the shorts on the pre-school calves.
 - Only the primary student's walk has had a full-size check; other clips were reviewed as small renders.
 - Frame rate is 60 fps at 135 draw calls and about 384k triangles; little draw-call margin is left.
 - Character GLBs depend on Meshy downloads that are git-ignored.

@@ -136,33 +136,121 @@ def sample(texels, uv):
     h, w = texels.shape[:2]
     return texels[min(int(uv.y % 1 * h), h - 1), min(int(uv.x % 1 * w), w - 1), :3]
 
-def bake_mismatch(mesh, high, source):
+class Surface:
+    """The visible source surface: the colour of its nearest point to any position."""
+
+    def __init__(self, high, source):
+        self.bm, parts = shell_bmesh(high)
+        self.faces = parts[0]
+        self.uv = self.bm.loops.layers.uv.active
+        self.tree = BVHTree.FromPolygons([v.co for v in self.bm.verts], [[v.index for v in f.verts] for f in self.faces])
+        self.texels = pixels(source)
+
+    def colour(self, point):
+        face = self.faces[self.tree.find_nearest(point)[2]]
+        weights = interpolate.poly_3d_calc([v.co for v in face.verts], point)
+        return sample(self.texels, sum((l[self.uv].uv * w for l, w in zip(face.loops, weights)), Vector((0, 0))))
+
+def reduced_mesh(mesh):
+    low = mesh.evaluated_get(bpy.context.evaluated_depsgraph_get()).to_mesh()
+    return low, low.uv_layers['baked'].data
+
+def bake_mismatch(mesh, image, surface):
     """Share of the reduced surface whose baked colour matches no visible source colour under it.
 
     A face is checked against the source at its centre and its corners, so one that straddles a colour
     border may take either colour; what counts is colour that appears nowhere nearby.
     """
-    bm, parts = shell_bmesh(high)
-    visible = parts[0]
-    uv = bm.loops.layers.uv.active
-    tree = BVHTree.FromPolygons([v.co for v in bm.verts], [[v.index for v in f.verts] for f in visible])
-    original, baked = pixels(source), pixels(mesh.data.materials[0].node_tree.nodes.active.image)
-    low = mesh.evaluated_get(bpy.context.evaluated_depsgraph_get()).to_mesh()
-    low_uv = low.uv_layers['baked'].data
-
-    def source_colour(point):
-        face = visible[tree.find_nearest(point)[2]]
-        weights = interpolate.poly_3d_calc([v.co for v in face.verts], point)
-        return sample(original, sum((l[uv].uv * w for l, w in zip(face.loops, weights)), Vector((0, 0))))
-
+    baked = pixels(image)
+    low, uv = reduced_mesh(mesh)
     wrong = 0
     for p in low.polygons:
-        at = sum((low_uv[i].uv for i in p.loop_indices), Vector((0, 0))) / p.loop_total
+        at = sum((uv[i].uv for i in p.loop_indices), Vector((0, 0))) / p.loop_total
         points = [mesh.matrix_world @ p.center] + [mesh.matrix_world @ low.vertices[i].co for i in p.vertices]
         colour = sample(baked, at)
-        wrong += min(numpy.abs(colour - source_colour(q)).max() for q in points) > .2
-    bm.free()
+        wrong += min(numpy.abs(colour - surface.colour(q)).max() for q in points) > .2
     return round(wrong / len(low.polygons), 4)
+
+def edge_distance(corners, points):
+    """Distance from each point to the nearest edge of a 2D triangle."""
+    best = numpy.full(len(points), numpy.inf)
+    for a, b in ((corners[0], corners[1]), (corners[1], corners[2]), (corners[2], corners[0])):
+        t = numpy.clip(((points - a) @ (b - a)) / max((b - a) @ (b - a), 1e-12), 0, 1)
+        best = numpy.minimum(best, numpy.linalg.norm(points - (a + t[:, None] * (b - a)), axis=1))
+    return best
+
+def pad(texels, steps):
+    """Spread colour into uncoloured texels around it, as the bake's margin does, so filtering never reaches black."""
+    for _ in range(steps):
+        empty = texels[..., 3] < .5
+        if not empty.any():
+            return
+        total, count = numpy.zeros(texels.shape[:2] + (3,), numpy.float32), numpy.zeros(texels.shape[:2], numpy.float32)
+        for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            shifted = numpy.roll(texels, (dy, dx), (0, 1))
+            have = shifted[..., 3] >= .5
+            total += shifted[..., :3] * have[..., None]
+            count += have
+        grow = empty & (count > 0)
+        texels[grow, :3] = total[grow] / count[grow, None]
+        texels[grow, 3] = 1
+
+def fill_gaps(mesh, image, surface):
+    """Colour the texels inside faces that the bake's rays never reached, from the nearest visible source.
+
+    Where a long thin face of a coarse reduction cuts across a curve (the top of the head, the chest), its
+    middle lies too far from the original for any ray to land, and those texels stayed black.
+    Returns the share of faces that needed it.
+    """
+    texels = pixels(image)
+    # Alpha is the share of a texel's rays that hit. Misses darken its colour, so a mostly hit texel is
+    # divided back to full strength; the rest count as missed.
+    alpha = texels[..., 3]
+    partial = (alpha >= .5) & (alpha < 1)
+    texels[partial, :3] /= alpha[partial, None]
+    texels[partial, 3] = 1
+    h, w = texels.shape[:2]
+    low, uv = reduced_mesh(mesh)
+    low.calc_loop_triangles()
+    filled = set()
+    for tri in low.loop_triangles:
+        corners = numpy.array([uv[i].uv for i in tri.loops]) * (w, h)
+        span = numpy.array([corners[1] - corners[0], corners[2] - corners[0]]).T
+        if abs(numpy.linalg.det(span)) < 1e-9:
+            continue
+        (x0, y0), (x1, y1) = numpy.floor(corners.min(0)).astype(int) - 1, numpy.ceil(corners.max(0)).astype(int) + 1
+        xs, ys = numpy.meshgrid(numpy.arange(max(x0, 0), min(x1, w - 1) + 1), numpy.arange(max(y0, 0), min(y1, h - 1) + 1))
+        cells = numpy.stack([xs.ravel(), ys.ravel()], 1)
+        centres = cells + .5
+        along = numpy.linalg.solve(span, (centres - corners[0]).T).T
+        weights = numpy.column_stack([1 - along.sum(1), along])
+        # Blender counts a texel as the face's when the face touches it, even a face thinner than a texel;
+        # so does this, by taking centres within half a texel diagonal of the face.
+        near = (weights >= -1e-4).all(1) | (edge_distance(corners, centres) <= .71)
+        cells, weights = cells[near], numpy.clip(weights[near], 0, None)
+        weights /= weights.sum(1, keepdims=True)
+        missed = texels[cells[:, 1], cells[:, 0], 3] < .5
+        if not missed.any():
+            continue
+        points = [mesh.matrix_world @ low.vertices[v].co for v in tri.vertices]
+        for (x, y), weight in zip(cells[missed], weights[missed]):
+            texels[y, x, :3] = surface.colour(sum((q * float(k) for q, k in zip(points, weight)), Vector()))
+            texels[y, x, 3] = 1
+        filled.add(tri.polygon_index)
+    if filled:
+        pad(texels, 16)
+    image.pixels.foreach_set(texels.ravel())
+    return round(len(filled) / len(low.polygons), 4)
+
+def bake_gaps(mesh, image):
+    """Share of the reduced faces whose centre no colour reached, then mark every texel opaque."""
+    texels = pixels(image)
+    uv = mesh.data.uv_layers['baked'].data
+    missed = sum(sample(numpy.dstack([texels[..., 3]] * 3), sum((uv[i].uv for i in p.loop_indices), Vector((0, 0))) / p.loop_total)[0] < .5
+                 for p in mesh.data.polygons)
+    texels[..., 3] = 1
+    image.pixels.foreach_set(texels.ravel())
+    return round(missed / len(mesh.data.polygons), 4)
 
 def bake_reduced(arm, mesh, target):
     """Reduce, unwrap afresh and bake colour from the original.
@@ -205,7 +293,9 @@ def bake_reduced(arm, mesh, target):
     bpy.ops.mesh.select_all(action='SELECT')
     bpy.ops.uv.smart_project(angle_limit=math.radians(60), island_margin=.015)
     bpy.ops.object.mode_set(mode='OBJECT')
-    baked = bpy.data.images.new('student_base_color', 1024, 1024)
+    # Texels start transparent so the ones the bake never reaches can be counted.
+    baked = bpy.data.images.new('student_base_color', 1024, 1024, alpha=True)
+    baked.generated_color = (0, 0, 0, 0)
     material = data.materials[0].copy()
     data.materials[0] = material
     principled = next(n for n in material.node_tree.nodes if n.type == 'BSDF_PRINCIPLED')
@@ -218,16 +308,20 @@ def bake_reduced(arm, mesh, target):
     view.objects.active = mesh
     bpy.ops.object.bake(type='DIFFUSE', pass_filter={'COLOR'}, use_selected_to_active=True,
                         cage_extrusion=.06, max_ray_distance=.16, margin=16)
+    surface = Surface(high, source)
+    filled = fill_gaps(mesh, baked, surface)
+    gaps = bake_gaps(mesh, baked)
     baked.pack()
     material.node_tree.links.new(target.outputs['Color'], principled.inputs['Base Color'])
     for node in [n for n in material.node_tree.nodes if n.type == 'TEX_IMAGE' and n.image != baked]:
         material.node_tree.nodes.remove(node)
-    mismatch = bake_mismatch(mesh, high, source)
+    mismatch = bake_mismatch(mesh, baked, surface)
+    surface.bm.free()
     data.uv_layers.remove(data.uv_layers[old_uv])
     bpy.data.objects.remove(high)
     arm.data.pose_position = 'POSE'
     scene.render.engine, scene.cycles.samples = engine, samples
-    return mismatch, hidden
+    return {'bake_mismatch': mismatch, 'bake_gaps': gaps, 'bake_filled': filled, 'hidden_parts': hidden}
 
 PRIMARY = 'assets/sources/meshy/poc/student-walk.glb'
 VARIANTS = {
@@ -260,7 +354,7 @@ def student(target, source, target_height, record):
             bpy.data.objects.remove(o)
     arm.parent = b.root
     triangles = sum(len(p.vertices) - 2 for p in mesh.data.polygons)
-    mismatch, hidden = bake_reduced(arm, mesh, target)
+    bake = bake_reduced(arm, mesh, target)
     height, floor = height_at_rest(arm, mesh)
     arm.scale = arm.scale * (target_height / height)
     bpy.context.view_layer.update()
@@ -269,4 +363,4 @@ def student(target, source, target_height, record):
     walk.name = 'walk'
     author_clips(arm)
     arm.animation_data.action = walk
-    return {'source': record or 'assets/sources/meshy/variants/PROVENANCE.json', 'source_triangles': triangles, 'bake_mismatch': mismatch, 'hidden_parts': hidden, 'clips': ['idle', 'walk', 'sit', 'interact'], 'armature': arm.name}
+    return {'source': record or 'assets/sources/meshy/variants/PROVENANCE.json', 'source_triangles': triangles, **bake, 'clips': ['idle', 'walk', 'sit', 'interact'], 'armature': arm.name}

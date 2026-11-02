@@ -46,8 +46,8 @@
     "sit",
     "walk"
   ],
-  "bytes": 363448,
-  "sha256": "1c7ed82bf17cf7090451a91214e2928c79594c76f3fcc1717a8a4b2328406821",
+  "bytes": 340024,
+  "sha256": "fc720672d4fd0abe33649c589b4cbb99a832f48cc15df0fef84469ae6f9abf93",
   "blender": "5.2.3 LTS",
   "verdicts": {
     "technical": "PASS",
@@ -57,7 +57,9 @@
   },
   "source": "assets/sources/meshy/poc/PROVENANCE.json",
   "source_triangles": 20444,
-  "bake_mismatch": 0.0471,
+  "bake_mismatch": 0.0236,
+  "bake_gaps": 0.0,
+  "bake_filled": 0.0721,
   "hidden_parts": 1,
   "clips": [
     "idle",
