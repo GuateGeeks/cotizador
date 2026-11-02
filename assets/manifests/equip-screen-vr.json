@@ -1,0 +1,44 @@
+{
+  "id": "equip-screen-vr",
+  "triangles": 1164,
+  "budget": 1500,
+  "materials": [
+    "GG_GreenFoliage",
+    "GG_IvorySoft",
+    "GG_PurpleDark",
+    "GG_PurplePrimary",
+    "GG_TurquoiseAccent",
+    "GG_YellowAccent"
+  ],
+  "size_m": [
+    1.5,
+    1.55,
+    0.36
+  ],
+  "bounds": {
+    "min": [
+      -0.75,
+      0.0,
+      -0.18
+    ],
+    "max": [
+      0.75,
+      1.55,
+      0.18
+    ]
+  },
+  "sockets": {},
+  "pivots": {},
+  "skins": 0,
+  "animations": [],
+  "bytes": 28624,
+  "sha256": "5b09170237ebaa8ab3d704b67a1899b022bc70e0b20dfefc2c51a17b25d3c763",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

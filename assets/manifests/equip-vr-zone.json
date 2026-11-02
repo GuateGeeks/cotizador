@@ -1,0 +1,39 @@
+{
+  "id": "equip-vr-zone",
+  "triangles": 96,
+  "budget": 300,
+  "materials": [
+    "GG_TurquoiseAccent"
+  ],
+  "size_m": [
+    1.1,
+    0.0,
+    1.1
+  ],
+  "bounds": {
+    "min": [
+      -0.55,
+      0.006,
+      -0.55
+    ],
+    "max": [
+      0.55,
+      0.006,
+      0.55
+    ]
+  },
+  "sockets": {},
+  "pivots": {},
+  "skins": 0,
+  "animations": [],
+  "bytes": 4188,
+  "sha256": "07afb916bc5ae8730e8042345272d31a072ec90063c59441c44a11bd70ab755f",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

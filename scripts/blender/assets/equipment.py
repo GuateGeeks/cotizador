@@ -1,6 +1,8 @@
 """Educational equipment, modelled in Blender so moving parts stay separate and pivoted."""
 import math
 
+import bmesh
+
 from gg import geometry
 from gg.geometry import At, ball, box, cyl, limb
 from gg.sockets import register
@@ -141,6 +143,32 @@ def vr_set():
         box('grip', (.05, .05, .1), (s * .17, -.04, .05), 'GG_IvorySoft', r=.02, seg=3)
         cyl('ring', .06, .06, .014, (s * .17, -.04, .1), 'GG_TurquoiseAccent', seg=20, bev=.005)
 
+@register('equip-vr-headset', budget=800)
+def vr_headset():
+    """Worn on the `vr_eyes` fitting point: eyes at the origin, 0.2 m wide, strap around the head."""
+    box('visor', (.2, .09, .1), (0, -.065, 0), 'GG_IvorySoft', r=.035, seg=3)
+    box('lens', (.17, .012, .07), (0, -.112, 0), 'GG_PurpleDark', r=.015, seg=3)
+    for s in (-1, 1):
+        box('strap', (.014, .2, .03), (s * .093, .02, .005), 'GG_PurplePrimary', r=.006)
+    box('strap_back', (.2, .014, .03), (0, .117, .005), 'GG_PurplePrimary', r=.006)
+
+@register('equip-vr-controller', budget=400)
+def vr_controller():
+    """Held at the `vr_grip_*` fitting points: the grip centred on the origin, 0.1 m tall."""
+    box('grip', (.032, .032, .086), (0, 0, 0), 'GG_IvorySoft', r=.012, seg=3)
+    cyl('ring', .036, .036, .014, (0, 0, .043), 'GG_TurquoiseAccent', seg=16, bev=.004)
+
+@register('equip-vr-zone', budget=300)
+def vr_zone():
+    """A play zone marked on the floor: a flat turquoise ring 1.1 m across."""
+    bm = bmesh.new()
+    outer, inner = .55, .47
+    ring = [(bm.verts.new((math.cos(a) * outer, math.sin(a) * outer, .006)), bm.verts.new((math.cos(a) * inner, math.sin(a) * inner, .006)))
+            for a in (i * math.tau / 48 for i in range(48))]
+    for (a, b), (c, d) in zip(ring, ring[1:] + ring[:1]):
+        bm.faces.new((a, c, d, b))
+    geometry.finish(bm, 'zone', 'GG_TurquoiseAccent', (0, 0, 0))
+
 @register('equip-printer', budget=5000)
 def printer():
     box('base', (.42, .4, .07), (0, 0, .035), 'GG_PurplePrimary', r=.02, corner=.04)
@@ -166,15 +194,29 @@ def laptop():
     attach(lid, [box('shell', (.34, .012, .23), (0, 0, .11), 'GG_PurplePrimary', r=.006, rot=(.2, 0, 0)),
                  box('display', (.3, .004, .19), (.0, -.0085, .11), 'GG_ScreenEmissive', r=.002, seg=1, rot=(.2, 0, 0))])
 
-@register('equip-screen', budget=5000)
-def screen():
+def screen_stand():
     box('frame', (1.5, .08, .9), (0, 0, 1.1), 'GG_PurplePrimary', r=.05, seg=3)
-    box('display', (1.34, .012, .74), (0, -.043, 1.1), 'GG_ScreenEmissive', r=.008, seg=1)
     box('tray', (.5, .04, .03), (0, -.05, .66), 'GG_IvorySoft', r=.012)
     for s in (-1, 1):
         box('leg', (.07, .07, .68), (s * .5, 0, .36), 'GG_IvorySoft', r=.02)
         box('foot', (.09, .36, .05), (s * .5, 0, .05), 'GG_IvorySoft', r=.02)
         cyl('caster', .03, .03, .03, (s * .5, 0, 0), 'GG_PurplePrimary', seg=10)
+
+@register('equip-screen', budget=5000)
+def screen():
+    screen_stand()
+    box('display', (1.34, .012, .74), (0, -.043, 1.1), 'GG_ScreenEmissive', r=.008, seg=1)
+
+@register('equip-screen-vr', budget=1500)
+def screen_vr():
+    """The VR room's screen shows what a headset sees: a bright little world, readable from the campus."""
+    screen_stand()
+    box('display', (1.34, .012, .74), (0, -.043, 1.1), 'GG_TurquoiseAccent', r=.008, seg=1)
+    # Three-sided discs turned to face the room, apex up; their bases hide behind the meadow.
+    cyl('peak', .3, .3, .006, (-.3, -.051, 1.0), 'GG_PurplePrimary', seg=3, bev=.002, rot=(math.pi / 2, 0, 0), centred=True)
+    cyl('peak', .22, .22, .006, (.05, -.05, .95), 'GG_PurpleDark', seg=3, bev=.002, rot=(math.pi / 2, 0, 0), centred=True)
+    box('meadow', (1.32, .008, .16), (0, -.053, .8), 'GG_GreenFoliage', r=.006, seg=1)
+    cyl('sun', .1, .1, .006, (.42, -.05, 1.27), 'GG_YellowAccent', seg=20, bev=.002, rot=(math.pi / 2, 0, 0), centred=True)
 
 @register('equip-arm', budget=5000)
 def robot_arm():

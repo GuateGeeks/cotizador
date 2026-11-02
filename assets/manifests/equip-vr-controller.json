@@ -1,0 +1,40 @@
+{
+  "id": "equip-vr-controller",
+  "triangles": 312,
+  "budget": 400,
+  "materials": [
+    "GG_IvorySoft",
+    "GG_TurquoiseAccent"
+  ],
+  "size_m": [
+    0.072,
+    0.1,
+    0.072
+  ],
+  "bounds": {
+    "min": [
+      -0.036,
+      -0.043,
+      -0.036
+    ],
+    "max": [
+      0.036,
+      0.057,
+      0.036
+    ]
+  },
+  "sockets": {},
+  "pivots": {},
+  "skins": 0,
+  "animations": [],
+  "bytes": 7972,
+  "sha256": "96e84028996e700ec8bb5d4838008b8c289dab8c3a84bd5c50f3ec3433f731a7",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

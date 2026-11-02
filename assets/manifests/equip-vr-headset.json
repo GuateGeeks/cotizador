@@ -1,0 +1,41 @@
+{
+  "id": "equip-vr-headset",
+  "triangles": 700,
+  "budget": 800,
+  "materials": [
+    "GG_IvorySoft",
+    "GG_PurpleDark",
+    "GG_PurplePrimary"
+  ],
+  "size_m": [
+    0.2,
+    0.1,
+    0.242
+  ],
+  "bounds": {
+    "min": [
+      -0.1,
+      -0.05,
+      -0.124
+    ],
+    "max": [
+      0.1,
+      0.05,
+      0.118
+    ]
+  },
+  "sockets": {},
+  "pivots": {},
+  "skins": 0,
+  "animations": [],
+  "bytes": 14824,
+  "sha256": "42e0ceb2602655fe319abd8a52bb77735b414811e1be66b75027de4786dfb299",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

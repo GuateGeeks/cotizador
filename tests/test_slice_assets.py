@@ -66,5 +66,21 @@ class Rover(unittest.TestCase):
             at, centre = pivots[wheel]['position'], pivots[wheel]['centre']
             self.assertLess(max(abs(a - b) for a, b in zip(at, centre)), .001)
 
+class VrGear(unittest.TestCase):
+    def test_gear_is_sized_for_the_fitting_points_and_in_budget(self):
+        headset, controller = build('equip-vr-headset'), build('equip-vr-controller')
+        self.assertAlmostEqual(headset['size_m'][0], .2, delta=.01)
+        self.assertAlmostEqual(controller['size_m'][1], .1, delta=.01)
+        for m, budget in ((headset, 800), (controller, 400)):
+            self.assertLessEqual(m['triangles'], budget)
+            self.assertEqual(m['islands'], 1)
+
+    def test_room_pieces_match_what_they_replace(self):
+        zone, screen, old = build('equip-vr-zone'), build('equip-screen-vr'), build('equip-screen')
+        self.assertAlmostEqual(zone['size_m'][0], 1.1, delta=.02)
+        self.assertLessEqual(zone['size_m'][1], .012)
+        self.assertEqual([round(v, 2) for v in screen['size_m']], [round(v, 2) for v in old['size_m']])
+        self.assertLessEqual(screen['triangles'], 1500)
+
 if __name__ == '__main__':
     unittest.main()
