@@ -146,4 +146,8 @@ describe('planWorld', () => {
     expect(busy).toBeGreaterThan(quiet);
     expect(busy).toBeLessThanOrEqual(4);
   });
+  it('puts three students in the VR room and two in the other program rooms', () => {
+    const result = planWorld(normalizeWorldInput(scope(LEVEL_IDS, PROGRAM_IDS, 150)));
+    for (const m of result.modules.filter(m => m.programId && m.type === 'room')) expect(m.population, m.programId).toBe(m.programId === 'immersive' ? 3 : 2);
+  });
 });

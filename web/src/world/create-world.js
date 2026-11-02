@@ -11,6 +11,8 @@ import { clearAssets, loadAsset } from './assets.js';
 import { diffEntities, signatureOf } from './entities.js';
 import { disposeMaterials, materialFor } from './materials.js';
 import { buildBatch, clearBatch, mergeStatic } from './merge.js';
+import { clearGear, wearGear } from './gear.js';
+import { VR_ASSETS, VR_PROPS, VR_TEACHER, VR_ZONES } from './vr-room.js';
 
 const BASE = constants.base;
 const ENTER_MS = 520, LEAVE_MS = 220;
@@ -27,7 +29,6 @@ const PROGRAM_SETUP = {
   master: [['equip-dino', 0, BASE, 1.1, -.5, 2.4], ['equip-laptop', 1.35, TOP, -.2, 0, 1]],
   spike: [['equip-rover-spike', 0, BASE, 1.1, .5, 2.2], ['equip-rover-spike', 1.35, TOP, -.2, .5, 1], ['equip-laptop', -1.05, TOP, -.2, 0, 1]],
   electronics: [['equip-printer', -2.1, BASE, 1.2, .4, 1.5], ['equip-arm', 0, BASE, 1.1, .3, 2], ['equip-electronics-kit', -1.05, TOP, -.2, .2, 1.4], ['equip-electronics-kit', 1.35, TOP, -.2, -.2, 1.4]],
-  immersive: [['equip-screen', .1, BASE, 1, 0, 1], ['equip-vr-set', -1.05, TOP, -.2, .2, 1.6], ['equip-vr-set', 1.35, TOP, -.2, -.2, 1.6]]
 };
 const LEVEL_TABLE_ITEM = { bas: 'equip-laptop', bach: 'equip-laptop', prim: 'equip-organizer', pre: 'equip-organizer' };
 const easeOut = t => 1 - Math.pow(1 - t, 3) + Math.sin(t * Math.PI) * .07;
@@ -110,6 +111,7 @@ export function createWorld(container, opts = {}) {
   const errors = [];
   const walkers = [];
   const insets = { left: 0, right: 0, top: 0, bottom: 0 };
+  let gearRequested = false;
   let batched = null, batchTimer = 0, lod = 'campus', viewMode = 'normal', contextLost = false, lastGesture = null;
   let plan = null, frame = 0, frames = 0, elapsed = 0, ready = false, paused = false, disposed = false, pendingLoads = 0, generation = 0, geometriesBeforeDispose = 0, islandKey = '';
   const timer = new Timer();
@@ -251,7 +253,18 @@ export function createWorld(container, opts = {}) {
     return pair;
   }
 
+  function furnishVr(entity, kit) {
+    placeIn(entity.extra, kit.get('furn-shelves'), 2.1, BASE, -1.95);
+    placeIn(entity.extra, kit.get('equip-kit-storage'), -2.1, BASE, -1.95);
+    for (const [asset, x, y, z, rotation, scale, onShelf] of VR_PROPS) {
+      const object = placeIn(onShelf ? entity.extra : entity.inside, kit.get(asset), x, y, z, rotation);
+      object.scale.setScalar(scale);
+      object.traverse(node => { if (node.isMesh) node.castShadow = false; });
+    }
+  }
+
   function furnish(entity, module, kit) {
+    if (module.programId === 'immersive') return furnishVr(entity, kit);
     const group = entity.inside;
     const extra = entity.extra; // Chairs, shelves and storage: dropped at campus distance to pay for the skyline.
     const table = kit.get('furn-table-four'), orange = kit.get('furn-chair-orange'), teal = kit.get('furn-chair-turquoise');
@@ -274,7 +287,22 @@ export function createWorld(container, opts = {}) {
     if (item) for (const x of [-1.05, 1.35]) placeIn(group, item, x, TOP, -.2);
   }
 
+  function seatVr(entity, module, kit) {
+    const roster = rosterFor(module);
+    entity.vr = { students: 0, headsets: 0, controllers: 0 };
+    for (const [i, [x, z, rotation, time]] of VR_ZONES.slice(0, module.population).entries()) {
+      const pair = character(entity, kit, roster[i % roster.length], 'vr', x, BASE, z, rotation, time);
+      const close = wearGear(pair.high, kit, { controllers: true }), far = wearGear(pair.low, kit, { controllers: false });
+      entity.vr.students += 1;
+      entity.vr.headsets += (close ? 1 : 0) + far;
+      entity.vr.controllers += Math.max(close - 1, 0);
+    }
+    const [tx, tz, turn] = VR_TEACHER;
+    character(entity, kit, TEACHER, 'interact', tx, BASE, tz, turn, .2); // By the screen, facing the room.
+  }
+
   function seat(entity, module, kit) {
+    if (module.programId === 'immersive') return seatVr(entity, module, kit);
     const seats = [[.47, -.2, Math.PI / 2, 'sit'], [2.4, 1, -.6, 'idle'], [-2.2, 1.1, .5, 'idle'], [-.9, 1.2, .2, 'interact']];
     const roster = rosterFor(module);
     for (let i = 0; i < (module.population || 1); i += 1) {
@@ -286,6 +314,11 @@ export function createWorld(container, opts = {}) {
 
   function needs(module) {
     const ids = [module.asset];
+    if (module.programId === 'immersive') {
+      gearRequested = true;
+      ids.push(...VR_ASSETS, ...rosterFor(module).flatMap(withLod), ...withLod(TEACHER));
+      return ids;
+    }
     if (module.type === 'room') ids.push(...ROOM_ASSETS, ...rosterFor(module).flatMap(withLod), ...withLod(TEACHER));
     if (module.terraceStudents) ids.push(...plan.levels.flatMap(level => ROSTER[level]).flatMap(withLod));
     if (LEVEL_TABLE_ITEM[module.levelId]) ids.push(LEVEL_TABLE_ITEM[module.levelId]);
@@ -547,6 +580,7 @@ export function createWorld(container, opts = {}) {
         roomDetail: lod === 'close' ? 'full' : 'light',
         batched: !!batched,
         characters: [...new Set([...entities.values()].flatMap(entity => entity.characters))],
+        vr: { students: 0, headsets: 0, controllers: 0, ...entities.get('project:immersive')?.vr, gearLoaded: gearRequested },
         animatedPrograms: [...new Set((plan?.modules || []).filter(m => m.programId).map(m => m.programId))] };
     },
     dispose() {
@@ -566,6 +600,7 @@ export function createWorld(container, opts = {}) {
       for (const entity of entities.values()) release(entity);
       scene.traverse(node => node.geometry?.dispose());
       disposeMaterials();
+      clearGear();
       clearAssets();
       renderer.dispose();
       renderer.domElement.remove();

@@ -30,6 +30,9 @@ for (const [index, state] of states.entries()) {
   await settled(page);
   await page.waitForTimeout(500);
   await page.screenshot({ path: `${out}/state-${index + 1}.png` });
+  const { vr } = await diag(page);
+  if (state.programs?.includes('immersive')) expect(vr.students === 3 && vr.headsets === 6 && vr.controllers === 6, `VR room on state ${index + 1}: ${JSON.stringify(vr)}`);
+  else expect(vr.students === 0 && !vr.gearLoaded, `VR gear without the immersive program on state ${index + 1}: ${JSON.stringify(vr)}`);
 }
 
 await page.evaluate(input => window.world.update(input), states[1]);
