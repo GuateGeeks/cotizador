@@ -77,3 +77,17 @@ def views(cam, objs, out):
     shoot(cam, objs, VIEWS['three-quarter'], os.path.join(out, 'neutral.png'))
     layer.material_override = None
     shoot(cam, objs, VIEWS['three-quarter'], os.path.join(out, 'final.png'), size=1024, samples=64)
+
+def clips(cam, arm, objs, names, out):
+    """Two frames of each clip from the side and the front, for deformation review."""
+    bpy.context.scene.frame_start = 0
+    for name in names:
+        action = bpy.data.actions[name]
+        arm.animation_data.action = action
+        if arm.animation_data.action_slot is None and action.slots:
+            arm.animation_data.action_slot = action.slots[0]
+        start, end = (int(v) for v in action.frame_range)
+        for t, frame in enumerate((start, (start + end) // 2)):
+            bpy.context.scene.frame_set(frame)
+            for view, direction in (('side', VIEWS['right']), ('front', VIEWS['front'])):
+                shoot(cam, objs, direction, os.path.join(out, f'clip-{name}-{t}-{view}.png'), size=420, margin=1.05)

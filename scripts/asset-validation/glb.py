@@ -55,7 +55,7 @@ def validate_glb(path):
                 counted = accessors[primitive['indices']] if 'indices' in primitive else position
                 triangles += counted['count'] // 3
                 lo, hi = position['min'], position['max']
-                box = [transform(world, (x, y, z)) for x in (lo[0], hi[0]) for y in (lo[1], hi[1]) for z in (lo[2], hi[2])]
+                box = [transform(IDENTITY if 'skin' in node else world, (x, y, z)) for x in (lo[0], hi[0]) for y in (lo[1], hi[1]) for z in (lo[2], hi[2])]
                 corners.extend(box)
                 if pivot:
                     pivots[name]['centre'] = [round(sum(c[i] for c in box) / 8, 6) for i in range(3)]
@@ -69,4 +69,4 @@ def validate_glb(path):
         bounds = {'min': [round(min(c[i] for c in corners), 6) for i in range(3)],
                   'max': [round(max(c[i] for c in corners), 6) for i in range(3)]}
     return {'triangles': triangles, 'materials': sorted(m.get('name', '') for m in doc.get('materials', [])),
-            'sockets': sockets, 'nodes': names, 'pivots': pivots, 'bounds': bounds, 'animations': sorted(a.get('name', '') for a in doc.get('animations', []))}
+            'sockets': sockets, 'nodes': names, 'pivots': pivots, 'skins': len(doc.get('skins', [])), 'bounds': bounds, 'animations': sorted(a.get('name', '') for a in doc.get('animations', []))}

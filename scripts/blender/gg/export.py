@@ -24,7 +24,7 @@ def write_manifest(asset, glb, budget, extra=None):
     lo, hi = metrics['bounds']['min'], metrics['bounds']['max']
     manifest = {'id': asset, 'triangles': metrics['triangles'], 'budget': budget, 'materials': metrics['materials'],
                 'size_m': [round(hi[i] - lo[i], 4) for i in range(3)], 'bounds': metrics['bounds'],
-                'sockets': metrics['sockets'], 'pivots': metrics['pivots'], 'animations': metrics['animations'], 'bytes': os.path.getsize(glb),
+                'sockets': metrics['sockets'], 'pivots': metrics['pivots'], 'skins': metrics['skins'], 'animations': metrics['animations'], 'bytes': os.path.getsize(glb),
                 'sha256': sha256(glb), 'blender': bpy.app.version_string, 'verdicts': verdicts, **(extra or {})}
     path.write_text(json.dumps(manifest, indent=2) + '\n')
     return manifest
@@ -57,4 +57,5 @@ def export_glb(objs, path):
     bpy.ops.object.select_all(action='DESELECT')
     for o in objs:
         o.select_set(True)
-    bpy.ops.export_scene.gltf(filepath=path, export_format='GLB', use_selection=True, export_apply=True, export_yup=True)
+    bpy.ops.export_scene.gltf(filepath=path, export_format='GLB', use_selection=True, export_apply=True, export_yup=True,
+                              export_image_format='JPEG', export_jpeg_quality=88)

@@ -10,7 +10,7 @@
   ],
   "size_m": [
     0.44,
-    0.82,
+    0.67,
     0.445
   ],
   "bounds": {
@@ -21,15 +21,16 @@
     ],
     "max": [
       0.22,
-      0.82,
+      0.67,
       0.21
     ]
   },
   "sockets": {},
   "pivots": {},
+  "skins": 0,
   "animations": [],
-  "bytes": 22988,
-  "sha256": "aba618a624c47b87f42d26b33038d2c433d86c6b30a63ec1781ddb6192aaf838",
+  "bytes": 23036,
+  "sha256": "5318a73a9f4b71bae6a1200d315509a5316dbe1d16ef082d98b7f75606695d14",
   "blender": "5.2.3 LTS",
   "verdicts": {
     "technical": "PASS",

@@ -46,6 +46,8 @@ def build(asset, out, render=True):
         previews = os.path.join(out, asset)
         os.makedirs(previews, exist_ok=True)
         preview.views(cam, objs, previews)
+        if 'clips' in extra:
+            preview.clips(cam, bpy.data.objects[extra['armature']], objs, extra['clips'], previews)
     print(asset, manifest['triangles'], manifest['size_m'])
 
 args = sys.argv[sys.argv.index('--') + 1:]
