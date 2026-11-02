@@ -35,6 +35,10 @@ describe('applyNeighbours', () => {
     expect(roof.variant).toBe('terrace');
     expect(roof.terraceStudents).toBeGreaterThan(0);
   });
+  it('never asks for more terrace students than there are spots', () => {
+    const input = { levels: ['pre', 'prim'], programs: ['tale', 'master'], enrollment: [{ id: 'a', levelId: 'pre', students: 90 }, { id: 'b', levelId: 'prim', students: 20 }] };
+    for (const roof of plan(input).modules.filter(m => m.variant === 'terrace')) expect(roof.terraceStudents ?? 0).toBeLessThanOrEqual(2);
+  });
   it('fills a gap with a pocket garden and adds an archway under a span', () => {
     const gap = keys(plan(scope(['pre', 'bach'])));
     expect(gap).toContain('pocket:1');

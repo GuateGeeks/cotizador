@@ -1,6 +1,6 @@
 // Pure diff between what exists and what the plan wants, keyed by stable module keys.
 export function signatureOf(module) {
-  return [module.asset, module.x, module.y, module.z, module.rot, module.population ?? '', module.programId ?? ''].join('|');
+  return [module.asset, module.x, module.y, module.z, module.rot, module.population ?? '', module.programId ?? '', module.hanging ? 'h' : ''].join('|');
 }
 
 export function diffEntities(current, modules) {

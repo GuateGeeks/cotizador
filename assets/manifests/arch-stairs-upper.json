@@ -1,27 +1,27 @@
 {
   "id": "arch-stairs-upper",
-  "triangles": 920,
+  "triangles": 1480,
   "budget": 2000,
   "materials": [
-    "GG_GlassSoft",
     "GG_IvorySoft",
+    "GG_PurplePrimary",
     "GG_TurquoiseAccent"
   ],
   "size_m": [
-    1.26,
-    4.0725,
-    4.6629
+    0.96,
+    4.0895,
+    4.573
   ],
   "bounds": {
     "min": [
-      -0.63,
-      0.0,
-      -4.571433
+      -0.48,
+      -0.065099,
+      -4.526499
     ],
     "max": [
-      0.63,
-      4.072549,
-      0.091433
+      0.48,
+      4.024412,
+      0.046499
     ]
   },
   "sockets": {
@@ -34,8 +34,8 @@
   "pivots": {},
   "skins": 0,
   "animations": [],
-  "bytes": 25172,
-  "sha256": "d780fd0ca6946ff52f519b1ae43764567774e90fa0565cd8707d8e2f8b5a881f",
+  "bytes": 34532,
+  "sha256": "a16eaac8f889389b82688c7f28bfbd4c6d3e49243c784ee8ff9f388fb3d95d0d",
   "blender": "5.2.3 LTS",
   "verdicts": {
     "technical": "PASS",

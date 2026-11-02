@@ -261,7 +261,7 @@ export function createWorld(container, opts = {}) {
       placeIn(extra, second, cx - .4, BASE, -.94);
       placeIn(extra, first, cx + .4, BASE, -.94);
     }
-    placeIn(extra, orange, .47, BASE, -.2, Math.PI / 2);
+    placeIn(group, orange, .47, BASE, -.2, Math.PI / 2); // The seat stays at every distance: a student sits on it.
     placeIn(extra, kit.get('furn-shelves'), 2.1, BASE, -1.95);
     placeIn(extra, kit.get('equip-kit-storage'), -2.1, BASE, -1.95);
     for (const [asset, x, y, z, rotation, scale] of PROGRAM_SETUP[module.programId] || []) {
@@ -301,7 +301,7 @@ export function createWorld(container, opts = {}) {
     group.rotation.y = module.rot;
     group.userData.entity = module;
     const shell = placeIn(group, kit.get(module.asset), 0, 0, 0);
-    if (module.floor >= 2 && (module.type === 'balcony' || module.type === 'gallery')) {
+    if (module.hanging) {
       // Upper walkways hang from the building; posts would stack on the deck below.
       const posts = [];
       shell.traverse(node => { if (node.name.startsWith('post')) posts.push(node); });

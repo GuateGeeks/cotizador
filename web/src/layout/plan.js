@@ -80,7 +80,8 @@ export function planWorld(data) {
   const walkway = (from, to, floor) => {
     for (let column = from; column <= to; column += 1) {
       const served = taken.get(`${column}:${floor}`)?.type === 'room';
-      add(`${served ? 'balcony' : 'bridge'}:${column}:${floor}`, 'balcony', served ? 'arch-balcony' : 'arch-bridge', column, floor, balconyZ(column));
+      // A floor-2 balcony hangs from its room; every other span keeps posts on the walkway below.
+      add(`${served ? 'balcony' : 'bridge'}:${column}:${floor}`, 'balcony', served ? 'arch-balcony' : 'arch-bridge', column, floor, balconyZ(column), floor >= 2 && served ? { hanging: true } : {});
       if (column < to) gallery(column, floor);
     }
   };
@@ -99,7 +100,7 @@ export function planWorld(data) {
   if (reachOf(2) >= 0) {
     walkway(1, reachOf(2), 2);
     gallery(0, 2);
-    add('stairs:upper', 'stairs', 'arch-stairs-upper', -.25, 1, balconyZ(0), { rot: -Math.PI / 2 });
+    add('stairs:upper', 'stairs', 'arch-stairs-upper', -.25, 1, balconyZ(0) + .25, { rot: -Math.PI / 2 }); // Front edge, leaving a passage behind.
   }
   const walkwayColumns = new Set(modules.filter(m => m.type === 'balcony').map(m => m.column));
 

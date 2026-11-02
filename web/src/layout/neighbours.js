@@ -4,6 +4,7 @@
  */
 const COURTYARD_ROOMS = 3;
 const CENTRE = 2;
+const TERRACE_SPOTS = 2; // The terrace roof has two standing places.
 const PLAIN_ROOFS = ['pitched', 'flat', 'garden'];
 
 // FNV-1a: small, stable across runs and engines.
@@ -33,7 +34,7 @@ function roofVariant(stack, stacks, tower) {
   if (stack.column === tower) return { variant: 'tower' };
   const taller = [stacks.get(stack.column - 1), stacks.get(stack.column + 1)].filter(other => other?.height > stack.height);
   if (taller.length) {
-    const occupied = taller.filter(other => other.top.type === 'room').reduce((sum, other) => sum + Math.min(2, other.top.population || 1), 0);
+    const occupied = Math.min(TERRACE_SPOTS, taller.filter(other => other.top.type === 'room').reduce((sum, other) => sum + (other.top.population || 1), 0));
     return { variant: 'terrace', terraceStudents: occupied };
   }
   if (stack.top.type === 'corridor') return { variant: 'flat' };

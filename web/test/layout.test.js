@@ -95,6 +95,15 @@ describe('planWorld', () => {
       }
     }
   });
+  it('only hangs upper walkways from a room; other spans stand on the walkway below', () => {
+    for (const input of [{ levels: ['pre', 'prim'], programs: ['electronics'] }, scope(LEVEL_IDS, PROGRAM_IDS, 150)]) {
+      const result = byKey(plan(input));
+      for (const walk of [...result.values()].filter(m => (m.type === 'balcony' || m.type === 'gallery') && m.floor === 2)) {
+        if (walk.hanging) expect(walk.type === 'balcony' && result.get(`balcony:${walk.column}:2`) === walk && [...result.values()].some(m => m.type === 'room' && m.floor === 2 && m.column === walk.column), walk.key).toBe(true);
+        else expect([...result.values()].some(m => m.type === 'balcony' && m.floor === 1 && Math.abs(m.x - walk.x) <= 3.5), walk.key).toBe(true);
+      }
+    }
+  });
   it('fills gaps in the row so the school stays connected', () => {
     const result = byKey(plan(scope(['pre', 'bach'])));
     expect(result.has('corridor:1') && result.has('corridor:2') && result.has('corridor:3')).toBe(true);

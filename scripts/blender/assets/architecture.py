@@ -160,7 +160,20 @@ def gallery():
 
 @register('arch-stairs-upper', budget=2000)
 def stairs_upper():
-    stairs_flight(1.1)
+    # Open treads on two stringers, so the walkway underneath stays visible and passable.
+    width, steps, run = .8, 14, .32
+    rise = TOP / steps
+    length = steps * run
+    tilt = math.atan2(TOP, length)
+    slope = length / math.cos(tilt)
+    for i in range(steps):
+        box('tread', (width, run * .92, .07), (0, i * run + run / 2, rise * (i + 1) - .035), 'GG_TurquoiseAccent', r=.015, seg=1)
+    for s in (-1, 1):
+        box('stringer', (.08, slope, .16), (s * (width / 2 + .04), length / 2, TOP / 2), 'GG_PurplePrimary', r=.03, rot=(tilt, 0, 0))
+        box('rail', (.06, slope, .06), (s * (width / 2 + .04), length / 2, TOP / 2 + .8), 'GG_IvorySoft', r=.025, rot=(tilt, 0, 0))
+        box('rail_post', (.05, .05, .8), (s * (width / 2 + .04), length - .2, TOP + .4 - .1), 'GG_IvorySoft', r=.02)
+        box('rail_post', (.05, .05, .8), (s * (width / 2 + .04), .3, .5), 'GG_IvorySoft', r=.02)
+    add_socket('floor_above', (0, length, TOP))
 
 @register('arch-courtyard-tree', budget=2000)
 def courtyard_tree():
