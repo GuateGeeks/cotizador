@@ -287,6 +287,15 @@ export function createWorld(container, opts = {}) {
     if (item) for (const x of [-1.05, 1.35]) placeIn(group, item, x, TOP, -.2);
   }
 
+  function visibleGear(entity) {
+    let visibleHeadsets = 0, visibleControllers = 0;
+    entity?.group.traverseVisible(node => {
+      if (node.name === 'equip-vr-headset') visibleHeadsets += 1;
+      if (node.name === 'equip-vr-controller') visibleControllers += 1;
+    });
+    return { visibleHeadsets, visibleControllers };
+  }
+
   function seatVr(entity, module, kit) {
     const roster = rosterFor(module);
     entity.vr = { students: 0, headsets: 0, controllers: 0 };
@@ -580,7 +589,7 @@ export function createWorld(container, opts = {}) {
         roomDetail: lod === 'close' ? 'full' : 'light',
         batched: !!batched,
         characters: [...new Set([...entities.values()].flatMap(entity => entity.characters))],
-        vr: { students: 0, headsets: 0, controllers: 0, ...entities.get('project:immersive')?.vr, gearLoaded: gearRequested },
+        vr: { students: 0, headsets: 0, controllers: 0, ...entities.get('project:immersive')?.vr, gearLoaded: gearRequested, ...visibleGear(entities.get('project:immersive')) },
         animatedPrograms: [...new Set((plan?.modules || []).filter(m => m.programId).map(m => m.programId))] };
     },
     dispose() {

@@ -29,6 +29,7 @@ function merged(asset) {
 export function gearMesh(asset) {
   material ||= new MeshStandardMaterial({ vertexColors: true, roughness: .5, name: 'GG_GearVertex' });
   const mesh = new Mesh(merged(asset), material);
+  mesh.name = asset.id;
   mesh.castShadow = false;
   mesh.receiveShadow = false;
   mesh.userData.separate = true; // Rides on a bone: merging it with the room would leave it behind.

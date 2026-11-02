@@ -35,6 +35,18 @@ for (const [index, state] of states.entries()) {
   else expect(vr.students === 0 && !vr.gearLoaded, `VR gear without the immersive program on state ${index + 1}: ${JSON.stringify(vr)}`);
 }
 
+stage('vr lod');
+// The headset must ride on whichever model is visible: distance models at campus view, close models up close.
+const campusVr = (await diag(page)).vr;
+expect(campusVr.visibleHeadsets === 3 && campusVr.visibleControllers === 0, `VR gear at campus view: ${JSON.stringify(campusVr)}`);
+await page.evaluate(() => window.world.setFocus({ kind: 'program', id: 'immersive' }));
+await page.waitForFunction(() => window.world.getDiagnostics().lod === 'close', null, { timeout: 20000 });
+await page.waitForTimeout(300);
+const closeVr = (await diag(page)).vr;
+expect(closeVr.visibleHeadsets === 3 && closeVr.visibleControllers === 6, `VR gear in close view: ${JSON.stringify(closeVr)}`);
+await page.evaluate(() => window.world.resetView());
+await page.waitForFunction(() => window.world.getDiagnostics().lod === 'campus', null, { timeout: 20000 });
+
 await page.evaluate(input => window.world.update(input), states[1]);
 await settled(page);
 const before = await diag(page);
