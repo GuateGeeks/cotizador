@@ -19,6 +19,12 @@ describe('VR room', () => {
     // Visible students in the other rooms stand 1.0-1.2 m in from the open front (z), like these.
     for (const [, z] of VR_ZONES) expect(z).toBeGreaterThanOrEqual(.9);
   });
+  it('keeps the screen out of the left third, which the neighbouring building hides at the default view', () => {
+    const [, sx, , sz] = VR_PROPS.find(([asset]) => asset === 'equip-screen-vr');
+    expect(sx - .75).toBeGreaterThanOrEqual(-1);  // its left edge (1.5 m wide) stays right of x = -1
+    expect(Math.abs(sx - 2.1)).toBeGreaterThanOrEqual(1.3);  // and clear of the shelf
+    expect(sz).toBeLessThanOrEqual(-1.5);  // against the back wall, behind the play zones
+  });
   it('starts each student at a different point of the loop', () => {
     expect(new Set(VR_ZONES.map(zone => zone[3])).size).toBe(3);
   });
