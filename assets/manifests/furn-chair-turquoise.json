@@ -1,0 +1,41 @@
+{
+  "id": "furn-chair-turquoise",
+  "triangles": 844,
+  "budget": 1000,
+  "materials": [
+    "GG_IvorySoft",
+    "GG_PurpleDark",
+    "GG_PurplePrimary",
+    "GG_TurquoiseAccent"
+  ],
+  "size_m": [
+    0.44,
+    0.82,
+    0.445
+  ],
+  "bounds": {
+    "min": [
+      -0.22,
+      0.0,
+      -0.235
+    ],
+    "max": [
+      0.22,
+      0.82,
+      0.21
+    ]
+  },
+  "sockets": {},
+  "pivots": {},
+  "animations": [],
+  "bytes": 23008,
+  "sha256": "f207158b02a929e6272aa62f162511a0c5fd9fd9a2d90ba74c726e93fcdd06eb",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

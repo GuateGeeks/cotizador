@@ -1,0 +1,76 @@
+{
+  "id": "equip-rover-spike",
+  "triangles": 4696,
+  "budget": 5000,
+  "materials": [
+    "GG_IvorySoft",
+    "GG_LightWarm",
+    "GG_PurpleDark",
+    "GG_PurplePrimary",
+    "GG_ShirtWhite",
+    "GG_TurquoiseAccent",
+    "GG_YellowAccent"
+  ],
+  "size_m": [
+    0.3,
+    0.324,
+    0.298
+  ],
+  "bounds": {
+    "min": [
+      -0.15,
+      -0.0,
+      -0.135
+    ],
+    "max": [
+      0.15,
+      0.324,
+      0.163
+    ]
+  },
+  "sockets": {},
+  "pivots": {
+    "head": {
+      "position": [
+        0.0,
+        0.195,
+        -0.09
+      ]
+    },
+    "wheel_l": {
+      "position": [
+        -0.125,
+        0.062,
+        -0.02
+      ],
+      "centre": [
+        -0.125,
+        0.062,
+        -0.02
+      ]
+    },
+    "wheel_r": {
+      "position": [
+        0.125,
+        0.062,
+        -0.02
+      ],
+      "centre": [
+        0.125,
+        0.062,
+        -0.02
+      ]
+    }
+  },
+  "animations": [],
+  "bytes": 105920,
+  "sha256": "97d0b12e671626a636d4b3e9824a29e06070167cabd6f5017ef1359fe75339bf",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

@@ -1,0 +1,40 @@
+{
+  "id": "veg-tree-large",
+  "triangles": 1488,
+  "budget": 1500,
+  "materials": [
+    "GG_GreenDark",
+    "GG_GreenFoliage",
+    "GG_Wood"
+  ],
+  "size_m": [
+    2.9537,
+    3.923,
+    2.2486
+  ],
+  "bounds": {
+    "min": [
+      -1.48487,
+      0.0,
+      -1.011319
+    ],
+    "max": [
+      1.468852,
+      3.92302,
+      1.237322
+    ]
+  },
+  "sockets": {},
+  "pivots": {},
+  "animations": [],
+  "bytes": 27292,
+  "sha256": "02bb6469a1020be499a37ebc4f425a7a436def1c2e2b8dcf86c258b84a66094e",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

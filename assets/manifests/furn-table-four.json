@@ -1,0 +1,39 @@
+{
+  "id": "furn-table-four",
+  "triangles": 936,
+  "budget": 1000,
+  "materials": [
+    "GG_IvorySoft",
+    "GG_PurplePrimary"
+  ],
+  "size_m": [
+    1.3,
+    0.728,
+    1.3
+  ],
+  "bounds": {
+    "min": [
+      -0.65,
+      0.0,
+      -0.65
+    ],
+    "max": [
+      0.65,
+      0.728,
+      0.65
+    ]
+  },
+  "sockets": {},
+  "pivots": {},
+  "animations": [],
+  "bytes": 21164,
+  "sha256": "113891920aca267f4b8810f9dcca8c8e44f832feeab876b728e7ac57b5dceb0f",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 5
+}

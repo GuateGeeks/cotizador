@@ -1,0 +1,48 @@
+{
+  "id": "arch-entrance",
+  "triangles": 1744,
+  "budget": 8000,
+  "materials": [
+    "GG_GlassSoft",
+    "GG_IvorySoft",
+    "GG_LightWarm",
+    "GG_OrangeAccent",
+    "GG_PurplePrimary"
+  ],
+  "size_m": [
+    3.2,
+    3.7,
+    5.775
+  ],
+  "bounds": {
+    "min": [
+      -1.6,
+      0.0,
+      -2.75
+    ],
+    "max": [
+      1.6,
+      3.7,
+      3.025
+    ]
+  },
+  "sockets": {
+    "socket_east": [
+      1.6,
+      0.0,
+      0.0
+    ]
+  },
+  "pivots": {},
+  "animations": [],
+  "bytes": 37340,
+  "sha256": "960c4836b01a231820f81a6fe3fb1572607b0ddbf2e30dcd4ef98d95a7312e1b",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}
