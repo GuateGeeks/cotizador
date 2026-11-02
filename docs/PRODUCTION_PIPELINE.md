@@ -9,3 +9,11 @@
    `PASS`, `FAIL`, `BLOCKED` or `NOT_RUN`.
 
 Meshy work keeps its input images, parameters and task IDs in a `PROVENANCE.json` beside the source.
+
+## Shareable page
+
+`npm run share` (in `web/`) builds `web/share-dist/`: the page from `web/share/`, one bundled script and
+every published model packed as base64 GLB text. The artifact frame refuses `.glb` files and blocks
+`fetch()` of `data:` and `blob:` URLs, so models are parsed in memory and textures load through images.
+`npm run test:share` serves the build under those rules and fails if any model or character is missing.
+Publishing the page outside this machine is a separate, explicit step.

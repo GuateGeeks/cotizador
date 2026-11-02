@@ -1,0 +1,95 @@
+<title>GuateGeeks World</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito+Sans:wght@400;600&display=swap">
+<style>
+  /* Full-screen 3D campus; a name card top-left, view tools top-right, growth stages along the bottom. One light look that matches the scene's sky. */
+  :root {
+    --sky: #F4F1F6;
+    --ink: #321853;
+    --grape: #6942A1;
+    --glass: #ffffffd9;
+    --line: #3218532e;
+    --muted: #5d4a78;
+    --display: "Baloo 2", "Nunito Sans", system-ui, sans-serif;
+    --body: "Nunito Sans", system-ui, sans-serif;
+    color-scheme: light;
+  }
+  html, body { height: 100%; }
+  body { background: var(--sky); color: var(--ink); font-family: var(--body); overflow: hidden; }
+  #stage { position: fixed; inset: 0; }
+  #stage canvas { display: block; width: 100%; height: 100%; }
+  .card { position: fixed; top: calc(12px + env(safe-area-inset-top, 0px)); left: max(16px, env(safe-area-inset-left, 0px)); max-width: min(340px, calc(100% - 32px)); padding: 12px 16px; border: 1px solid var(--line); border-radius: 18px; background: var(--glass); backdrop-filter: blur(8px); }
+  .card h1 { margin: 0; font: 800 1.45rem/1.1 var(--display); text-wrap: balance; }
+  .card p { margin: 4px 0 0; font-size: .86rem; line-height: 1.4; color: var(--muted); }
+  .card .stage-name { margin-top: 8px; font: 600 .78rem/1 var(--body); letter-spacing: .06em; text-transform: uppercase; color: var(--grape); }
+  .bar { position: fixed; display: flex; gap: 8px; flex-wrap: wrap; }
+  #tools { top: calc(12px + env(safe-area-inset-top, 0px)); right: max(16px, env(safe-area-inset-right, 0px)); }
+  #scope { bottom: calc(14px + env(safe-area-inset-bottom, 0px)); left: max(16px, env(safe-area-inset-left, 0px)); right: max(16px, env(safe-area-inset-right, 0px)); justify-content: center; }
+  button { min-height: 44px; padding: 0 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--glass); color: var(--ink); font: 600 .9rem var(--body); cursor: pointer; transition: background .15s, transform .15s; }
+  button:hover { transform: translateY(-1px); }
+  button[aria-pressed="true"] { background: var(--grape); border-color: var(--grape); color: #fff; }
+  button:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+  #status { position: fixed; inset: 0; display: grid; place-items: center; pointer-events: none; font: 600 1rem var(--display); color: var(--muted); }
+  #status[hidden] { display: none; }
+  @media (max-width: 640px) {
+    .card p { display: none; }
+    #tools { top: auto; bottom: calc(118px + env(safe-area-inset-bottom, 0px)); }
+    #scope button { flex: 1 1 30%; padding: 0 8px; font-size: .8rem; }
+  }
+  @media (prefers-reduced-motion: reduce) { button { transition: none; } button:hover { transform: none; } }
+</style>
+
+<div id="stage" aria-label="Campus 3D interactivo"></div>
+<p id="status">Cargando el campus…</p>
+<header class="card">
+  <h1>GuateGeeks World</h1>
+  <p>Un colegio que crece con su programa: arrastra para girar, rueda o pellizca para acercarte, toca un salón para verlo de cerca.</p>
+  <div class="stage-name" id="stage-name">Campus</div>
+</header>
+<nav id="tools" class="bar" aria-label="Vista">
+  <button id="overview">Vista general</button>
+  <button id="pause" aria-pressed="false">Pausar</button>
+</nav>
+<nav id="scope" class="bar" aria-label="Crecimiento del colegio"></nav>
+
+<script type="module">
+  import { createWorld, states } from './world.js';
+  const status = document.querySelector('#status');
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let world;
+  try {
+    world = window.world = createWorld(document.querySelector('#stage'), { reduceMotion, base: 'packed/', onError: error => console.warn('world', error) });
+  } catch (error) {
+    status.textContent = 'Este navegador no pudo iniciar la vista 3D (WebGL).';
+    throw error;
+  }
+  const names = ['Escuela inicial', 'Comunidad educativa', 'Robótica', 'Ampliación', 'Conexiones', 'Campus'];
+  const scope = document.querySelector('#scope');
+  const label = document.querySelector('#stage-name');
+  const show = index => {
+    scope.querySelectorAll('button').forEach((item, i) => item.setAttribute('aria-pressed', i === index));
+    label.textContent = `${index + 1} / ${names.length} · ${names[index]}`;
+    world.update(states[index]);
+  };
+  names.forEach((name, index) => {
+    const button = document.createElement('button');
+    button.textContent = name;
+    button.onclick = () => show(index);
+    scope.append(button);
+  });
+  show(names.length - 1);
+  const ready = setInterval(() => {
+    const d = world.getDiagnostics?.();
+    if (d && d.loaded > 0 && d.pendingLoads === 0) { status.hidden = true; clearInterval(ready); }
+  }, 300);
+  setTimeout(() => { status.hidden = true; clearInterval(ready); }, 15000);
+  document.querySelector('#overview').onclick = () => world.setFocus(null);
+  const pause = document.querySelector('#pause');
+  pause.onclick = () => {
+    const next = pause.getAttribute('aria-pressed') !== 'true';
+    pause.setAttribute('aria-pressed', next);
+    pause.textContent = next ? 'Reanudar' : 'Pausar';
+    world.setPaused(next);
+  };
+</script>

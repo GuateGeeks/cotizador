@@ -7,7 +7,9 @@
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1 --port 4410",
     "test": "vitest run",
-    "test:browser": "node test/growth.browser.mjs"
+    "test:browser": "node test/growth.browser.mjs",
+    "share": "node ../scripts/asset-export/share.mjs",
+    "test:share": "node test/share.browser.mjs"
   },
   "dependencies": {
     "three": "0.186.1"
