@@ -61,7 +61,7 @@ export function gearMesh(asset) {
 // A grip point turns with its hand from the T-pose, so each rotation undoes the hand's turn in the clip that holds
 // the item: the remote and tablet lie flat across both palms in hold (riding the left grip, shifted towards the
 // right hand), the controllers stand upright in each fist in vr, one grip per side because the hands mirror.
-// Solved from the characters' measured hand_poses; the browser checks measure the result.
+// Solved by web/tools/grip-solver.js from the characters' hand_poses; test/grips.test.js checks every character.
 export const GRIPS = {
   'equip-vr-headset': { position: [0, 0, 0], rotation: [0, 0, 0] },
   'equip-vr-controller': { l: { position: [0, 0, 0], rotation: [1.401, 1.128, .362] }, r: { position: [0, 0, 0], rotation: [1.52, -1.027, -.261] } },
