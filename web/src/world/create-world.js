@@ -9,7 +9,8 @@ import { normalizeWorldInput } from '../layout/normalize.js';
 import { planWorld } from '../layout/plan.js';
 import { clearAssets, clipNamed, loadAsset } from './assets.js';
 import { diffEntities, signatureOf } from './entities.js';
-import { disposeMaterials, materialFor } from './materials.js';
+import { disposeMaterials, materialFor, veilMaterial } from './materials.js';
+import { HIDES_INSIDE, OWN_WALLS, wallVeils, xrayBlockers } from './room-xray.js';
 import { buildBatch, clearBatch, mergeStatic } from './merge.js';
 import { clearGear, wearGear, wearItem } from './gear.js';
 import { KIT_ASSETS, KIT_SCALE, tableKits } from './classroom-kits.js';
@@ -205,6 +206,7 @@ export function createWorld(container, opts = {}) {
       entity.group.scale.setScalar(Math.max(.001, entity.leave));
       if (entity.leave <= 0) finishLeave(entity);
     }
+    if (xrayState && Math.round(goal.yaw * 4) !== xrayState.yawStep) applyXray(plan.modules.find(m => m.key === xrayState.room));
     if (animate()) {
       elapsed += delta;
       for (const entity of entities.values()) for (const mixer of entity.mixers) if (mixer.getRoot().visible) mixer.update(delta);
@@ -527,12 +529,89 @@ export function createWorld(container, opts = {}) {
     batched = null;
   }
 
+  // ---------------------------------------------------------------- x-ray of a focused room
+  // Whatever stands above the focused room or between it and the camera veils or steps aside, and the room
+  // shows an unmerged copy of its shell whose camera-facing walls veil (rules in room-xray.js).
+  let xrayState = null;
+  const partName = node => node.name.replace(/[.\d]+$/, '');
+
+  function hideObject(state, object) {
+    if (!object || !object.visible) return;
+    state.hiddenObjects.push(object);
+    object.visible = false;
+  }
+
+  function veilMesh(state, mesh) {
+    if (!mesh.isMesh || mesh.isSkinnedMesh || mesh.material === veilMaterial()) return;
+    state.veiledMeshes.push([mesh, mesh.material, mesh.castShadow]);
+    mesh.material = veilMaterial();
+    mesh.castShadow = false;
+  }
+
+  function applyXray(module) {
+    clearXray();
+    const room = module && entities.get(module.key);
+    if (!room || module.type !== 'room' || !room.shellAsset) return;
+    const yaw = goal.yaw;
+    const state = { room: module.key, yawStep: Math.round(yaw * 4), keys: new Set([module.key]), veiled: [], hidden: [], ownVeils: [], hiddenObjects: [], veiledMeshes: [], clone: null, groups: new Map() };
+    for (const [key, kind] of xrayBlockers(module, plan.modules, yaw)) {
+      const entity = entities.get(key);
+      if (!entity) continue;
+      state.keys.add(key);
+      state.groups.set(key, entity.group);
+      if (kind === 'hide') { state.hidden.push(key); hideObject(state, entity.group); continue; }
+      state.veiled.push(key);
+      const blockerModule = plan.modules.find(m => m.key === key);
+      if (HIDES_INSIDE.has(blockerModule?.type) && entity.shell) {
+        // Rooms and roofs above keep only their shell, as a veil: furniture, people and gear step aside.
+        for (const child of entity.group.children) if (child !== entity.shell) hideObject(state, child);
+        entity.shell.traverse(node => veilMesh(state, node));
+      } else {
+        entity.group.traverse(node => veilMesh(state, node));
+        for (const pair of entity.pairs) { hideObject(state, pair.high); hideObject(state, pair.low); }
+      }
+    }
+    // The focused room: its merged shell steps aside for an unmerged copy whose camera-facing walls veil.
+    const sides = wallVeils(yaw);
+    const clone = room.shellAsset.scene.clone(true);
+    clone.userData.xrayClone = true;
+    hideObject(state, room.shell);
+    room.group.add(clone);
+    clone.updateMatrixWorld(true);
+    clone.traverse(node => {
+      const name = partName(node);
+      const veil = OWN_WALLS.always.includes(name) || (sides.front && OWN_WALLS.front.includes(name)) || (sides.back && OWN_WALLS.back.includes(name))
+        || (OWN_WALLS.side.includes(name) && ((sides.left && node.position.x < 0) || (sides.right && node.position.x > 0)));
+      if (!veil) return;
+      state.ownVeils.push(name);
+      node.traverse(child => veilMesh(state, child));
+    });
+    state.clone = clone;
+    state.groups.set(module.key, room.group);
+    xrayState = state;
+    unbatch();
+    scheduleBatch();
+    invalidate();
+  }
+
+  function clearXray() {
+    const state = xrayState;
+    if (!state) return;
+    xrayState = null;
+    for (const [mesh, material, castShadow] of state.veiledMeshes) { mesh.material = material; mesh.castShadow = castShadow; }
+    for (const object of state.hiddenObjects) object.visible = true;
+    state.clone?.removeFromParent(); // Shares the cached asset's geometry: nothing to dispose.
+    unbatch();
+    scheduleBatch();
+    invalidate();
+  }
+
   function scheduleBatch() {
     clearTimeout(batchTimer);
     batchTimer = setTimeout(() => {
       if (disposed || moving() || pendingLoads) return scheduleBatch();
       clearBatch(batched);
-      const settled = [...entities.values()].filter(entity => entity.group.visible).flatMap(entity => [...(entity.staticMeshes || []), ...(entity.extra?.visible ? entity.extraMeshes : [])]);
+      const settled = [...entities.values()].filter(entity => entity.group.visible && !xrayState?.keys.has(entity.key)).flatMap(entity => [...(entity.staticMeshes || []), ...(entity.extra?.visible ? entity.extraMeshes : [])]);
       batched = buildBatch(settled, root);
       invalidate();
     }, 300);
@@ -611,6 +690,8 @@ export function createWorld(container, opts = {}) {
           build(module, kit);
         }
         syncWalkers(Math.min(8, 2 + Math.floor(plan.modules.filter(m => m.type === 'room').length / 2)), kit);
+        // An open room reopens on what the update built: its blockers and its own entity may be new.
+        if (xrayState) { const open = plan.modules.find(m => m.key === xrayState.room); if (open) applyXray(open); else clearXray(); }
         ready = true;
         scheduleBatch();
         resize();
@@ -633,8 +714,14 @@ export function createWorld(container, opts = {}) {
     const ray = new Raycaster();
     ray.setFromCamera(pointer, camera);
     for (const hit of ray.intersectObjects(root.children, true)) {
+      // What the visitor sees: hidden groups and veiled links let the pointer through. Batched originals are
+      // themselves invisible (the batch draws them), so only their ancestors count.
+      let seen = true;
+      for (let up = hit.object.parent; up; up = up.parent) if (!up.visible) seen = false;
+      if (!seen) continue;
       let node = hit.object;
       while (node && !node.userData.entity) node = node.parent;
+      if (node && hit.object.material === veilMaterial()) continue; // Veils let the pointer through to the open room.
       if (node) {
         const { key, levelId, programId } = node.userData.entity;
         opts.onSelect?.({ key, levelId, programId });
@@ -686,6 +773,7 @@ export function createWorld(container, opts = {}) {
     zoom(factor) { goal.half = MathUtils.clamp(goal.half * factor, 3, 40); invalidate(); },
     resetView() {
       handle.focused = false;
+      clearXray();
       Object.assign(goal, { yaw: -.54, pitch: .55, half: overview.half });
       goal.target.copy(overview.target);
       invalidate();
@@ -707,6 +795,7 @@ export function createWorld(container, opts = {}) {
       handle.focused = true;
       goal.target.set(module.x, module.y + 1.1, module.z);
       goal.half = 4.6;
+      if (module.type === 'room') applyXray(module); else clearXray();
       invalidate();
     },
     breakdown() {
@@ -716,6 +805,23 @@ export function createWorld(container, opts = {}) {
       out.batch = (batched?.batch || []).reduce((n, mesh) => n + (mesh.geometry.attributes.position.count / 3) * (mesh.castShadow ? 2 : 1), 0);
       out.island = count(islandBody) + count(islandTop);
       return out;
+    },
+    // Test helpers: where an entity is on screen, and which keys still show x-ray effects.
+    screenPoint(key) {
+      const entity = entities.get(key);
+      if (!entity) return null;
+      const at = entity.group.getWorldPosition(new Vector3()).add(new Vector3(0, 1.2, 1.2)).project(camera);
+      const box = renderer.domElement.getBoundingClientRect();
+      return { x: box.left + (at.x + 1) / 2 * box.width, y: box.top + (1 - at.y) / 2 * box.height };
+    },
+    xrayLeftovers(keys) {
+      return keys.filter(key => {
+        const entity = entities.get(key);
+        if (!entity) return false;
+        let left = !entity.group.visible;
+        entity.group.traverse(node => { if (node.material === veilMaterial()) left = true; });
+        return left;
+      });
     },
     planKeys(input) { return planWorld(normalizeWorldInput(input)).modules.map(m => m.key); },
     capture() { draw(); return renderer.domElement.toDataURL('image/png'); },
@@ -730,6 +836,7 @@ export function createWorld(container, opts = {}) {
         batched: !!batched,
         characters: [...new Set([...entities.values()].flatMap(entity => entity.characters))],
         dino: dinoDiagnostics(),
+        xray: { room: xrayState?.room ?? null, veiled: xrayState?.veiled ?? [], hidden: xrayState?.hidden ?? [], ownVeils: xrayState?.ownVeils ?? [], batchSources: batched?.sources.length ?? 0 },
         electronics: electronicsDiagnostics(),
         tableKits: Object.fromEntries([...entities.values()].filter(entity => entity.tableKits).map(entity => [entity.key, entity.tableKits])),
         vr: { students: 0, headsets: 0, controllers: 0, ...entities.get('project:immersive')?.vr, gearLoaded: gearRequested, ...visibleGear(entities.get('project:immersive')) },

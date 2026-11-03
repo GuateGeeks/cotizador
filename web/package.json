@@ -10,7 +10,8 @@
     "test:browser": "node test/growth.browser.mjs",
     "share": "node ../scripts/asset-export/share.mjs",
     "test:share": "node test/share.browser.mjs",
-    "review": "node tools/review-sheet.mjs"
+    "review": "node tools/review-sheet.mjs",
+    "test:xray": "node test/xray.browser.mjs"
   },
   "dependencies": {
     "three": "0.186.1"
