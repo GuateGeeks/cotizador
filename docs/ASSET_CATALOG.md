@@ -48,6 +48,10 @@ Generated from `assets/manifests/` by `python3 scripts/world.py catalog`.
 | char-teacher | 5797 | 1.66 x 1.75 x 0.50 | 555616 | PASS | PASS |
 | equip-arm | 1120 | 0.30 x 0.41 x 0.41 | 24856 | PASS | PASS |
 | equip-dino | 4828 | 0.31 x 0.48 x 0.81 | 182772 | PASS | PASS |
+| equip-drone-gate | 396 | 2.00 x 1.60 x 0.32 | 12012 | PASS | PASS |
+| equip-drone-hoop | 432 | 2.00 x 2.00 x 0.09 | 10468 | PASS | PASS |
+| equip-drone-post | 28 | 0.08 x 1.00 x 0.08 | 1828 | PASS | PASS |
+| equip-drone-remote | 208 | 0.18 x 0.04 x 0.11 | 7712 | PASS | PASS |
 | equip-drone | 1984 | 0.58 x 0.09 x 0.54 | 44516 | PASS | PASS |
 | equip-electronics-kit | 1260 | 0.36 x 0.05 x 0.26 | 34084 | PASS | PASS |
 | equip-kit-storage | 728 | 0.80 x 0.94 x 0.42 | 16096 | PASS | PASS |
@@ -55,6 +59,7 @@ Generated from `assets/manifests/` by `python3 scripts/world.py catalog`.
 | equip-organizer | 608 | 0.60 x 0.13 x 0.34 | 14016 | PASS | PASS |
 | equip-printed-parts | 244 | 0.30 x 0.09 x 0.20 | 9360 | PASS | PASS |
 | equip-printer | 1332 | 0.45 x 0.49 x 0.40 | 29800 | PASS | PASS |
+| equip-race-flag | 248 | 0.68 x 1.40 x 0.20 | 13984 | PASS | PASS |
 | equip-rover-programmable | 3628 | 0.33 x 0.22 x 0.30 | 63920 | PASS | PASS |
 | equip-rover-spike | 4696 | 0.30 x 0.32 x 0.30 | 105920 | PASS | PASS |
 | equip-screen-vr | 1164 | 1.50 x 1.55 x 0.36 | 28624 | PASS | PASS |

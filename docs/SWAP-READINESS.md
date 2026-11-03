@@ -30,6 +30,7 @@ The swap (M6) needs separate approval. **Status: not ready.**
 
 ## Open items
 
+- The Drones field shows two drones racing through gates and hoops, flown by two pilots with remotes while two classmates watch (`runs/drone-09-race`).
 - The Electronics room is three workbench stations (printing, arm, circuits) with four students and no classroom tables (`runs/lab-11-review`).
 - Focusing a room (click or the cotizador's `setFocus`) opens it as the cotizador's paper campus does: what blocks it veils or steps aside (`runs/xray-17-review`). Unlike the cotizador, a veiled room above cannot be clicked through to.
 - Classrooms show the kits of the programs their grades use, from the cotizador's equipment `groupIds`; on the landing showcase (no groups) each program shows at its usual level (`runs/kits-13-tables`). At the default view the front lintel and pillar still hide part of each classroom's tables.

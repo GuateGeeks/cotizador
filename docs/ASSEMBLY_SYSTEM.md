@@ -15,6 +15,12 @@ terrace below a taller neighbour, barrel on project stacks, and pitched, flat or
 It adds archways under spans, pocket gardens in gaps, trims between equal stacks and a courtyard
 tree and bench from three ground rooms. Rooms are never moved or rebuilt by these rules.
 
+The Drones field (`web/src/world/drone-course.js`) is a closed course of two gates and two hoops on the field's
+sides, joined by waypoints so each side is a straight run. Two lanes offset ±0.3 m sideways and ±0.25 m in height
+keep the drones apart; their speeds follow different slow rhythms, so the lead changes. Each drone is merged by
+`vertexMerge` into one body, leaving its `rotor_*` parts to spin. Pilots hold `equip-drone-remote` on
+`vr_grip_l` and face their drone; watchers face the leader. Under reduced motion both drones rest on the ring.
+
 A focused room opens like the cotizador's (`web/src/world/room-xray.js`, `applyXray` in `create-world.js`).
 Modules above it veil, and rooms and roofs above keep only their shell. Buildings between it and the camera
 hide, and thin links veil. The room swaps its merged `entity.shell` for an unmerged copy of its asset whose

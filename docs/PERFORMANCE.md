@@ -16,6 +16,13 @@ Draw calls fell from 4,536 by merging each entity's static parts, then batching 
 draw per material. During a transition the batch is off, and draw calls rise to about 600 until it rebuilds.
 Characters swap to a 1,400-triangle model at campus distance. `InstancedMesh` was not needed.
 
+## 2026-11-03 Drone field
+
+Two drones race a gate-and-hoop course with two pilots and two watchers. Each drone is now one vertex-coloured
+body plus four rotors (the single hovering drone was about 20 separate meshes), so the campus view fell to 120
+draw calls at 60 fps (`runs/drone-11-parity`; it was 144). Verdict: PASS against the 150 budget. Focused on the
+field: 187 draw calls, 1,136,020 triangles, 60 fps (`runs/drone-12-perf`), in line with the other close views.
+
 ## 2026-11-03 Electronics stations
 
 The Electronics room became three workbench stations with four students. Verdict: over the stations design's first limits (142

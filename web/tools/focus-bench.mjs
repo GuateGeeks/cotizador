@@ -1,5 +1,5 @@
 // Requires `npm run dev`. Measures the largest campus in close view with a program room focused.
-// Usage: node tools/focus-bench.mjs <run-dir> [program ...]   (GG_GPU=1 for the reference desktop)
+// Usage: node tools/focus-bench.mjs <run-dir> [program | key:<module key> ...]   (GG_GPU=1 for the reference desktop)
 import { chromium } from 'playwright';
 import { mkdirSync, writeFileSync } from 'node:fs';
 
@@ -18,7 +18,7 @@ await page.evaluate(input => window.world.update(input), full);
 await settled();
 const results = {};
 for (const id of programs.length ? programs : ['master', 'electronics']) {
-  await page.evaluate(p => window.world.setFocus({ kind: 'program', id: p }), id);
+  await page.evaluate(p => window.world.setFocus(p.startsWith('key:') ? { key: p.slice(4) } : { kind: 'program', id: p }), id);
   await page.waitForTimeout(2500);
   await settled();
   const fps = await page.evaluate(() => new Promise(done => {
@@ -28,7 +28,7 @@ for (const id of programs.length ? programs : ['master', 'electronics']) {
   }));
   const d = await page.evaluate(() => window.world.getDiagnostics());
   results[id] = { fps: Math.round(fps), drawCalls: d.drawCalls, triangles: d.triangles, lod: d.lod, xray: d.xray || null };
-  await page.screenshot({ path: `${out}/focus-${id}.png` });
+  await page.screenshot({ path: `${out}/focus-${id.replace(/[:]/g, '_')}.png` });
 }
 await browser.close();
 writeFileSync(`${out}/bench.json`, JSON.stringify({ date: new Date().toISOString().slice(0, 10), gpu, results }, null, 2));
