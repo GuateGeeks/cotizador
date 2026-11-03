@@ -1,6 +1,6 @@
 import { BoxGeometry, Group, Mesh, MeshStandardMaterial, Object3D } from 'three';
 import { afterEach, describe, expect, it } from 'vitest';
-import { clearGear, gearMesh, wearGear } from '../src/world/gear.js';
+import { clearGear, gearMesh, wearGear, wearItem } from '../src/world/gear.js';
 import { mergeStatic } from '../src/world/merge.js';
 
 const red = new MeshStandardMaterial({ name: 'R', color: 0xff0000 }), blue = new MeshStandardMaterial({ name: 'B', color: 0x0000ff });
@@ -56,6 +56,12 @@ describe('VR gear', () => {
 
   it('wears only the headset on a distance model', () => {
     expect(wearGear(rig(['vr_eyes', 'vr_grip_l', 'vr_grip_r']), kit, { controllers: false })).toBe(1);
+  });
+
+  it('puts one item on a named grip, and skips a character without it', () => {
+    const tabletKit = new Map([['equip-tablet', asset('equip-tablet', [[0, red]])]]);
+    expect(wearItem(rig(['vr_grip_l']), tabletKit, 'vr_grip_l', 'equip-tablet')).toBe(true);
+    expect(wearItem(rig([]), tabletKit, 'vr_grip_l', 'equip-tablet')).toBe(false);
   });
 
   it('skips a character exported before the fitting points existed', () => {

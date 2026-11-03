@@ -94,5 +94,12 @@ class KitDino(unittest.TestCase):
         self.assertLess(m['stride'], .5)
         self.assertGreater(m['walk_seconds'], .8)
 
+class Tablet(unittest.TestCase):
+    def test_tablet_is_small_flat_and_one_piece(self):
+        m = build('equip-tablet')
+        self.assertAlmostEqual(m['size_m'][0], .24, delta=.01)
+        self.assertLess(m['size_m'][1], .03)
+        self.assertEqual(m['islands'], 1)
+
 if __name__ == '__main__':
     unittest.main()

@@ -137,6 +137,12 @@ def vr_controller():
     box('grip', (.032, .032, .086), (0, 0, 0), 'GG_IvorySoft', r=.012, seg=3)
     cyl('ring', .036, .036, .014, (0, 0, .043), 'GG_TurquoiseAccent', seg=16, bev=.004)
 
+@register('equip-tablet', budget=300)
+def tablet():
+    """Held flat at a `vr_grip_*` fitting point while a student drives the Makerzoid dinosaur."""
+    box('case', (.24, .17, .014), (0, 0, 0), 'GG_PurplePrimary', r=.006, seg=2)
+    box('screen', (.2, .13, .004), (0, 0, .008), 'GG_TurquoiseAccent', r=.002, seg=1)
+
 @register('equip-vr-zone', budget=300)
 def vr_zone():
     """A play zone marked on the floor: a flat turquoise ring 1.1 m across."""

@@ -37,17 +37,17 @@ export function gearMesh(asset) {
   return mesh;
 }
 
+export function wearItem(character, kit, point, id) {
+  const anchor = character.getObjectByName(point), asset = kit.get(id);
+  if (!anchor || !asset) return false; // A character exported before the fitting points existed goes without.
+  anchor.add(gearMesh(asset));
+  return true;
+}
+
 export function wearGear(character, kit, { controllers }) {
   const pieces = [['vr_eyes', 'equip-vr-headset']];
   if (controllers) pieces.push(['vr_grip_l', 'equip-vr-controller'], ['vr_grip_r', 'equip-vr-controller']);
-  let worn = 0;
-  for (const [point, id] of pieces) {
-    const anchor = character.getObjectByName(point), asset = kit.get(id);
-    if (!anchor || !asset) continue; // A character exported before the fitting points existed goes without.
-    anchor.add(gearMesh(asset));
-    worn += 1;
-  }
-  return worn;
+  return pieces.filter(([point, id]) => wearItem(character, kit, point, id)).length;
 }
 
 export function clearGear() {
