@@ -13,7 +13,9 @@ export const STATIONS = [
     items: [['equip-electronics-kit', -.5, -1.85, .2], ['equip-electronics-kit', .5, -1.85, -.2]],
     students: [{ x: -.45, z: -1.2, rot: Math.PI, clip: 'sit', stool: true }, { x: .45, z: -1.2, rot: Math.PI, clip: 'sit', stool: true }] }
 ];
-export const ELECTRONICS_TEACHER = [0, .5, Math.PI]; // In the open middle, facing the circuits bench.
+// Front-left of the open middle, facing the circuits bench: low enough on screen from the default camera that
+// the bench and its seated students show above the teacher, not behind.
+export const ELECTRONICS_TEACHER = [-1.2, 1.4, Math.atan2(1.2, -3.28)];
 export const MACHINES = new Set(['equip-printer', 'equip-arm']);
 export const LAB_ASSETS = [...new Set(STATIONS.flatMap(s => [s.bench.asset, ...s.items.map(([asset]) => asset)])), 'furn-stool'];
 
