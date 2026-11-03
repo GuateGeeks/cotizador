@@ -13,7 +13,7 @@ import { disposeMaterials, materialFor, veilMaterial } from './materials.js';
 import { HIDES_INSIDE, OWN_WALLS, wallVeils, xrayBlockers, xrayKey } from './room-xray.js';
 import { buildBatch, clearBatch, mergeStatic } from './merge.js';
 import { clearGear, vertexMerge, wearGear, wearItem } from './gear.js';
-import { COURSE_ASSETS, DRONE_SCALE, FLAG, OBSTACLES, PILOTS, REST, WATCHERS, distanceAt, dronePose } from './drone-course.js';
+import { COURSE_ASSETS, DRONE_SCALE, FLAG, OBSTACLES, PILOTS, REST, WATCHERS, distanceAt, dronePose, standHeight } from './drone-course.js';
 import { KIT_ASSETS, KIT_SCALE, tableKits } from './classroom-kits.js';
 import { ELECTRONICS_TEACHER, LAB_ASSETS, MACHINES, STATIONS, swayPose } from './electronics-room.js';
 import workbenchManifest from '../../../assets/manifests/furn-workbench.json';
@@ -325,19 +325,19 @@ export function createWorld(container, opts = {}) {
   // room at every distance; the printer and arm are close-view detail, since their moving parts cannot merge.
   // The Drones field (drone-course.js): gates, hoops and the flag merge with the field; two drones race their lanes,
   // each one vertex-coloured body plus four free rotors, while two pilots fly them and two classmates watch.
-  const PAD_TOP = .05;
   function placeCourse(entity, kit) {
     entity.obstacles = 0;
     for (const o of OBSTACLES) {
-      if (o.kind === 'gate') placeIn(entity.inside, kit.get('equip-drone-gate'), o.x, PAD_TOP, o.z, o.yaw);
+      const floor = standHeight(o.x, o.z);
+      if (o.kind === 'gate') placeIn(entity.inside, kit.get('equip-drone-gate'), o.x, floor, o.z, o.yaw);
       else {
-        placeIn(entity.inside, kit.get('equip-drone-hoop'), o.x, PAD_TOP + o.y, o.z, o.yaw);
-        const post = placeIn(entity.inside, kit.get('equip-drone-post'), o.x, PAD_TOP, o.z, o.yaw);
+        placeIn(entity.inside, kit.get('equip-drone-hoop'), o.x, floor + o.y, o.z, o.yaw);
+        const post = placeIn(entity.inside, kit.get('equip-drone-post'), o.x, floor, o.z, o.yaw);
         post.scale.set(1, o.y - .95, 1); // up to the ring's underside
       }
       entity.obstacles += 1;
     }
-    placeIn(entity.inside, kit.get('equip-race-flag'), FLAG.x, PAD_TOP, FLAG.z, .4);
+    placeIn(entity.inside, kit.get('equip-race-flag'), FLAG.x, standHeight(FLAG.x, FLAG.z), FLAG.z, .4); // Off the pad: on the ground.
   }
 
   function raceDrones(entity, module, kit) {

@@ -1,6 +1,6 @@
 import { Object3D, Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';
-import { COURSE_ASSETS, DRONE_HALF_HEIGHT, DRONE_RADIUS, DRONE_SCALE, FLAG, OBSTACLES, PILOTS, REST, SPEED, WATCHERS, closestPoint, distanceAt, dronePose, laneLength } from '../src/world/drone-course.js';
+import { COURSE_ASSETS, DRONE_HALF_HEIGHT, DRONE_RADIUS, DRONE_SCALE, FLAG, OBSTACLES, PILOTS, REST, SPEED, WATCHERS, closestPoint, standHeight, distanceAt, dronePose, laneLength } from '../src/world/drone-course.js';
 
 const PAD = { minX: -4, maxX: 4, minZ: -2.5, maxZ: 2.5 };
 const PLANTERS = [{ minX: 2.5, maxX: 3.9, minZ: -2.0, maxZ: -1.4 }, { minX: -3.9, maxX: -2.5, minZ: -2.0, maxZ: -1.4 }];
@@ -102,6 +102,12 @@ describe('drone course', () => {
     // The drone's underside is 0.05 m above its origin unscaled (bounds y 0.05-0.141), 0.06 m at 1.2x; the landing
     // ring's top is 0.085 m, so the origin sits at 0.085 - 0.06 = 0.025 m.
     for (const r of Object.values(REST)) expect(r[1] + .05 * DRONE_SCALE).toBeCloseTo(.085, 3);
+  });
+  it('stands what is on the pad at its top and what is off it on the ground', () => {
+    // The pad is 8 x 5 m, 0.05 m tall; the flag (z 2.6) stands just past its front edge, so its base is at 0.
+    for (const o of OBSTACLES) expect(standHeight(o.x, o.z), o.id).toBe(.05);
+    expect(inBox(PAD, FLAG.x, FLAG.z)).toBe(false);
+    expect(standHeight(FLAG.x, FLAG.z)).toBe(0);
   });
   it('loads what the field needs', () => {
     expect(COURSE_ASSETS).toEqual(expect.arrayContaining(['equip-drone', 'equip-drone-gate', 'equip-drone-hoop', 'equip-drone-post', 'equip-race-flag', 'equip-drone-remote']));
