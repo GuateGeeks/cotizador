@@ -6,7 +6,10 @@ export const DINO_SPEED = .35; // metres per second along the loop
 // In the room's right half: at the default view the neighbouring column hides the left half and the walkway
 // above hides the back, so the loop, the driver and the watchers all sit where the camera sees them.
 export const DINO_LOOP = { x: .9, z: 1.25, half: .6, radius: .4 };
-export const MASTER_SPOTS = { driver: [2.55, .75], watchers: [[2.55, 1.65], [1.95, 2.15]] };
+// The driver stands nearest the open front so the tablet is in view; the watchers stand beside the loop.
+export const MASTER_SPOTS = { driver: [1.95, 2.15], watchers: [[2.55, 1.65], [2.55, .75]] };
+// Where the walk starts, and where reduced motion leaves the dinosaur: mid-way along the front straight.
+export const DINO_START = DINO_LOOP.half;
 export const MASTER_ASSETS = ['equip-dino', 'equip-tablet', 'equip-laptop'];
 
 const { x: cx, z: cz, half, radius } = DINO_LOOP;

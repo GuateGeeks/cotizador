@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MASTER_ASSETS, MASTER_SPOTS, loopLength, loopPoint } from '../src/world/dino-room.js';
+import { DINO_LOOP, DINO_START, MASTER_ASSETS, MASTER_SPOTS, loopLength, loopPoint } from '../src/world/dino-room.js';
 
 const TABLES = [[-1.05, -.2], [1.35, -.2]]; // 1.3 x 1.3 m
 const nearTable = (x, z, margin) => TABLES.some(([tx, tz]) => Math.abs(x - tx) < .65 + margin && Math.abs(z - tz) < .65 + margin);
@@ -31,6 +31,14 @@ describe('Makerzoid room', () => {
       expect(Math.hypot(b.x - a.x, b.z - a.z)).toBeCloseTo(.05, 2);
       expect(Math.abs(Math.atan2(Math.sin(b.heading - a.heading), Math.cos(b.heading - a.heading)))).toBeLessThan(.2);
     }
+  });
+  it('starts, and stands still under reduced motion, on the front straight the camera sees', () => {
+    const { x, z } = loopPoint(DINO_START);
+    expect(z).toBeCloseTo(DINO_LOOP.z + DINO_LOOP.radius);
+    expect(Math.abs(x - DINO_LOOP.x)).toBeLessThanOrEqual(DINO_LOOP.half / 2);
+  });
+  it('puts the driver nearest the open front, so the tablet is in view', () => {
+    for (const [, z] of MASTER_SPOTS.watchers) expect(MASTER_SPOTS.driver[1]).toBeGreaterThan(z);
   });
   it('loads what the room needs', () => {
     expect(MASTER_ASSETS).toEqual(expect.arrayContaining(['equip-dino', 'equip-tablet', 'equip-laptop']));

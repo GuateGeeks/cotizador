@@ -12,7 +12,7 @@ import { diffEntities, signatureOf } from './entities.js';
 import { disposeMaterials, materialFor } from './materials.js';
 import { buildBatch, clearBatch, mergeStatic } from './merge.js';
 import { clearGear, wearGear, wearItem } from './gear.js';
-import { DINO_SCALE, DINO_SPEED, MASTER_ASSETS, MASTER_SPOTS, loopPoint } from './dino-room.js';
+import { DINO_SCALE, DINO_SPEED, DINO_START, MASTER_ASSETS, MASTER_SPOTS, loopPoint } from './dino-room.js';
 import dinoManifest from '../../../assets/manifests/equip-dino.json';
 import { VR_ASSETS, VR_PROPS, VR_TEACHER, VR_ZONES } from './vr-room.js';
 
@@ -206,7 +206,7 @@ export function createWorld(container, opts = {}) {
       for (const entity of entities.values()) for (const mixer of entity.mixers) if (mixer.getRoot().visible) mixer.update(delta);
       for (const walker of walkers) walkAlong(walker);
       for (const entity of entities.values()) {
-        if (entity.dino) poseDino(entity, elapsed * DINO_SPEED);
+        if (entity.dino) poseDino(entity, DINO_START + elapsed * DINO_SPEED);
         for (const spinner of entity.spinners) spinner.node.rotation[spinner.axis] += delta * spinner.speed;
         for (const hover of entity.hovers) hover.position.y = hover.userData.height + Math.sin(elapsed * 1.4) * .22;
       }
@@ -279,7 +279,7 @@ export function createWorld(container, opts = {}) {
     mixer.timeScale = DINO_TIME_SCALE;
     entity.mixers.push(mixer);
     entity.dino = { object, mixer, trackers: [], tablet: false };
-    poseDino(entity, 0); // Reduced motion leaves it here: on the loop, never at the room's origin.
+    poseDino(entity, DINO_START); // Reduced motion leaves it here, in view on the loop.
   }
 
   function poseDino(entity, distance) {
@@ -301,7 +301,7 @@ export function createWorld(container, opts = {}) {
       entity.dino.trackers.push(character(entity, kit, roster[(i + 1) % roster.length], 'idle', x, BASE, z, 0, .4 + i * .5));
     }
     character(entity, kit, TEACHER, 'interact', 2.2, BASE, -.6, -.8, .2);
-    poseDino(entity, 0);
+    poseDino(entity, DINO_START);
   }
 
   function furnish(entity, module, kit) {
