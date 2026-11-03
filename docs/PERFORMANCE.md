@@ -16,6 +16,16 @@ Draw calls fell from 4,536 by merging each entity's static parts, then batching 
 draw per material. During a transition the batch is off, and draw calls rise to about 600 until it rebuilds.
 Characters swap to a 1,400-triangle model at campus distance. `InstancedMesh` was not needed.
 
+## 2026-11-03 Focused-room x-ray
+
+A focused room is seen in close view, where every room's detail and full-detail characters show. That view had
+never been measured: with the Makerzoid or Electronics room focused, the largest campus draws about 195 calls
+and 1.06 million triangles at 60 fps before any x-ray (`runs/xray-00-baseline`), over the campus-view targets.
+With the x-ray open, veils batch into one draw (one shared material) and the open room's shell copy merges per
+material and joins the batch: Makerzoid 179 draw calls, Electronics 207, triangles within 1% of the baseline,
+60 fps (`runs/xray-15-perf`). The campus view is unchanged at 142 draw calls (`runs/xray-16-parity`).
+Close view over 500,000 triangles is a standing finding for phones.
+
 ## 2026-11-03 Classroom kits and Electronics bench
 
 Classrooms now show their programs' kits, and the Electronics printer and arm work at a bench. The first
