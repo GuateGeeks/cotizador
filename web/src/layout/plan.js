@@ -59,7 +59,7 @@ export function planWorld(data) {
       continue;
     }
     const [column, floor] = PROJECT_SLOT[program];
-    building(`project:${program}`, 'room', program === 'immersive' ? 'arch-classroom-corner' : 'arch-classroom-expandable', column, floor, { programId: program, population: program === 'immersive' ? 3 : 2 });
+    building(`project:${program}`, 'room', program === 'immersive' ? 'arch-classroom-corner' : 'arch-classroom-expandable', column, floor, { programId: program, population: ['immersive', 'master'].includes(program) ? 3 : 2 });
   }
 
   for (const module of [...taken.values()]) {
