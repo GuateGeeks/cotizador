@@ -12,6 +12,7 @@ import { diffEntities, signatureOf } from './entities.js';
 import { disposeMaterials, materialFor } from './materials.js';
 import { buildBatch, clearBatch, mergeStatic } from './merge.js';
 import { clearGear, wearGear, wearItem } from './gear.js';
+import { KIT_ASSETS, KIT_SCALE, tableKits } from './classroom-kits.js';
 import { DINO_SCALE, DINO_SPEED, DINO_START, MASTER_ASSETS, MASTER_SPOTS, loopPoint } from './dino-room.js';
 import dinoManifest from '../../../assets/manifests/equip-dino.json';
 import { VR_ASSETS, VR_PROPS, VR_TEACHER, VR_ZONES } from './vr-room.js';
@@ -325,8 +326,21 @@ export function createWorld(container, opts = {}) {
       object.traverse(node => { if (/^wheel_/.test(node.name)) node.name = `still_${node.name}`; }); // Parked rovers: their wheels merge with the room.
       object.traverse(node => { if (node.isMesh) node.castShadow = false; });
     }
-    const item = kit.get(LEVEL_TABLE_ITEM[module.levelId]);
-    if (item) for (const x of [-1.05, 1.35]) placeIn(group, item, x, TOP, -.2);
+    if (!module.levelId) return;
+    // Classrooms show the kits of the programs their grades use; parked kits merge with the room.
+    entity.tableKits = tableKits(module.programs || [], LEVEL_TABLE_ITEM[module.levelId] || null).map((items, i) => {
+      const x = [-1.05, 1.35][i];
+      for (const [asset, dx, dz, scale, rotation] of items) {
+        const source = kit.get(asset);
+        const object = source.animations?.length ? cloneSkinned(source.scene) : source.scene.clone(true);
+        object.position.set(x + dx * KIT_SCALE, TOP, -.2 + dz * KIT_SCALE);
+        object.rotation.y = rotation;
+        object.scale.setScalar(scale * KIT_SCALE);
+        object.traverse(node => { if (/^(wheel_|rotor_)/.test(node.name)) node.name = `still_${node.name}`; });
+        group.add(object);
+      }
+      return items.map(([asset]) => asset);
+    });
   }
 
   function dinoDiagnostics() {
@@ -381,6 +395,7 @@ export function createWorld(container, opts = {}) {
     if (module.type === 'room') ids.push(...ROOM_ASSETS, ...rosterFor(module).flatMap(withLod), ...withLod(TEACHER));
     if (module.terraceStudents) ids.push(...plan.levels.flatMap(level => ROSTER[level]).flatMap(withLod));
     if (LEVEL_TABLE_ITEM[module.levelId]) ids.push(LEVEL_TABLE_ITEM[module.levelId]);
+    if (module.levelId) ids.push(...KIT_ASSETS(module.programs || []));
     for (const [asset] of PROGRAM_SETUP[module.programId] || []) ids.push(asset);
     if (module.type === 'patio') ids.push('equip-drone');
     if (module.programId === 'master') ids.push(...MASTER_ASSETS);
@@ -641,6 +656,7 @@ export function createWorld(container, opts = {}) {
         batched: !!batched,
         characters: [...new Set([...entities.values()].flatMap(entity => entity.characters))],
         dino: dinoDiagnostics(),
+        tableKits: Object.fromEntries([...entities.values()].filter(entity => entity.tableKits).map(entity => [entity.key, entity.tableKits])),
         vr: { students: 0, headsets: 0, controllers: 0, ...entities.get('project:immersive')?.vr, gearLoaded: gearRequested, ...visibleGear(entities.get('project:immersive')) },
         animatedPrograms: [...new Set((plan?.modules || []).filter(m => m.programId).map(m => m.programId))] };
     },

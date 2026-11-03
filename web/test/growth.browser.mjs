@@ -35,6 +35,16 @@ for (const [index, state] of states.entries()) {
   const { vr } = await diag(page);
   if (state.programs?.includes('immersive')) expect(vr.students === 3 && vr.headsets === 6 && vr.controllers === 6, `VR room on state ${index + 1}: ${JSON.stringify(vr)}`);
   else expect(vr.students === 0 && !vr.gearLoaded, `VR gear without the immersive program on state ${index + 1}: ${JSON.stringify(vr)}`);
+  const { tableKits } = await diag(page);
+  if (index === 1) for (const [key, tables] of Object.entries(tableKits)) {
+    const fallback = key.includes(':bas:') || key.includes(':bach:') ? 'equip-laptop' : 'equip-organizer';
+    expect(tables.every(t => t.length === 1 && t[0] === fallback), `classroom without programs ${key}: ${JSON.stringify(tables)}`);
+  }
+  if (index === states.length - 1) {
+    const want = { 'room:prim:0': [['equip-dino'], ['equip-electronics-kit']], 'room:pre:0': [['equip-rover-programmable'], ['equip-rover-programmable']],
+      'room:bas:0': [['equip-rover-spike', 'equip-laptop'], ['equip-drone']] };
+    for (const [key, tables] of Object.entries(want)) expect(JSON.stringify(tableKits[key]) === JSON.stringify(tables), `kits in ${key}: ${JSON.stringify(tableKits[key])}`);
+  }
   const { dino } = await diag(page);
   if (state.programs?.includes('master')) expect(dino.count === 1 && dino.students === 3 && dino.tablet === true, `Makerzoid room on state ${index + 1}: ${JSON.stringify(dino)}`);
   else expect(dino.count === 0, `dinosaur without the Makerzoid program on state ${index + 1}: ${JSON.stringify(dino)}`);
@@ -78,7 +88,10 @@ await settled(page);
 const after = await diag(page);
 const added = after.entityKeys.filter(key => !before.entityKeys.includes(key));
 expect(added.includes('project:tale'), `tale room not added: ${added}`);
-for (const key of before.entityKeys) if (after.entityIds[key] && !key.startsWith('roof') && !key.startsWith('tree') && !key.startsWith('planter') && !key.startsWith('pathway') && !key.startsWith('walker') && key !== 'room:prim:0') expect(after.entityIds[key] === before.entityIds[key], `${key} was rebuilt`);
+// Classrooms whose programs changed are rebuilt with their new kits; everything else stays.
+const reKitted = new Set(Object.keys(after.tableKits).filter(key => JSON.stringify(after.tableKits[key]) !== JSON.stringify(before.tableKits[key])));
+expect(reKitted.has('room:pre:0'), `adding Tale-Bot did not re-kit preprimaria: ${JSON.stringify(after.tableKits)}`);
+for (const key of before.entityKeys) if (after.entityIds[key] && !key.startsWith('roof') && !key.startsWith('tree') && !key.startsWith('planter') && !key.startsWith('pathway') && !key.startsWith('walker') && key !== 'room:prim:0' && !reKitted.has(key)) expect(after.entityIds[key] === before.entityIds[key], `${key} was rebuilt`);
 
 await page.evaluate(input => window.world.update(input), states[5]);
 await settled(page);

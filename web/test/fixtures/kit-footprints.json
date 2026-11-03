@@ -1,0 +1,37 @@
+{
+ "equip-rover-programmable": [
+  0.33,
+  0.22,
+  0.304
+ ],
+ "equip-dino": [
+  0.31,
+  0.485,
+  0.81
+ ],
+ "equip-electronics-kit": [
+  0.36,
+  0.05,
+  0.26
+ ],
+ "equip-rover-spike": [
+  0.3,
+  0.324,
+  0.298
+ ],
+ "equip-laptop": [
+  0.34,
+  0.2419,
+  0.2687
+ ],
+ "equip-drone": [
+  0.58,
+  0.091,
+  0.54
+ ],
+ "equip-vr-set": [
+  0.5,
+  0.135,
+  0.3125
+ ]
+}
