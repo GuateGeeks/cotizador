@@ -120,7 +120,7 @@ changes with the school's choices.
   | `master` | `equip-dino` at about 0.45x, standing still in its rest pose |
   | `electronics` | `equip-electronics-kit` |
   | `spike` | `equip-rover-spike` with `equip-laptop` beside it |
-  | `drones` | `equip-drone` with rotors still |
+  | `drones` | `equip-drone` at about 0.7x (it is 0.58 m wide), rotors still |
   | `immersive` | `equip-vr-set` |
 
 - **Signature (proposal):** the module's program list is part of its signature, so changing the school's
@@ -139,10 +139,14 @@ changes with the school's choices.
 
 ## The Electronics room (decided with the user; details are proposals)
 
-- **Bench (user + call):** the printer and arm come off the floor onto the existing, unused
-  `furn-equipment-table` (1.60 x 0.80 m, 0.605 m tall, 696 triangles, visual PASS), so no new model is needed
-  unless its renders show it does not read as a lab bench. It stands in the front-right part of the room the
-  camera sees. The printer and arm stand on it at scale 1, since real size reads at working height.
+- **Bench (user):** the printer and arm come off the floor onto a new `furn-workbench`. The existing
+  `furn-equipment-table` was rendered (`runs/kits-02-models`) and set aside: at 0.605 m it is as low as the
+  student tables and reads as another table.
+  - The bench is a purpose-built kit-lab bench, about 2.0 x 0.7 m and 0.75 m tall, with a pegboard back holding
+    a few tools, in campus colours.
+  - Budget 1,500 triangles.
+  - It stands in the front-right part of the room the camera sees.
+  - The printer and arm stand on it at scale 1, since real size reads at working height.
 - **Motion (proposal):** the arm's joints sway in a slow reach loop (base turns, shoulder and elbow bend). The
   printer's head moves side to side. Pivots are renamed or marked so merging leaves them free. Reduced motion
   leaves them still in a neutral pose.
@@ -162,7 +166,7 @@ changes with the school's choices.
     showcase input)
   - signatures change with programs
   - the kit list covers every program
-  - the bench's placement and that the machines sit on its top
+  - the bench's size and budget, and that the machines sit on its top
   - the moving joints stay out of merging
 - Performance on the largest campus within 150 draw calls and 500,000 triangles, and the parity test passing,
   recorded in a new run. Other rooms unchanged against a baseline captured first.
