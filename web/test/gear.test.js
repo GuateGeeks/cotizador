@@ -1,6 +1,6 @@
 import { BoxGeometry, Group, Mesh, MeshStandardMaterial, Object3D } from 'three';
 import { afterEach, describe, expect, it } from 'vitest';
-import { clearGear, gearMesh, vertexMerge, wearGear, wearItem } from '../src/world/gear.js';
+import { GRIPS, clearGear, gearMesh, vertexMerge, wearGear, wearItem } from '../src/world/gear.js';
 import { mergeStatic } from '../src/world/merge.js';
 
 const red = new MeshStandardMaterial({ name: 'R', color: 0xff0000 }), blue = new MeshStandardMaterial({ name: 'B', color: 0x0000ff });
@@ -62,6 +62,23 @@ describe('VR gear', () => {
     const tabletKit = new Map([['equip-tablet', asset('equip-tablet', [[0, red]])]]);
     expect(wearItem(rig(['vr_grip_l']), tabletKit, 'vr_grip_l', 'equip-tablet')).toBe(true);
     expect(wearItem(rig([]), tabletKit, 'vr_grip_l', 'equip-tablet')).toBe(false);
+  });
+
+  it('places each item with its own grip, per side when the item has one', () => {
+    const body = rig(['vr_grip_l', 'vr_grip_r']);
+    wearItem(body, kit, 'vr_grip_l', 'equip-vr-controller');
+    wearItem(body, kit, 'vr_grip_r', 'equip-vr-controller');
+    for (const side of ['l', 'r']) {
+      const mesh = body.getObjectByName(`vr_grip_${side}`).children[0];
+      const grip = GRIPS['equip-vr-controller'][side] ?? GRIPS['equip-vr-controller'];
+      expect(mesh.userData.gear).toBe('equip-vr-controller');
+      expect(mesh.rotation.toArray().slice(0, 3)).toEqual(grip.rotation);
+      expect(mesh.position.toArray()).toEqual(grip.position);
+    }
+  });
+
+  it('has a grip for every item a character holds or wears', () => {
+    for (const id of ['equip-vr-headset', 'equip-vr-controller', 'equip-drone-remote', 'equip-tablet']) expect(GRIPS[id], id).toBeTruthy();
   });
 
   it('merges a drone body into one mesh and leaves its rotors to spin', () => {

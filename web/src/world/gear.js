@@ -57,10 +57,30 @@ export function gearMesh(asset) {
   return mesh;
 }
 
+// How each item rests on its fitting point: position in metres at the reference size, Euler XYZ rotation in radians.
+// An item whose hands mirror each other has one grip per side (l, r).
+export const GRIPS = {
+  'equip-vr-headset': { position: [0, 0, 0], rotation: [0, 0, 0] },
+  'equip-vr-controller': { l: { position: [0, 0, 0], rotation: [0, 0, 0] }, r: { position: [0, 0, 0], rotation: [0, 0, 0] } },
+  'equip-drone-remote': { position: [0, 0, 0], rotation: [0, 0, 0] },
+  'equip-tablet': { position: [0, 0, 0], rotation: [0, 0, 0] }
+};
+
+function gripFor(id, point) {
+  const grip = GRIPS[id];
+  return grip?.[point.slice(-1)] ?? grip;
+}
+
 export function wearItem(character, kit, point, id) {
   const anchor = character.getObjectByName(point), asset = kit.get(id);
   if (!anchor || !asset) return false; // A character exported before the fitting points existed goes without.
-  anchor.add(gearMesh(asset));
+  const mesh = gearMesh(asset), grip = gripFor(id, point);
+  if (grip) {
+    mesh.position.fromArray(grip.position);
+    mesh.rotation.set(...grip.rotation);
+  }
+  mesh.userData.gear = id;
+  anchor.add(mesh);
   return true;
 }
 
