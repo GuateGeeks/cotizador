@@ -1,3 +1,4 @@
+import { Object3D, Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';
 import { COURSE_ASSETS, DRONE_HALF_HEIGHT, DRONE_RADIUS, FLAG, OBSTACLES, PILOTS, REST, SPEED, WATCHERS, closestPoint, distanceAt, dronePose, laneLength } from '../src/world/drone-course.js';
 
@@ -73,6 +74,25 @@ describe('drone course', () => {
     }
     for (const [i, a] of people.entries()) for (const b of people.slice(i + 1)) expect(Math.hypot(a.x - b.x, a.z - b.z)).toBeGreaterThanOrEqual(.6);
     expect(PILOTS.map(p => p.lane).sort()).toEqual(['A', 'B']);
+  });
+  it('banks into every turn: the inside wing dips', () => {
+    let banked = 0;
+    for (let i = 0; i < 300; i += 1) {
+      const t = i / 300 * lap(), p = dronePose('A', t);
+      if (Math.abs(p.bank) < .05) continue;
+      // The inside of the turn: where the heading bends over the next 0.16 m, the distance the drone looks ahead.
+      const ahead = dronePose('A', t + .01 * laneLength('A') / SPEED);
+      const inside = new Vector3(Math.sin(ahead.yaw) - Math.sin(p.yaw), 0, Math.cos(ahead.yaw) - Math.cos(p.yaw));
+      if (inside.length() < 1e-5) continue;
+      const drone = new Object3D();
+      drone.rotation.set(p.pitch, p.yaw, p.bank, 'YXZ');
+      drone.updateMatrixWorld(true);
+      const wing = new Vector3(1, 0, 0).transformDirection(drone.matrixWorld);
+      const insideWing = wing.x * inside.x + wing.z * inside.z > 0 ? wing : wing.clone().negate();
+      expect(insideWing.y, `sample ${i}`).toBeLessThan(0);
+      banked += 1;
+    }
+    expect(banked).toBeGreaterThan(20);
   });
   it('rests both drones on the landing ring, apart', () => {
     for (const r of Object.values(REST)) expect(Math.hypot(r[0], r[2])).toBeLessThanOrEqual(1.7 - DRONE_RADIUS);

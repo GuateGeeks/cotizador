@@ -68,7 +68,7 @@ function poseAt(id, u) {
   const curve = lane(id), p = curve.getPointAt(u), t = curve.getTangentAt(u);
   const next = curve.getTangentAt((u + .01) % 1), step = .01 * curve.getLength();
   const turn = (t.x * next.z - t.z * next.x) / step; // signed horizontal curvature
-  const bank = Math.max(-.35, Math.min(.35, -.6 * turn * SPEED));
+  const bank = Math.max(-.35, Math.min(.35, .6 * turn * SPEED)); // into the turn: the inside wing dips
   return { x: p.x, y: p.y, z: p.z, yaw: Math.atan2(t.x, t.z), pitch: -Math.asin(Math.max(-1, Math.min(1, t.y))), bank, u };
 }
 
