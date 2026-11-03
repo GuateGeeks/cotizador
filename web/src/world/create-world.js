@@ -586,7 +586,7 @@ export function createWorld(container, opts = {}) {
     if (module.terraceStudents) ids.push(...plan.levels.flatMap(level => ROSTER[level]).flatMap(withLod));
     if (LEVEL_TABLE_ITEM[module.levelId]) ids.push(LEVEL_TABLE_ITEM[module.levelId]);
     for (const [asset] of PROGRAM_SETUP[module.programId] || []) ids.push(asset);
-    if (module.type === 'patio') ids.push(...COURSE_ASSETS);
+    if (module.type === 'patio') ids.push(...COURSE_ASSETS, ...rosterFor(module).flatMap(withLod)); // its pilots and watchers
     if (module.programId === 'master') ids.push(...MASTER_ASSETS);
     if (module.programId === 'electronics') ids.push(...LAB_ASSETS);
     return ids;

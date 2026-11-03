@@ -195,6 +195,20 @@ expect(reports.some(r => r.kind === 'asset' && r.id.startsWith('arch-roof-')), '
 expect(hurt.entityKeys.includes('room:pre:0'), 'other modules should survive one failed asset');
 await broken.close();
 
+stage('drones only');
+// A school whose only program is Drones: the field brings its own students.
+const solo = await browser.newPage();
+const soloProblems = [];
+solo.on('pageerror', e => soloProblems.push(String(e)));
+await solo.goto(URL);
+await solo.waitForFunction(() => window.world);
+await solo.evaluate(input => window.world.update(input), { levels: ['bas'], students: 60, programs: ['drones'], equipment: [{ id: 'drones@x', programId: 'drones', groupIds: [] }] });
+await solo.waitForFunction(() => { const d = window.world.getDiagnostics(); return d.ready && d.pendingLoads === 0 && d.transitionsActive === 0; }, null, { timeout: 60000 })
+  .catch(() => failures.push('a Drones-only school never finished building'));
+const soloField = (await diag(solo)).drones;
+expect(soloField?.count === 2 && soloField.pilots === 2 && soloProblems.length === 0, `Drones-only school: ${JSON.stringify(soloField)} ${soloProblems[0] || ''}`);
+await solo.close();
+
 stage('broken kit');
 // A classroom kit that fails to load leaves its classroom standing, with its usual table item instead.
 const brokenKit = await browser.newPage();
