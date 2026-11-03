@@ -221,7 +221,6 @@ export function createWorld(container, opts = {}) {
         if (entity.swayers) poseSwayers(entity, elapsed);
         if (entity.flyers) poseFlyers(entity, elapsed);
         for (const spinner of entity.spinners) spinner.node.rotation[spinner.axis] += delta * spinner.speed;
-        for (const hover of entity.hovers) hover.position.y = hover.userData.height + Math.sin(elapsed * 1.4) * .22;
       }
     }
     draw();
@@ -595,7 +594,7 @@ export function createWorld(container, opts = {}) {
 
   function build(module, kit) {
     const group = new Group();
-    const entity = { key: module.key, signature: signatureOf(module), group, mixers: [], spinners: [], walkers: [], hovers: [], pairs: [], owned: [], characters: [], home: { y: module.y }, enter: reduced ? null : 0 };
+    const entity = { key: module.key, signature: signatureOf(module), group, mixers: [], spinners: [], walkers: [], pairs: [], owned: [], characters: [], home: { y: module.y }, enter: reduced ? null : 0 };
     group.position.set(module.x, module.y, module.z);
     group.rotation.y = module.rot;
     group.userData.entity = module;
@@ -784,7 +783,7 @@ export function createWorld(container, opts = {}) {
     for (let i = walkers.length; i < wanted; i += 1) {
       const key = `walker:${i}`;
       const group = new Group();
-      const entity = { key, signature: key, group, mixers: [], spinners: [], walkers: [], hovers: [], pairs: [], owned: [], characters: [], home: { y: 0 }, enter: null };
+      const entity = { key, signature: key, group, mixers: [], spinners: [], walkers: [], pairs: [], owned: [], characters: [], home: { y: 0 }, enter: null };
       root.add(group);
       const { high, low } = character(entity, kit, roster[i % roster.length], 'walk', 0, 0, 0, 0, i * .3);
       const walker = { key, objects: [high, low], phase: (i * .37) % 1, lane: i % 2 ? .4 : -.4 };
