@@ -11,6 +11,7 @@
  * Stairs climb to a floor-1 walkway along the fronts, and a second flight reaches floor 2.
  * A level gains an upper room at 90 students or 4 sections, as the cotizador's planner does.
  */
+import { levelPrograms, tablePrograms } from './classroom-programs.js';
 import constants from '../../../world/constants.json';
 import { applyNeighbours } from './neighbours.js';
 import { LEVEL_IDS } from './normalize.js';
@@ -36,6 +37,7 @@ const needsUpper = (data, level) => (data.counts[level] || 0) >= UPPER_STUDENTS 
 
 export function planWorld(data) {
   const modules = [];
+  const programsOf = levelPrograms(data);
   const add = (key, type, asset, column, floor, z = rowZ(column), extra = {}) => {
     const module = { key, type, asset, column, floor, x: columnX(column), y: floor * FLOOR, z, rot: 0, ...extra };
     modules.push(module);
@@ -50,8 +52,8 @@ export function planWorld(data) {
   const levels = data.levels.length ? data.levels : ['pre'];
   for (const level of levels) {
     const count = data.counts[level] || 0;
-    building(`room:${level}:0`, 'room', 'arch-classroom-standard', LEVEL_COLUMN[level], 0, { levelId: level, population: population(count), example: !data.levels.length });
-    if (needsUpper(data, level)) building(`upper:${level}:0`, 'room', 'arch-classroom-upper', LEVEL_COLUMN[level], 1, { levelId: level, population: population(count / 2) });
+    building(`room:${level}:0`, 'room', 'arch-classroom-standard', LEVEL_COLUMN[level], 0, { levelId: level, population: population(count), example: !data.levels.length, programs: tablePrograms(programsOf[level] || [], false) });
+    if (needsUpper(data, level)) building(`upper:${level}:0`, 'room', 'arch-classroom-upper', LEVEL_COLUMN[level], 1, { levelId: level, population: population(count / 2), programs: tablePrograms(programsOf[level] || [], true) });
   }
   for (const program of data.programs) {
     if (program === 'drones') {

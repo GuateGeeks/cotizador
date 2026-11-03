@@ -18,3 +18,11 @@ describe('diffEntities', () => {
     expect(diff.add.map(m => m.key)).toEqual(['a']);
   });
 });
+
+describe('signatureOf', () => {
+  it('rebuilds a classroom when its programs change, and only then', () => {
+    const room = { key: 'room:prim:0', asset: 'arch-classroom-standard', x: 0, y: 0, z: 0, rot: 0, population: 2, programs: ['master'] };
+    expect(signatureOf(room)).not.toBe(signatureOf({ ...room, programs: ['master', 'electronics'] }));
+    expect(signatureOf(room)).toBe(signatureOf({ ...room, programs: ['master'] }));
+  });
+});
