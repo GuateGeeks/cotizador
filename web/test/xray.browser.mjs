@@ -48,7 +48,7 @@ const cleared = await xray(page);
 await focus(page, { kind: 'level', id: 'bas' });
 x = await xray(page);
 expect(x.room === 'room:bas:0', `level focus did not open básico: ${x.room}`);
-expect(x.batchSources < cleared.batchSources, `batch still holds x-rayed meshes: ${x.batchSources} vs ${cleared.batchSources}`);
+expect(x.hiddenInBatch === 0, `batch draws ${x.hiddenInBatch} meshes the x-ray stepped aside`);
 
 // Switching rooms restores the first.
 const first = x;
@@ -59,6 +59,8 @@ const stale = [...first.veiled, ...first.hidden].filter(key => key !== x.room &&
 const leftovers = await page.evaluate(keys => window.world.xrayLeftovers(keys), stale);
 expect(leftovers.length === 0, `first room's blockers still x-rayed: ${leftovers}`);
 await page.screenshot({ path: `${out}/focus-electronics.png` });
+// The open room's shell copy is merged per material after veiling, so it costs a few draws, not one per part.
+expect(x.cloneMeshes > 0 && x.cloneMeshes <= 12, `open shell draws ${x.cloneMeshes} meshes`);
 
 // Turning the camera to the back swaps which own walls veil.
 expect(x.ownVeils.includes('pier_front'), `front wall not veiled from the front: ${x.ownVeils}`);

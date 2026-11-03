@@ -586,6 +586,8 @@ export function createWorld(container, opts = {}) {
       state.ownVeils.push(name);
       node.traverse(child => veilMesh(state, child));
     });
+    // Merged per material once veiled: the veil parts become one draw, the rest a few.
+    state.cloneOwned = mergeStatic(clone, true);
     state.clone = clone;
     state.groups.set(module.key, room.group);
     xrayState = state;
@@ -600,7 +602,8 @@ export function createWorld(container, opts = {}) {
     xrayState = null;
     for (const [mesh, material, castShadow] of state.veiledMeshes) { mesh.material = material; mesh.castShadow = castShadow; }
     for (const object of state.hiddenObjects) object.visible = true;
-    state.clone?.removeFromParent(); // Shares the cached asset's geometry: nothing to dispose.
+    state.clone?.removeFromParent();
+    for (const geometry of state.cloneOwned || []) geometry.dispose();
     unbatch();
     scheduleBatch();
     invalidate();
@@ -611,7 +614,12 @@ export function createWorld(container, opts = {}) {
     batchTimer = setTimeout(() => {
       if (disposed || moving() || pendingLoads) return scheduleBatch();
       clearBatch(batched);
-      const settled = [...entities.values()].filter(entity => entity.group.visible && !xrayState?.keys.has(entity.key)).flatMap(entity => [...(entity.staticMeshes || []), ...(entity.extra?.visible ? entity.extraMeshes : [])]);
+      // Meshes under a hidden part (an x-ray steps furniture and shells aside) stay out; veiled ones batch into
+      // a single veil draw, since they share one material.
+      const shown = mesh => { for (let up = mesh.parent; up; up = up.parent) if (!up.visible) return false; return true; };
+      const settled = [...entities.values()].filter(entity => entity.group.visible).flatMap(entity => [...(entity.staticMeshes || []), ...(entity.extra?.visible ? entity.extraMeshes : [])]).filter(shown);
+      // The open room's merged shell copy joins the batch, sharing draws with the same materials elsewhere.
+      if (xrayState?.clone) settled.push(...xrayState.clone.children.filter(child => child.isMesh));
       batched = buildBatch(settled, root);
       invalidate();
     }, 300);
@@ -836,7 +844,7 @@ export function createWorld(container, opts = {}) {
         batched: !!batched,
         characters: [...new Set([...entities.values()].flatMap(entity => entity.characters))],
         dino: dinoDiagnostics(),
-        xray: { room: xrayState?.room ?? null, veiled: xrayState?.veiled ?? [], hidden: xrayState?.hidden ?? [], ownVeils: xrayState?.ownVeils ?? [], batchSources: batched?.sources.length ?? 0 },
+        xray: { hiddenInBatch: (batched?.sources || []).filter(mesh => { for (let up = mesh.parent; up; up = up.parent) if (!up.visible) return true; return false; }).length, cloneMeshes: (() => { let n = 0; xrayState?.clone?.traverse(node => { if (node.isMesh) n += 1; }); return n; })(), room: xrayState?.room ?? null, veiled: xrayState?.veiled ?? [], hidden: xrayState?.hidden ?? [], ownVeils: xrayState?.ownVeils ?? [], batchSources: batched?.sources.length ?? 0 },
         electronics: electronicsDiagnostics(),
         tableKits: Object.fromEntries([...entities.values()].filter(entity => entity.tableKits).map(entity => [entity.key, entity.tableKits])),
         vr: { students: 0, headsets: 0, controllers: 0, ...entities.get('project:immersive')?.vr, gearLoaded: gearRequested, ...visibleGear(entities.get('project:immersive')) },
