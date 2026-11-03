@@ -16,6 +16,13 @@ Draw calls fell from 4,536 by merging each entity's static parts, then batching 
 draw per material. During a transition the batch is off, and draw calls rise to about 600 until it rebuilds.
 Characters swap to a 1,400-triangle model at campus distance. `InstancedMesh` was not needed.
 
+## 2026-11-03 Classroom kits and Electronics bench
+
+Classrooms now show their programs' kits, and the Electronics printer and arm work at a bench. The first
+measurement read 164 draw calls: kits on the tables and the arm's and printer's moving parts, which cannot
+merge. Making both close-view detail (dropped at campus distance like the chairs, no shadows) brought the
+largest campus back to 60 fps, 142 draw calls and 363,608 triangles (`runs/kits-21-parity/bench.json`).
+
 ## 2026-11-03 Makerzoid dinosaur
 
 With the kit dinosaur walking the Makerzoid room (one skinned, vertex-coloured mesh), a driver with a tablet

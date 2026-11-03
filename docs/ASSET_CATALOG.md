@@ -47,7 +47,7 @@ Generated from `assets/manifests/` by `python3 scripts/world.py catalog`.
 | char-teacher-lod1 | 1399 | 1.65 x 1.75 x 0.50 | 358248 | PASS | PASS |
 | char-teacher | 5797 | 1.66 x 1.75 x 0.50 | 555616 | PASS | PASS |
 | equip-arm | 1120 | 0.30 x 0.41 x 0.41 | 24856 | PASS | PASS |
-| equip-dino | 4828 | 0.31 x 0.48 x 0.81 | 181416 | PASS | PASS |
+| equip-dino | 4828 | 0.31 x 0.48 x 0.81 | 182772 | PASS | PASS |
 | equip-drone | 1984 | 0.58 x 0.09 x 0.54 | 44516 | PASS | PASS |
 | equip-electronics-kit | 1260 | 0.36 x 0.05 x 0.26 | 34084 | PASS | PASS |
 | equip-kit-storage | 728 | 0.80 x 0.94 x 0.42 | 16096 | PASS | PASS |
@@ -73,6 +73,7 @@ Generated from `assets/manifests/` by `python3 scripts/world.py catalog`.
 | furn-table-four | 936 | 1.30 x 0.61 x 1.30 | 21164 | PASS | PASS |
 | furn-tile-paving | 568 | 2.00 x 0.12 x 2.00 | 12572 | PASS | PASS |
 | furn-whiteboard | 756 | 1.26 x 1.42 x 0.36 | 15404 | PASS | PASS |
+| furn-workbench | 1456 | 2.00 x 1.33 x 0.70 | 37028 | PASS | PASS |
 | veg-flowers | 160 | 0.62 x 0.26 x 0.52 | 7560 | PASS | PASS |
 | veg-shrub | 240 | 1.03 x 0.63 x 0.69 | 6292 | PASS | PASS |
 | veg-tree-large-alt | 1488 | 2.87 x 3.96 x 1.96 | 27296 | PASS | PASS |

@@ -15,6 +15,16 @@ terrace below a taller neighbour, barrel on project stacks, and pitched, flat or
 It adds archways under spans, pocket gardens in gaps, trims between equal stacks and a courtyard
 tree and bench from three ground rooms. Rooms are never moved or rebuilt by these rules.
 
+Classrooms show the programs their grades use (`web/src/layout/classroom-programs.js`): a program counts
+for a level when one of its equipment `groupIds` is an enrollment row of that level, and a program with no
+groups (the cotizador's landing showcase) counts for its usual levels (`HOME_LEVELS`). The ground classroom
+shows programs 1-2 and the upper one 3-4 (or 1-2 again); the list is part of the module's signature, so a
+change rebuilds only the affected classrooms. `web/src/world/classroom-kits.js` maps each program to table
+kits, shown at `KIT_SCALE` 1.5 on the front half of each table as close-view detail; with no programs the
+tables keep `LEVEL_TABLE_ITEM`. The Electronics room's printer and arm stand on `furn-workbench` at the front
+(`web/src/world/electronics-room.js`); their pivots are marked `userData.separate` and swayed each frame by
+`swayPose`, and they drop at campus distance.
+
 The Makerzoid program room keeps its tables; its dinosaur (`equip-dino`) is a kit robot of rigid parts
 joined into one mesh skinned to a small armature and coloured per vertex (`GG_KitVertex`), so it is one draw
 call. It walks a stadium loop in the room's visible right half (`web/src/world/dino-room.js`); the app plays
