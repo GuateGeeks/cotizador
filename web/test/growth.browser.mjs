@@ -161,7 +161,7 @@ await brokenKit.goto(URL);
 await brokenKit.waitForFunction(() => window.world);
 await brokenKit.evaluate(input => window.world.update(input), states[2]);
 await brokenKit.waitForFunction(() => window.world.getDiagnostics().pendingLoads === 0, null, { timeout: 60000 });
-await brokenKit.waitForTimeout(1500);
+await brokenKit.waitForFunction(() => window.world.getDiagnostics().tableKits['room:pre:0'], null, { timeout: 20000 }).catch(() => {});
 const kitless = await diag(brokenKit);
 expect(kitless.entityKeys.includes('room:pre:0'), `a failed kit took preprimaria down: ${kitless.entityKeys.filter(k => k.startsWith('room'))}`);
 expect(JSON.stringify(kitless.tableKits['room:pre:0']) === JSON.stringify([['equip-organizer'], ['equip-organizer']]), `preprimaria without its kit: ${JSON.stringify(kitless.tableKits['room:pre:0'])}`);

@@ -234,6 +234,7 @@ export function createWorld(container, opts = {}) {
 
   function placeIn(group, asset, x, y, z, rotation = 0) {
     const object = asset.scene.clone(true);
+    object.userData.asset = asset.id; // Lets diagnostics and checks find placed equipment by what it is.
     object.position.set(x, y, z);
     object.rotation.y = rotation;
     group.add(object);
@@ -391,11 +392,18 @@ export function createWorld(container, opts = {}) {
   function electronicsDiagnostics() {
     const room = entities.get('project:electronics');
     if (!room?.bench) return null;
-    const onBench = room.bench.filter(({ object }) => Math.abs(object.position.y - BENCH_TOP) < 1e-6).map(({ asset }) => asset);
+    const floor = room.home.y + BASE + .01, top = room.home.y + BENCH_TOP;
+    const at = new Vector3();
     let floorMachines = 0;
-    room.group.traverse(node => { if (/^equip-(arm|printer)/.test(node.userData.asset || '') && node.position.y <= BASE + 1e-6) floorMachines += 1; });
+    const onBench = [];
+    room.group.traverse(node => {
+      if (!/^equip-(arm|printer)$/.test(node.userData.asset || '')) return;
+      const y = node.getWorldPosition(at).y;
+      if (y <= floor) floorMachines += 1;
+      else if (Math.abs(y - top) < .01) onBench.push(node.userData.asset);
+    });
     const swaying = room.swayers.some(({ node, name, axis, rest }) => Math.abs((name === 'head_printer' ? node.position[axis] : node.rotation[axis]) - rest) > 1e-4);
-    return { onBench, floorMachines: floorMachines + room.bench.length - onBench.length, swaying };
+    return { onBench, floorMachines, swaying };
   }
 
   function dinoDiagnostics() {
