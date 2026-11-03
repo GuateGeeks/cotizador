@@ -2,6 +2,8 @@
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
 import states from '../src/app/states.json' with { type: 'json' };
+import dinoManifest from '../../assets/manifests/equip-dino.json' with { type: 'json' };
+import { DINO_SCALE, DINO_SPEED } from '../src/world/dino-room.js';
 
 const out = process.argv[2] || '../runs/web-growth';
 mkdirSync(out, { recursive: true });
@@ -33,7 +35,25 @@ for (const [index, state] of states.entries()) {
   const { vr } = await diag(page);
   if (state.programs?.includes('immersive')) expect(vr.students === 3 && vr.headsets === 6 && vr.controllers === 6, `VR room on state ${index + 1}: ${JSON.stringify(vr)}`);
   else expect(vr.students === 0 && !vr.gearLoaded, `VR gear without the immersive program on state ${index + 1}: ${JSON.stringify(vr)}`);
+  const { dino } = await diag(page);
+  if (state.programs?.includes('master')) expect(dino.count === 1 && dino.students === 3 && dino.tablet === true, `Makerzoid room on state ${index + 1}: ${JSON.stringify(dino)}`);
+  else expect(dino.count === 0, `dinosaur without the Makerzoid program on state ${index + 1}: ${JSON.stringify(dino)}`);
 }
+
+// The dinosaur walks: it moves, and its clip runs at the speed that keeps its feet planted.
+const walked = async label => {
+  // World time advances at most 0.1 s per frame, so on the software renderer it runs slower than the wall
+  // clock: wait for 0.2 m of walking along the loop, then check the dinosaur really moved.
+  const a = (await diag(page)).dino;
+  await page.waitForFunction(from => window.world.getDiagnostics().dino.distance >= from + .2, a.distance, { timeout: 30000 })
+    .catch(() => failures.push(`dinosaur did not walk ${label}`));
+  const b = (await diag(page)).dino;
+  expect(Math.hypot(b.x - a.x, b.z - a.z) >= .15, `dinosaur did not move ${label}: ${JSON.stringify([a, b])}`);
+  return b;
+};
+const strideScale = DINO_SPEED * dinoManifest.walk_seconds / (dinoManifest.stride * DINO_SCALE);
+const walking = await walked('at campus view');
+expect(Math.abs(walking.timeScale - strideScale) < .01, `walk clip speed ${walking.timeScale}, wanted ${strideScale}`);
 
 stage('vr lod');
 // The headset must ride on whichever model is visible: distance models at campus view, close models up close.
@@ -44,6 +64,9 @@ await page.waitForFunction(() => window.world.getDiagnostics().lod === 'close', 
 await page.waitForTimeout(300);
 const closeVr = (await diag(page)).vr;
 expect(closeVr.visibleHeadsets === 3 && closeVr.visibleControllers === 6, `VR gear in close view: ${JSON.stringify(closeVr)}`);
+await page.evaluate(() => window.world.setFocus({ kind: 'program', id: 'master' }));
+await page.waitForFunction(() => window.world.getDiagnostics().lod === 'close', null, { timeout: 20000 });
+await walked('in close view');
 await page.evaluate(() => window.world.resetView());
 await page.waitForFunction(() => window.world.getDiagnostics().lod === 'campus', null, { timeout: 20000 });
 
@@ -66,6 +89,7 @@ await settled(page);
 const rapid = await diag(page);
 expect(rapid.entityKeys.length === baseline.entityKeys.length, `rapid updates ended on ${rapid.entityKeys.length}, wanted ${baseline.entityKeys.length}`);
 expect(rapid.geometries <= baseline.geometries + 2, `geometry leak: ${baseline.geometries} -> ${rapid.geometries}`);
+expect(rapid.dino.count === 1, `dinosaurs after rapid updates: ${rapid.dino.count}`);
 console.log(JSON.stringify({ triangles: baseline.triangles, drawCalls: baseline.drawCalls, entities: baseline.entityKeys.length, geometries: baseline.geometries }));
 
 stage('skyline');

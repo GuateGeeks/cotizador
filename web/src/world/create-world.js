@@ -11,7 +11,9 @@ import { clearAssets, clipNamed, loadAsset } from './assets.js';
 import { diffEntities, signatureOf } from './entities.js';
 import { disposeMaterials, materialFor } from './materials.js';
 import { buildBatch, clearBatch, mergeStatic } from './merge.js';
-import { clearGear, wearGear } from './gear.js';
+import { clearGear, wearGear, wearItem } from './gear.js';
+import { DINO_SCALE, DINO_SPEED, MASTER_ASSETS, MASTER_SPOTS, loopPoint } from './dino-room.js';
+import dinoManifest from '../../../assets/manifests/equip-dino.json';
 import { VR_ASSETS, VR_PROPS, VR_TEACHER, VR_ZONES } from './vr-room.js';
 
 const BASE = constants.base;
@@ -26,7 +28,7 @@ const TOP = BASE + .608;
 // Hero equipment is enlarged so a program reads at campus distance. [asset, x, y, z, rotation, scale]
 const PROGRAM_SETUP = {
   tale: [['equip-rover-programmable', 0, BASE, 1.1, .5, 2.4], ['equip-rover-programmable', -1.05, TOP, -.2, -.4, 1]],
-  master: [['equip-dino', 0, BASE, 1.1, -.5, 2.4], ['equip-laptop', 1.35, TOP, -.2, 0, 1]],
+  master: [['equip-laptop', 1.35, TOP, -.2, 0, 1]], // The kit dinosaur walks; see placeDino.
   spike: [['equip-rover-spike', 0, BASE, 1.1, .5, 2.2], ['equip-rover-spike', 1.35, TOP, -.2, .5, 1], ['equip-laptop', -1.05, TOP, -.2, 0, 1]],
   electronics: [['equip-printer', -2.1, BASE, 1.2, .4, 1.5], ['equip-arm', 0, BASE, 1.1, .3, 2], ['equip-electronics-kit', -1.05, TOP, -.2, .2, 1.4], ['equip-electronics-kit', 1.35, TOP, -.2, -.2, 1.4]],
 };
@@ -204,6 +206,7 @@ export function createWorld(container, opts = {}) {
       for (const entity of entities.values()) for (const mixer of entity.mixers) if (mixer.getRoot().visible) mixer.update(delta);
       for (const walker of walkers) walkAlong(walker);
       for (const entity of entities.values()) {
+        if (entity.dino) poseDino(entity, elapsed * DINO_SPEED);
         for (const spinner of entity.spinners) spinner.node.rotation[spinner.axis] += delta * spinner.speed;
         for (const hover of entity.hovers) hover.position.y = hover.userData.height + Math.sin(elapsed * 1.4) * .22;
       }
@@ -263,8 +266,47 @@ export function createWorld(container, opts = {}) {
     }
   }
 
+  // The walk clip runs at the speed that matches the stride to the dinosaur's travel, so its feet stay planted.
+  const DINO_TIME_SCALE = DINO_SPEED * dinoManifest.walk_seconds / (dinoManifest.stride * DINO_SCALE);
+
+  function placeDino(entity, kit) {
+    const asset = kit.get('equip-dino');
+    const object = cloneSkinned(asset.scene);
+    object.scale.setScalar(DINO_SCALE);
+    entity.group.add(object);
+    const mixer = new AnimationMixer(object);
+    mixer.clipAction(clipNamed(asset.animations, 'walk')).setLoop(LoopRepeat).play();
+    mixer.timeScale = DINO_TIME_SCALE;
+    entity.mixers.push(mixer);
+    entity.dino = { object, mixer, trackers: [], tablet: false };
+    poseDino(entity, 0); // Reduced motion leaves it here: on the loop, never at the room's origin.
+  }
+
+  function poseDino(entity, distance) {
+    const { object, trackers } = entity.dino;
+    entity.dino.distance = distance;
+    const { x, z, heading } = loopPoint(distance);
+    object.position.set(x, BASE, z);
+    object.rotation.y = heading;
+    for (const pair of trackers) for (const body of [pair.high, pair.low]) body.rotation.y = Math.atan2(x - body.position.x, z - body.position.z);
+  }
+
+  function seatMaster(entity, module, kit) {
+    const roster = rosterFor(module);
+    const [dx, dz] = MASTER_SPOTS.driver;
+    const driver = character(entity, kit, roster[0], 'interact', dx, BASE, dz, 0, 0);
+    entity.dino.tablet = wearItem(driver.high, kit, 'vr_grip_l', 'equip-tablet');
+    entity.dino.trackers.push(driver);
+    for (const [i, [x, z]] of MASTER_SPOTS.watchers.slice(0, Math.max(module.population - 1, 1)).entries()) {
+      entity.dino.trackers.push(character(entity, kit, roster[(i + 1) % roster.length], 'idle', x, BASE, z, 0, .4 + i * .5));
+    }
+    character(entity, kit, TEACHER, 'interact', 2.2, BASE, -.6, -.8, .2);
+    poseDino(entity, 0);
+  }
+
   function furnish(entity, module, kit) {
     if (module.programId === 'immersive') return furnishVr(entity, kit);
+    if (module.programId === 'master') placeDino(entity, kit);
     const group = entity.inside;
     const extra = entity.extra; // Chairs, shelves and storage: dropped at campus distance to pay for the skyline.
     const table = kit.get('furn-table-four'), orange = kit.get('furn-chair-orange'), teal = kit.get('furn-chair-turquoise');
@@ -285,6 +327,13 @@ export function createWorld(container, opts = {}) {
     }
     const item = kit.get(LEVEL_TABLE_ITEM[module.levelId]);
     if (item) for (const x of [-1.05, 1.35]) placeIn(group, item, x, TOP, -.2);
+  }
+
+  function dinoDiagnostics() {
+    const rooms = [...entities.values()].filter(entity => entity.dino);
+    const dino = rooms[0]?.dino;
+    if (!dino) return { count: 0, students: 0, tablet: false };
+    return { count: rooms.length, distance: dino.distance, x: dino.object.position.x, z: dino.object.position.z, timeScale: dino.mixer.timeScale, students: dino.trackers.length, tablet: dino.tablet };
   }
 
   function visibleGear(entity) {
@@ -312,6 +361,7 @@ export function createWorld(container, opts = {}) {
 
   function seat(entity, module, kit) {
     if (module.programId === 'immersive') return seatVr(entity, module, kit);
+    if (module.programId === 'master') return seatMaster(entity, module, kit);
     const seats = [[.47, -.2, Math.PI / 2, 'sit'], [2.4, 1, -.6, 'idle'], [-2.2, 1.1, .5, 'idle'], [-.9, 1.2, .2, 'interact']];
     const roster = rosterFor(module);
     for (let i = 0; i < (module.population || 1); i += 1) {
@@ -333,6 +383,7 @@ export function createWorld(container, opts = {}) {
     if (LEVEL_TABLE_ITEM[module.levelId]) ids.push(LEVEL_TABLE_ITEM[module.levelId]);
     for (const [asset] of PROGRAM_SETUP[module.programId] || []) ids.push(asset);
     if (module.type === 'patio') ids.push('equip-drone');
+    if (module.programId === 'master') ids.push(...MASTER_ASSETS);
     return ids;
   }
 
@@ -589,6 +640,7 @@ export function createWorld(container, opts = {}) {
         roomDetail: lod === 'close' ? 'full' : 'light',
         batched: !!batched,
         characters: [...new Set([...entities.values()].flatMap(entity => entity.characters))],
+        dino: dinoDiagnostics(),
         vr: { students: 0, headsets: 0, controllers: 0, ...entities.get('project:immersive')?.vr, gearLoaded: gearRequested, ...visibleGear(entities.get('project:immersive')) },
         animatedPrograms: [...new Set((plan?.modules || []).filter(m => m.programId).map(m => m.programId))] };
     },
