@@ -35,7 +35,8 @@ for (const [index, state] of states.entries()) {
   const { vr } = await diag(page);
   if (state.programs?.includes('immersive')) expect(vr.students === 3 && vr.headsets === 6 && vr.controllers === 6, `VR room on state ${index + 1}: ${JSON.stringify(vr)}`);
   else expect(vr.students === 0 && !vr.gearLoaded, `VR gear without the immersive program on state ${index + 1}: ${JSON.stringify(vr)}`);
-  const { tableKits } = await diag(page);
+  const { tableKits, electronics: lab } = await diag(page);
+  if (!state.programs?.includes('electronics')) expect(lab === null, `Electronics room without the program on state ${index + 1}`);
   if (index === 1) for (const [key, tables] of Object.entries(tableKits)) {
     const fallback = key.includes(':bas:') || key.includes(':bach:') ? 'equip-laptop' : 'equip-organizer';
     expect(tables.every(t => t.length === 1 && t[0] === fallback), `classroom without programs ${key}: ${JSON.stringify(tables)}`);
@@ -44,6 +45,8 @@ for (const [index, state] of states.entries()) {
     const { electronics } = await diag(page);
     expect(electronics && ['equip-arm', 'equip-printer'].every(id => electronics.onBench.includes(id)) && electronics.floorMachines === 0 && electronics.swaying,
       `Electronics bench: ${JSON.stringify(electronics)}`);
+    expect(electronics?.tables === 0 && JSON.stringify(electronics.stations) === JSON.stringify(['printing', 'arm', 'circuits']) && electronics.students === 4,
+      `Electronics stations: ${JSON.stringify(electronics)}`);
     const want = { 'room:prim:0': [['equip-dino'], ['equip-electronics-kit']], 'room:pre:0': [['equip-rover-programmable'], ['equip-rover-programmable']],
       'room:bas:0': [['equip-rover-spike', 'equip-laptop'], ['equip-drone']] };
     for (const [key, tables] of Object.entries(want)) expect(JSON.stringify(tableKits[key]) === JSON.stringify(tables), `kits in ${key}: ${JSON.stringify(tableKits[key])}`);

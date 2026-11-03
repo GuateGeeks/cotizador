@@ -14,7 +14,7 @@ import { HIDES_INSIDE, OWN_WALLS, wallVeils, xrayBlockers, xrayKey } from './roo
 import { buildBatch, clearBatch, mergeStatic } from './merge.js';
 import { clearGear, wearGear, wearItem } from './gear.js';
 import { KIT_ASSETS, KIT_SCALE, tableKits } from './classroom-kits.js';
-import { BENCH, BENCH_ITEMS, ELECTRONICS_SPOTS, swayPose } from './electronics-room.js';
+import { ELECTRONICS_TEACHER, LAB_ASSETS, MACHINES, STATIONS, swayPose } from './electronics-room.js';
 import workbenchManifest from '../../../assets/manifests/furn-workbench.json';
 import { DINO_SCALE, DINO_SPEED, DINO_START, MASTER_ASSETS, MASTER_SPOTS, loopPoint } from './dino-room.js';
 import dinoManifest from '../../../assets/manifests/equip-dino.json';
@@ -34,8 +34,6 @@ const PROGRAM_SETUP = {
   tale: [['equip-rover-programmable', 0, BASE, 1.1, .5, 2.4], ['equip-rover-programmable', -1.05, TOP, -.2, -.4, 1]],
   master: [['equip-laptop', 1.35, TOP, -.2, 0, 1]], // The kit dinosaur walks; see placeDino.
   spike: [['equip-rover-spike', 0, BASE, 1.1, .5, 2.2], ['equip-rover-spike', 1.35, TOP, -.2, .5, 1], ['equip-laptop', -1.05, TOP, -.2, 0, 1]],
-  // The printer and the arm work at the bench; see placeBench.
-  electronics: [['equip-electronics-kit', -1.05, TOP, -.2, .2, 1.4], ['equip-electronics-kit', 1.35, TOP, -.2, -.2, 1.4]],
 };
 const LEVEL_TABLE_ITEM = { bas: 'equip-laptop', bach: 'equip-laptop', prim: 'equip-organizer', pre: 'equip-organizer' };
 const easeOut = t => 1 - Math.pow(1 - t, 3) + Math.sin(t * Math.PI) * .07;
@@ -321,21 +319,31 @@ export function createWorld(container, opts = {}) {
   const BENCH_TOP = BASE + workbenchManifest.sockets.socket_top[1];
   const SWAY_AXES = { joint_base: 'y', joint_shoulder: 'x', joint_elbow: 'x', head_printer: 'x' };
 
-  function placeBench(entity, kit) {
-    placeIn(entity.inside, kit.get('furn-workbench'), BENCH.x, BASE, BENCH.z, BENCH.rot);
+  // The Electronics room is three workbench stations (electronics-room.js). Benches, stools and props merge with the
+  // room at every distance; the printer and arm are close-view detail, since their moving parts cannot merge.
+  function placeStations(entity, kit) {
+    placeIn(entity.extra, kit.get('furn-shelves'), 2.1, BASE, -1.95);
+    placeIn(entity.extra, kit.get('equip-kit-storage'), -2.1, BASE, -1.95);
     entity.swayers = [];
     entity.bench = [];
-    for (const [asset, dx, dz, rotation] of BENCH_ITEMS) {
-      // Close-view detail like the chairs: their moving parts cannot merge, so they drop at campus distance.
-      const object = placeIn(entity.extra, kit.get(asset), BENCH.x + dx, BENCH_TOP, BENCH.z + dz, rotation);
-      object.traverse(node => { if (node.isMesh) node.castShadow = false; });
-      entity.bench.push({ asset, object });
-      object.traverse(node => {
-        if (!(node.name in SWAY_AXES)) return;
-        node.userData.separate = true; // Moving parts stay whole when the room's static parts merge.
-        const axis = SWAY_AXES[node.name];
-        entity.swayers.push({ node, name: node.name, axis, rest: node.name === 'head_printer' ? node.position[axis] : node.rotation[axis] });
-      });
+    entity.stations = STATIONS.map(station => station.id);
+    for (const station of STATIONS) {
+      const { asset, x, z, rot } = station.bench;
+      placeIn(entity.inside, kit.get(asset), x, BASE, z, rot);
+      for (const student of station.students) if (student.stool) placeIn(entity.inside, kit.get('furn-stool'), student.x, BASE, student.z);
+      for (const [item, ix, iz, irot] of station.items) {
+        const machine = MACHINES.has(item);
+        const object = placeIn(machine ? entity.extra : entity.inside, kit.get(item), ix, BENCH_TOP, iz, irot);
+        if (!machine) continue;
+        object.traverse(node => { if (node.isMesh) node.castShadow = false; });
+        entity.bench.push({ asset: item, object });
+        object.traverse(node => {
+          if (!(node.name in SWAY_AXES)) return;
+          node.userData.separate = true; // Moving parts stay whole when the room's static parts merge.
+          const axis = SWAY_AXES[node.name];
+          entity.swayers.push({ node, name: node.name, axis, rest: node.name === 'head_printer' ? node.position[axis] : node.rotation[axis] });
+        });
+      }
     }
     poseSwayers(entity, 0); // Reduced motion leaves the machines at rest.
   }
@@ -350,15 +358,18 @@ export function createWorld(container, opts = {}) {
 
   function seatElectronics(entity, module, kit) {
     const roster = rosterFor(module);
-    const [bx, bz, brot] = ELECTRONICS_SPOTS.bench, [sx, sz, srot] = ELECTRONICS_SPOTS.seat;
-    character(entity, kit, roster[0], 'interact', bx, BASE, bz, brot, 0);
-    character(entity, kit, roster[1 % roster.length], 'sit', sx, BASE + .02, sz, srot, .4);
-    character(entity, kit, TEACHER, 'interact', 2.2, BASE, -.6, -.8, .2);
+    const students = STATIONS.flatMap(station => station.students).slice(0, module.population);
+    for (const [i, { x, z, rot, clip }] of students.entries()) {
+      character(entity, kit, roster[i % roster.length], clip, x, BASE + (clip === 'sit' ? .02 : 0), z, rot, i * .4);
+    }
+    entity.labStudents = students.length;
+    const [tx, tz, trot] = ELECTRONICS_TEACHER;
+    character(entity, kit, TEACHER, 'interact', tx, BASE, tz, trot, .2);
   }
 
   function furnish(entity, module, kit) {
     if (module.programId === 'immersive') return furnishVr(entity, kit);
-    if (module.programId === 'electronics') placeBench(entity, kit);
+    if (module.programId === 'electronics') return placeStations(entity, kit);
     if (module.programId === 'master') placeDino(entity, kit);
     const group = entity.inside;
     const extra = entity.extra; // Chairs, shelves and storage: dropped at campus distance to pay for the skyline.
@@ -411,7 +422,9 @@ export function createWorld(container, opts = {}) {
       else if (Math.abs(y - top) < .01) onBench.push(node.userData.asset);
     });
     const swaying = room.swayers.some(({ node, name, axis, rest }) => Math.abs((name === 'head_printer' ? node.position[axis] : node.rotation[axis]) - rest) > 1e-4);
-    return { onBench, floorMachines, swaying };
+    let tables = 0;
+    room.group.traverse(node => { if (node.userData.asset === 'furn-table-four') tables += 1; });
+    return { onBench, floorMachines, swaying, tables, stations: room.stations, students: room.labStudents };
   }
 
   // Meshes still showing inside a veiled room or roof, outside its shell: what the x-ray failed to step aside.
@@ -497,7 +510,7 @@ export function createWorld(container, opts = {}) {
     for (const [asset] of PROGRAM_SETUP[module.programId] || []) ids.push(asset);
     if (module.type === 'patio') ids.push('equip-drone');
     if (module.programId === 'master') ids.push(...MASTER_ASSETS);
-    if (module.programId === 'electronics') ids.push('furn-workbench', ...BENCH_ITEMS.map(([asset]) => asset));
+    if (module.programId === 'electronics') ids.push(...LAB_ASSETS);
     return ids;
   }
 
