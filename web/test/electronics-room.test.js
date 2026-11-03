@@ -1,19 +1,43 @@
 import { describe, expect, it } from 'vitest';
-import { BENCH, BENCH_ITEMS, SWAY_PERIOD, swayPose } from '../src/world/electronics-room.js';
+import { ELECTRONICS_TEACHER, LAB_ASSETS, STATIONS, SWAY_PERIOD, footprint, swayPose } from '../src/world/electronics-room.js';
+
+const SHELVES = { minX: 1.575, maxX: 2.625, minZ: -2.115, maxZ: -1.79 }, STORAGE = { minX: -2.5, maxX: -1.7, minZ: -2.15, maxZ: -1.73 };
+const overlap = (a, b) => a.minX < b.maxX && b.minX < a.maxX && a.minZ < b.maxZ && b.minZ < a.maxZ;
 
 describe('Electronics room', () => {
-  it('stands the bench in the visible front strip, clear of the tables', () => {
-    expect(BENCH.z - .35).toBeGreaterThanOrEqual(1.0);
-    expect(BENCH.x - 1.0).toBeGreaterThanOrEqual(-1.0); // not in the hidden left part
-    const tableFront = -.2 + .65;
-    expect(BENCH.z - .35 - tableFront).toBeGreaterThanOrEqual(.6); // room to pass
-  });
-  it('puts both machines on the worktop', () => {
-    expect(BENCH_ITEMS.map(item => item[0]).sort()).toEqual(['equip-arm', 'equip-printer']);
-    for (const [, dx, dz] of BENCH_ITEMS) {
-      expect(Math.abs(dx) + .25).toBeLessThanOrEqual(1.0);
-      expect(Math.abs(dz) + .2).toBeLessThanOrEqual(.35);
+  it('keeps every bench inside the walls and clear of the shelves, the storage and each other', () => {
+    const boxes = STATIONS.map(s => footprint(s.bench));
+    for (const b of boxes) {
+      expect(b.minX).toBeGreaterThanOrEqual(-2.75);
+      expect(b.maxX).toBeLessThanOrEqual(2.75);
+      expect(b.minZ).toBeGreaterThanOrEqual(-2.25);
+      expect(b.maxZ).toBeLessThanOrEqual(2.25);
+      expect(overlap(b, SHELVES) || overlap(b, STORAGE)).toBe(false);
     }
+    for (const [i, a] of boxes.entries()) for (const b of boxes.slice(i + 1)) expect(overlap(a, b)).toBe(false);
+  });
+  it('puts every student outside every bench and apart from each other', () => {
+    const people = STATIONS.flatMap(s => s.students).concat([{ x: ELECTRONICS_TEACHER[0], z: ELECTRONICS_TEACHER[1] }]);
+    for (const p of people) for (const s of STATIONS) {
+      const b = footprint(s.bench);
+      expect(p.x > b.minX - .15 && p.x < b.maxX + .15 && p.z > b.minZ - .15 && p.z < b.maxZ + .15, `${p.x},${p.z} inside ${s.id}`).toBe(false);
+    }
+    for (const [i, p] of people.entries()) for (const q of people.slice(i + 1)) expect(Math.hypot(p.x - q.x, p.z - q.z)).toBeGreaterThanOrEqual(.6);
+  });
+  it('puts every item on its bench top and faces students toward their bench', () => {
+    for (const s of STATIONS) {
+      const b = footprint(s.bench);
+      for (const [, x, z] of s.items) expect(x >= b.minX && x <= b.maxX && z >= b.minZ && z <= b.maxZ, `${s.id} item off its bench`).toBe(true);
+      for (const p of s.students) {
+        const cx = (b.minX + b.maxX) / 2, cz = (b.minZ + b.maxZ) / 2;
+        expect(Math.cos(Math.atan2(cx - p.x, cz - p.z) - p.rot)).toBeGreaterThan(.7);
+      }
+    }
+  });
+  it('has a printing, an arm and a circuits station with four students', () => {
+    expect(STATIONS.map(s => s.id).sort()).toEqual(['arm', 'circuits', 'printing']);
+    expect(STATIONS.flatMap(s => s.students)).toHaveLength(4);
+    expect(LAB_ASSETS).toEqual(expect.arrayContaining(['furn-workbench', 'furn-workbench-short', 'furn-stool', 'equip-printer', 'equip-arm', 'equip-spool-rack']));
   });
   it('keeps the printer carriage on its rail', () => {
     // Rail half-length 0.17 m, carriage half-width 0.035 m.

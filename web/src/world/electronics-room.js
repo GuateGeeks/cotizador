@@ -1,8 +1,29 @@
-// The Electronics room: the 3D printer and the robotic arm work at a bench in the front of the room, where the
-// camera sees them, instead of standing on the floor. Room-local metres, like the other furnishing.
-export const BENCH = { x: 1.0, z: 1.45, rot: 0 }; // 2.0 x 0.7 m: spans x 0..2, z 1.1..1.8
-export const BENCH_ITEMS = [['equip-printer', -.55, 0, 0], ['equip-arm', .45, 0, -.4]]; // [asset, dx, dz, rotation]
-export const ELECTRONICS_SPOTS = { bench: [2.45, 1.45, -Math.PI / 2], seat: [.47, -.2, Math.PI / 2] };
+// The Electronics room as a maker lab: three workbench stations in a U around an open middle, each with its own
+// job and students. Room-local metres (open front at +z); items sit on the bench tops at BASE + 0.75. A bench at
+// rotation 0 faces the room's front; +pi/2 faces +x, -pi/2 faces -x.
+const H = Math.PI / 2;
+export const STATIONS = [
+  { id: 'printing', bench: { asset: 'furn-workbench-short', x: -2.38, z: -.3, rot: H },
+    items: [['equip-printer', -2.38, -.65, H], ['equip-spool-rack', -2.38, -.05, H], ['equip-printed-parts', -2.38, .25, H]],
+    students: [{ x: -1.6, z: -.3, rot: -H, clip: 'idle', stool: false }] },
+  { id: 'arm', bench: { asset: 'furn-workbench-short', x: 2.38, z: -.3, rot: -H },
+    items: [['equip-arm', 2.38, -.55, -H], ['equip-laptop', 2.38, .1, -H]],
+    students: [{ x: 1.6, z: -.3, rot: H, clip: 'interact', stool: false }] },
+  { id: 'circuits', bench: { asset: 'furn-workbench', x: 0, z: -1.88, rot: 0 },
+    items: [['equip-electronics-kit', -.5, -1.85, .2], ['equip-electronics-kit', .5, -1.85, -.2]],
+    students: [{ x: -.45, z: -1.2, rot: Math.PI, clip: 'sit', stool: true }, { x: .45, z: -1.2, rot: Math.PI, clip: 'sit', stool: true }] }
+];
+export const ELECTRONICS_TEACHER = [0, .5, Math.PI]; // In the open middle, facing the circuits bench.
+export const MACHINES = new Set(['equip-printer', 'equip-arm']);
+export const LAB_ASSETS = [...new Set(STATIONS.flatMap(s => [s.bench.asset, ...s.items.map(([asset]) => asset)])), 'furn-stool'];
+
+const LENGTH = { 'furn-workbench': 2.0, 'furn-workbench-short': 1.4 }, DEPTH = .7;
+// A bench's floor rectangle: its length runs along x at rotation 0, along z when turned a quarter.
+export function footprint({ asset, x, z, rot }) {
+  const along = Math.abs(Math.cos(rot)) > .5, w = (along ? LENGTH[asset] : DEPTH) / 2, d = (along ? DEPTH : LENGTH[asset]) / 2;
+  return { minX: x - w, maxX: x + w, minZ: z - d, maxZ: z + d };
+}
+
 export const SWAY_PERIOD = 6;
 
 // The arm reaches out and back while its base turns; the printer head slides along its rail. 0 is the rest pose.
