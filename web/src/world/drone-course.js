@@ -89,8 +89,8 @@ export function closestPoint(id, obstacle) {
   return best;
 }
 
-// Reduced motion: both drones sit on the landing ring.
-export const REST = { A: [.45, .05, 0], B: [-.45, .05, 0] };
+// Reduced motion: both drones sit on the landing ring (top 0.085 m; the 1.2x drone's underside is 0.06 m below its origin).
+export const REST = { A: [.45, .025, 0], B: [-.45, .025, 0] };
 export const PILOTS = [{ lane: 'A', x: .7, z: 3.1 }, { lane: 'B', x: 1.5, z: 3.1 }];
 export const WATCHERS = [{ x: -1.6, z: 3.1 }, { x: -2.3, z: 3.2 }];
 export const FLAG = { x: -3.7, z: 2.6 };
