@@ -1,0 +1,41 @@
+{
+  "id": "equip-drone-gate",
+  "triangles": 396,
+  "budget": 600,
+  "materials": [
+    "GG_OrangeAccent",
+    "GG_PurpleDark",
+    "GG_TurquoiseAccent"
+  ],
+  "size_m": [
+    2.0,
+    1.6025,
+    0.32
+  ],
+  "bounds": {
+    "min": [
+      -1.0,
+      0.0,
+      -0.16
+    ],
+    "max": [
+      1.0,
+      1.6025,
+      0.16
+    ]
+  },
+  "sockets": {},
+  "pivots": {},
+  "skins": 0,
+  "animations": [],
+  "bytes": 12012,
+  "sha256": "2a13b32d9d8cdad1e96de55ad8cdd6b5baa39597b5bc839225ed0cbae7874208",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

@@ -141,6 +141,68 @@ def printed_parts():
     ball('figure', (.025, .025, .035), (.09, -.04, .055), 'GG_YellowAccent', sub=1)
     box('figure_base', (.04, .04, .02), (.09, -.04, .03), 'GG_PurplePrimary', r=.006, seg=1)
 
+@register('equip-drone-gate', budget=600)
+def drone_gate():
+    """A race gate standing on the ground: a 1.8 m wide opening up to 1.55 m, under a striped top bar."""
+    for x in (-.95, .95):
+        box('post', (.1, .1, 1.6), (x, 0, .8), 'GG_TurquoiseAccent', r=.03, seg=1)
+        box('foot', (.1, .32, .05), (x, 0, .025), 'GG_PurpleDark', r=.015, seg=1)
+    box('bar', (2.0, .1, .06), (0, 0, 1.57), 'GG_TurquoiseAccent', r=.02, seg=1)
+    for i in range(4):
+        box('stripe', (.18, .11, .065), (-.6 + i * .4, 0, 1.57), 'GG_OrangeAccent', r=.02, seg=1)
+
+def tube_arc(name, radius, thickness, a0, a1, mat, steps, sides=6):
+    """A smooth arc of a ring in the x-z plane (facing -y), as one closed tube."""
+    bm = bmesh.new()
+    rings = []
+    for i in range(steps + 1):
+        a = a0 + (a1 - a0) * i / steps
+        centre, outward = (radius * math.cos(a), 0, radius * math.sin(a)), (math.cos(a), 0, math.sin(a))
+        ring = []
+        for j in range(sides):
+            b = 2 * math.pi * j / sides
+            ring.append(bm.verts.new((centre[0] + thickness * math.cos(b) * outward[0], thickness * math.sin(b), centre[2] + thickness * math.cos(b) * outward[2])))
+        rings.append(ring)
+    for r0, r1 in zip(rings, rings[1:]):
+        for j in range(sides):
+            bm.faces.new((r0[j], r0[(j + 1) % sides], r1[(j + 1) % sides], r1[j]))
+    for ring in (rings[0], rings[-1][::-1]):
+        bm.faces.new(ring[::-1])
+    return geometry.finish(bm, name, mat, (0, 0, 0), weighted=False)
+
+@register('equip-drone-hoop', budget=600)
+def drone_hoop():
+    """A race hoop: a smooth vertical ring with a 1.8 m opening, centred at the origin and facing -y."""
+    bands = [(0, 'GG_OrangeAccent'), (1, 'GG_TurquoiseAccent'), (2, 'GG_OrangeAccent'), (3, 'GG_TurquoiseAccent')]
+    for quarter, mat in bands:
+        a0 = quarter * math.pi / 2 + (math.pi / 2 - .35 if mat == 'GG_OrangeAccent' else 0)
+        # Each quarter: turquoise, with an orange band at the end of every other quarter.
+        tube_arc('ring', .95, .05, quarter * math.pi / 2, quarter * math.pi / 2 + math.pi / 2 - (.35 if mat == 'GG_OrangeAccent' else 0), 'GG_TurquoiseAccent', 7)
+        if mat == 'GG_OrangeAccent':
+            tube_arc('band', .95, .052, a0, a0 + .35, 'GG_OrangeAccent', 2)
+
+@register('equip-drone-post', budget=150)
+def drone_post():
+    """A 1 m post scaled in height to hold a hoop."""
+    cyl('post', .04, .04, 1.0, (0, 0, 0), 'GG_PurplePrimary', seg=8, bev=0)
+
+@register('equip-race-flag', budget=400)
+def race_flag():
+    """The start and finish: a checkered flag on a pole."""
+    cyl('base', .1, .1, .04, (0, 0, 0), 'GG_PurpleDark', seg=10, bev=.01)
+    cyl('pole', .02, .02, 1.36, (0, 0, .04), 'GG_PurplePrimary', seg=8, bev=0)
+    for i in range(4):
+        for j in range(3):
+            box('check', (.14, .015, .13), (.09 + i * .14, 0, 1.33 - j * .13), 'GG_IvorySoft' if (i + j) % 2 else 'GG_PurpleDark', r=0, seg=1)
+
+@register('equip-drone-remote', budget=300)
+def drone_remote():
+    """A pilot's handheld remote: two sticks and a small screen, held flat."""
+    box('body', (.18, .11, .024), (0, 0, 0), 'GG_PurplePrimary', r=.01, seg=2)
+    box('screen', (.07, .045, .004), (0, .02, .013), 'GG_TurquoiseAccent', r=.002, seg=1)
+    for x in (-.055, .055):
+        cyl('stick', .008, .008, .016, (x, -.02, .012), 'GG_PurpleDark', seg=8, bev=0)
+
 @register('equip-vr-headset', budget=800)
 def vr_headset():
     """Worn on the `vr_eyes` fitting point: eyes at the origin, 0.2 m wide, strap around the head."""

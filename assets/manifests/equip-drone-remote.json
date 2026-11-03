@@ -1,0 +1,41 @@
+{
+  "id": "equip-drone-remote",
+  "triangles": 208,
+  "budget": 300,
+  "materials": [
+    "GG_PurpleDark",
+    "GG_PurplePrimary",
+    "GG_TurquoiseAccent"
+  ],
+  "size_m": [
+    0.18,
+    0.04,
+    0.11
+  ],
+  "bounds": {
+    "min": [
+      -0.09,
+      -0.012,
+      -0.055
+    ],
+    "max": [
+      0.09,
+      0.028,
+      0.055
+    ]
+  },
+  "sockets": {},
+  "pivots": {},
+  "skins": 0,
+  "animations": [],
+  "bytes": 7712,
+  "sha256": "d39a6658a2ac0f62757453369a7cd4d7959e4765c0e1203b284cd02b50802050",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

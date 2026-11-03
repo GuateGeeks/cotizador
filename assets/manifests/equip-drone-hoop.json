@@ -1,0 +1,40 @@
+{
+  "id": "equip-drone-hoop",
+  "triangles": 432,
+  "budget": 600,
+  "materials": [
+    "GG_OrangeAccent",
+    "GG_TurquoiseAccent"
+  ],
+  "size_m": [
+    2.0,
+    2.004,
+    0.0901
+  ],
+  "bounds": {
+    "min": [
+      -1.0,
+      -1.002,
+      -0.045033
+    ],
+    "max": [
+      1.0,
+      1.002,
+      0.045033
+    ]
+  },
+  "sockets": {},
+  "pivots": {},
+  "skins": 0,
+  "animations": [],
+  "bytes": 10468,
+  "sha256": "85cf08f45aec0b337fd75ea53a02bb0604169b852641b07e6086a36214ce655c",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

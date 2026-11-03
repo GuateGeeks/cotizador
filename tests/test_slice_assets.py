@@ -171,5 +171,20 @@ class LabStations(unittest.TestCase):
             self.assertLessEqual(max(m['size_m']), .45, asset)
             self.assertEqual(m['islands'], 1, asset)
 
+class DroneCourse(unittest.TestCase):
+    SIZES = {'equip-drone-gate': ((2.0, 1.6, None), 600), 'equip-drone-hoop': ((2.0, 2.0, .1), 600), 'equip-drone-post': ((.08, 1.0, .08), 150),
+             'equip-race-flag': ((None, 1.4, None), 400), 'equip-drone-remote': ((.18, .03, .11), 300)}
+
+    def test_course_pieces_have_their_sizes_and_budgets(self):
+        for asset, (size, budget) in self.SIZES.items():
+            m = build(asset)
+            for axis, want in enumerate(size):
+                if want is not None:
+                    self.assertAlmostEqual(m['size_m'][axis], want, delta=.03, msg=asset)
+            if asset == 'equip-drone-gate':
+                self.assertLessEqual(m['size_m'][2], .35, asset)  # feet keep it standing; the frame itself is thin
+            self.assertLessEqual(m['triangles'], budget, asset)
+            self.assertEqual(m['islands'], 1, asset)
+
 if __name__ == '__main__':
     unittest.main()

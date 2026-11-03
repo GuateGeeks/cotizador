@@ -1,0 +1,39 @@
+{
+  "id": "equip-drone-post",
+  "triangles": 28,
+  "budget": 150,
+  "materials": [
+    "GG_PurplePrimary"
+  ],
+  "size_m": [
+    0.08,
+    1.0,
+    0.08
+  ],
+  "bounds": {
+    "min": [
+      -0.04,
+      0.0,
+      -0.04
+    ],
+    "max": [
+      0.04,
+      1.0,
+      0.04
+    ]
+  },
+  "sockets": {},
+  "pivots": {},
+  "skins": 0,
+  "animations": [],
+  "bytes": 1828,
+  "sha256": "52a1b9f8bd289e6c13d3d23bfcaa0d089f4a6852f25294091cc0ffa76149b4c5",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}
