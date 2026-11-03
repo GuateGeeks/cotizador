@@ -14,5 +14,6 @@
   "GG_Wood": {"color": "#9A6548", "roughness": 0.70},
   "GG_WarmInterior": {"color": "#FFD9A8", "roughness": 0.70},
   "GG_LightWarm": {"color": "#FFF0C8", "roughness": 0.50, "emissive": 3.5},
-  "GG_ShirtWhite": {"color": "#FFFFFF", "roughness": 0.70}
+  "GG_ShirtWhite": {"color": "#FFFFFF", "roughness": 0.70},
+  "GG_KitVertex": {"color": "#FFFFFF", "roughness": 0.50, "vertexColors": true}
 }

@@ -26,6 +26,10 @@ def gg_material(name):
     if 'emissive' in spec:
         p.inputs['Emission Color'].default_value = linear(spec['color'])
         p.inputs['Emission Strength'].default_value = spec['emissive']
+    if spec.get('vertexColors'):
+        # Kit robots: one material, each part's colour carried by the mesh's colour attribute.
+        colours = m.node_tree.nodes.new('ShaderNodeVertexColor')
+        m.node_tree.links.new(colours.outputs['Color'], p.inputs['Base Color'])
     if 'alpha' in spec:
         p.inputs['Alpha'].default_value = spec['alpha']
         m.surface_render_method = 'BLENDED'

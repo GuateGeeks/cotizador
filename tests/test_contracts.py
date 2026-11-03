@@ -16,6 +16,9 @@ class Contracts(unittest.TestCase):
             self.assertIn(name, mats)
         self.assertTrue(all(m.get('metallic', 0) == 0 for m in mats.values()))
 
+    def test_kit_robots_have_a_vertex_colour_material(self):
+        self.assertTrue(self.c['materials']['GG_KitVertex']['vertexColors'])
+
     def test_palette_is_canonical(self):
         p = self.c['palette']
         self.assertEqual((p['primaryViolet'], p['deepViolet'], p['orange'], p['turquoise'], p['navy'], p['ivory'],

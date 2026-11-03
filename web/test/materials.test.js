@@ -20,6 +20,11 @@ describe('materialFor', () => {
       expect(material.metalness).toBe(0);
     }
   });
+  it('gives kit robots one material coloured per vertex', () => {
+    const kit = materialFor('GG_KitVertex');
+    expect(kit.vertexColors).toBe(true);
+    expect(materialFor('GG_IvorySoft').vertexColors).toBe(false);
+  });
   it('rejects unknown names instead of drawing the wrong colour', () => {
     expect(materialFor('Material_0')).toBeNull();
   });

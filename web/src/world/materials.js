@@ -10,6 +10,7 @@ export function materialFor(name) {
   if (!value) return null;
   const material = new MeshStandardMaterial({ name, roughness: value.roughness, metalness: 0 });
   material.color.set(value.color);
+  if (value.vertexColors) material.vertexColors = true; // Kit robots: one material, colour per vertex.
   if ('alpha' in value) Object.assign(material, { transparent: true, opacity: value.alpha, depthWrite: false });
   if ('emissive' in value) Object.assign(material, { emissive: new Color(value.color), emissiveIntensity: value.emissive });
   cache.set(name, material);
