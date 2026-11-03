@@ -94,6 +94,19 @@ changes with the school's choices.
 
 - **Which programs (user):** a classroom shows the programs whose equipment `groupIds` include at least one
   enrollment row of the classroom's level. Its upper classroom follows the same rule.
+- **The landing showcase (user):** the cotizador's landing page (`showcaseData()` in its `asesor/asesor.js`)
+  sends all six programs with `enrollment: []` and every `groupIds: []`, so no program matches a classroom by
+  groups. When a program has no `groupIds` at all, it shows at its usual level instead:
+
+  | Level | Programs |
+  | --- | --- |
+  | preprimaria | `tale` |
+  | primaria | `master`, `electronics` |
+  | básico | `drones`, `spike` |
+  | bachillerato | `spike`, `immersive` |
+
+  This is the demo campus's mix, defined in this repo (`HOME_LEVELS`), with no cotizador change. A program that
+  has `groupIds` always follows them.
 - **Order (proposal):** programs in `PROGRAM_IDS` order. The first two used go on the two tables, one each;
   with one program both tables get it; with none the tables keep today's `LEVEL_TABLE_ITEM`.
 - **Three or more programs (call):** the ground classroom shows the first two. When the level also has an upper
@@ -145,7 +158,8 @@ changes with the school's choices.
   nothing stands on the floor that belongs on a bench.
 - Tests pin:
   - the classroom-programs rule, including no programs, one program, two programs, programs whose groups belong
-    to another level, and a program not in `programs`
+    to another level, and a program not in `programs`, and a program with no `groupIds` (its usual levels; the landing
+    showcase input)
   - signatures change with programs
   - the kit list covers every program
   - the bench's placement and that the machines sit on its top
