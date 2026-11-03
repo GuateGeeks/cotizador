@@ -1,6 +1,6 @@
 """Reusable furniture. Sized for a primary student at 1.35 m."""
 from gg.geometry import ball, box, cyl
-from gg.sockets import register
+from gg.sockets import add_socket, register
 
 def chair(color):
     box('seat', (.44, .42, .07), (0, 0, .265), color, r=.03, seg=3)
@@ -27,6 +27,28 @@ def table_four():
     for x, y in ((-.54, -.54), (.54, -.54), (-.54, .54), (.54, .54)):
         cyl('leg', .04, .05, .49, (x, y, .03), 'GG_PurplePrimary', seg=10)
         cyl('foot', .055, .055, .04, (x, y, 0), 'GG_IvorySoft', seg=10, bev=.01)
+
+@register('furn-workbench', budget=1500)
+def workbench():
+    """The Electronics lab bench: worktop at 0.75 m, a pegboard back with tools, a shelf below."""
+    W, D, TOP = 2.0, .7, .75
+    box('top', (W, D, .05), (0, 0, TOP - .025), 'GG_IvorySoft', r=.02)
+    box('edge', (W, .03, .06), (0, -D / 2 + .015, TOP - .03), 'GG_PurplePrimary', r=.012)
+    box('shelf', (W - .12, D - .12, .03), (0, 0, .18), 'GG_PurplePrimary', r=.01)
+    for x in (-W / 2 + .06, W / 2 - .06):
+        for y in (-D / 2 + .06, D / 2 - .06):
+            box('leg', (.05, .05, TOP - .05), (x, y, (TOP - .05) / 2), 'GG_PurplePrimary', r=.012)
+    board_h = .58
+    box('pegboard', (W, .03, board_h), (0, D / 2 - .015, TOP + board_h / 2), 'GG_PurpleDark', r=.015)
+    for i in range(6):
+        for j in range(2):
+            box('peg', (.016, .006, .016), (-W / 2 + .25 + i * .3, D / 2 - .033, TOP + .16 + j * .3), 'GG_IvorySoft', r=0, seg=1)
+    # Tools hanging on the board: a wrench, pliers handles and a coil of wire.
+    box('wrench', (.03, .015, .2), (-.6, D / 2 - .04, TOP + .32), 'GG_OrangeAccent', r=.008)
+    for s in (-1, 1):
+        box('pliers', (.022, .015, .16), (.05 + s * .02, D / 2 - .04, TOP + .3), 'GG_TurquoiseAccent', r=.008, rot=(0, s * .15, 0))
+    cyl('wire', .07, .07, .03, (.65, D / 2 - .045, TOP + .33), 'GG_YellowAccent', seg=16, bev=.008, rot=(1.5708, 0, 0), centred=True)
+    add_socket('top', (0, 0, TOP))
 
 @register('furn-shelves', budget=1000)
 def shelves():

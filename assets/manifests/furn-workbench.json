@@ -1,0 +1,50 @@
+{
+  "id": "furn-workbench",
+  "triangles": 1456,
+  "budget": 1500,
+  "materials": [
+    "GG_IvorySoft",
+    "GG_OrangeAccent",
+    "GG_PurpleDark",
+    "GG_PurplePrimary",
+    "GG_TurquoiseAccent",
+    "GG_YellowAccent"
+  ],
+  "size_m": [
+    2.0,
+    1.33,
+    0.7
+  ],
+  "bounds": {
+    "min": [
+      -1.0,
+      0.0,
+      -0.35
+    ],
+    "max": [
+      1.0,
+      1.33,
+      0.35
+    ]
+  },
+  "sockets": {
+    "socket_top": [
+      0.0,
+      0.75,
+      0.0
+    ]
+  },
+  "pivots": {},
+  "skins": 0,
+  "animations": [],
+  "bytes": 37028,
+  "sha256": "fc53462e86581e605731ca1c2e674a01117068efde99bc602b617b52365e1d46",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

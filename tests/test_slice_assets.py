@@ -120,5 +120,15 @@ class Tablet(unittest.TestCase):
         self.assertLess(m['size_m'][1], .03)
         self.assertEqual(m['islands'], 1)
 
+class Workbench(unittest.TestCase):
+    def test_workbench_is_a_lab_bench_at_working_height(self):
+        m = build('furn-workbench')
+        self.assertAlmostEqual(m['size_m'][0], 2.0, delta=.05)
+        self.assertAlmostEqual(m['size_m'][2], .7, delta=.05)
+        self.assertGreater(m['size_m'][1], 1.1)  # pegboard rises above the top
+        self.assertAlmostEqual(m['sockets']['socket_top'][1], .75, places=3)
+        self.assertLessEqual(m['triangles'], 1500)
+        self.assertEqual(m['islands'], 1)
+
 if __name__ == '__main__':
     unittest.main()
