@@ -125,31 +125,87 @@ def join_skinned(parts, arm):
     body.modifiers.new('rig', 'ARMATURE').object = arm
     return body
 
+LIFT = .02
+REACH = HIP_Z * math.sin(SWING)  # how far a foot lands ahead of, and leaves behind, its hip
+
+def foot_offset(u):
+    """A trotting foot over one loop (u in 0..1): planted for the first half, sliding back at a steady pace
+    while the body walks over it, then lifted and carried forward. Returns (along, lift); along > 0 is ahead."""
+    if u < .5:
+        return REACH * (1 - 4 * u), 0
+    return REACH * (4 * u - 3), LIFT * math.sin(math.pi * (u - .5) * 2)
+
 def walk(arm):
-    """Diagonal pairs swing together; the head bobs twice and the tail sways once per loop."""
+    """Diagonal pairs trot half a loop apart; the body dips as its planted legs lean, the head bobs and the tail sways.
+
+    Feet are placed by their position along the floor rather than by a swing angle, so a planted foot keeps pace
+    with the floor while the body moves at a steady speed. The loop runs from frame 0 to its seamless end.
+    """
     action = bpy.data.actions.new('walk')
     arm.animation_data_create().action = action
     for bone in arm.pose.bones:
         bone.rotation_mode = 'XYZ'
-    for frame in range(1, FRAMES + 1, 4):
-        # Starts at full stride, so the clip preview's first and middle frames show opposite steps.
-        phase = 2 * math.pi * (frame - 1) / (FRAMES - 1) + math.pi / 2
-        swing = SWING * math.sin(phase)
-        for name, sign in (('leg_fl', 1), ('leg_br', 1), ('leg_fr', -1), ('leg_bl', -1)):
-            arm.pose.bones[name].rotation_euler = (sign * swing, 0, 0)
-        arm.pose.bones['head'].rotation_euler = (math.radians(6) * math.sin(2 * phase), 0, 0)
-        arm.pose.bones['tail'].rotation_euler = (0, 0, math.radians(15) * math.sin(phase))
-        arm.pose.bones['body'].location = (0, .01 * abs(math.sin(phase)), 0)
-        for bone in arm.pose.bones:
-            bone.keyframe_insert('rotation_euler', frame=frame)
-        arm.pose.bones['body'].keyframe_insert('location', frame=frame)
+    view = bpy.context.view_layer
+    # Which way a positive turn swings a leg: towards the front (-Y) or the back.
+    leg = arm.pose.bones['leg_fl']
+    leg.rotation_euler = (.3, 0, 0)
+    view.update()
+    forward = 1 if (arm.matrix_world @ leg.tail).y < (arm.matrix_world @ leg.head).y else -1
+    leg.rotation_euler = (0, 0, 0)
+    preferences = bpy.context.preferences.edit
+    interpolation, preferences.keyframe_new_interpolation_type = preferences.keyframe_new_interpolation_type, 'LINEAR'
+    last = FRAMES - 1
+    for frame in range(FRAMES):
+        u = frame / last
+        dip = 0
+        for names, offset in ((('leg_fl', 'leg_br'), 0), (('leg_fr', 'leg_bl'), .5)):
+            along, lift = foot_offset((u + offset) % 1)
+            angle = math.asin(along / HIP_Z)
+            if not lift:
+                dip = HIP_Z * math.cos(angle) - HIP_Z
+            for name in names:
+                bone = arm.pose.bones[name]
+                bone.rotation_euler = (forward * angle, 0, 0)
+                bone.location = (0, -lift, 0)  # along the leg, which points down: up
+                bone.keyframe_insert('rotation_euler', frame=frame)
+                bone.keyframe_insert('location', frame=frame)
+        body = arm.pose.bones['body']
+        body.location = (0, dip, 0)  # the body bone points up
+        body.keyframe_insert('location', frame=frame)
+        arm.pose.bones['head'].rotation_euler = (math.radians(6) * math.sin(4 * math.pi * u), 0, 0)
+        arm.pose.bones['tail'].rotation_euler = (0, 0, math.radians(15) * math.sin(2 * math.pi * u))
+        for name in ('head', 'tail'):
+            arm.pose.bones[name].keyframe_insert('rotation_euler', frame=frame)
+    preferences.keyframe_new_interpolation_type = interpolation
     return action
+
+def foot_check(arm, stride):
+    """How much planted feet slide against the floor (relative to walking speed), and how high lifted feet rise."""
+    scene, last = bpy.context.scene, FRAMES - 1
+    speed = stride / last
+    feet = {name: [] for name in ('leg_fl', 'leg_fr', 'leg_bl', 'leg_br')}
+    for frame in range(FRAMES):
+        scene.frame_set(frame)
+        for name, track in feet.items():
+            tip = arm.matrix_world @ arm.pose.bones[name].tail
+            track.append((tip.y - speed * frame, tip.z))  # walking towards -Y: the floor point under a planted foot stays put
+    slip, lift = 0, 0
+    for track in feet.values():
+        floor = min(z for _, z in track)
+        lift = max(lift, max(z for _, z in track) - floor)
+        for (y0, z0), (y1, z1) in zip(track, track[1:]):
+            if z0 - floor < .002 and z1 - floor < .002:
+                slip = max(slip, abs(y1 - y0) / speed)
+    return round(slip, 4), round(lift, 4)
 
 @register('equip-dino', budget=5000)
 def kit_dino():
     arm = armature()
     join_skinned(build_parts(), arm)
     walk(arm)
-    # While a pair is planted it sweeps 2 L sin(swing); the two pairs take turns, so a loop covers twice that.
-    stride = 2 * 2 * HIP_Z * math.sin(SWING)
-    return {'clips': ['walk'], 'armature': arm.name, 'stride': round(stride, 4), 'walk_seconds': round((FRAMES - 1) / 24, 4)}
+    # While a pair is planted the body moves 2 x REACH over it; the two pairs take turns, so a loop covers twice that.
+    stride = 4 * REACH
+    slip, lift = foot_check(arm, stride)
+    bpy.context.scene.frame_set(0)
+    return {'clips': ['walk'], 'armature': arm.name, 'stride': round(stride, 4), 'walk_seconds': round((FRAMES - 1) / 24, 4),
+            'foot_slip': slip, 'foot_lift': lift}

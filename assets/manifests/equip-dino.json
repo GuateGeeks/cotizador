@@ -36,8 +36,8 @@
   "animations": [
     "walk"
   ],
-  "bytes": 181416,
-  "sha256": "623b094a8ebff5ee5f15805758cb2874ad457a1dddea0f432477946031db9901",
+  "bytes": 182772,
+  "sha256": "0fa6ec6cf91a8784a178bbe19c7f5c857e7fc46288185864b79636f1fdd80666",
   "blender": "5.2.3 LTS",
   "verdicts": {
     "technical": "PASS",
@@ -51,5 +51,7 @@
   "armature": "dino_rig",
   "stride": 0.4057,
   "walk_seconds": 1.3333,
+  "foot_slip": 0.0833,
+  "foot_lift": 0.0219,
   "islands": 1
 }

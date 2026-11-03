@@ -3,6 +3,11 @@ from scripts.world import ROOT, native, run_blender
 
 TMP = ROOT / 'runs' / 'test-tmp' / 'assets'
 
+def glb_json(path):
+    data = pathlib.Path(path).read_bytes()
+    length = int.from_bytes(data[12:16], 'little')
+    return json.loads(data[20:20 + length])
+
 def build(asset, sub='a'):
     out = TMP / sub
     out.mkdir(parents=True, exist_ok=True)
@@ -93,6 +98,20 @@ class KitDino(unittest.TestCase):
         self.assertGreater(m['stride'], .1)
         self.assertLess(m['stride'], .5)
         self.assertGreater(m['walk_seconds'], .8)
+
+    def test_walk_keeps_planted_feet_still_and_lifts_the_others(self):
+        m = build('equip-dino')
+        # Feet on the floor move with the floor while the body walks at the clip's average speed.
+        self.assertLess(m['foot_slip'], .1)
+        self.assertGreaterEqual(m['foot_lift'], .01)
+
+    def test_walk_clip_lasts_exactly_one_loop(self):
+        build('equip-dino')
+        doc = glb_json(TMP / 'a' / 'equip-dino.glb')
+        walk = next(a for a in doc['animations'] if a['name'] == 'walk')
+        times = [doc['accessors'][s['input']] for s in walk['samplers']]
+        self.assertAlmostEqual(min(t['min'][0] for t in times), 0, places=4)
+        self.assertAlmostEqual(max(t['max'][0] for t in times), build('equip-dino')['walk_seconds'], places=3)
 
 class Tablet(unittest.TestCase):
     def test_tablet_is_small_flat_and_one_piece(self):
