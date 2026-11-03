@@ -3,8 +3,10 @@
 export const DINO_SCALE = 1.5;
 export const DINO_SPEED = .35; // metres per second along the loop
 // Two straights along x at z - radius and z + radius, joined by half circles.
-export const DINO_LOOP = { x: -.2, z: 1.25, half: 1.0, radius: .45 };
-export const MASTER_SPOTS = { driver: [2.1, 1.25], watchers: [[-2.3, .95], [-2.3, 1.6]] };
+// In the room's right half: at the default view the neighbouring column hides the left half and the walkway
+// above hides the back, so the loop, the driver and the watchers all sit where the camera sees them.
+export const DINO_LOOP = { x: .9, z: 1.25, half: .6, radius: .4 };
+export const MASTER_SPOTS = { driver: [2.55, .75], watchers: [[2.55, 1.65], [1.95, 2.15]] };
 export const MASTER_ASSETS = ['equip-dino', 'equip-tablet', 'equip-laptop'];
 
 const { x: cx, z: cz, half, radius } = DINO_LOOP;
