@@ -4,6 +4,7 @@ import { mkdirSync } from 'node:fs';
 import states from '../src/app/states.json' with { type: 'json' };
 
 const out = process.argv[2] || '../runs/web-xray';
+const URL = process.env.GG_URL || 'http://127.0.0.1:4410/world.html'; // GG_URL points at another dev server.
 mkdirSync(out, { recursive: true });
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const failures = [];
@@ -13,7 +14,7 @@ async function open(reducedMotion = 'no-preference') {
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 }, reducedMotion });
   const problems = [];
   page.on('pageerror', e => problems.push(String(e)));
-  await page.goto('http://127.0.0.1:4410/world.html');
+  await page.goto(URL);
   await page.waitForFunction(() => window.world);
   await page.addStyleTag({ content: '.bar { display: none !important; }' });
   page.problems = problems;
@@ -94,6 +95,22 @@ expect(x.room === 'room:prim:0' && before !== after, `update while open: room ${
 await page.evaluate(s => window.world.update(s), states[5]);
 await settled(page);
 
+// The focused room's entity can be missing when the x-ray applies: it opens once the rebuilt room exists.
+// A turn of the camera while an update rebuilds the open room keeps it open.
+await focus(page, { kind: 'level', id: 'prim' });
+await page.evaluate(s => { window.world.update(s); window.world.rotate(.5); }, states[3]);
+await settled(page);
+await page.waitForTimeout(800);
+x = await xray(page);
+expect(x.room === 'room:prim:0', `turning during a rebuild lost the x-ray: ${x.room}`);
+// A focus given in the same tick as an update that rebuilds that room opens it.
+await focus(page, null);
+await page.evaluate(s => { window.world.update(s); window.world.setFocus({ kind: 'level', id: 'prim' }); }, states[5]);
+await settled(page);
+await page.waitForTimeout(800);
+x = await xray(page);
+expect(x.room === 'room:prim:0', `focus in the update's tick did not open the rebuilt room: ${x.room}`);
+
 // Picking passes through veils: a click on the open room's front stays on it.
 await focus(page, { kind: 'level', id: 'prim' });
 const front = await page.evaluate(() => window.world.screenPoint('room:prim:0'));
@@ -115,6 +132,16 @@ expect(x.room === null && !x.veiled.length && !x.hidden.length && x.batchSources
   `overview did not restore: ${JSON.stringify({ ...x, before: cleared.batchSources })}`);
 expect(page.problems.length === 0, `page errors: ${page.problems.slice(0, 2)}`);
 await page.close();
+
+// A focus given before the first load settles opens the room once it is built.
+const early = await open();
+await early.evaluate(s => { window.world.update(s); window.world.setFocus({ kind: 'program', id: 'electronics' }); }, states[5]);
+await settled(early);
+await early.waitForTimeout(800);
+x = await xray(early);
+expect(x.room === 'project:electronics', `focus before the first load did not open Electronics: ${x.room}`);
+expect(early.problems.length === 0, `page errors: ${early.problems.slice(0, 2)}`);
+await early.close();
 
 // Reduced motion opens and clears the same way.
 const still = await open('reduce');

@@ -11,7 +11,7 @@ const gpu = process.env.GG_GPU === '1';
 const browser = await chromium.launch({ args: gpu ? ['--use-angle=gl', '--enable-gpu', '--ignore-gpu-blocklist'] : ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const failures = [];
 const expect = (ok, text) => { if (!ok) failures.push(text); };
-const URL = 'http://127.0.0.1:4410/world.html';
+const URL = process.env.GG_URL || 'http://127.0.0.1:4410/world.html'; // GG_URL points at another dev server.
 const settled = page => page.waitForFunction(() => { const d = window.world.getDiagnostics(); return d.ready && d.transitionsActive === 0 && d.pendingLoads === 0; }, null, { timeout: 60000 });
 const diag = page => page.evaluate(() => window.world.getDiagnostics());
 

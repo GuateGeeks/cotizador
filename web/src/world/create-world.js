@@ -13,7 +13,7 @@ import { disposeMaterials, materialFor, veilMaterial } from './materials.js';
 import { HIDES_INSIDE, OWN_WALLS, wallVeils, xrayBlockers, xrayKey } from './room-xray.js';
 import { buildBatch, clearBatch, mergeStatic } from './merge.js';
 import { clearGear, vertexMerge, wearGear, wearItem } from './gear.js';
-import { COURSE_ASSETS, DRONE_SCALE, FLAG, OBSTACLES, PILOTS, REST, WATCHERS, distanceAt, dronePose } from './drone-course.js';
+import { COURSE_ASSETS, DRONE_SCALE, FLAG, OBSTACLES, PILOTS, REST, WATCHERS, distanceAt, dronePose, standHeight } from './drone-course.js';
 import { KIT_ASSETS, KIT_SCALE, tableKits } from './classroom-kits.js';
 import { ELECTRONICS_TEACHER, LAB_ASSETS, MACHINES, STATIONS, swayPose } from './electronics-room.js';
 import workbenchManifest from '../../../assets/manifests/furn-workbench.json';
@@ -221,7 +221,6 @@ export function createWorld(container, opts = {}) {
         if (entity.swayers) poseSwayers(entity, elapsed);
         if (entity.flyers) poseFlyers(entity, elapsed);
         for (const spinner of entity.spinners) spinner.node.rotation[spinner.axis] += delta * spinner.speed;
-        for (const hover of entity.hovers) hover.position.y = hover.userData.height + Math.sin(elapsed * 1.4) * .22;
       }
     }
     draw();
@@ -325,19 +324,19 @@ export function createWorld(container, opts = {}) {
   // room at every distance; the printer and arm are close-view detail, since their moving parts cannot merge.
   // The Drones field (drone-course.js): gates, hoops and the flag merge with the field; two drones race their lanes,
   // each one vertex-coloured body plus four free rotors, while two pilots fly them and two classmates watch.
-  const PAD_TOP = .05;
   function placeCourse(entity, kit) {
     entity.obstacles = 0;
     for (const o of OBSTACLES) {
-      if (o.kind === 'gate') placeIn(entity.inside, kit.get('equip-drone-gate'), o.x, PAD_TOP, o.z, o.yaw);
+      const floor = standHeight(o.x, o.z);
+      if (o.kind === 'gate') placeIn(entity.inside, kit.get('equip-drone-gate'), o.x, floor, o.z, o.yaw);
       else {
-        placeIn(entity.inside, kit.get('equip-drone-hoop'), o.x, PAD_TOP + o.y, o.z, o.yaw);
-        const post = placeIn(entity.inside, kit.get('equip-drone-post'), o.x, PAD_TOP, o.z, o.yaw);
+        placeIn(entity.inside, kit.get('equip-drone-hoop'), o.x, floor + o.y, o.z, o.yaw);
+        const post = placeIn(entity.inside, kit.get('equip-drone-post'), o.x, floor, o.z, o.yaw);
         post.scale.set(1, o.y - .95, 1); // up to the ring's underside
       }
       entity.obstacles += 1;
     }
-    placeIn(entity.inside, kit.get('equip-race-flag'), FLAG.x, PAD_TOP, FLAG.z, .4);
+    placeIn(entity.inside, kit.get('equip-race-flag'), FLAG.x, standHeight(FLAG.x, FLAG.z), FLAG.z, .4); // Off the pad: on the ground.
   }
 
   function raceDrones(entity, module, kit) {
@@ -400,9 +399,10 @@ export function createWorld(container, opts = {}) {
       const { asset, x, z, rot } = station.bench;
       placeIn(entity.inside, kit.get(asset), x, BASE, z, rot);
       for (const student of station.students) if (student.stool) placeIn(entity.inside, kit.get('furn-stool'), student.x, BASE, student.z);
-      for (const [item, ix, iz, irot] of station.items) {
+      for (const [item, ix, iz, irot, scale = 1] of station.items) {
         const machine = MACHINES.has(item);
         const object = placeIn(machine ? entity.extra : entity.inside, kit.get(item), ix, BENCH_TOP, iz, irot);
+        object.scale.setScalar(scale);
         if (!machine) continue;
         object.traverse(node => { if (node.isMesh) node.castShadow = false; });
         entity.bench.push({ asset: item, object });
@@ -594,7 +594,7 @@ export function createWorld(container, opts = {}) {
 
   function build(module, kit) {
     const group = new Group();
-    const entity = { key: module.key, signature: signatureOf(module), group, mixers: [], spinners: [], walkers: [], hovers: [], pairs: [], owned: [], characters: [], home: { y: module.y }, enter: reduced ? null : 0 };
+    const entity = { key: module.key, signature: signatureOf(module), group, mixers: [], spinners: [], walkers: [], pairs: [], owned: [], characters: [], home: { y: module.y }, enter: reduced ? null : 0 };
     group.position.set(module.x, module.y, module.z);
     group.rotation.y = module.rot;
     group.userData.entity = module;
@@ -647,6 +647,9 @@ export function createWorld(container, opts = {}) {
   // Whatever stands above the focused room or between it and the camera veils or steps aside, and the room
   // shows an unmerged copy of its shell whose camera-facing walls veil (rules in room-xray.js).
   let xrayState = null;
+  // The room the visitor focused, kept apart from what is applied: its entity can be missing while an update
+  // rebuilds it or before the first load, and the x-ray opens once it exists.
+  let xrayRoom = null;
   const partName = node => node.name.replace(/[.\d]+$/, '');
 
   function hideObject(state, object) {
@@ -780,7 +783,7 @@ export function createWorld(container, opts = {}) {
     for (let i = walkers.length; i < wanted; i += 1) {
       const key = `walker:${i}`;
       const group = new Group();
-      const entity = { key, signature: key, group, mixers: [], spinners: [], walkers: [], hovers: [], pairs: [], owned: [], characters: [], home: { y: 0 }, enter: null };
+      const entity = { key, signature: key, group, mixers: [], spinners: [], walkers: [], pairs: [], owned: [], characters: [], home: { y: 0 }, enter: null };
       root.add(group);
       const { high, low } = character(entity, kit, roster[i % roster.length], 'walk', 0, 0, 0, 0, i * .3);
       const walker = { key, objects: [high, low], phase: (i * .37) % 1, lane: i % 2 ? .4 : -.4 };
@@ -818,7 +821,7 @@ export function createWorld(container, opts = {}) {
         }
         syncWalkers(Math.min(8, 2 + Math.floor(plan.modules.filter(m => m.type === 'room').length / 2)), kit);
         // An open room reopens on what the update built: its blockers and its own entity may be new.
-        if (xrayState) { const open = plan.modules.find(m => m.key === xrayState.room); if (open) applyXray(open, true); else clearXray(); }
+        if (xrayRoom) { const open = plan.modules.find(m => m.key === xrayRoom); if (open) applyXray(open, true); else { xrayRoom = null; clearXray(); } }
         ready = true;
         scheduleBatch();
         resize();
@@ -900,6 +903,7 @@ export function createWorld(container, opts = {}) {
     zoom(factor) { goal.half = MathUtils.clamp(goal.half * factor, 3, 40); invalidate(); },
     resetView() {
       handle.focused = false;
+      xrayRoom = null;
       clearXray();
       Object.assign(goal, { yaw: -.54, pitch: .55, half: overview.half });
       goal.target.copy(overview.target);
@@ -922,7 +926,8 @@ export function createWorld(container, opts = {}) {
       handle.focused = true;
       goal.target.set(module.x, module.y + 1.1, module.z);
       goal.half = 4.6;
-      if (module.type === 'room') applyXray(module); else clearXray();
+      xrayRoom = module.type === 'room' ? module.key : null;
+      if (xrayRoom) applyXray(module); else clearXray();
       invalidate();
     },
     breakdown() {

@@ -89,9 +89,12 @@ export function closestPoint(id, obstacle) {
   return best;
 }
 
-// Reduced motion: both drones sit on the landing ring.
-export const REST = { A: [.45, .05, 0], B: [-.45, .05, 0] };
+// Reduced motion: both drones sit on the landing ring (top 0.085 m; the 1.2x drone's underside is 0.06 m below its origin).
+export const REST = { A: [.45, .025, 0], B: [-.45, .025, 0] };
 export const PILOTS = [{ lane: 'A', x: .7, z: 3.1 }, { lane: 'B', x: 1.5, z: 3.1 }];
 export const WATCHERS = [{ x: -1.6, z: 3.1 }, { x: -2.3, z: 3.2 }];
 export const FLAG = { x: -3.7, z: 2.6 };
+// The pad (8 x 5 m, 0.05 m tall): what stands on it sits on its top, what stands past its edge on the ground.
+const PAD = { minX: -4, maxX: 4, minZ: -2.5, maxZ: 2.5 }, PAD_TOP = .05;
+export const standHeight = (x, z) => (x >= PAD.minX && x <= PAD.maxX && z >= PAD.minZ && z <= PAD.maxZ ? PAD_TOP : 0);
 export const COURSE_ASSETS = ['equip-drone', 'equip-drone-gate', 'equip-drone-hoop', 'equip-drone-post', 'equip-race-flag', 'equip-drone-remote'];
