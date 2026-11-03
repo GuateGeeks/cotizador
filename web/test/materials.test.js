@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import spec from '../../world/materials.json';
-import { materialFor } from '../src/world/materials.js';
+import { materialFor, veilMaterial } from '../src/world/materials.js';
 
 describe('materialFor', () => {
   it('returns one shared instance per name', () => {
@@ -24,6 +24,14 @@ describe('materialFor', () => {
     const kit = materialFor('GG_KitVertex');
     expect(kit.vertexColors).toBe(true);
     expect(materialFor('GG_IvorySoft').vertexColors).toBe(false);
+  });
+  it('veils with one shared translucent ivory material that casts no shadow', () => {
+    const veil = veilMaterial();
+    expect(veil).toBe(veilMaterial());
+    expect(veil.transparent).toBe(true);
+    expect(veil.opacity).toBeCloseTo(.22);
+    expect(veil.depthWrite).toBe(false);
+    expect(`#${veil.color.getHexString()}`.toUpperCase()).toBe('#FFF8EC');
   });
   it('rejects unknown names instead of drawing the wrong colour', () => {
     expect(materialFor('Material_0')).toBeNull();

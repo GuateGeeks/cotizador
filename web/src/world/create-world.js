@@ -477,7 +477,12 @@ export function createWorld(container, opts = {}) {
     group.position.set(module.x, module.y, module.z);
     group.rotation.y = module.rot;
     group.userData.entity = module;
-    const shell = placeIn(group, kit.get(module.asset), 0, 0, 0);
+    // The module's own asset merges on its own, so a focused room can veil or swap just its shell.
+    entity.shell = new Group();
+    entity.shell.userData.separate = true;
+    group.add(entity.shell);
+    entity.shellAsset = kit.get(module.asset);
+    const shell = placeIn(entity.shell, entity.shellAsset, 0, 0, 0);
     if (module.hanging) {
       // Upper walkways hang from the building; posts would stack on the deck below.
       const posts = [];
@@ -491,8 +496,8 @@ export function createWorld(container, opts = {}) {
     entity.extra.userData.separate = entity.inside.userData.separate = true;
     group.add(entity.extra, entity.inside);
     if (module.type === 'room') furnish(entity, module, kit);
-    entity.owned = [...mergeStatic(entity.extra, false), ...mergeStatic(entity.inside, true), ...mergeStatic(group, true)];
-    entity.staticMeshes = [...group.children, ...entity.inside.children].filter(child => child.isMesh);
+    entity.owned = [...mergeStatic(entity.extra, false), ...mergeStatic(entity.inside, true), ...mergeStatic(entity.shell, true), ...mergeStatic(group, true)];
+    entity.staticMeshes = [...group.children, ...entity.shell.children, ...entity.inside.children].filter(child => child.isMesh);
     entity.extraMeshes = entity.extra.children.filter(child => child.isMesh);
     if (module.terraceStudents) {
       const roster = plan.levels.flatMap(level => ROSTER[level]);

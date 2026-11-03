@@ -3,6 +3,7 @@ import { Color, MeshStandardMaterial } from 'three';
 import spec from '../../../world/materials.json';
 
 const cache = new Map();
+let veil = null;
 
 export function materialFor(name) {
   if (cache.has(name)) return cache.get(name);
@@ -17,7 +18,15 @@ export function materialFor(name) {
   return material;
 }
 
+// The see-through veil over whatever blocks a focused room: one shared, light, shadowless material.
+export function veilMaterial() {
+  veil ||= new MeshStandardMaterial({ name: 'GG_Veil', color: 0xfff8ec, roughness: .6, metalness: 0, transparent: true, opacity: .22, depthWrite: false });
+  return veil;
+}
+
 export function disposeMaterials() {
+  veil?.dispose();
+  veil = null;
   for (const material of cache.values()) material.dispose();
   cache.clear();
 }
