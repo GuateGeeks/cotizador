@@ -67,6 +67,14 @@ def author_clips(arm):
     clip(arm, 'sit', [(1, seated, -9), (25, merged(ARMS_DOWN, FOREARMS, SIT_LEGS, tap_b), -9), (49, seated, -9)])
     # Using VR: controllers held in front, the head looks around while one hand and then the other reaches,
     # then both arms sweep out. Arms stay below the shoulders so the controllers never cross the headset.
+    # Both hands in front of the chest, palms up round something flat; the roll is split between forearm and hand so
+    # the wrist does not pinch. The hands tap in turn, as thumbs on a remote would.
+    level = {'LeftArm': [(X, -40), (Z, -30)], 'RightArm': [(X, -40), (Z, 30)],
+             'LeftForeArm': [(X, -100), (Y, 45), (Z, -85)], 'RightForeArm': [(X, -100), (Y, -45), (Z, 85)],
+             'LeftHand': [(Y, 45), (X, 30)], 'RightHand': [(Y, -45), (X, 30)]}
+    cupped = merged(ARMS_DOWN, level)
+    clip(arm, 'hold', [(1, cupped, 0), (13, merged(cupped, {'LeftHand': [(X, 8)]}), 0), (25, cupped, 0),
+                       (37, merged(cupped, {'RightHand': [(X, 8)]}), 0), (49, cupped, 0)])
     holding = merged(ARMS_DOWN, {'LeftForeArm': [(X, -60)], 'RightForeArm': [(X, -60)]})
     clip(arm, 'vr', [(1, holding, 0),
                      (19, merged(holding, {'Head': [(Z, 35)], 'RightArm': [(X, -40)]}), 0),
@@ -113,7 +121,7 @@ def add_fitting(arm, mesh):
     bpy.context.view_layer.update()
     return grips
 
-HAND_CLIPS = ('idle', 'sit', 'interact', 'vr')
+HAND_CLIPS = ('idle', 'sit', 'interact', 'vr', 'hold')
 
 def gltf(v):
     return [round(v.x, 4), round(v.z, 4), round(-v.y, 4)]
@@ -466,4 +474,4 @@ def student(target, source, target_height, record):
     arm.animation_data.action = walk
     grips = add_fitting(arm, mesh)
     hands = hand_poses(arm, mesh, grips)
-    return {'source': record or 'assets/sources/meshy/variants/PROVENANCE.json', 'source_triangles': triangles, **bake, 'clips': ['idle', 'walk', 'sit', 'interact', 'vr'], 'armature': arm.name, 'hand_poses': hands}
+    return {'source': record or 'assets/sources/meshy/variants/PROVENANCE.json', 'source_triangles': triangles, **bake, 'clips': ['idle', 'walk', 'sit', 'interact', 'vr', 'hold'], 'armature': arm.name, 'hand_poses': hands}

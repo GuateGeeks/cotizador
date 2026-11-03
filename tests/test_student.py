@@ -1,7 +1,7 @@
 import json, math, unittest
 from tests.test_slice_assets import ROOT, build
 
-CLIPS = ['idle', 'interact', 'sit', 'vr', 'walk']
+CLIPS = ['hold', 'idle', 'interact', 'sit', 'vr', 'walk']
 
 class Student(unittest.TestCase):
     @classmethod
@@ -63,6 +63,8 @@ class VrFitting(unittest.TestCase):
                 left, right = pivots['vr_grip_l']['position'], pivots['vr_grip_r']['position']
                 self.assertGreater(abs(left[0] - right[0]), .5, asset + suffix)  # hands apart in T-pose
 
+HEIGHTS = {**Variants.HEIGHTS, 'char-student-primary': 1.35}
+
 class HandPoses(unittest.TestCase):
     """Grip positions and palm directions per clip, measured in the manifest (glTF axes, metres)."""
     ASSETS = ('char-student-pre', 'char-student-primary', 'char-teacher')
@@ -73,12 +75,22 @@ class HandPoses(unittest.TestCase):
 
     def test_manifest_measures_both_hands_in_each_clip(self):
         for asset, m in self.built.items():
-            for clip in ('idle', 'sit', 'interact', 'vr'):
+            for clip in ('idle', 'sit', 'interact', 'vr', 'hold'):
                 samples = m['hand_poses'][clip]
                 self.assertEqual([s['frame'] for s in samples], [1, 13], asset)
                 for s in samples:
                     for side in ('l', 'r'):
                         self.assertAlmostEqual(sum(v * v for v in s[f'palm_{side}']), 1, delta=.01)
+
+    def test_hold_brings_both_hands_together_in_front_palms_up(self):
+        for asset, m in self.built.items():
+            h = HEIGHTS[asset]
+            for s in m['hand_poses']['hold']:
+                l, r = s['grip_l'], s['grip_r']
+                self.assertLess(math.dist(l, r), .15 * h, asset)                    # close together
+                self.assertGreater(min(l[2], r[2]), .12 * h, asset)                  # in front of the body
+                self.assertTrue(.5 * h < (l[1] + r[1]) / 2 < .75 * h, asset)         # waist to chest
+                self.assertGreater(min(s['palm_l'][1], s['palm_r'][1]), .7, asset)   # palms up
 
     def test_sit_and_idle_hands_match_the_baseline(self):
         baseline = json.loads((ROOT / 'tests/fixtures/hand_baseline.json').read_text())
