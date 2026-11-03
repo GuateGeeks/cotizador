@@ -317,7 +317,9 @@ export function createWorld(container, opts = {}) {
     entity.swayers = [];
     entity.bench = [];
     for (const [asset, dx, dz, rotation] of BENCH_ITEMS) {
-      const object = placeIn(entity.group, kit.get(asset), BENCH.x + dx, BENCH_TOP, BENCH.z + dz, rotation);
+      // Close-view detail like the chairs: their moving parts cannot merge, so they drop at campus distance.
+      const object = placeIn(entity.extra, kit.get(asset), BENCH.x + dx, BENCH_TOP, BENCH.z + dz, rotation);
+      object.traverse(node => { if (node.isMesh) node.castShadow = false; });
       entity.bench.push({ asset, object });
       object.traverse(node => {
         if (!(node.name in SWAY_AXES)) return;
@@ -378,7 +380,7 @@ export function createWorld(container, opts = {}) {
         object.rotation.y = rotation;
         object.scale.setScalar(scale * KIT_SCALE);
         object.traverse(node => { if (/^(wheel_|rotor_)/.test(node.name)) node.name = `still_${node.name}`; });
-        group.add(object);
+        entity.extra.add(object); // Close-view detail, like the chairs: dropped at campus distance to pay for the skyline.
       }
       return items.map(([asset]) => asset);
     });
