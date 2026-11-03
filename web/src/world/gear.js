@@ -7,28 +7,48 @@ import { plain } from './merge.js';
 const geometries = new Map();
 let material = null;
 
-function merged(asset) {
-  if (geometries.has(asset.id)) return geometries.get(asset.id);
-  asset.scene.updateWorldMatrix(true, true);
-  const inverse = new Matrix4().copy(asset.scene.matrixWorld).invert();
+// Every mesh under root (except under a node skip() accepts) as one geometry in root's space, coloured per vertex.
+function mergeColoured(root, skip = () => false) {
+  root.updateWorldMatrix(true, true);
+  const inverse = new Matrix4().copy(root.matrixWorld).invert();
   const parts = [];
-  asset.scene.traverse(node => {
-    if (!node.isMesh) return;
-    const part = plain(node, new Matrix4().multiplyMatrices(inverse, node.matrixWorld));
-    const { r, g, b } = node.material.color;
-    const colours = new Float32Array(part.attributes.position.count * 3);
-    for (let i = 0; i < colours.length; i += 3) colours.set([r, g, b], i);
-    part.setAttribute('color', new BufferAttribute(colours, 3));
-    parts.push(part);
-  });
-  const geometry = mergeGeometries(parts);
-  geometries.set(asset.id, geometry);
-  return geometry;
+  const visit = node => {
+    if (node !== root && skip(node)) return;
+    if (node.isMesh) {
+      const part = plain(node, new Matrix4().multiplyMatrices(inverse, node.matrixWorld));
+      const { r, g, b } = node.material.color;
+      const colours = new Float32Array(part.attributes.position.count * 3);
+      for (let i = 0; i < colours.length; i += 3) colours.set([r, g, b], i);
+      part.setAttribute('color', new BufferAttribute(colours, 3));
+      parts.push(part);
+    }
+    for (const child of node.children) visit(child);
+  };
+  visit(root);
+  return mergeGeometries(parts);
+}
+
+function merged(asset) {
+  if (!geometries.has(asset.id)) geometries.set(asset.id, mergeColoured(asset.scene));
+  return geometries.get(asset.id);
+}
+
+function colourMaterial() {
+  material ||= new MeshStandardMaterial({ vertexColors: true, roughness: .5, name: 'GG_GearVertex' });
+  return material;
+}
+
+// A model's body as one vertex-coloured mesh (one draw), leaving the parts skip() accepts to move on their own.
+// The caller owns the returned geometry and disposes it with the entity.
+export function vertexMerge(root, skip) {
+  const mesh = new Mesh(mergeColoured(root, skip), colourMaterial());
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  return mesh;
 }
 
 export function gearMesh(asset) {
-  material ||= new MeshStandardMaterial({ vertexColors: true, roughness: .5, name: 'GG_GearVertex' });
-  const mesh = new Mesh(merged(asset), material);
+  const mesh = new Mesh(merged(asset), colourMaterial());
   mesh.name = asset.id;
   mesh.castShadow = false;
   mesh.receiveShadow = false;

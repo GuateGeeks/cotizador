@@ -1,6 +1,6 @@
 import { BoxGeometry, Group, Mesh, MeshStandardMaterial, Object3D } from 'three';
 import { afterEach, describe, expect, it } from 'vitest';
-import { clearGear, gearMesh, wearGear, wearItem } from '../src/world/gear.js';
+import { clearGear, gearMesh, vertexMerge, wearGear, wearItem } from '../src/world/gear.js';
 import { mergeStatic } from '../src/world/merge.js';
 
 const red = new MeshStandardMaterial({ name: 'R', color: 0xff0000 }), blue = new MeshStandardMaterial({ name: 'B', color: 0x0000ff });
@@ -62,6 +62,19 @@ describe('VR gear', () => {
     const tabletKit = new Map([['equip-tablet', asset('equip-tablet', [[0, red]])]]);
     expect(wearItem(rig(['vr_grip_l']), tabletKit, 'vr_grip_l', 'equip-tablet')).toBe(true);
     expect(wearItem(rig([]), tabletKit, 'vr_grip_l', 'equip-tablet')).toBe(false);
+  });
+
+  it('merges a drone body into one mesh and leaves its rotors to spin', () => {
+    const root = new Group();
+    root.add(new Mesh(new BoxGeometry(1, 1, 1), red));
+    const rotor = Object.assign(new Group(), { name: 'rotor_1' });
+    rotor.add(new Mesh(new BoxGeometry(.2, .02, .2), blue));
+    root.add(rotor);
+    const body = vertexMerge(root, node => /^rotor_/.test(node.name));
+    expect(body.material.vertexColors).toBe(true);
+    expect(body.geometry.getAttribute('position').count).toBe(new BoxGeometry(1, 1, 1).toNonIndexed().getAttribute('position').count);
+    expect(body.castShadow).toBe(true);
+    expect(rotor.children[0].isMesh).toBe(true);
   });
 
   it('skips a character exported before the fitting points existed', () => {
