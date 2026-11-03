@@ -263,7 +263,7 @@ export function createWorld(container, opts = {}) {
     };
     const castsShadow = entity.key.startsWith('walker:');
     entity.characters.push(id);
-    const pair = { high: make(kit.get(id), lod === 'close'), low: make(kit.get(`${id}-lod1`), lod !== 'close') };
+    const pair = { high: make(kit.get(id), lod === 'close'), low: make(kit.get(`${id}-lod1`), lod !== 'close'), clip: clipName };
     pair.low.traverse(node => { if (node.isMesh) node.castShadow = castsShadow; });
     entity.pairs.push(pair);
     return pair;
@@ -307,7 +307,7 @@ export function createWorld(container, opts = {}) {
   function seatMaster(entity, module, kit) {
     const roster = rosterFor(module);
     const [dx, dz] = MASTER_SPOTS.driver;
-    const driver = character(entity, kit, roster[0], 'interact', dx, BASE, dz, 0, 0);
+    const driver = character(entity, kit, roster[0], 'hold', dx, BASE, dz, 0, 0); // Both hands on the tablet.
     entity.dino.tablet = wearItem(driver.high, kit, 'vr_grip_l', 'equip-tablet');
     entity.dino.trackers.push(driver);
     for (const [i, [x, z]] of MASTER_SPOTS.watchers.slice(0, Math.max(module.population - 1, 1)).entries()) {
@@ -362,7 +362,7 @@ export function createWorld(container, opts = {}) {
     }
     const roster = rosterFor(module);
     entity.pilots = PILOTS.map(({ lane, x, z }, i) => {
-      const pair = character(entity, kit, roster[i % roster.length], 'interact', x, 0, z, Math.PI, i * .4);
+      const pair = character(entity, kit, roster[i % roster.length], 'hold', x, 0, z, Math.PI, i * .4);
       return { lane, pair, remote: wearItem(pair.high, kit, 'vr_grip_l', 'equip-drone-remote') };
     });
     entity.watchers = WATCHERS.map(({ x, z }, i) => character(entity, kit, roster[(i + 1) % roster.length], 'idle', x, 0, z, Math.PI, .6 + i * .5));
@@ -525,6 +525,28 @@ export function createWorld(container, opts = {}) {
     for (const { object } of field.flyers) object.traverseVisible(node => { if (node.isMesh) unbatchedMeshes += 1; });
     return { count: field.flyers.length, time: field.flyTime, positions: Object.fromEntries(field.flyers.map(({ id, object }) => [id, object.position.toArray().map(v => +v.toFixed(3))])),
       pilots: field.pilots.length, remotes: field.pilots.filter(p => p.remote).length, watchers: field.watchers.length, obstacles: field.obstacles, unbatchedMeshes };
+  }
+
+  // Every item held on a close-view character: how far it sits from the middle of both hands, how high above them,
+  // and how upright it stands (its own up against world up).
+  const HELD = { 'equip-tablet': 'driver', 'equip-drone-remote': 'pilot', 'equip-vr-controller': 'vr' };
+  function handDiagnostics() {
+    const hands = [], up = new Vector3(), centre = new Vector3(), middle = new Vector3();
+    for (const entity of entities.values()) for (const pair of entity.pairs || []) {
+      pair.high.updateMatrixWorld(true);
+      const left = pair.high.getObjectByName('vr_grip_l'), right = pair.high.getObjectByName('vr_grip_r');
+      pair.high.traverse(node => {
+        const role = HELD[node.userData.gear];
+        if (!role || !left || !right) return;
+        node.geometry.computeBoundingBox();
+        node.geometry.boundingBox.getCenter(centre).applyMatrix4(node.matrixWorld);
+        middle.setFromMatrixPosition(left.matrixWorld).add(up.setFromMatrixPosition(right.matrixWorld)).multiplyScalar(.5);
+        const between = centre.distanceTo(middle), above = centre.y - middle.y;
+        up.set(0, 1, 0).transformDirection(node.matrixWorld);
+        hands.push({ role, clip: pair.clip, item: node.userData.gear, between: +between.toFixed(3), above: +above.toFixed(3), up: +up.y.toFixed(3) });
+      });
+    }
+    return hands;
   }
 
   function dinoDiagnostics() {
@@ -968,6 +990,7 @@ export function createWorld(container, opts = {}) {
         batched: !!batched,
         characters: [...new Set([...entities.values()].flatMap(entity => entity.characters))],
         dino: dinoDiagnostics(),
+        hands: handDiagnostics(),
         drones: droneDiagnostics(),
         xray: { builds: xrayBuilds, stray: xrayStray(), lodMismatches: lodMismatches(), hiddenInBatch: (batched?.sources || []).filter(mesh => { for (let up = mesh.parent; up; up = up.parent) if (!up.visible) return true; return false; }).length, cloneMeshes: (() => { let n = 0; xrayState?.clone?.traverse(node => { if (node.isMesh) n += 1; }); return n; })(), room: xrayState?.room ?? null, veiled: xrayState?.veiled ?? [], hidden: xrayState?.hidden ?? [], ownVeils: xrayState?.ownVeils ?? [], batchSources: batched?.sources.length ?? 0 },
         electronics: electronicsDiagnostics(),

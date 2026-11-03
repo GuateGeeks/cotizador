@@ -107,6 +107,20 @@ await page.waitForFunction(() => window.world.getDiagnostics().lod === 'close', 
 await page.waitForTimeout(300);
 const closeVr = (await diag(page)).vr;
 expect(closeVr.visibleHeadsets === 3 && closeVr.visibleControllers === 6, `VR gear in close view: ${JSON.stringify(closeVr)}`);
+stage('hands');
+// Held items sit in the hands: remotes and tablets flat between both hands, VR controllers upright, at three moments.
+for (let sample = 0; sample < 3; sample += 1) {
+  const hands = (await diag(page)).hands;
+  for (const h of hands.filter(h => h.role !== 'vr')) {
+    expect(h.clip === 'hold', `${h.role} plays ${h.clip}`);
+    expect(h.between <= .08 && h.above >= -.01, `${h.role} ${h.item} sits between the hands: ${JSON.stringify(h)}`);
+    expect(h.up >= .9, `${h.role} ${h.item} lies flat: ${JSON.stringify(h)}`);
+  }
+  const controllers = hands.filter(h => h.role === 'vr');
+  expect(controllers.length === 6 && controllers.every(h => h.up >= .7), `VR controllers stand upright: ${JSON.stringify(controllers)}`);
+  expect(hands.filter(h => h.role === 'pilot').length === 2 && hands.filter(h => h.role === 'driver').length === 1, `every holder is measured: ${JSON.stringify(hands)}`);
+  await page.waitForTimeout(1000);
+}
 await page.evaluate(() => window.world.setFocus({ kind: 'program', id: 'master' }));
 await page.waitForFunction(() => window.world.getDiagnostics().lod === 'close', null, { timeout: 20000 });
 await walked('in close view');

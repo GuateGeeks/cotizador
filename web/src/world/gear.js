@@ -58,12 +58,15 @@ export function gearMesh(asset) {
 }
 
 // How each item rests on its fitting point: position in metres at the reference size, Euler XYZ rotation in radians.
-// An item whose hands mirror each other has one grip per side (l, r).
+// A grip point turns with its hand from the T-pose, so each rotation undoes the hand's turn in the clip that holds
+// the item: the remote and tablet lie flat across both palms in hold (riding the left grip, shifted towards the
+// right hand), the controllers stand upright in each fist in vr, one grip per side because the hands mirror.
+// Solved from the characters' measured hand_poses; the browser checks measure the result.
 export const GRIPS = {
   'equip-vr-headset': { position: [0, 0, 0], rotation: [0, 0, 0] },
-  'equip-vr-controller': { l: { position: [0, 0, 0], rotation: [0, 0, 0] }, r: { position: [0, 0, 0], rotation: [0, 0, 0] } },
-  'equip-drone-remote': { position: [0, 0, 0], rotation: [0, 0, 0] },
-  'equip-tablet': { position: [0, 0, 0], rotation: [0, 0, 0] }
+  'equip-vr-controller': { l: { position: [0, 0, 0], rotation: [1.401, 1.128, .362] }, r: { position: [0, 0, 0], rotation: [1.52, -1.027, -.261] } },
+  'equip-drone-remote': { position: [.001, -.013, -.048], rotation: [1.083, 1.276, 2.338] },
+  'equip-tablet': { position: [.002, -.008, -.046], rotation: [1.083, 1.276, 2.338] }
 };
 
 function gripFor(id, point) {
