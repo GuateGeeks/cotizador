@@ -15,6 +15,12 @@ terrace below a taller neighbour, barrel on project stacks, and pitched, flat or
 It adds archways under spans, pocket gardens in gaps, trims between equal stacks and a courtyard
 tree and bench from three ground rooms. Rooms are never moved or rebuilt by these rules.
 
+The Makerzoid program room keeps its tables; its dinosaur (`equip-dino`) is a kit robot of rigid parts
+joined into one mesh skinned to a small armature and coloured per vertex (`GG_KitVertex`), so it is one draw
+call. It walks a stadium loop in the room's visible right half (`web/src/world/dino-room.js`); the app plays
+its `walk` clip at the time scale that matches the manifest's `stride` to its travel. A driver holds
+`equip-tablet` on the `vr_grip_l` point and two watchers turn each frame to face the dinosaur.
+
 The immersive program room is a VR space (`web/src/world/vr-room.js`): no tables, three play zones
 (`equip-vr-zone`) in the room's front strip, where the roof and front beam leave students in view, spare
 `equip-vr-set`s on the shelf, `equip-screen-vr` and the teacher at the back. Its students play the `vr`

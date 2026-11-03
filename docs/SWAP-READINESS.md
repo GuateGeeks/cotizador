@@ -30,6 +30,7 @@ The swap (M6) needs separate approval. **Status: not ready.**
 
 ## Open items
 
+- The Makerzoid room shows a kit robot dinosaur walking a loop, driven by a student with a tablet while two watch (`runs/dino-12-room`). The walkway above the room hides the dinosaur for part of its loop at the default close view.
 - The VR room shows three bachillerato students wearing headsets and holding controllers in the `vr` loop, readable from the campus camera (`runs/vr-15-room`, `runs/vr-18-review`). Gear fit was checked on the basico and bach students only; the other characters carry fitting points but have not worn gear.
 - Characters are clean at close view. The teacher vest's waist marks came from hidden shirt pieces inside the Meshy mesh; the bake now drops enclosed loose parts and records `bake_mismatch` (teacher 1.6%, students 0.8-1.1%; distance models 2.4-3.9%). The campus-distance models (`-lod1`) no longer show black bake gaps: texels the bake's rays miss (long thin faces across curves) are filled from the nearest visible source point and padded, and partly hit texels are restored to full strength (`bake_gaps` 0 for all twelve). At close view the distance models still carry small colour slips, such as navy from the shorts on the pre-school calves.
 - Only the primary student's walk has had a full-size check; other clips were reviewed as small renders.

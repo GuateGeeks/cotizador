@@ -16,6 +16,12 @@ Draw calls fell from 4,536 by merging each entity's static parts, then batching 
 draw per material. During a transition the batch is off, and draw calls rise to about 600 until it rebuilds.
 Characters swap to a 1,400-triangle model at campus distance. `InstancedMesh` was not needed.
 
+## 2026-11-03 Makerzoid dinosaur
+
+With the kit dinosaur walking the Makerzoid room (one skinned, vertex-coloured mesh), a driver with a tablet
+and two watchers, the largest campus measured 59 fps, 142 draw calls and 383,712 triangles
+(`runs/dino-09-parity/bench.json`). A first run measured 45 fps while another session loaded the machine.
+
 ## 2026-11-02 VR room
 
 With the immersive room as a VR space (three students in the `vr` loop wearing headsets, controllers in

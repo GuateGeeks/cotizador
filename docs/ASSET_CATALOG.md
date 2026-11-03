@@ -47,7 +47,7 @@ Generated from `assets/manifests/` by `python3 scripts/world.py catalog`.
 | char-teacher-lod1 | 1399 | 1.65 x 1.75 x 0.50 | 358248 | PASS | PASS |
 | char-teacher | 5797 | 1.66 x 1.75 x 0.50 | 555616 | PASS | PASS |
 | equip-arm | 1120 | 0.30 x 0.41 x 0.41 | 24856 | PASS | PASS |
-| equip-dino | 2644 | 0.26 x 0.49 x 0.77 | 55208 | PASS | PASS |
+| equip-dino | 4828 | 0.31 x 0.48 x 0.81 | 181416 | PASS | PASS |
 | equip-drone | 1984 | 0.58 x 0.09 x 0.54 | 44516 | PASS | PASS |
 | equip-electronics-kit | 1260 | 0.36 x 0.05 x 0.26 | 34084 | PASS | PASS |
 | equip-kit-storage | 728 | 0.80 x 0.94 x 0.42 | 16096 | PASS | PASS |
@@ -58,6 +58,7 @@ Generated from `assets/manifests/` by `python3 scripts/world.py catalog`.
 | equip-rover-spike | 4696 | 0.30 x 0.32 x 0.30 | 105920 | PASS | PASS |
 | equip-screen-vr | 1164 | 1.50 x 1.55 x 0.36 | 28624 | PASS | PASS |
 | equip-screen | 924 | 1.50 x 1.55 x 0.36 | 20836 | PASS | PASS |
+| equip-tablet | 152 | 0.24 x 0.02 x 0.17 | 5172 | PASS | PASS |
 | equip-vr-controller | 312 | 0.07 x 0.10 x 0.07 | 7972 | PASS | PASS |
 | equip-vr-headset | 700 | 0.20 x 0.10 x 0.24 | 14824 | PASS | PASS |
 | equip-vr-set | 1540 | 0.50 x 0.14 x 0.31 | 30504 | PASS | PASS |
