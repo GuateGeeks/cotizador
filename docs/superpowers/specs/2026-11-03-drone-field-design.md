@@ -78,15 +78,20 @@ is outdoors with nothing above it, so it is one of the first things a visitor se
     4. a second hoop, at a lower height
   - The drones climb and dip between them.
   - A checkered `equip-race-flag` marks the start/finish beside the ring.
-  - Every obstacle is wide enough for both lanes side by side: gates about 1.6 m wide and 1.2 m tall, hoops about
-    1.4 m across.
+  - Every obstacle is wide enough for both lanes: gates 1.8 m wide and 1.4 m tall (opening), hoops 1.8 m across
+    (opening).
 - **The race (user + proposal):**
-  - **Lanes:** two drones fly the same loop in two lanes about 0.45 m apart (left and right of the centre line,
-    both inside each obstacle opening).
+  - **Lanes (call):** two drones fly the same loop in two lanes offset 0.3 m to either side of the centre line and
+    0.2 m above and below it, so drones level with each other are 0.6 m apart sideways and 0.4 m apart in height.
   - **Speed:** each drone's speed along its lane rises and falls on a different slow rhythm, so the lead changes
     hands now and then. They never touch, since they keep their lanes.
   - **Motion:** the drones bank into turns and pitch with climbs. Rotors spin as today.
-  - **Scale:** 1.6× (about 0.9 m across), down from 3×.
+  - **Scale (call):** 1.2× (about 0.7 m across, 0.11 m tall), down from 3×. At 1.6× two drones level with each
+    other would overlap, and they would barely clear the hoops.
+  - **Clearance (call):** measured from each drone's outer edge (a 0.35 m radius disc, 0.06 m half-height).
+    - Drones keep at least 0.15 m apart: they are thin discs, so the height offset separates them even when they are
+      level.
+    - Each drone keeps at least 0.12 m from every obstacle frame.
 - **Pilots (user + proposal):**
   - Two students stand at the front edge of the field, outside the course, facing it.
   - Each holds an `equip-drone-remote` (a small handheld controller with two sticks) on `vr_grip_l`, in the
@@ -99,8 +104,16 @@ is outdoors with nothing above it, so it is one of the first things a visitor se
 - **Campus distance (proposal):** gates, hoops and the flag merge with the field at every distance. The drones, being
   in motion, stay unmerged as today. The remote is close-view only (gear on the close model, as the VR controllers
   are).
-- **Performance (proposal):** four added students and one more drone should land near 148 campus draw calls. If the
-  campus goes over 150, drop to one watcher.
+- **Performance (call):** today's single drone is about 20 separate meshes, each a draw (`runs/lab` breakdown:
+  20 unbatched patio meshes).
+  - Each drone's static parts are merged at build time into one vertex-coloured mesh, as `gear.js` merges gear. Its
+    four rotors are kept separate so they spin.
+  - Rotors cast no shadow.
+  - That is 5 meshes and 6 draws per drone (the body with its shadow), so two drones cost fewer draws than one drone
+    today. This pays for the four students.
+  - Campus view must stay at most 150 draw calls. If it goes over, drop to one watcher.
+- **The table drone in classrooms is unaffected:** it uses the classroom-kit path, which renames rotors `still_` and
+  merges them with the room.
 
 ## Done means
 
@@ -109,7 +122,8 @@ is outdoors with nothing above it, so it is one of the first things a visitor se
 - Tests pin:
   - every obstacle stands on the pad, clear of the ring, the planters, the pilots and the watchers
   - each lane passes through every obstacle opening with clearance for a 0.9 m drone
-  - the lanes never come within 0.35 m of each other or of any obstacle frame
+  - measured from the drones' outer edges, the drones stay at least 0.15 m apart and at least 0.12 m from every
+    obstacle frame
   - the paths stay inside the pad and below a sensible ceiling
   - the drones' order changes at least once per lap
   - reduced motion rests both drones on the ring
