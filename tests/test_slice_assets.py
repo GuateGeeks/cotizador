@@ -34,7 +34,7 @@ class Connected(unittest.TestCase):
             self.assertEqual(build(asset).get('islands'), 1, asset)
 
 class Library(unittest.TestCase):
-    EQUIPMENT = {'equip-rover-programmable': ('wheel_l', 'wheel_r'), 'equip-dino': ('joint_neck', 'joint_tail'), 'equip-electronics-kit': (),
+    EQUIPMENT = {'equip-rover-programmable': ('wheel_l', 'wheel_r'), 'equip-dino': (), 'equip-electronics-kit': (),
                  'equip-drone': ('rotor_1', 'rotor_2', 'rotor_3', 'rotor_4'), 'equip-vr-set': (), 'equip-printer': ('head_printer',),
                  'equip-laptop': ('lid',), 'equip-screen': (), 'equip-arm': ('joint_base', 'joint_shoulder', 'joint_elbow'),
                  'equip-organizer': (), 'equip-kit-storage': ()}
@@ -81,6 +81,18 @@ class VrGear(unittest.TestCase):
         self.assertLessEqual(zone['size_m'][1], .012)
         self.assertEqual([round(v, 2) for v in screen['size_m']], [round(v, 2) for v in old['size_m']])
         self.assertLessEqual(screen['triangles'], 1500)
+
+class KitDino(unittest.TestCase):
+    def test_kit_dinosaur_is_one_skinned_mesh_with_a_walk(self):
+        m = build('equip-dino')
+        self.assertEqual(m['materials'], ['GG_KitVertex'])
+        self.assertEqual(m['skins'], 1)
+        self.assertEqual(m['animations'], ['walk'])
+        self.assertLessEqual(m['triangles'], 5000)
+        self.assertAlmostEqual(m['size_m'][2], .77, delta=.1)  # length along glTF Z
+        self.assertGreater(m['stride'], .1)
+        self.assertLess(m['stride'], .5)
+        self.assertGreater(m['walk_seconds'], .8)
 
 if __name__ == '__main__':
     unittest.main()

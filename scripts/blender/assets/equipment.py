@@ -82,27 +82,6 @@ def rover_programmable():
     wheel('wheel_rl', -.14, .09, .062)
     wheel('wheel_rr', .14, .09, .062)
 
-@register('equip-dino', budget=5000)
-def dino():
-    ball('body', (.09, .19, .1), (0, .02, .24), 'GG_GreenFoliage', wobble=.01, sub=3)
-    ball('belly', (.07, .13, .07), (0, .01, .205), 'GG_IvorySoft', sub=2)
-    for i in range(4):
-        cyl('plate', .03, .006, .06, (0, -.06 + i * .07, .32 - i * .006), 'GG_PurplePrimary', seg=6, bev=0)
-    for s, y in ((-1, -.1), (1, -.1), (-1, .12), (1, .12)):
-        limb('leg', (s * .08, y, .2), (s * .09, y, .06), .04, 'GG_PurplePrimary', seg=10)
-        ball('joint', (.03, .03, .03), (s * .09, y, .19), 'GG_OrangeAccent', sub=2)
-        box('foot', (.08, .11, .05), (s * .09, y - .015, .03), 'GG_IvorySoft', r=.02, seg=3)
-    root = geometry.current().root
-    neck = pivot('joint_neck', root, (0, -.14, .29))
-    attach(neck, [limb('neck', (0, 0, 0), (0, -.06, .1), .05, 'GG_GreenFoliage'),
-                  ball('head', (.075, .1, .065), (0, -.11, .14), 'GG_GreenFoliage', sub=3),
-                  ball('snout', (.05, .05, .03), (0, -.17, .115), 'GG_IvorySoft', sub=2)])
-    for s in (-1, 1):
-        attach(neck, [ball('eye', (.014, .008, .016), (s * .06, -.14, .165), 'GG_PurpleDark', sub=2)])
-    tail = pivot('joint_tail', root, (0, .18, .25))
-    attach(tail, [limb('tail', (0, 0, 0), (0, .12, .02), .045, 'GG_GreenFoliage'),
-                  limb('tail_tip', (0, .11, .02), (0, .22, .05), .022, 'GG_GreenDark')])
-
 @register('equip-electronics-kit', budget=5000)
 def electronics_kit():
     box('board', (.36, .26, .02), (0, 0, .01), 'GG_IvorySoft', r=.012, corner=.02)

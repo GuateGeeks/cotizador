@@ -1,7 +1,7 @@
 """Importing this package registers every asset generator."""
 import importlib
 
-for name in ('furniture', 'vegetation', 'architecture', 'equipment', 'characters'):
+for name in ('furniture', 'vegetation', 'architecture', 'equipment', 'robot_dino', 'characters'):
     try:
         importlib.import_module(f'{__name__}.{name}')
     except ModuleNotFoundError as exc:
