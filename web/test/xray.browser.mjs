@@ -4,6 +4,7 @@ import { mkdirSync } from 'node:fs';
 import states from '../src/app/states.json' with { type: 'json' };
 
 const out = process.argv[2] || '../runs/web-xray';
+const URL = process.env.GG_URL || 'http://127.0.0.1:4410/world.html'; // GG_URL points at another dev server.
 mkdirSync(out, { recursive: true });
 const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const failures = [];
@@ -13,7 +14,7 @@ async function open(reducedMotion = 'no-preference') {
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 }, reducedMotion });
   const problems = [];
   page.on('pageerror', e => problems.push(String(e)));
-  await page.goto('http://127.0.0.1:4410/world.html');
+  await page.goto(URL);
   await page.waitForFunction(() => window.world);
   await page.addStyleTag({ content: '.bar { display: none !important; }' });
   page.problems = problems;
