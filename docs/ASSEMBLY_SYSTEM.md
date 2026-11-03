@@ -19,8 +19,8 @@ A focused room opens like the cotizador's (`web/src/world/room-xray.js`, `applyX
 Modules above it veil, and rooms and roofs above keep only their shell. Buildings between it and the camera
 hide, and thin links veil. The room swaps its merged `entity.shell` for an unmerged copy of its asset whose
 camera-facing walls veil, merged per material once veiled. Veils share `veilMaterial()` and batch into one draw;
-anything under a hidden part stays out of the batch. Picking skips hidden parts and veils. It reopens on yaw
-quarter-turns and after updates, and clears on `resetView` or a non-room focus.
+anything under a hidden part stays out of the batch. Picking skips hidden parts and veils. It rebuilds only when the walls
+facing the camera or the blockers change (`xrayKey`), reapplies when the view distance changes, reopens after updates, and clears on `resetView` or a non-room focus.
 
 Classrooms show the programs their grades use (`web/src/layout/classroom-programs.js`): a program counts
 for a level when one of its equipment `groupIds` is an enrollment row of that level, and a program with no
