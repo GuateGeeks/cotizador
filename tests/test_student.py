@@ -77,7 +77,7 @@ class HandPoses(unittest.TestCase):
         for asset, m in self.built.items():
             for clip in ('idle', 'sit', 'interact', 'vr', 'hold'):
                 samples = m['hand_poses'][clip]
-                self.assertEqual([s['frame'] for s in samples], [1, 13], asset)
+                self.assertEqual([s['frame'] for s in samples][:2], [1, 13], asset)
                 for s in samples:
                     for side in ('l', 'r'):
                         self.assertAlmostEqual(sum(v * v for v in s[f'palm_{side}']), 1, delta=.01)
@@ -112,6 +112,13 @@ class HandPoses(unittest.TestCase):
             self.assertGreater(min(s['thumb_l'][1], s['thumb_r'][1]), .95, asset)
             self.assertLess(s['palm_l'][0], -.6, asset)      # the left hand is at +x, its palm faces the body's centre
             self.assertGreater(s['palm_r'][0], .6, asset)
+
+    def test_vr_keeps_the_controllers_upright_through_the_reaches(self):
+        for asset, m in self.built.items():
+            samples = m['hand_poses']['vr']
+            self.assertEqual([s['frame'] for s in samples], [1, 13, 19, 37, 55], asset)
+            for s in samples:
+                self.assertGreater(min(s['thumb_l'][1], s['thumb_r'][1]), .9, f"{asset} frame {s['frame']}")
 
     def test_sit_and_idle_hands_match_the_baseline(self):
         baseline = json.loads((ROOT / 'tests/fixtures/hand_baseline.json').read_text())

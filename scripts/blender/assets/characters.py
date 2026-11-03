@@ -80,9 +80,10 @@ def author_clips(arm):
                        (37, merged(cupped, {'RightHand': [(X, 8)]}), 0), (49, cupped, 0)])
     # Fists a little forward with the forearms near level, so the thumbs (and the handles) point up.
     holding = merged(ARMS_DOWN, {'LeftArm': [(X, -15)], 'RightArm': [(X, -15)], 'LeftForeArm': [(X, -85)], 'RightForeArm': [(X, -85)]})
+    # A reaching arm lifts 40°; its wrist turns back as much, so the controller stays upright.
     clip(arm, 'vr', [(1, holding, 0),
-                     (19, merged(holding, {'Head': [(Z, 35)], 'RightArm': [(X, -40)]}), 0),
-                     (37, merged(holding, {'Head': [(Z, -35), (X, 8)], 'LeftArm': [(X, -40)]}), 0),
+                     (19, merged(holding, {'Head': [(Z, 35)], 'RightArm': [(X, -40)], 'RightHand': [(X, 40)]}), 0),
+                     (37, merged(holding, {'Head': [(Z, -35), (X, 8)], 'LeftArm': [(X, -40)], 'LeftHand': [(X, 40)]}), 0),
                      (55, merged(holding, {'Head': [(X, -6)], 'LeftArm': [(Y, -35)], 'RightArm': [(Y, 35)]}), -.3),
                      (73, holding, 0)])
 
@@ -152,6 +153,8 @@ def palm_axes(arm, mesh):
         axes[bone] = {'palm': (frame.inverted() @ normal).normalized(), 'thumb': (frame.inverted() @ thumb).normalized()}
     return axes
 
+VR_KEYS = (19, 37, 55)  # the reach, the other reach and the sweep
+
 def hand_poses(arm, mesh, grips, clips=HAND_CLIPS, frames=(1, 13)):
     """Where both grips are and which way the palms and thumbs face, per clip, in glTF axes."""
     axes, scene, keep = palm_axes(arm, mesh), bpy.context.scene, arm.animation_data.action
@@ -163,7 +166,7 @@ def hand_poses(arm, mesh, grips, clips=HAND_CLIPS, frames=(1, 13)):
         if arm.animation_data.action_slot is None and action.slots:
             arm.animation_data.action_slot = action.slots[0]
         out[name] = []
-        for frame in frames:
+        for frame in frames + (VR_KEYS if name == 'vr' else ()):
             scene.frame_set(frame)
             bpy.context.view_layer.update()
             sample = {'frame': frame}
