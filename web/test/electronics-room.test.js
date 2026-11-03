@@ -71,4 +71,19 @@ describe('Electronics room', () => {
     const cx = (b.minX + b.maxX) / 2, cz = (b.minZ + b.maxZ) / 2;
     expect(Math.cos(Math.atan2(cx - tx, cz - tz) - trot)).toBeGreaterThan(.95);
   });
+  it('shows the circuit kits at 1.4 scale, wholly on the bench top', () => {
+    // The kit's footprint is 0.36 x 0.26 m at scale 1; turned by its rotation, its scaled corners stay on the 2.0 x 0.7 m top.
+    const circuits = STATIONS.find(s => s.id === 'circuits'), b = footprint(circuits.bench);
+    const kits = circuits.items.filter(([asset]) => asset === 'equip-electronics-kit');
+    expect(kits).toHaveLength(2);
+    for (const [, x, z, rot, scale] of kits) {
+      expect(scale).toBe(1.4);
+      const w = .36 * scale / 2, d = .26 * scale / 2;
+      const ex = w * Math.abs(Math.cos(rot)) + d * Math.abs(Math.sin(rot)), ez = w * Math.abs(Math.sin(rot)) + d * Math.abs(Math.cos(rot));
+      expect(x - ex >= b.minX && x + ex <= b.maxX && z - ez >= b.minZ && z + ez <= b.maxZ, `kit at ${x},${z} hangs off the bench`).toBe(true);
+    }
+    const [[, ax, , arot, as], [, bx, , brot, bs]] = kits;
+    const reach = (rot, scale) => .36 * scale / 2 * Math.abs(Math.cos(rot)) + .26 * scale / 2 * Math.abs(Math.sin(rot));
+    expect(Math.abs(ax - bx)).toBeGreaterThan(reach(arot, as) + reach(brot, bs)); // The two kits do not overlap.
+  });
 });

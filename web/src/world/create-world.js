@@ -400,9 +400,10 @@ export function createWorld(container, opts = {}) {
       const { asset, x, z, rot } = station.bench;
       placeIn(entity.inside, kit.get(asset), x, BASE, z, rot);
       for (const student of station.students) if (student.stool) placeIn(entity.inside, kit.get('furn-stool'), student.x, BASE, student.z);
-      for (const [item, ix, iz, irot] of station.items) {
+      for (const [item, ix, iz, irot, scale = 1] of station.items) {
         const machine = MACHINES.has(item);
         const object = placeIn(machine ? entity.extra : entity.inside, kit.get(item), ix, BENCH_TOP, iz, irot);
+        object.scale.setScalar(scale);
         if (!machine) continue;
         object.traverse(node => { if (node.isMesh) node.castShadow = false; });
         entity.bench.push({ asset: item, object });

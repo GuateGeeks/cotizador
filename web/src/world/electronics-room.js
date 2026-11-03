@@ -1,5 +1,6 @@
 // The Electronics room as a maker lab: three workbench stations in a U around an open middle, each with its own
-// job and students. Room-local metres (open front at +z); items sit on the bench tops at BASE + 0.75. A bench at
+// job and students. Room-local metres (open front at +z); items [asset, x, z, rotation, scale = 1] sit on the bench
+// tops at BASE + 0.75; the circuit kits show larger than life so they read from the room's front. A bench at
 // rotation 0 faces the room's front; +pi/2 faces +x, -pi/2 faces -x.
 const H = Math.PI / 2;
 export const STATIONS = [
@@ -10,7 +11,7 @@ export const STATIONS = [
     items: [['equip-arm', 2.38, -.55, -H], ['equip-laptop', 2.38, .1, -H]],
     students: [{ x: 1.6, z: -.3, rot: H, clip: 'interact', stool: false }] },
   { id: 'circuits', bench: { asset: 'furn-workbench', x: 0, z: -1.88, rot: 0 },
-    items: [['equip-electronics-kit', -.5, -1.85, .2], ['equip-electronics-kit', .5, -1.85, -.2]],
+    items: [['equip-electronics-kit', -.5, -1.85, .2, 1.4], ['equip-electronics-kit', .5, -1.85, -.2, 1.4]],
     students: [{ x: -.45, z: -1.2, rot: Math.PI, clip: 'sit', stool: true }, { x: .45, z: -1.2, rot: Math.PI, clip: 'sit', stool: true }] }
 ];
 // Front-left of the open middle, facing the circuits bench: low enough on screen from the default camera that
