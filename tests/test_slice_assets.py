@@ -130,5 +130,23 @@ class Workbench(unittest.TestCase):
         self.assertLessEqual(m['triangles'], 1500)
         self.assertEqual(m['islands'], 1)
 
+class PrinterHead(unittest.TestCase):
+    def test_only_the_carriage_moves_so_the_rail_stays_inside_the_case(self):
+        build('equip-printer')
+        doc = glb_json(TMP / 'a' / 'equip-printer.glb')
+        nodes = doc['nodes']
+        head = next(n for n in nodes if n.get('name') == 'head_printer')
+        reach, stack = 0, [(c, 0.0) for c in head.get('children', [])]
+        while stack:
+            index, offset = stack.pop()
+            node = nodes[index]
+            x = offset + node.get('translation', [0, 0, 0])[0]
+            if 'mesh' in node:
+                for primitive in doc['meshes'][node['mesh']]['primitives']:
+                    bounds = doc['accessors'][primitive['attributes']['POSITION']]
+                    reach = max(reach, abs(x + bounds['min'][0]), abs(x + bounds['max'][0]))
+            stack.extend((c, x) for c in node.get('children', []))
+        self.assertLessEqual(reach, .05)  # the 0.34 m rail would reach 0.17
+
 if __name__ == '__main__':
     unittest.main()

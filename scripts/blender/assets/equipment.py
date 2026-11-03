@@ -164,8 +164,10 @@ def printer():
     box('bed', (.26, .24, .02), (0, -.02, .1), 'GG_TurquoiseAccent', r=.008)
     cyl('bed_post', .03, .03, .04, (0, -.02, .06), 'GG_PurpleDark', seg=10)
     root = geometry.current().root
+    # The rail spans the case and stays put; only the carriage and nozzle ride along it.
+    box('rail', (.34, .018, .018), (0, 0, .34), 'GG_PurpleDark', r=.006)
     head = pivot('head_printer', root, (0, 0, .34))
-    attach(head, [box('rail', (.34, .018, .018), (0, 0, 0), 'GG_PurpleDark', r=.006), box('carriage', (.07, .05, .06), (0, 0, -.02), 'GG_PurplePrimary', r=.012),
+    attach(head, [box('carriage', (.07, .05, .06), (0, 0, -.02), 'GG_PurplePrimary', r=.012),
                   cyl('nozzle', .012, .004, .03, (0, 0, -.08), 'GG_YellowAccent', seg=8, rot=(0, 0, 0))])
     cyl('spool', .1, .1, .05, (-.24, 0, .25), 'GG_OrangeAccent', seg=20, bev=.008, rot=(0, math.pi / 2, 0))
 

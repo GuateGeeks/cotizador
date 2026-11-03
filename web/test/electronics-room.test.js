@@ -15,6 +15,12 @@ describe('Electronics room', () => {
       expect(Math.abs(dz) + .2).toBeLessThanOrEqual(.35);
     }
   });
+  it('keeps the printer carriage on its rail', () => {
+    // Rail half-length 0.17 m, carriage half-width 0.035 m.
+    let reach = 0;
+    for (let t = 0; t < SWAY_PERIOD; t += .01) reach = Math.max(reach, Math.abs(swayPose(t).head_printer));
+    expect(reach + .035).toBeLessThanOrEqual(.17);
+  });
   it('sways from a neutral pose and loops', () => {
     expect(Object.values(swayPose(0)).every(v => v === 0)).toBe(true);
     for (const [k, v] of Object.entries(swayPose(1.3))) expect(swayPose(1.3 + SWAY_PERIOD)[k]).toBeCloseTo(v);
