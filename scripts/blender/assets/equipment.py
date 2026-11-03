@@ -122,6 +122,25 @@ def vr_set():
         box('grip', (.05, .05, .1), (s * .17, -.04, .05), 'GG_IvorySoft', r=.02, seg=3)
         cyl('ring', .06, .06, .014, (s * .17, -.04, .1), 'GG_TurquoiseAccent', seg=20, bev=.005)
 
+@register('equip-spool-rack', budget=700)
+def spool_rack():
+    """Filament spools on a stand beside the 3D printer."""
+    box('base', (.34, .14, .02), (0, 0, .01), 'GG_PurpleDark', r=.006, seg=1)
+    for s in (-1, 1):
+        box('post', (.02, .02, .2), (s * .16, 0, .11), 'GG_PurplePrimary', r=.006, seg=1)
+    cyl('rod', .008, .008, .34, (0, 0, .18), 'GG_IvorySoft', seg=8, bev=0, rot=(0, math.pi / 2, 0), centred=True)
+    for i, mat in enumerate(('GG_OrangeAccent', 'GG_TurquoiseAccent', 'GG_YellowAccent')):
+        cyl('spool', .075, .075, .08, (-.1 + i * .1, 0, .18), mat, seg=18, bev=.008, rot=(0, math.pi / 2, 0), centred=True)
+
+@register('equip-printed-parts', budget=500)
+def printed_parts():
+    """A tray of small printed shapes: what the 3D printer has made."""
+    box('tray', (.3, .2, .02), (0, 0, .01), 'GG_IvorySoft', r=.006, seg=1)
+    box('gear', (.06, .06, .03), (-.08, -.03, .035), 'GG_OrangeAccent', r=.01, seg=1)
+    cyl('cup', .03, .025, .05, (.02, .04, .02), 'GG_TurquoiseAccent', seg=12, bev=.005)
+    ball('figure', (.025, .025, .035), (.09, -.04, .055), 'GG_YellowAccent', sub=1)
+    box('figure_base', (.04, .04, .02), (.09, -.04, .03), 'GG_PurplePrimary', r=.006, seg=1)
+
 @register('equip-vr-headset', budget=800)
 def vr_headset():
     """Worn on the `vr_eyes` fitting point: eyes at the origin, 0.2 m wide, strap around the head."""

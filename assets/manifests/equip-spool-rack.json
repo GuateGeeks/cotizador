@@ -1,0 +1,44 @@
+{
+  "id": "equip-spool-rack",
+  "triangles": 580,
+  "budget": 700,
+  "materials": [
+    "GG_IvorySoft",
+    "GG_OrangeAccent",
+    "GG_PurpleDark",
+    "GG_PurplePrimary",
+    "GG_TurquoiseAccent",
+    "GG_YellowAccent"
+  ],
+  "size_m": [
+    0.34,
+    0.2539,
+    0.15
+  ],
+  "bounds": {
+    "min": [
+      -0.17,
+      0.0,
+      -0.075
+    ],
+    "max": [
+      0.17,
+      0.253861,
+      0.075
+    ]
+  },
+  "sockets": {},
+  "pivots": {},
+  "skins": 0,
+  "animations": [],
+  "bytes": 15392,
+  "sha256": "6b80b621562d238c6f2a77676883763977d2c0f6d98f9555469e77a35553773b",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

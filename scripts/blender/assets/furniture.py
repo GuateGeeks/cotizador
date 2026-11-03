@@ -28,16 +28,36 @@ def table_four():
         cyl('leg', .04, .05, .49, (x, y, .03), 'GG_PurplePrimary', seg=10)
         cyl('foot', .055, .055, .04, (x, y, 0), 'GG_IvorySoft', seg=10, bev=.01)
 
-@register('furn-workbench', budget=1500)
-def workbench():
-    """The Electronics lab bench: worktop at 0.75 m, a pegboard back with tools, a shelf below."""
-    W, D, TOP = 2.0, .7, .75
+def bench_frame(W, D=.7, TOP=.75):
+    """Worktop, front edge, lower shelf and legs shared by the lab benches."""
     box('top', (W, D, .05), (0, 0, TOP - .025), 'GG_IvorySoft', r=.02)
     box('edge', (W, .03, .06), (0, -D / 2 + .015, TOP - .03), 'GG_PurplePrimary', r=.012)
     box('shelf', (W - .12, D - .12, .03), (0, 0, .18), 'GG_PurplePrimary', r=.01)
     for x in (-W / 2 + .06, W / 2 - .06):
         for y in (-D / 2 + .06, D / 2 - .06):
             box('leg', (.05, .05, TOP - .05), (x, y, (TOP - .05) / 2), 'GG_PurplePrimary', r=.012)
+    return W, D, TOP
+
+@register('furn-workbench-short', budget=1200)
+def workbench_short():
+    """A 1.4 m station bench for the side walls: a low upstand instead of the pegboard, so windows stay clear."""
+    W, D, TOP = bench_frame(1.4)
+    box('upstand', (W, .03, .1), (0, D / 2 - .015, TOP + .05), 'GG_PurpleDark', r=.01)
+    add_socket('top', (0, 0, TOP))
+
+@register('furn-stool', budget=400)
+def stool():
+    """A lab stool whose seat top is at 0.30 m, like the classroom chairs."""
+    cyl('seat', .16, .16, .05, (0, 0, .25), 'GG_TurquoiseAccent', seg=14, bev=.012)
+    for x, y in ((-.1, -.1), (.1, -.1), (-.1, .1), (.1, .1)):
+        cyl('leg', .016, .02, .26, (x, y, 0), 'GG_PurplePrimary', seg=6, bev=0)
+    for a, b in (((-.1, -.1), (.1, -.1)), ((.1, -.1), (.1, .1)), ((.1, .1), (-.1, .1)), ((-.1, .1), (-.1, -.1))):
+        box('ring', (abs(a[0] - b[0]) + .02 or .02, abs(a[1] - b[1]) + .02 or .02, .015), ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, .1), 'GG_PurpleDark', r=.004, seg=1)
+
+@register('furn-workbench', budget=1500)
+def workbench():
+    """The Electronics lab bench: worktop at 0.75 m, a pegboard back with tools, a shelf below."""
+    W, D, TOP = bench_frame(2.0)
     board_h = .58
     box('pegboard', (W, .03, board_h), (0, D / 2 - .015, TOP + board_h / 2), 'GG_PurpleDark', r=.015)
     for i in range(6):

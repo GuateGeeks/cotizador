@@ -148,5 +148,28 @@ class PrinterHead(unittest.TestCase):
             stack.extend((c, x) for c in node.get('children', []))
         self.assertLessEqual(reach, .05)  # the 0.34 m rail would reach 0.17
 
+class LabStations(unittest.TestCase):
+    def test_short_bench_matches_the_long_one_without_a_pegboard(self):
+        m = build('furn-workbench-short')
+        self.assertAlmostEqual(m['size_m'][0], 1.4, delta=.05)
+        self.assertAlmostEqual(m['size_m'][2], .7, delta=.05)
+        self.assertLess(m['size_m'][1], .9)  # no pegboard above the worktop
+        self.assertAlmostEqual(m['sockets']['socket_top'][1], .75, places=3)
+        self.assertLessEqual(m['triangles'], 1200)
+        self.assertEqual(m['islands'], 1)
+
+    def test_stool_seats_at_chair_height(self):
+        m = build('furn-stool')
+        self.assertAlmostEqual(m['size_m'][1], .30, delta=.02)
+        self.assertLessEqual(m['triangles'], 400)
+        self.assertEqual(m['islands'], 1)
+
+    def test_printing_props_are_small_and_whole(self):
+        for asset, budget in (('equip-spool-rack', 700), ('equip-printed-parts', 500)):
+            m = build(asset)
+            self.assertLessEqual(m['triangles'], budget, asset)
+            self.assertLessEqual(max(m['size_m']), .45, asset)
+            self.assertEqual(m['islands'], 1, asset)
+
 if __name__ == '__main__':
     unittest.main()

@@ -1,0 +1,41 @@
+{
+  "id": "furn-stool",
+  "triangles": 364,
+  "budget": 400,
+  "materials": [
+    "GG_PurpleDark",
+    "GG_PurplePrimary",
+    "GG_TurquoiseAccent"
+  ],
+  "size_m": [
+    0.312,
+    0.3,
+    0.32
+  ],
+  "bounds": {
+    "min": [
+      -0.155988,
+      0.0,
+      -0.16
+    ],
+    "max": [
+      0.155988,
+      0.3,
+      0.16
+    ]
+  },
+  "sockets": {},
+  "pivots": {},
+  "skins": 0,
+  "animations": [],
+  "bytes": 12624,
+  "sha256": "9b2197b393aad370c26b7bfbbc24c90d74c0dbd886dab527d67fb0fa84b34598",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

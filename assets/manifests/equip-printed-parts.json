@@ -1,0 +1,43 @@
+{
+  "id": "equip-printed-parts",
+  "triangles": 244,
+  "budget": 500,
+  "materials": [
+    "GG_IvorySoft",
+    "GG_OrangeAccent",
+    "GG_PurplePrimary",
+    "GG_TurquoiseAccent",
+    "GG_YellowAccent"
+  ],
+  "size_m": [
+    0.3,
+    0.09,
+    0.2
+  ],
+  "bounds": {
+    "min": [
+      -0.15,
+      0.0,
+      -0.1
+    ],
+    "max": [
+      0.15,
+      0.09,
+      0.1
+    ]
+  },
+  "sockets": {},
+  "pivots": {},
+  "skins": 0,
+  "animations": [],
+  "bytes": 9360,
+  "sha256": "42dce8623c5eac82fe49cff2fb60d383d353bda793fc9f5bb589d874190e72bf",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}

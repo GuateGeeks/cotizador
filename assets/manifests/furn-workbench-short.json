@@ -1,0 +1,47 @@
+{
+  "id": "furn-workbench-short",
+  "triangles": 864,
+  "budget": 1200,
+  "materials": [
+    "GG_IvorySoft",
+    "GG_PurpleDark",
+    "GG_PurplePrimary"
+  ],
+  "size_m": [
+    1.4,
+    0.85,
+    0.7
+  ],
+  "bounds": {
+    "min": [
+      -0.7,
+      0.0,
+      -0.35
+    ],
+    "max": [
+      0.7,
+      0.85,
+      0.35
+    ]
+  },
+  "sockets": {
+    "socket_top": [
+      0.0,
+      0.75,
+      0.0
+    ]
+  },
+  "pivots": {},
+  "skins": 0,
+  "animations": [],
+  "bytes": 17444,
+  "sha256": "f0e7200a40edc05edeab1e2520cf2ff08a8d07f6244d0797593a9595ac6a182b",
+  "blender": "5.2.3 LTS",
+  "verdicts": {
+    "technical": "PASS",
+    "visual": "NOT_RUN",
+    "content": "NOT_RUN",
+    "provenance": "NOT_RUN"
+  },
+  "islands": 1
+}
