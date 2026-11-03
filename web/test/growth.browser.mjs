@@ -41,6 +41,9 @@ for (const [index, state] of states.entries()) {
     expect(tables.every(t => t.length === 1 && t[0] === fallback), `classroom without programs ${key}: ${JSON.stringify(tables)}`);
   }
   if (index === states.length - 1) {
+    const { electronics } = await diag(page);
+    expect(electronics && ['equip-arm', 'equip-printer'].every(id => electronics.onBench.includes(id)) && electronics.floorMachines === 0 && electronics.swaying,
+      `Electronics bench: ${JSON.stringify(electronics)}`);
     const want = { 'room:prim:0': [['equip-dino'], ['equip-electronics-kit']], 'room:pre:0': [['equip-rover-programmable'], ['equip-rover-programmable']],
       'room:bas:0': [['equip-rover-spike', 'equip-laptop'], ['equip-drone']] };
     for (const [key, tables] of Object.entries(want)) expect(JSON.stringify(tableKits[key]) === JSON.stringify(tables), `kits in ${key}: ${JSON.stringify(tableKits[key])}`);

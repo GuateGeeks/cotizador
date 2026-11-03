@@ -13,6 +13,8 @@ import { disposeMaterials, materialFor } from './materials.js';
 import { buildBatch, clearBatch, mergeStatic } from './merge.js';
 import { clearGear, wearGear, wearItem } from './gear.js';
 import { KIT_ASSETS, KIT_SCALE, tableKits } from './classroom-kits.js';
+import { BENCH, BENCH_ITEMS, ELECTRONICS_SPOTS, swayPose } from './electronics-room.js';
+import workbenchManifest from '../../../assets/manifests/furn-workbench.json';
 import { DINO_SCALE, DINO_SPEED, DINO_START, MASTER_ASSETS, MASTER_SPOTS, loopPoint } from './dino-room.js';
 import dinoManifest from '../../../assets/manifests/equip-dino.json';
 import { VR_ASSETS, VR_PROPS, VR_TEACHER, VR_ZONES } from './vr-room.js';
@@ -31,7 +33,8 @@ const PROGRAM_SETUP = {
   tale: [['equip-rover-programmable', 0, BASE, 1.1, .5, 2.4], ['equip-rover-programmable', -1.05, TOP, -.2, -.4, 1]],
   master: [['equip-laptop', 1.35, TOP, -.2, 0, 1]], // The kit dinosaur walks; see placeDino.
   spike: [['equip-rover-spike', 0, BASE, 1.1, .5, 2.2], ['equip-rover-spike', 1.35, TOP, -.2, .5, 1], ['equip-laptop', -1.05, TOP, -.2, 0, 1]],
-  electronics: [['equip-printer', -2.1, BASE, 1.2, .4, 1.5], ['equip-arm', 0, BASE, 1.1, .3, 2], ['equip-electronics-kit', -1.05, TOP, -.2, .2, 1.4], ['equip-electronics-kit', 1.35, TOP, -.2, -.2, 1.4]],
+  // The printer and the arm work at the bench; see placeBench.
+  electronics: [['equip-electronics-kit', -1.05, TOP, -.2, .2, 1.4], ['equip-electronics-kit', 1.35, TOP, -.2, -.2, 1.4]],
 };
 const LEVEL_TABLE_ITEM = { bas: 'equip-laptop', bach: 'equip-laptop', prim: 'equip-organizer', pre: 'equip-organizer' };
 const easeOut = t => 1 - Math.pow(1 - t, 3) + Math.sin(t * Math.PI) * .07;
@@ -208,6 +211,7 @@ export function createWorld(container, opts = {}) {
       for (const walker of walkers) walkAlong(walker);
       for (const entity of entities.values()) {
         if (entity.dino) poseDino(entity, DINO_START + elapsed * DINO_SPEED);
+        if (entity.swayers) poseSwayers(entity, elapsed);
         for (const spinner of entity.spinners) spinner.node.rotation[spinner.axis] += delta * spinner.speed;
         for (const hover of entity.hovers) hover.position.y = hover.userData.height + Math.sin(elapsed * 1.4) * .22;
       }
@@ -305,8 +309,45 @@ export function createWorld(container, opts = {}) {
     poseDino(entity, DINO_START);
   }
 
+  const BENCH_TOP = BASE + workbenchManifest.sockets.socket_top[1];
+  const SWAY_AXES = { joint_base: 'y', joint_shoulder: 'x', joint_elbow: 'x', head_printer: 'x' };
+
+  function placeBench(entity, kit) {
+    placeIn(entity.inside, kit.get('furn-workbench'), BENCH.x, BASE, BENCH.z, BENCH.rot);
+    entity.swayers = [];
+    entity.bench = [];
+    for (const [asset, dx, dz, rotation] of BENCH_ITEMS) {
+      const object = placeIn(entity.group, kit.get(asset), BENCH.x + dx, BENCH_TOP, BENCH.z + dz, rotation);
+      entity.bench.push({ asset, object });
+      object.traverse(node => {
+        if (!(node.name in SWAY_AXES)) return;
+        node.userData.separate = true; // Moving parts stay whole when the room's static parts merge.
+        const axis = SWAY_AXES[node.name];
+        entity.swayers.push({ node, name: node.name, axis, rest: node.name === 'head_printer' ? node.position[axis] : node.rotation[axis] });
+      });
+    }
+    poseSwayers(entity, 0); // Reduced motion leaves the machines at rest.
+  }
+
+  function poseSwayers(entity, time) {
+    const pose = swayPose(time);
+    for (const { node, name, axis, rest } of entity.swayers) {
+      if (name === 'head_printer') node.position[axis] = rest + pose[name];
+      else node.rotation[axis] = rest + pose[name];
+    }
+  }
+
+  function seatElectronics(entity, module, kit) {
+    const roster = rosterFor(module);
+    const [bx, bz, brot] = ELECTRONICS_SPOTS.bench, [sx, sz, srot] = ELECTRONICS_SPOTS.seat;
+    character(entity, kit, roster[0], 'interact', bx, BASE, bz, brot, 0);
+    character(entity, kit, roster[1 % roster.length], 'sit', sx, BASE + .02, sz, srot, .4);
+    character(entity, kit, TEACHER, 'interact', 2.2, BASE, -.6, -.8, .2);
+  }
+
   function furnish(entity, module, kit) {
     if (module.programId === 'immersive') return furnishVr(entity, kit);
+    if (module.programId === 'electronics') placeBench(entity, kit);
     if (module.programId === 'master') placeDino(entity, kit);
     const group = entity.inside;
     const extra = entity.extra; // Chairs, shelves and storage: dropped at campus distance to pay for the skyline.
@@ -343,6 +384,16 @@ export function createWorld(container, opts = {}) {
     });
   }
 
+  function electronicsDiagnostics() {
+    const room = entities.get('project:electronics');
+    if (!room?.bench) return null;
+    const onBench = room.bench.filter(({ object }) => Math.abs(object.position.y - BENCH_TOP) < 1e-6).map(({ asset }) => asset);
+    let floorMachines = 0;
+    room.group.traverse(node => { if (/^equip-(arm|printer)/.test(node.userData.asset || '') && node.position.y <= BASE + 1e-6) floorMachines += 1; });
+    const swaying = room.swayers.some(({ node, name, axis, rest }) => Math.abs((name === 'head_printer' ? node.position[axis] : node.rotation[axis]) - rest) > 1e-4);
+    return { onBench, floorMachines: floorMachines + room.bench.length - onBench.length, swaying };
+  }
+
   function dinoDiagnostics() {
     const rooms = [...entities.values()].filter(entity => entity.dino);
     const dino = rooms[0]?.dino;
@@ -376,6 +427,7 @@ export function createWorld(container, opts = {}) {
   function seat(entity, module, kit) {
     if (module.programId === 'immersive') return seatVr(entity, module, kit);
     if (module.programId === 'master') return seatMaster(entity, module, kit);
+    if (module.programId === 'electronics') return seatElectronics(entity, module, kit);
     const seats = [[.47, -.2, Math.PI / 2, 'sit'], [2.4, 1, -.6, 'idle'], [-2.2, 1.1, .5, 'idle'], [-.9, 1.2, .2, 'interact']];
     const roster = rosterFor(module);
     for (let i = 0; i < (module.population || 1); i += 1) {
@@ -399,6 +451,7 @@ export function createWorld(container, opts = {}) {
     for (const [asset] of PROGRAM_SETUP[module.programId] || []) ids.push(asset);
     if (module.type === 'patio') ids.push('equip-drone');
     if (module.programId === 'master') ids.push(...MASTER_ASSETS);
+    if (module.programId === 'electronics') ids.push('furn-workbench', ...BENCH_ITEMS.map(([asset]) => asset));
     return ids;
   }
 
@@ -656,6 +709,7 @@ export function createWorld(container, opts = {}) {
         batched: !!batched,
         characters: [...new Set([...entities.values()].flatMap(entity => entity.characters))],
         dino: dinoDiagnostics(),
+        electronics: electronicsDiagnostics(),
         tableKits: Object.fromEntries([...entities.values()].filter(entity => entity.tableKits).map(entity => [entity.key, entity.tableKits])),
         vr: { students: 0, headsets: 0, controllers: 0, ...entities.get('project:immersive')?.vr, gearLoaded: gearRequested, ...visibleGear(entities.get('project:immersive')) },
         animatedPrograms: [...new Set((plan?.modules || []).filter(m => m.programId).map(m => m.programId))] };

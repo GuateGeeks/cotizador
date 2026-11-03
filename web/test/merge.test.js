@@ -27,6 +27,15 @@ describe('mergeStatic', () => {
     mergeStatic(group);
     expect(group.getObjectByName('wheel_l')).toBe(wheel);
   });
+  it('leaves a part marked separate whole, with everything under it', () => {
+    const group = new Group(), pivot = new Group();
+    pivot.userData.separate = true;
+    const arm = new Mesh(new BoxGeometry(1, 1, 1), a);
+    pivot.add(arm);
+    group.add(pivot, new Mesh(new BoxGeometry(1, 1, 1), a));
+    mergeStatic(group);
+    expect(arm.parent).toBe(pivot);
+  });
 });
 
 describe('buildBatch', () => {
