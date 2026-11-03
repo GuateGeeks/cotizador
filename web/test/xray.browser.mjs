@@ -37,9 +37,17 @@ await settled(page);
 let x = await xray(page);
 expect(x.room === 'project:immersive' && x.ownVeils.includes('header'), `click did not open the VR room: ${JSON.stringify(x)}`);
 await page.screenshot({ path: `${out}/click-vr.png` });
+// Opening a ground room from the overview: the zoom into close view must not bring back what the x-ray stepped aside.
+await page.evaluate(() => window.world.resetView());
+await page.waitForTimeout(2500);
+await settled(page);
 await focus(page, { kind: 'level', id: 'prim' });
 x = await xray(page);
 expect(x.veiled.includes('upper:prim:0'), `the room above primaria is not veiled: ${JSON.stringify(x)}`);
+expect(x.stray === 0, `${x.stray} meshes of the rooms above still show inside the veil`);
+const builds = x.builds;
+await focus(page, { kind: 'level', id: 'prim' });
+expect((await xray(page)).builds === builds, 'refocusing the open room rebuilt the x-ray');
 await page.screenshot({ path: `${out}/focus-prim.png` });
 
 // The batch leaves x-rayed meshes out while a room is open.
@@ -57,6 +65,7 @@ x = await xray(page);
 expect(x.room === 'project:electronics', `program focus did not open Electronics: ${x.room}`);
 const stale = [...first.veiled, ...first.hidden].filter(key => key !== x.room && !x.veiled.includes(key) && !x.hidden.includes(key));
 const leftovers = await page.evaluate(keys => window.world.xrayLeftovers(keys), stale);
+expect(x.lodMismatches === 0, `${x.lodMismatches} characters or detail groups disagree with the view distance after switching rooms`);
 expect(leftovers.length === 0, `first room's blockers still x-rayed: ${leftovers}`);
 await page.screenshot({ path: `${out}/focus-electronics.png` });
 // The open room's shell copy is merged per material after veiling, so it costs a few draws, not one per part.

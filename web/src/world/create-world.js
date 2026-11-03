@@ -10,7 +10,7 @@ import { planWorld } from '../layout/plan.js';
 import { clearAssets, clipNamed, loadAsset } from './assets.js';
 import { diffEntities, signatureOf } from './entities.js';
 import { disposeMaterials, materialFor, veilMaterial } from './materials.js';
-import { HIDES_INSIDE, OWN_WALLS, wallVeils, xrayBlockers } from './room-xray.js';
+import { HIDES_INSIDE, OWN_WALLS, wallVeils, xrayBlockers, xrayKey } from './room-xray.js';
 import { buildBatch, clearBatch, mergeStatic } from './merge.js';
 import { clearGear, wearGear, wearItem } from './gear.js';
 import { KIT_ASSETS, KIT_SCALE, tableKits } from './classroom-kits.js';
@@ -147,12 +147,18 @@ export function createWorld(container, opts = {}) {
     const next = view.half < CLOSE_VIEW ? 'close' : 'campus';
     if (next === lod) return;
     lod = next;
+    syncLodVisibility();
+    // The x-ray owns what it stepped aside: reapplied at the new distance, so detail it hid stays hidden.
+    if (xrayState) applyXray(plan.modules.find(m => m.key === xrayState.room), true);
+    unbatch();
+    scheduleBatch();
+  }
+
+  function syncLodVisibility() {
     for (const entity of entities.values()) {
       for (const pair of entity.pairs) { pair.high.visible = lod === 'close'; pair.low.visible = lod !== 'close'; }
       if (entity.extra) entity.extra.visible = lod === 'close';
     }
-    unbatch();
-    scheduleBatch();
   }
 
   function draw() {
@@ -408,6 +414,28 @@ export function createWorld(container, opts = {}) {
     return { onBench, floorMachines, swaying };
   }
 
+  // Meshes still showing inside a veiled room or roof, outside its shell: what the x-ray failed to step aside.
+  function xrayStray() {
+    let stray = 0;
+    for (const key of xrayState?.veiled || []) {
+      const entity = entities.get(key), module = plan.modules.find(m => m.key === key);
+      if (!entity?.shell || !HIDES_INSIDE.has(module?.type)) continue;
+      for (const child of entity.group.children) if (child !== entity.shell) child.traverseVisible(node => { if (node.isMesh && !node.userData.batch) stray += 1; });
+    }
+    return stray;
+  }
+
+  // Entities outside the x-ray whose characters or detail disagree with the view distance.
+  function lodMismatches() {
+    let n = 0;
+    for (const entity of entities.values()) {
+      if (xrayState?.keys.has(entity.key)) continue;
+      for (const pair of entity.pairs) if (pair.high.visible !== (lod === 'close') || pair.low.visible !== (lod !== 'close')) n += 1;
+      if (entity.extra && entity.extra.visible !== (lod === 'close')) n += 1;
+    }
+    return n;
+  }
+
   function dinoDiagnostics() {
     const rooms = [...entities.values()].filter(entity => entity.dino);
     const dino = rooms[0]?.dino;
@@ -548,12 +576,16 @@ export function createWorld(container, opts = {}) {
     mesh.castShadow = false;
   }
 
-  function applyXray(module) {
+  let xrayBuilds = 0;
+  function applyXray(module, force = false) {
+    const yaw = goal.yaw;
+    const key = module && xrayKey(module, plan.modules, yaw);
+    if (!force && xrayState && xrayState.key === key) { xrayState.yawStep = Math.round(yaw * 4); return; }
     clearXray();
     const room = module && entities.get(module.key);
     if (!room || module.type !== 'room' || !room.shellAsset) return;
-    const yaw = goal.yaw;
-    const state = { room: module.key, yawStep: Math.round(yaw * 4), keys: new Set([module.key]), veiled: [], hidden: [], ownVeils: [], hiddenObjects: [], veiledMeshes: [], clone: null, groups: new Map() };
+    xrayBuilds += 1;
+    const state = { key, room: module.key, yawStep: Math.round(yaw * 4), keys: new Set([module.key]), veiled: [], hidden: [], ownVeils: [], hiddenObjects: [], veiledMeshes: [], clone: null, groups: new Map() };
     for (const [key, kind] of xrayBlockers(module, plan.modules, yaw)) {
       const entity = entities.get(key);
       if (!entity) continue;
@@ -602,6 +634,7 @@ export function createWorld(container, opts = {}) {
     xrayState = null;
     for (const [mesh, material, castShadow] of state.veiledMeshes) { mesh.material = material; mesh.castShadow = castShadow; }
     for (const object of state.hiddenObjects) object.visible = true;
+    syncLodVisibility(); // Characters and detail come back as the current view distance wants them.
     state.clone?.removeFromParent();
     for (const geometry of state.cloneOwned || []) geometry.dispose();
     unbatch();
@@ -699,7 +732,7 @@ export function createWorld(container, opts = {}) {
         }
         syncWalkers(Math.min(8, 2 + Math.floor(plan.modules.filter(m => m.type === 'room').length / 2)), kit);
         // An open room reopens on what the update built: its blockers and its own entity may be new.
-        if (xrayState) { const open = plan.modules.find(m => m.key === xrayState.room); if (open) applyXray(open); else clearXray(); }
+        if (xrayState) { const open = plan.modules.find(m => m.key === xrayState.room); if (open) applyXray(open, true); else clearXray(); }
         ready = true;
         scheduleBatch();
         resize();
@@ -844,7 +877,7 @@ export function createWorld(container, opts = {}) {
         batched: !!batched,
         characters: [...new Set([...entities.values()].flatMap(entity => entity.characters))],
         dino: dinoDiagnostics(),
-        xray: { hiddenInBatch: (batched?.sources || []).filter(mesh => { for (let up = mesh.parent; up; up = up.parent) if (!up.visible) return true; return false; }).length, cloneMeshes: (() => { let n = 0; xrayState?.clone?.traverse(node => { if (node.isMesh) n += 1; }); return n; })(), room: xrayState?.room ?? null, veiled: xrayState?.veiled ?? [], hidden: xrayState?.hidden ?? [], ownVeils: xrayState?.ownVeils ?? [], batchSources: batched?.sources.length ?? 0 },
+        xray: { builds: xrayBuilds, stray: xrayStray(), lodMismatches: lodMismatches(), hiddenInBatch: (batched?.sources || []).filter(mesh => { for (let up = mesh.parent; up; up = up.parent) if (!up.visible) return true; return false; }).length, cloneMeshes: (() => { let n = 0; xrayState?.clone?.traverse(node => { if (node.isMesh) n += 1; }); return n; })(), room: xrayState?.room ?? null, veiled: xrayState?.veiled ?? [], hidden: xrayState?.hidden ?? [], ownVeils: xrayState?.ownVeils ?? [], batchSources: batched?.sources.length ?? 0 },
         electronics: electronicsDiagnostics(),
         tableKits: Object.fromEntries([...entities.values()].filter(entity => entity.tableKits).map(entity => [entity.key, entity.tableKits])),
         vr: { students: 0, headsets: 0, controllers: 0, ...entities.get('project:immersive')?.vr, gearLoaded: gearRequested, ...visibleGear(entities.get('project:immersive')) },

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { HIDES_INSIDE, OWN_WALLS, wallVeils, xrayBlockers } from '../src/world/room-xray.js';
+import { HIDES_INSIDE, OWN_WALLS, wallVeils, xrayBlockers, xrayKey } from '../src/world/room-xray.js';
 
 const room = { key: 'room:prim:0', type: 'room', x: 0, y: 0, z: 0 };
 const m = (key, type, x, y, z) => ({ key, type, x, y, z });
@@ -35,5 +35,10 @@ describe('room x-ray', () => {
     expect(OWN_WALLS.always).toEqual(['header', 'sill']);
     expect(OWN_WALLS.front).toEqual(['pier_front']);
     expect([...HIDES_INSIDE].sort()).toEqual(['roof', 'room']);
+  });
+  it('keys an x-ray by what it changes, so small turns that change nothing keep it', () => {
+    const modules = [room, m('upper:prim:0', 'room', 0, 3.2, 0)];
+    expect(xrayKey(room, modules, -.54)).toBe(xrayKey(room, modules, -.6));
+    expect(xrayKey(room, modules, -.54)).not.toBe(xrayKey(room, modules, Math.PI));
   });
 });

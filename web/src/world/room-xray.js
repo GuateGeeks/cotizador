@@ -35,3 +35,9 @@ export function wallVeils(yaw) {
   const hx = Math.sin(yaw), hz = Math.cos(yaw);
   return { front: hz > .25, back: hz < -.25, left: hx < -.25, right: hx > .25 };
 }
+
+// What an x-ray actually changes for this room and yaw: a turn or refocus that keeps it needs no rebuild.
+export function xrayKey(room, modules, yaw) {
+  const walls = wallVeils(yaw);
+  return JSON.stringify([room.key, walls, [...xrayBlockers(room, modules, yaw)].sort()]);
+}
