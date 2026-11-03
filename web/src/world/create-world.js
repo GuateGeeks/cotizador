@@ -371,7 +371,9 @@ export function createWorld(container, opts = {}) {
     }
     if (!module.levelId) return;
     // Classrooms show the kits of the programs their grades use; parked kits merge with the room.
-    entity.tableKits = tableKits(module.programs || [], LEVEL_TABLE_ITEM[module.levelId] || null).map((items, i) => {
+    const fallback = LEVEL_TABLE_ITEM[module.levelId] || null;
+    const kits = tableKits(module.programs || [], fallback);
+    entity.tableKits = kits.map(items => (items.every(([asset]) => kit.has(asset)) ? items : tableKits([], fallback)[0])).map((items, i) => {
       const x = [-1.05, 1.35][i];
       for (const [asset, dx, dz, scale, rotation] of items) {
         const source = kit.get(asset);
@@ -439,6 +441,11 @@ export function createWorld(container, opts = {}) {
     if (module.programId || (module.population || 1) >= 3) character(entity, kit, TEACHER, 'interact', 2.2, BASE, -.6, -.8, .2);
   }
 
+  // Loaded with the module but never required: a classroom whose kit fails keeps its usual table item.
+  function optional(module) {
+    return module.levelId ? KIT_ASSETS(module.programs || []) : [];
+  }
+
   function needs(module) {
     const ids = [module.asset];
     if (module.programId === 'immersive') {
@@ -449,7 +456,6 @@ export function createWorld(container, opts = {}) {
     if (module.type === 'room') ids.push(...ROOM_ASSETS, ...rosterFor(module).flatMap(withLod), ...withLod(TEACHER));
     if (module.terraceStudents) ids.push(...plan.levels.flatMap(level => ROSTER[level]).flatMap(withLod));
     if (LEVEL_TABLE_ITEM[module.levelId]) ids.push(LEVEL_TABLE_ITEM[module.levelId]);
-    if (module.levelId) ids.push(...KIT_ASSETS(module.programs || []));
     for (const [asset] of PROGRAM_SETUP[module.programId] || []) ids.push(asset);
     if (module.type === 'patio') ids.push('equip-drone');
     if (module.programId === 'master') ids.push(...MASTER_ASSETS);
@@ -575,7 +581,7 @@ export function createWorld(container, opts = {}) {
     const current = new Map([...entities].filter(([key]) => !key.startsWith('walker:')));
     const { add, remove } = diffEntities(current, entries);
     for (const key of remove) discard(key);
-    const ids = new Set(add.flatMap(needs).concat(plan.levels.flatMap(level => ROSTER[level]).flatMap(withLod)));
+    const ids = new Set(add.flatMap(module => [...needs(module), ...optional(module)]).concat(plan.levels.flatMap(level => ROSTER[level]).flatMap(withLod)));
     pendingLoads += 1;
     Promise.allSettled([...ids].map(id => loadAsset(id, opts.base).then(asset => [id, asset]))).then(results => {
       pendingLoads -= 1;
