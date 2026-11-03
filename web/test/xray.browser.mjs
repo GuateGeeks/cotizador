@@ -45,7 +45,10 @@ await focus(page, { kind: 'level', id: 'prim' });
 x = await xray(page);
 expect(x.veiled.includes('upper:prim:0'), `the room above primaria is not veiled: ${JSON.stringify(x)}`);
 expect(x.stray === 0, `${x.stray} meshes of the rooms above still show inside the veil`);
-const builds = x.builds;
+// Count only once the zoom has reached close view: crossing it reapplies the x-ray on purpose.
+await page.waitForFunction(() => window.world.getDiagnostics().lod === 'close', null, { timeout: 20000 });
+await page.waitForTimeout(300);
+const builds = (await xray(page)).builds;
 await focus(page, { kind: 'level', id: 'prim' });
 expect((await xray(page)).builds === builds, 'refocusing the open room rebuilt the x-ray');
 await page.screenshot({ path: `${out}/focus-prim.png` });

@@ -16,6 +16,10 @@ const settled = page => page.waitForFunction(() => { const d = window.world.getD
 const diag = page => page.evaluate(() => window.world.getDiagnostics());
 
 const page = await browser.newPage({ viewport: { width: 1400, height: 880 } });
+// Every model the page asks for, so a school without a program can be shown never to download its room.
+const requested = [];
+page.on('request', request => { const match = request.url().match(/models\/([^/?]+)\.glb/); if (match) requested.push(match[1]); });
+const LAB_ONLY = ['furn-workbench-short', 'furn-stool', 'equip-spool-rack', 'equip-printed-parts'];
 const problems = [];
 page.on('pageerror', e => problems.push(String(e)));
 page.on('crash', () => console.error('PAGE CRASHED'));
@@ -36,7 +40,11 @@ for (const [index, state] of states.entries()) {
   if (state.programs?.includes('immersive')) expect(vr.students === 3 && vr.headsets === 6 && vr.controllers === 6, `VR room on state ${index + 1}: ${JSON.stringify(vr)}`);
   else expect(vr.students === 0 && !vr.gearLoaded, `VR gear without the immersive program on state ${index + 1}: ${JSON.stringify(vr)}`);
   const { tableKits, electronics: lab } = await diag(page);
-  if (!state.programs?.includes('electronics')) expect(lab === null, `Electronics room without the program on state ${index + 1}`);
+  if (!state.programs?.includes('electronics')) {
+    expect(lab === null, `Electronics room without the program on state ${index + 1}`);
+    const fetched = requested.filter(id => LAB_ONLY.includes(id));
+    expect(fetched.length === 0, `state ${index + 1} downloaded Electronics models without the program: ${fetched}`);
+  }
   if (index === 1) for (const [key, tables] of Object.entries(tableKits)) {
     const fallback = key.includes(':bas:') || key.includes(':bach:') ? 'equip-laptop' : 'equip-organizer';
     expect(tables.every(t => t.length === 1 && t[0] === fallback), `classroom without programs ${key}: ${JSON.stringify(tables)}`);
@@ -141,6 +149,12 @@ await still.waitForTimeout(500);
 const framesB = (await diag(still)).frames;
 expect(rest.framePending === false, 'reduced motion keeps a frame pending at rest');
 expect(framesA === framesB, 'reduced motion keeps rendering at rest');
+// The Electronics machines rest too, on a campus that has the room.
+await still.evaluate(input => window.world.update(input), states[5]);
+await settled(still);
+await still.waitForTimeout(800);
+const restingLab = (await diag(still)).electronics;
+expect(restingLab && restingLab.swaying === false, `reduced motion: Electronics machines sway: ${JSON.stringify(restingLab)}`);
 await quiet.close();
 
 stage('broken');

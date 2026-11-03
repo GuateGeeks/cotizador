@@ -18,7 +18,9 @@ Characters swap to a 1,400-triangle model at campus distance. `InstancedMesh` wa
 
 ## 2026-11-03 Electronics stations
 
-The Electronics room became three workbench stations with four students. Campus view: 144 draw calls at 60 fps
+The Electronics room became three workbench stations with four students. Verdict: over the stations design's first limits (142
+campus draw calls, 1,080,000 focused triangles); the owner kept four students and raised them to 144 and
+1,085,000. Campus view: 144 draw calls at 60 fps
 (the two added students cost one draw each), parity PASS (`runs/lab-08-parity`). Focused with the x-ray open:
 204 draw calls, 1,081,888 triangles, 60 fps (`runs/lab-07-perf`).
 

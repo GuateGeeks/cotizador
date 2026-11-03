@@ -103,6 +103,10 @@ the whole floor is visible when the room is in focus, so stations no longer have
   - electronics population is 4 (`web/test/layout.test.js` updated from 2)
   - the room has no `furn-table-four`
   - the new assets' sizes and budgets
+- **Performance limits raised (user, 2026-11-03):** with four students the room measured 144 campus draw calls
+  (two added students at one draw each; the original 142 could not be met with four) and 1,081,888 triangles focused.
+  The user chose to keep four students and raise the limits to 144 campus draw calls (still within the 150 budget)
+  and 1,085,000 focused triangles. Original wording kept below for the record.
 - **Performance (call):** the campus view at 142 draw calls or fewer with the parity test passing. The focused
   close view of Electronics (x-ray open) at most 215 draw calls and 1,080,000 triangles at 60 fps. That is the
   current 200 calls and 1,059,892 triangles (`runs/xray-27-perf`) plus room for two more close-view students
