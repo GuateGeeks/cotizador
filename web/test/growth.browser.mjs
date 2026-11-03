@@ -20,6 +20,7 @@ const page = await browser.newPage({ viewport: { width: 1400, height: 880 } });
 const requested = [];
 page.on('request', request => { const match = request.url().match(/models\/([^/?]+)\.glb/); if (match) requested.push(match[1]); });
 const LAB_ONLY = ['furn-workbench-short', 'furn-stool', 'equip-spool-rack', 'equip-printed-parts'];
+const COURSE_ONLY = ['equip-drone-gate', 'equip-drone-hoop', 'equip-drone-post', 'equip-race-flag', 'equip-drone-remote'];
 const problems = [];
 page.on('pageerror', e => problems.push(String(e)));
 page.on('crash', () => console.error('PAGE CRASHED'));
@@ -40,6 +41,15 @@ for (const [index, state] of states.entries()) {
   if (state.programs?.includes('immersive')) expect(vr.students === 3 && vr.headsets === 6 && vr.controllers === 6, `VR room on state ${index + 1}: ${JSON.stringify(vr)}`);
   else expect(vr.students === 0 && !vr.gearLoaded, `VR gear without the immersive program on state ${index + 1}: ${JSON.stringify(vr)}`);
   const { tableKits, electronics: lab } = await diag(page);
+  const { drones: field } = await diag(page);
+  if (!state.programs?.includes('drones')) {
+    expect(field === null, `drone field without the program on state ${index + 1}`);
+    const fetched = requested.filter(id => COURSE_ONLY.includes(id));
+    expect(fetched.length === 0, `state ${index + 1} downloaded drone course models without the program: ${fetched}`);
+  } else {
+    expect(field && field.count === 2 && field.obstacles === 4 && field.pilots === 2 && field.watchers === 2 && field.remotes === 2 && field.unbatchedMeshes <= 10,
+      `drone field on state ${index + 1}: ${JSON.stringify(field)}`);
+  }
   if (!state.programs?.includes('electronics')) {
     expect(lab === null, `Electronics room without the program on state ${index + 1}`);
     const fetched = requested.filter(id => LAB_ONLY.includes(id));
@@ -75,6 +85,15 @@ const walked = async label => {
   expect(Math.hypot(b.x - a.x, b.z - a.z) >= .15, `dinosaur did not move ${label}: ${JSON.stringify([a, b])}`);
   return b;
 };
+// Both drones fly: wait for 1 s of world time, then check each moved.
+const flying = (await diag(page)).drones;
+await page.waitForFunction(from => window.world.getDiagnostics().drones?.time >= from + 1, flying?.time ?? 0, { timeout: 30000 })
+  .catch(() => failures.push('the drones never flew'));
+const flown = (await diag(page)).drones;
+for (const id of ['A', 'B']) {
+  const a = flying?.positions?.[id], b = flown?.positions?.[id];
+  expect(a && b && Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]) >= .5, `drone ${id} did not move: ${JSON.stringify([a, b])}`);
+}
 const strideScale = DINO_SPEED * dinoManifest.walk_seconds / (dinoManifest.stride * DINO_SCALE);
 const walking = await walked('at campus view');
 expect(Math.abs(walking.timeScale - strideScale) < .01, `walk clip speed ${walking.timeScale}, wanted ${strideScale}`);
@@ -117,6 +136,7 @@ const rapid = await diag(page);
 expect(rapid.entityKeys.length === baseline.entityKeys.length, `rapid updates ended on ${rapid.entityKeys.length}, wanted ${baseline.entityKeys.length}`);
 expect(rapid.geometries <= baseline.geometries + 2, `geometry leak: ${baseline.geometries} -> ${rapid.geometries}`);
 expect(rapid.dino.count === 1, `dinosaurs after rapid updates: ${rapid.dino.count}`);
+expect(rapid.drones?.count === 2, `drones after rapid updates: ${rapid.drones?.count}`);
 console.log(JSON.stringify({ triangles: baseline.triangles, drawCalls: baseline.drawCalls, entities: baseline.entityKeys.length, geometries: baseline.geometries }));
 
 stage('skyline');
@@ -155,6 +175,11 @@ await settled(still);
 await still.waitForTimeout(800);
 const restingLab = (await diag(still)).electronics;
 expect(restingLab && restingLab.swaying === false, `reduced motion: Electronics machines sway: ${JSON.stringify(restingLab)}`);
+const restingField = (await diag(still)).drones;
+await still.waitForTimeout(600);
+const stillField = (await diag(still)).drones;
+expect(restingField && JSON.stringify(restingField.positions) === JSON.stringify(stillField.positions)
+  && Object.values(restingField.positions).every(([x, , z]) => Math.hypot(x, z) <= 1.7), `reduced motion: drones not resting on the ring: ${JSON.stringify(restingField)}`);
 await quiet.close();
 
 stage('broken');

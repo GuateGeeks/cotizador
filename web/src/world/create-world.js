@@ -12,7 +12,8 @@ import { diffEntities, signatureOf } from './entities.js';
 import { disposeMaterials, materialFor, veilMaterial } from './materials.js';
 import { HIDES_INSIDE, OWN_WALLS, wallVeils, xrayBlockers, xrayKey } from './room-xray.js';
 import { buildBatch, clearBatch, mergeStatic } from './merge.js';
-import { clearGear, wearGear, wearItem } from './gear.js';
+import { clearGear, vertexMerge, wearGear, wearItem } from './gear.js';
+import { COURSE_ASSETS, DRONE_SCALE, FLAG, OBSTACLES, PILOTS, REST, WATCHERS, distanceAt, dronePose } from './drone-course.js';
 import { KIT_ASSETS, KIT_SCALE, tableKits } from './classroom-kits.js';
 import { ELECTRONICS_TEACHER, LAB_ASSETS, MACHINES, STATIONS, swayPose } from './electronics-room.js';
 import workbenchManifest from '../../../assets/manifests/furn-workbench.json';
@@ -218,6 +219,7 @@ export function createWorld(container, opts = {}) {
       for (const entity of entities.values()) {
         if (entity.dino) poseDino(entity, DINO_START + elapsed * DINO_SPEED);
         if (entity.swayers) poseSwayers(entity, elapsed);
+        if (entity.flyers) poseFlyers(entity, elapsed);
         for (const spinner of entity.spinners) spinner.node.rotation[spinner.axis] += delta * spinner.speed;
         for (const hover of entity.hovers) hover.position.y = hover.userData.height + Math.sin(elapsed * 1.4) * .22;
       }
@@ -321,6 +323,73 @@ export function createWorld(container, opts = {}) {
 
   // The Electronics room is three workbench stations (electronics-room.js). Benches, stools and props merge with the
   // room at every distance; the printer and arm are close-view detail, since their moving parts cannot merge.
+  // The Drones field (drone-course.js): gates, hoops and the flag merge with the field; two drones race their lanes,
+  // each one vertex-coloured body plus four free rotors, while two pilots fly them and two classmates watch.
+  const PAD_TOP = .05;
+  function placeCourse(entity, kit) {
+    entity.obstacles = 0;
+    for (const o of OBSTACLES) {
+      if (o.kind === 'gate') placeIn(entity.inside, kit.get('equip-drone-gate'), o.x, PAD_TOP, o.z, o.yaw);
+      else {
+        placeIn(entity.inside, kit.get('equip-drone-hoop'), o.x, PAD_TOP + o.y, o.z, o.yaw);
+        const post = placeIn(entity.inside, kit.get('equip-drone-post'), o.x, PAD_TOP, o.z, o.yaw);
+        post.scale.set(1, o.y - .95, 1); // up to the ring's underside
+      }
+      entity.obstacles += 1;
+    }
+    placeIn(entity.inside, kit.get('equip-race-flag'), FLAG.x, PAD_TOP, FLAG.z, .4);
+  }
+
+  function raceDrones(entity, module, kit) {
+    entity.flyers = [];
+    for (const id of ['A', 'B']) {
+      const object = kit.get('equip-drone').scene.clone(true);
+      const rotor = node => /^rotor_/.test(node.name);
+      const body = vertexMerge(object, rotor);
+      const parts = [];
+      object.traverse(node => { if (node.isMesh) { let up = node; while (up && up !== object && !rotor(up)) up = up.parent; if (up === object) parts.push(node); } });
+      for (const part of parts) part.removeFromParent();
+      object.add(body);
+      entity.owned.push(body.geometry);
+      object.scale.setScalar(DRONE_SCALE);
+      object.userData.separate = true;
+      object.traverse(node => {
+        if (!rotor(node)) return;
+        entity.spinners.push({ node, axis: 'y', speed: 16 });
+        node.traverse(child => { if (child.isMesh) child.castShadow = false; });
+      });
+      entity.group.add(object);
+      entity.flyers.push({ id, object });
+    }
+    const roster = rosterFor(module);
+    entity.pilots = PILOTS.map(({ lane, x, z }, i) => {
+      const pair = character(entity, kit, roster[i % roster.length], 'interact', x, 0, z, Math.PI, i * .4);
+      return { lane, pair, remote: wearItem(pair.high, kit, 'vr_grip_l', 'equip-drone-remote') };
+    });
+    entity.watchers = WATCHERS.map(({ x, z }, i) => character(entity, kit, roster[(i + 1) % roster.length], 'idle', x, 0, z, Math.PI, .6 + i * .5));
+    poseFlyers(entity, null); // Reduced motion leaves them resting on the landing ring.
+  }
+
+  function poseFlyers(entity, time) {
+    for (const { id, object } of entity.flyers) {
+      if (time === null) {
+        const [x, y, z] = REST[id];
+        object.position.set(x, y, z);
+        object.rotation.set(0, 0, 0);
+      } else {
+        const p = dronePose(id, time);
+        object.position.set(p.x, p.y, p.z);
+        object.rotation.set(p.pitch, p.yaw, p.bank, 'YXZ');
+      }
+    }
+    entity.flyTime = time ?? 0;
+    const at = id => entity.flyers.find(f => f.id === id).object.position;
+    const face = (pair, target) => { for (const body of [pair.high, pair.low]) body.rotation.y = Math.atan2(target.x - body.position.x, target.z - body.position.z); };
+    for (const pilot of entity.pilots || []) face(pilot.pair, at(pilot.lane));
+    const leader = time === null || distanceAt('A', time) >= distanceAt('B', time) ? 'A' : 'B';
+    for (const watcher of entity.watchers || []) face(watcher, at(leader));
+  }
+
   function placeStations(entity, kit) {
     placeIn(entity.extra, kit.get('furn-shelves'), 2.1, BASE, -1.95);
     placeIn(entity.extra, kit.get('equip-kit-storage'), -2.1, BASE, -1.95);
@@ -449,6 +518,15 @@ export function createWorld(container, opts = {}) {
     return n;
   }
 
+  function droneDiagnostics() {
+    const field = [...entities.values()].find(entity => entity.flyers);
+    if (!field) return null;
+    let unbatchedMeshes = 0;
+    for (const { object } of field.flyers) object.traverseVisible(node => { if (node.isMesh) unbatchedMeshes += 1; });
+    return { count: field.flyers.length, time: field.flyTime, positions: Object.fromEntries(field.flyers.map(({ id, object }) => [id, object.position.toArray().map(v => +v.toFixed(3))])),
+      pilots: field.pilots.length, remotes: field.pilots.filter(p => p.remote).length, watchers: field.watchers.length, obstacles: field.obstacles, unbatchedMeshes };
+  }
+
   function dinoDiagnostics() {
     const rooms = [...entities.values()].filter(entity => entity.dino);
     const dino = rooms[0]?.dino;
@@ -508,7 +586,7 @@ export function createWorld(container, opts = {}) {
     if (module.terraceStudents) ids.push(...plan.levels.flatMap(level => ROSTER[level]).flatMap(withLod));
     if (LEVEL_TABLE_ITEM[module.levelId]) ids.push(LEVEL_TABLE_ITEM[module.levelId]);
     for (const [asset] of PROGRAM_SETUP[module.programId] || []) ids.push(asset);
-    if (module.type === 'patio') ids.push('equip-drone');
+    if (module.type === 'patio') ids.push(...COURSE_ASSETS);
     if (module.programId === 'master') ids.push(...MASTER_ASSETS);
     if (module.programId === 'electronics') ids.push(...LAB_ASSETS);
     return ids;
@@ -539,6 +617,7 @@ export function createWorld(container, opts = {}) {
     entity.extra.userData.separate = entity.inside.userData.separate = true;
     group.add(entity.extra, entity.inside);
     if (module.type === 'room') furnish(entity, module, kit);
+    if (module.type === 'patio') placeCourse(entity, kit);
     entity.owned = [...mergeStatic(entity.extra, false), ...mergeStatic(entity.inside, true), ...mergeStatic(entity.shell, true), ...mergeStatic(group, true)];
     entity.staticMeshes = [...group.children, ...entity.shell.children, ...entity.inside.children].filter(child => child.isMesh);
     entity.extraMeshes = entity.extra.children.filter(child => child.isMesh);
@@ -551,13 +630,7 @@ export function createWorld(container, opts = {}) {
       }
     }
     if (module.type === 'room') seat(entity, module, kit);
-    if (module.type === 'patio') {
-      const drone = placeIn(group, kit.get('equip-drone'), 0, 2.4, 0);
-      drone.scale.setScalar(3);
-      drone.userData.height = 2.4;
-      entity.hovers.push(drone);
-      drone.traverse(node => { if (/^rotor_/.test(node.name)) entity.spinners.push({ node, axis: 'y', speed: 16 }); });
-    }
+    if (module.type === 'patio') raceDrones(entity, module, kit);
     if (viewMode === 'xray' && module.type === 'roof') group.visible = false;
     if (!reduced) group.scale.setScalar(.001);
     root.add(group);
@@ -890,6 +963,7 @@ export function createWorld(container, opts = {}) {
         batched: !!batched,
         characters: [...new Set([...entities.values()].flatMap(entity => entity.characters))],
         dino: dinoDiagnostics(),
+        drones: droneDiagnostics(),
         xray: { builds: xrayBuilds, stray: xrayStray(), lodMismatches: lodMismatches(), hiddenInBatch: (batched?.sources || []).filter(mesh => { for (let up = mesh.parent; up; up = up.parent) if (!up.visible) return true; return false; }).length, cloneMeshes: (() => { let n = 0; xrayState?.clone?.traverse(node => { if (node.isMesh) n += 1; }); return n; })(), room: xrayState?.room ?? null, veiled: xrayState?.veiled ?? [], hidden: xrayState?.hidden ?? [], ownVeils: xrayState?.ownVeils ?? [], batchSources: batched?.sources.length ?? 0 },
         electronics: electronicsDiagnostics(),
         tableKits: Object.fromEntries([...entities.values()].filter(entity => entity.tableKits).map(entity => [entity.key, entity.tableKits])),
