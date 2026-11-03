@@ -92,6 +92,22 @@ class HandPoses(unittest.TestCase):
                 self.assertTrue(.5 * h < (l[1] + r[1]) / 2 < .75 * h, asset)         # waist to chest
                 self.assertGreater(min(s['palm_l'][1], s['palm_r'][1]), .7, asset)   # palms up
 
+    def test_interact_turns_the_palms_down(self):
+        for asset, m in self.built.items():
+            for s in m['hand_poses']['interact']:
+                self.assertLess(max(s['palm_l'][1], s['palm_r'][1]), -.7, asset)
+
+    def test_vr_holds_the_controllers_forward_and_upright(self):
+        # An upright handle in a fist runs along the thumb side, so the thumbs point up.
+        for asset, m in self.built.items():
+            h = HEIGHTS[asset]
+            s = m['hand_poses']['vr'][0]                     # frame 1, the resting hold
+            self.assertGreater(min(s['grip_l'][2], s['grip_r'][2]), .14 * h, asset)
+            self.assertGreater(abs(s['grip_l'][0] - s['grip_r'][0]), .2 * h, asset)
+            self.assertGreater(min(s['thumb_l'][1], s['thumb_r'][1]), .95, asset)
+            self.assertLess(s['palm_l'][0], -.6, asset)      # the left hand is at +x, its palm faces the body's centre
+            self.assertGreater(s['palm_r'][0], .6, asset)
+
     def test_sit_and_idle_hands_match_the_baseline(self):
         baseline = json.loads((ROOT / 'tests/fixtures/hand_baseline.json').read_text())
         for asset, m in self.built.items():

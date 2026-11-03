@@ -62,7 +62,10 @@ def author_clips(arm):
     clip(arm, 'idle', [(1, merged(ARMS_DOWN, {'Spine': [(X, 0)]}), 0), (25, merged(ARMS_DOWN, {'Spine': [(X, 2)], 'Head': [(X, -2)]}), -.3), (49, merged(ARMS_DOWN, {'Spine': [(X, 0)]}), 0)])
     tap_a = {'LeftHand': [(X, 10)], 'RightHand': [(X, -8)], 'Head': [(X, 6)]}
     tap_b = {'LeftHand': [(X, -8)], 'RightHand': [(X, 10)], 'Head': [(X, 4)]}
-    clip(arm, 'interact', [(1, merged(ARMS_DOWN, FOREARMS, tap_a), 0), (13, merged(ARMS_DOWN, FOREARMS, tap_b), 0), (25, merged(ARMS_DOWN, FOREARMS, tap_a), 0)])
+    # At work the palms face down, the roll split between forearm and hand; sit keeps its own hands.
+    palms_down = {'LeftForeArm': [(Y, -45)], 'RightForeArm': [(Y, 45)], 'LeftHand': [(Y, -45)], 'RightHand': [(Y, 45)]}
+    working = merged(ARMS_DOWN, FOREARMS, palms_down)
+    clip(arm, 'interact', [(1, merged(working, tap_a), 0), (13, merged(working, tap_b), 0), (25, merged(working, tap_a), 0)])
     seated = merged(ARMS_DOWN, FOREARMS, SIT_LEGS, tap_a)
     clip(arm, 'sit', [(1, seated, -9), (25, merged(ARMS_DOWN, FOREARMS, SIT_LEGS, tap_b), -9), (49, seated, -9)])
     # Using VR: controllers held in front, the head looks around while one hand and then the other reaches,
@@ -75,7 +78,8 @@ def author_clips(arm):
     cupped = merged(ARMS_DOWN, level)
     clip(arm, 'hold', [(1, cupped, 0), (13, merged(cupped, {'LeftHand': [(X, 8)]}), 0), (25, cupped, 0),
                        (37, merged(cupped, {'RightHand': [(X, 8)]}), 0), (49, cupped, 0)])
-    holding = merged(ARMS_DOWN, {'LeftForeArm': [(X, -60)], 'RightForeArm': [(X, -60)]})
+    # Fists a little forward with the forearms near level, so the thumbs (and the handles) point up.
+    holding = merged(ARMS_DOWN, {'LeftArm': [(X, -15)], 'RightArm': [(X, -15)], 'LeftForeArm': [(X, -85)], 'RightForeArm': [(X, -85)]})
     clip(arm, 'vr', [(1, holding, 0),
                      (19, merged(holding, {'Head': [(Z, 35)], 'RightArm': [(X, -40)]}), 0),
                      (37, merged(holding, {'Head': [(Z, -35), (X, 8)], 'LeftArm': [(X, -40)]}), 0),
