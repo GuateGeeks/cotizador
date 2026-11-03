@@ -72,8 +72,8 @@ def author_clips(arm):
     # then both arms sweep out. Arms stay below the shoulders so the controllers never cross the headset.
     # Both hands in front of the chest, palms up round something flat; the roll is split between forearm and hand so
     # the wrist does not pinch. The hands tap in turn, as thumbs on a remote would.
-    level = {'LeftArm': [(X, -40), (Z, -30)], 'RightArm': [(X, -40), (Z, 30)],
-             'LeftForeArm': [(X, -100), (Y, 45), (Z, -85)], 'RightForeArm': [(X, -100), (Y, -45), (Z, 85)],
+    level = {'LeftArm': [(X, -40), (Z, -10)], 'RightArm': [(X, -40), (Z, 10)],
+             'LeftForeArm': [(X, -55), (Y, 45), (X, -15), (Z, -45)], 'RightForeArm': [(X, -55), (Y, -45), (X, -15), (Z, 45)],
              'LeftHand': [(Y, 45), (X, 30)], 'RightHand': [(Y, -45), (X, 30)]}
     cupped = merged(ARMS_DOWN, level)
     clip(arm, 'hold', [(1, cupped, 0), (13, merged(cupped, {'LeftHand': [(X, 8)]}), 0), (25, cupped, 0),
@@ -169,6 +169,7 @@ def hand_poses(arm, mesh, grips, clips=HAND_CLIPS, frames=(1, 13)):
             sample = {'frame': frame}
             for side, bone in (('l', 'LeftHand'), ('r', 'RightHand')):
                 sample[f'grip_{side}'] = gltf(grips[side].matrix_world.translation)
+                sample[f'elbow_{side}'] = gltf(arm.matrix_world @ arm.pose.bones[bone.replace('Hand', 'ForeArm')].head)
                 posed = (arm.matrix_world @ arm.pose.bones[bone].matrix).to_3x3()
                 for key, axis in axes[bone].items():
                     sample[f'{key}_{side}'] = gltf((posed @ axis).normalized())
@@ -478,4 +479,5 @@ def student(target, source, target_height, record):
     arm.animation_data.action = walk
     grips = add_fitting(arm, mesh)
     hands = hand_poses(arm, mesh, grips)
-    return {'source': record or 'assets/sources/meshy/variants/PROVENANCE.json', 'source_triangles': triangles, **bake, 'clips': ['idle', 'walk', 'sit', 'interact', 'vr', 'hold'], 'armature': arm.name, 'hand_poses': hands}
+    body = {name: round((arm.matrix_world @ arm.data.bones[bone].head_local).z, 4) for name, bone in (('hips', 'Hips'), ('neck', 'neck'))}
+    return {'source': record or 'assets/sources/meshy/variants/PROVENANCE.json', 'source_triangles': triangles, **bake, 'clips': ['idle', 'walk', 'sit', 'interact', 'vr', 'hold'], 'armature': arm.name, 'hand_poses': hands, 'body_heights': body}

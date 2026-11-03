@@ -89,8 +89,13 @@ class HandPoses(unittest.TestCase):
                 l, r = s['grip_l'], s['grip_r']
                 self.assertLess(math.dist(l, r), .15 * h, asset)                    # close together
                 self.assertGreater(min(l[2], r[2]), .12 * h, asset)                  # in front of the body
-                self.assertTrue(.5 * h < (l[1] + r[1]) / 2 < .75 * h, asset)         # waist to chest
+                body = m['body_heights']
+                self.assertTrue(body['hips'] < (l[1] + r[1]) / 2 < body['neck'], asset)  # in front of the chest
                 self.assertGreater(min(s['palm_l'][1], s['palm_r'][1]), .7, asset)   # palms up
+                for side in ('l', 'r'):         # elbows by the body's sides, wider than the hands: not arms folded across it
+                    grip, elbow = s[f'grip_{side}'], s[f'elbow_{side}']
+                    self.assertGreater(abs(elbow[0]), .07 * h, f'{asset} {side}')   # hanging arms put the hands at .06h
+                    self.assertGreater(abs(elbow[0]), abs(grip[0]), f'{asset} {side}')
 
     def test_interact_turns_the_palms_down(self):
         for asset, m in self.built.items():
