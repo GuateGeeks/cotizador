@@ -1,5 +1,5 @@
-import unittest
-from tests.test_slice_assets import build
+import json, math, unittest
+from tests.test_slice_assets import ROOT, build
 
 CLIPS = ['idle', 'interact', 'sit', 'vr', 'walk']
 
@@ -62,6 +62,33 @@ class VrFitting(unittest.TestCase):
                 self.assertGreater(eyes[2], 0, asset + suffix)  # in front of the body (+Z)
                 left, right = pivots['vr_grip_l']['position'], pivots['vr_grip_r']['position']
                 self.assertGreater(abs(left[0] - right[0]), .5, asset + suffix)  # hands apart in T-pose
+
+class HandPoses(unittest.TestCase):
+    """Grip positions and palm directions per clip, measured in the manifest (glTF axes, metres)."""
+    ASSETS = ('char-student-pre', 'char-student-primary', 'char-teacher')
+
+    @classmethod
+    def setUpClass(cls):
+        cls.built = {asset: build(asset) for asset in cls.ASSETS}
+
+    def test_manifest_measures_both_hands_in_each_clip(self):
+        for asset, m in self.built.items():
+            for clip in ('idle', 'sit', 'interact', 'vr'):
+                samples = m['hand_poses'][clip]
+                self.assertEqual([s['frame'] for s in samples], [1, 13], asset)
+                for s in samples:
+                    for side in ('l', 'r'):
+                        self.assertAlmostEqual(sum(v * v for v in s[f'palm_{side}']), 1, delta=.01)
+
+    def test_sit_and_idle_hands_match_the_baseline(self):
+        baseline = json.loads((ROOT / 'tests/fixtures/hand_baseline.json').read_text())
+        for asset, m in self.built.items():
+            for clip in ('idle', 'sit'):
+                for now, then in zip(m['hand_poses'][clip], baseline[asset][clip], strict=True):
+                    for key in ('grip_l', 'grip_r'):
+                        self.assertLess(math.dist(now[key], then[key]), .01, f'{asset} {clip} {key}')
+                    for key in ('palm_l', 'palm_r'):
+                        self.assertGreater(sum(a * b for a, b in zip(now[key], then[key])), .99, f'{asset} {clip} {key}')
 
 if __name__ == '__main__':
     unittest.main()

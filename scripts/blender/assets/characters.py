@@ -104,12 +104,68 @@ def add_fitting(arm, mesh):
     centre = (min(p.x for p in head) + max(p.x for p in head)) / 2
     fitting_point(arm, 'Head', 'vr_eyes', Vector((centre, min(p.y for p in face), eye)),
                   (max(p.x for p in head) - min(p.x for p in head)) / .2 * .95)
+    grips = {}
     for side, bone in (('l', 'LeftHand'), ('r', 'RightHand')):
         hand = rest_vertices(arm, mesh, {bone})
         span = max(max(p[i] for p in hand) - min(p[i] for p in hand) for i in range(3))
-        fitting_point(arm, bone, f'vr_grip_{side}', sum(hand, Vector()) / len(hand), span / .14)
+        grips[side] = fitting_point(arm, bone, f'vr_grip_{side}', sum(hand, Vector()) / len(hand), span / .14)
     arm.data.pose_position = 'POSE'
     bpy.context.view_layer.update()
+    return grips
+
+HAND_CLIPS = ('idle', 'sit', 'interact', 'vr')
+
+def gltf(v):
+    return [round(v.x, 4), round(v.z, 4), round(-v.y, 4)]
+
+def palm_axes(arm, mesh):
+    """Each palm's normal and thumb side in its hand bone's frame. A hand is flat, so the normal is the direction its
+    rest vertices spread least along; the T-pose has the palms down, which picks the sign. The bone's own roll does
+    not follow the palm on these rigs."""
+    axes = {}
+    for bone in ('LeftHand', 'RightHand'):
+        points = numpy.array([tuple(p) for p in rest_vertices(arm, mesh, {bone})])
+        flat = numpy.linalg.eigh(numpy.cov((points - points.mean(0)).T))[1][:, 0]
+        normal = Vector(flat).normalized()
+        if normal.z > 0:
+            normal = -normal
+        if normal.z > -.8:
+            raise RuntimeError(f'{bone}: the palm is not facing down at rest: {tuple(normal)}')
+        frame = (arm.matrix_world @ arm.data.bones[bone].matrix_local).to_3x3()
+        # The thumb side: across the palm and the fingers, forward (-y) in the T-pose. An upright handle in a fist
+        # runs along it.
+        thumb = normal.cross((frame @ Vector((0, 1, 0))).normalized()).normalized()
+        if thumb.y > 0:
+            thumb = -thumb
+        axes[bone] = {'palm': (frame.inverted() @ normal).normalized(), 'thumb': (frame.inverted() @ thumb).normalized()}
+    return axes
+
+def hand_poses(arm, mesh, grips, clips=HAND_CLIPS, frames=(1, 13)):
+    """Where both grips are and which way the palms and thumbs face, per clip, in glTF axes."""
+    axes, scene, keep = palm_axes(arm, mesh), bpy.context.scene, arm.animation_data.action
+    arm.data.pose_position = 'POSE'
+    out = {}
+    for name in clips:
+        action = bpy.data.actions[name]
+        arm.animation_data.action = action
+        if arm.animation_data.action_slot is None and action.slots:
+            arm.animation_data.action_slot = action.slots[0]
+        out[name] = []
+        for frame in frames:
+            scene.frame_set(frame)
+            bpy.context.view_layer.update()
+            sample = {'frame': frame}
+            for side, bone in (('l', 'LeftHand'), ('r', 'RightHand')):
+                sample[f'grip_{side}'] = gltf(grips[side].matrix_world.translation)
+                posed = (arm.matrix_world @ arm.pose.bones[bone].matrix).to_3x3()
+                for key, axis in axes[bone].items():
+                    sample[f'{key}_{side}'] = gltf((posed @ axis).normalized())
+            out[name].append(sample)
+    arm.animation_data.action = keep
+    if arm.animation_data.action_slot is None and keep.slots:
+        arm.animation_data.action_slot = keep.slots[0]
+    scene.frame_set(1)
+    return out
 
 def height_at_rest(arm, mesh):
     arm.data.pose_position = 'REST'
@@ -408,5 +464,6 @@ def student(target, source, target_height, record):
     walk.name = 'walk'
     author_clips(arm)
     arm.animation_data.action = walk
-    add_fitting(arm, mesh)
-    return {'source': record or 'assets/sources/meshy/variants/PROVENANCE.json', 'source_triangles': triangles, **bake, 'clips': ['idle', 'walk', 'sit', 'interact', 'vr'], 'armature': arm.name}
+    grips = add_fitting(arm, mesh)
+    hands = hand_poses(arm, mesh, grips)
+    return {'source': record or 'assets/sources/meshy/variants/PROVENANCE.json', 'source_triangles': triangles, **bake, 'clips': ['idle', 'walk', 'sit', 'interact', 'vr'], 'armature': arm.name, 'hand_poses': hands}
