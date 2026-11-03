@@ -28,9 +28,11 @@ groups (the cotizador's landing showcase) counts for its usual levels (`HOME_LEV
 shows programs 1-2 and the upper one 3-4 (or 1-2 again); the list is part of the module's signature, so a
 change rebuilds only the affected classrooms. `web/src/world/classroom-kits.js` maps each program to table
 kits, shown at `KIT_SCALE` 1.5 on the front half of each table as close-view detail; with no programs the
-tables keep `LEVEL_TABLE_ITEM`. The Electronics room's printer and arm stand on `furn-workbench` at the front
-(`web/src/world/electronics-room.js`); their pivots are marked `userData.separate` and swayed each frame by
-`swayPose`, and they drop at campus distance.
+tables keep `LEVEL_TABLE_ITEM`. The Electronics room is three workbench stations in a U (`STATIONS` in `web/src/world/electronics-room.js`):
+3D printing on the left wall (`furn-workbench-short`, printer, spool rack, printed parts), the robotic arm on
+the right (arm, laptop) and circuits along the back (`furn-workbench`, kits, two students on `furn-stool`s), with
+the teacher in the open middle. Benches and stools merge with the room; the printer and arm sway (`swayPose`)
+and are close-view detail.
 
 The Makerzoid program room keeps its tables; its dinosaur (`equip-dino`) is a kit robot of rigid parts
 joined into one mesh skinned to a small armature and coloured per vertex (`GG_KitVertex`), so it is one draw

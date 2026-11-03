@@ -53,11 +53,13 @@ Generated from `assets/manifests/` by `python3 scripts/world.py catalog`.
 | equip-kit-storage | 728 | 0.80 x 0.94 x 0.42 | 16096 | PASS | PASS |
 | equip-laptop | 524 | 0.34 x 0.24 x 0.27 | 14248 | PASS | PASS |
 | equip-organizer | 608 | 0.60 x 0.13 x 0.34 | 14016 | PASS | PASS |
-| equip-printer | 1332 | 0.45 x 0.49 x 0.40 | 29760 | PASS | PASS |
+| equip-printed-parts | 244 | 0.30 x 0.09 x 0.20 | 9360 | PASS | PASS |
+| equip-printer | 1332 | 0.45 x 0.49 x 0.40 | 29800 | PASS | PASS |
 | equip-rover-programmable | 3628 | 0.33 x 0.22 x 0.30 | 63920 | PASS | PASS |
 | equip-rover-spike | 4696 | 0.30 x 0.32 x 0.30 | 105920 | PASS | PASS |
 | equip-screen-vr | 1164 | 1.50 x 1.55 x 0.36 | 28624 | PASS | PASS |
 | equip-screen | 924 | 1.50 x 1.55 x 0.36 | 20836 | PASS | PASS |
+| equip-spool-rack | 580 | 0.34 x 0.25 x 0.15 | 15392 | PASS | PASS |
 | equip-tablet | 152 | 0.24 x 0.02 x 0.17 | 5172 | PASS | PASS |
 | equip-vr-controller | 312 | 0.07 x 0.10 x 0.07 | 7972 | PASS | PASS |
 | equip-vr-headset | 700 | 0.20 x 0.10 x 0.24 | 14824 | PASS | PASS |
@@ -70,9 +72,11 @@ Generated from `assets/manifests/` by `python3 scripts/world.py catalog`.
 | furn-lamp | 548 | 0.36 x 1.93 x 0.36 | 11632 | PASS | PASS |
 | furn-laptop-desk | 500 | 1.20 x 0.60 x 0.55 | 11352 | PASS | PASS |
 | furn-shelves | 824 | 1.05 x 1.20 x 0.33 | 19000 | PASS | PASS |
+| furn-stool | 364 | 0.31 x 0.30 x 0.32 | 12624 | PASS | PASS |
 | furn-table-four | 936 | 1.30 x 0.61 x 1.30 | 21164 | PASS | PASS |
 | furn-tile-paving | 568 | 2.00 x 0.12 x 2.00 | 12572 | PASS | PASS |
 | furn-whiteboard | 756 | 1.26 x 1.42 x 0.36 | 15404 | PASS | PASS |
+| furn-workbench-short | 864 | 1.40 x 0.85 x 0.70 | 17444 | PASS | PASS |
 | furn-workbench | 1456 | 2.00 x 1.33 x 0.70 | 37028 | PASS | PASS |
 | veg-flowers | 160 | 0.62 x 0.26 x 0.52 | 7560 | PASS | PASS |
 | veg-shrub | 240 | 1.03 x 0.63 x 0.69 | 6292 | PASS | PASS |

@@ -16,6 +16,12 @@ Draw calls fell from 4,536 by merging each entity's static parts, then batching 
 draw per material. During a transition the batch is off, and draw calls rise to about 600 until it rebuilds.
 Characters swap to a 1,400-triangle model at campus distance. `InstancedMesh` was not needed.
 
+## 2026-11-03 Electronics stations
+
+The Electronics room became three workbench stations with four students. Campus view: 144 draw calls at 60 fps
+(the two added students cost one draw each), parity PASS (`runs/lab-08-parity`). Focused with the x-ray open:
+204 draw calls, 1,081,888 triangles, 60 fps (`runs/lab-07-perf`).
+
 ## 2026-11-03 Focused-room x-ray
 
 A focused room is seen in close view, where every room's detail and full-detail characters show. That view had
