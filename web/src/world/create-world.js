@@ -648,6 +648,9 @@ export function createWorld(container, opts = {}) {
   // Whatever stands above the focused room or between it and the camera veils or steps aside, and the room
   // shows an unmerged copy of its shell whose camera-facing walls veil (rules in room-xray.js).
   let xrayState = null;
+  // The room the visitor focused, kept apart from what is applied: its entity can be missing while an update
+  // rebuilds it or before the first load, and the x-ray opens once it exists.
+  let xrayRoom = null;
   const partName = node => node.name.replace(/[.\d]+$/, '');
 
   function hideObject(state, object) {
@@ -819,7 +822,7 @@ export function createWorld(container, opts = {}) {
         }
         syncWalkers(Math.min(8, 2 + Math.floor(plan.modules.filter(m => m.type === 'room').length / 2)), kit);
         // An open room reopens on what the update built: its blockers and its own entity may be new.
-        if (xrayState) { const open = plan.modules.find(m => m.key === xrayState.room); if (open) applyXray(open, true); else clearXray(); }
+        if (xrayRoom) { const open = plan.modules.find(m => m.key === xrayRoom); if (open) applyXray(open, true); else { xrayRoom = null; clearXray(); } }
         ready = true;
         scheduleBatch();
         resize();
@@ -901,6 +904,7 @@ export function createWorld(container, opts = {}) {
     zoom(factor) { goal.half = MathUtils.clamp(goal.half * factor, 3, 40); invalidate(); },
     resetView() {
       handle.focused = false;
+      xrayRoom = null;
       clearXray();
       Object.assign(goal, { yaw: -.54, pitch: .55, half: overview.half });
       goal.target.copy(overview.target);
@@ -923,7 +927,8 @@ export function createWorld(container, opts = {}) {
       handle.focused = true;
       goal.target.set(module.x, module.y + 1.1, module.z);
       goal.half = 4.6;
-      if (module.type === 'room') applyXray(module); else clearXray();
+      xrayRoom = module.type === 'room' ? module.key : null;
+      if (xrayRoom) applyXray(module); else clearXray();
       invalidate();
     },
     breakdown() {
