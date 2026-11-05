@@ -929,6 +929,11 @@ function addProgram(id, level) {
   let scope = groups().filter(g => g.students > 0 && compatible(p, g) && !used.has(g.id));
   // Si el programa ya se separó por nivel, agregar desde otro nivel suma solo ese nivel.
   if (others.length) scope = scope.filter(g => g.levelId === level);
+  // Un grado no lleva dos kits de la misma área (p. ej. Robot Master y SPIKE Prime): por defecto entra solo lo que otro kit de esa área aún no cubre.
+  // Si el nivel desde donde se agrega ya está cubierto, se mantiene todo para que no quede sin opción; el cliente ajusta los grados al configurar.
+  const areaCovered = new Set(state.selected.filter(s => s.programId !== id && findP(s.programId).area === p.area).flatMap(s => s.groupIds));
+  const free = scope.filter(g => !areaCovered.has(g.id));
+  if (free.some(g => g.levelId === level)) scope = free;
   // Grados recomendados; si el nivel desde donde se agrega no tiene ninguno (SPIKE Prime en 1.º a 3.º), entran sus grados permitidos.
   const hereRec = scope.some(g => g.levelId === level && recommended(p, g));
   const pool = scope.filter(g => recommended(p, g) || (!hereRec && g.levelId === level));

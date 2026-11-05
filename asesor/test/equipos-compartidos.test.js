@@ -113,3 +113,67 @@ test('el cliente puede aumentar o disminuir la cantidad de equipos del kit compa
   e.units = Math.max(1, base - 2); assert.equal(M.effectiveUnits(e, p, gs), Math.max(1, base - 2));
   assert.equal(e.groupIds.length, 4, 'cambiar la cantidad no reduce los niveles cubiertos');
 });
+
+// Matriz comercial de grados por programa (la define GuateGeeks; el cliente elige cuáles cubre cada kit).
+const allowed = id => C.PROGRAMS.find(p => p.id === id).grades;
+const gradesOf = levelIds => C.LEVELS.filter(l => levelIds.includes(l.id)).flatMap(l => l.grades.map(g => g[0]));
+test('matriz de grados permitidos: Tale-Bot solo preprimaria; los demás kits cubren varios niveles', () => {
+  assert.equal(JSON.stringify(allowed('tale')), JSON.stringify(gradesOf(['pre'])));
+  for (const id of ['master', 'spike', 'electronics']) assert.equal(JSON.stringify(allowed(id)), JSON.stringify(gradesOf(['prim', 'bas', 'bach'])), id + ': primaria a bachillerato');
+  assert.equal(JSON.stringify(allowed('drones')), JSON.stringify(['p4', 'p5', 'p6', ...gradesOf(['bas', 'bach'])]), 'drones: 4.º primaria a bachillerato');
+  assert.equal(JSON.stringify(allowed('immersive')), JSON.stringify(gradesOf(['bas', 'bach'])), 'realidad virtual: básico a bachillerato');
+});
+
+test('el cliente reparte los kits por grados: Robot Master de 1.º a 3.º y SPIKE Prime de 4.º a bachillerato, sin repetir equipo', () => {
+  const state = school(['prim', 'bas', 'bach'], { p1: 20, p2: 20, p3: 20, p4: 20, p5: 20, p6: 20, b1: 25, b2: 25, b3: 25, bc4: 30, bc5: 30 });
+  const h = host(state);
+  h.add('master', 'prim');
+  // El cliente deja Robot Master solo en 1.º a 3.º primaria (quita los demás grados al configurar).
+  state.selected[0].groupIds = ['p1-1', 'p2-1', 'p3-1'];
+  h.add('spike', 'prim');
+  assert.equal(state.selected.length, 2, 'un kit de cada programa, no uno por nivel');
+  const spike = state.selected.find(e => e.programId === 'spike');
+  assert.equal(ids(spike), JSON.stringify(['p4-1', 'p5-1', 'p6-1', 'b1-1', 'b2-1', 'b3-1', 'bc4-1', 'bc5-1']));
+  const covered = state.selected.flatMap(e => e.groupIds);
+  assert.equal(new Set(covered).size, covered.length, 'ningún grado queda cubierto por dos kits');
+});
+
+test('el cliente puede usar Robot Master solo en primaria y básico, y SPIKE Prime solo en bachillerato', () => {
+  const state = school(['prim', 'bas', 'bach'], { p1: 20, p2: 20, b1: 25, b2: 25, bc4: 30, bc5: 30 });
+  const h = host(state);
+  h.add('master', 'prim');
+  state.selected[0].groupIds = state.selected[0].groupIds.filter(id => !id.startsWith('bc'));
+  assert.equal(ids(state.selected[0]), JSON.stringify(['p1-1', 'p2-1', 'b1-1', 'b2-1']));
+  h.add('spike', 'bach');
+  const spike = state.selected.find(e => e.programId === 'spike');
+  assert.equal(state.selected.length, 2);
+  assert.equal(ids(spike), JSON.stringify(['bc4-1', 'bc5-1']), 'SPIKE Prime para bachillerato (recomendado) sin arrastrar primaria ni básico');
+});
+
+test('drones y realidad virtual no entran fuera de sus grados aunque haya estudiantes', () => {
+  const state = school(['prim', 'bas', 'bach'], { p1: 20, p3: 20, p4: 20, b1: 25, bc4: 30 });
+  const h = host(state);
+  h.add('drones', 'prim');
+  assert.equal(ids(state.selected[0]), JSON.stringify(['p4-1', 'b1-1', 'bc4-1']), 'sin 1.º ni 3.º primaria');
+  h.add('immersive', 'bas');
+  assert.equal(ids(state.selected[1]), JSON.stringify(['b1-1', 'bc4-1']), 'sin primaria');
+});
+
+test('kits de áreas distintas sí pueden coincidir en un grado (robótica y electrónica)', () => {
+  const state = school(['prim', 'bas'], { p4: 20, p5: 20, b1: 25 });
+  const h = host(state);
+  h.add('master', 'prim');
+  h.add('electronics', 'prim');
+  assert.equal(state.selected.length, 2);
+  assert.equal(ids(state.selected[1]), JSON.stringify(['p4-1', 'p5-1', 'b1-1']), 'la electrónica no se limita por lo que cubre la robótica');
+});
+
+test('si el nivel desde donde se agrega ya está cubierto por otro kit de la misma área, no queda sin opción', () => {
+  const state = school(['prim'], { p4: 20, p5: 20, p6: 20 });
+  const h = host(state);
+  h.add('master', 'prim');
+  assert.equal(ids(state.selected[0]), JSON.stringify(['p4-1', 'p5-1', 'p6-1']));
+  h.add('spike', 'prim');
+  assert.equal(state.selected.length, 2, 'se puede agregar; el cliente decide los grados al configurar');
+  assert.equal(ids(state.selected[1]), JSON.stringify(['p4-1', 'p5-1', 'p6-1']));
+});
