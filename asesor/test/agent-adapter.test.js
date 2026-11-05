@@ -402,3 +402,53 @@ test('flujo de venta con matrícula por nivel: cada programa solo en sus grados 
   for(const e of x.api.getContext().selection){assert.equal(update(x,'set_schedule',{entryId:e.id,sharing:'separate',simIds:[]}).ok,true);assert.equal(update(x,'set_modality',{entryId:e.id,plan:'EV8'}).ok,true);}
   const c=x.api.getContext();assert.equal(c.summary.complete,true);assert.ok(c.summary.total>0);
 });
+test('escenario positivo: un promedio por nivel llena todos los grados de preprimaria, primaria, básico y bachillerato',()=>{
+  const x=setup();x.manual(st=>{st.levels=[];st.enroll={};st.selected=[];});
+  assert.equal(update(x,'set_levels',{levelIds:['pre','prim','bas','bach']}).ok,true);
+  const promedio={pre:10,prim:20,bas:25,bach:30},esperado={pre:3,prim:6,bas:3,bach:2};
+  for(const [levelId,students] of Object.entries(promedio)){
+    const r=update(x,'set_level_students',{levelId,students});assert.equal(r.ok,true,levelId);
+    const grupos=x.api.getContext().groups.filter(g=>g.levelId===levelId);
+    assert.equal(grupos.length,esperado[levelId],levelId);
+    assert.equal(grupos.every(g=>g.students===students),true,levelId+' debe quedar con '+students+' en cada grado');
+  }
+  assert.equal(x.api.getContext().summary.registered,3*10+6*20+3*25+2*30);
+  assert.equal(update(x,'set_students',{gradeId:'p4',sectionId:'p4-1',students:18}).ok,true,'ajuste manual de un solo grado');
+  const prim=x.api.getContext().groups.filter(g=>g.levelId==='prim').map(g=>g.students);
+  assert.equal(JSON.stringify(prim),'[20,20,20,18,20,20]');
+});
+test('escenario positivo: cifra distinta por grado se registra grado por grado con la revisión devuelta',()=>{
+  const x=setup();x.manual(st=>{st.levels=['pre'];st.enroll={};st.selected=[];});
+  let revision=x.api.getContext().revision;
+  for(const [gradeId,students] of [['pk',8],['ki',12],['pr',15]]){
+    const r=update(x,'set_students',{gradeId,sectionId:gradeId+'-1',students},revision);
+    assert.equal(r.ok,true,gradeId);revision=r.revision;
+  }
+  assert.equal(JSON.stringify(x.api.getContext().groups.map(g=>g.students)),'[8,12,15]');
+});
+test('escenario negativo: sin matrícula no se agrega programa y el error permite explicar la causa',()=>{
+  const x=setup();x.manual(st=>{st.levels=['pre'];st.enroll={};st.selected=[];});
+  const snapshot=JSON.stringify(x.state),revision=x.api.getContext().revision;
+  const ids=x.api.getContext().groups.map(g=>g.id);
+  const r=update(x,'add_program',{programId:'tale',groupIds:ids});
+  assert.equal(r.ok,false);assert.ok(r.error||r.message,'debe devolver motivo');
+  assert.equal(JSON.stringify(x.state),snapshot);assert.equal(x.api.getContext().revision,revision);
+});
+test('escenario negativo: cifras inválidas por nivel (texto, decimal, negativa, enorme) se rechazan sin cambios',()=>{
+  const x=setup();x.manual(st=>{st.levels=['pre'];st.enroll={};st.selected=[];});
+  const snapshot=JSON.stringify(x.state),revision=x.api.getContext().revision;
+  for(const students of ['diez',10.5,-3,1001,NaN,undefined]){
+    assert.equal(update(x,'set_level_students',{levelId:'pre',students}).ok,false,String(students));
+  }
+  assert.equal(JSON.stringify(x.state),snapshot);assert.equal(x.api.getContext().revision,revision);
+});
+test('escenario negativo: conflicto de revisión no cambia nada y reintentar con la revisión vigente continúa el flujo',()=>{
+  const x=setup();x.manual(st=>{st.levels=['pre','prim'];st.enroll={};st.selected=[];});
+  const vieja=x.api.getContext().revision;
+  assert.equal(update(x,'set_level_students',{levelId:'pre',students:10},vieja).ok,true);
+  const choque=update(x,'set_level_students',{levelId:'prim',students:15},vieja);
+  assert.equal(choque.ok,false);assert.equal(choque.error,'revision_conflict');
+  assert.equal(x.api.getContext().groups.filter(g=>g.levelId==='prim').every(g=>g.students===null),true);
+  assert.equal(update(x,'set_level_students',{levelId:'prim',students:15}).ok,true);
+  assert.equal(x.api.getContext().summary.registered,3*10+6*15);
+});
