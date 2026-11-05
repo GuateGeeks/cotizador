@@ -336,3 +336,33 @@ test('real manual navigation retains undo while commercial edit and revert inval
   assert.equal(update('set_tax',{enabled:false},beforeManual).error,'revision_conflict');
   assert.equal(api.getContext().canUndo,false);
 });
+
+test('grados permitidos y recomendados: SPIKE Prime admite 1.º a 3.º primaria con aviso; Tale-Bot, drones y realidad virtual no salen de sus grados',()=>{
+  const x=setup();assert.ok(x.api,'semantic adapter must exist');
+  assert.equal(update(x,'add_program',{programId:'tale',groupIds:['p1-1']}).ok,false);
+  assert.equal(update(x,'add_program',{programId:'drones',groupIds:['p1-1']}).ok,false);
+  assert.equal(update(x,'add_program',{programId:'immersive',groupIds:['p1-1']}).ok,false);
+  assert.equal(update(x,'add_program',{programId:'spike',groupIds:['p1-1']}).ok,true);
+  const ctx=x.api.getContext(), spike=ctx.selection.find(e=>e.programId==='spike');
+  assert.equal(JSON.stringify(spike.outsideRecommended),'["p1-1"]');
+  assert.equal(ctx.policy.gradeRules,'allowed_grades_with_recommendations');
+  assert.equal(update(x,'add_program',{programId:'master',groupIds:['p1-2']}).ok,true);
+  assert.equal(update(x,'add_program',{programId:'electronics',groupIds:['p1-2']}).ok,true);
+});
+
+test('cada nivel puede llevar programas distintos: robótica en preprimaria; electrónica y robótica en primaria; solo electrónica en básico; realidad virtual en bachillerato',()=>{
+  const x=setup();assert.ok(x.api,'semantic adapter must exist');
+  assert.equal(update(x,'set_levels',{levelIds:['pre','prim','bas','bach']}).ok,true);
+  for(const [g,id,n] of [['pk','pk-1',15],['b1','b1-1',30],['bc4','bc4-1',22]]) assert.equal(update(x,'set_students',{gradeId:g,sectionId:id,students:n}).ok,true);
+  for(const [programId,groupIds] of [['tale',['pk-1']],['master',['p1-1','p1-2']],['electronics',['p1-1','p1-2']],['electronics',['b1-1']],['immersive',['bc4-1']]]) assert.equal(update(x,'add_program',{programId,groupIds}).ok,true,programId+' '+groupIds);
+  for(const e of x.api.getContext().selection){
+    assert.equal(update(x,'set_schedule',{entryId:e.id,sharing:'separate',simIds:[]}).ok,true);
+    assert.equal(update(x,'set_modality',{entryId:e.id,plan:'INTEGRA'}).ok,true);
+  }
+  assert.equal(update(x,'calculate',{}).ok,true);
+  const ctx=x.api.getContext();
+  assert.equal(ctx.selection.length,5);
+  assert.equal(ctx.summary.complete,true);
+  assert.equal(ctx.summary.uncovered.length,0);
+  assert.ok(ctx.summary.total>0);
+});

@@ -104,13 +104,13 @@
       const covered = new Set(s.selected.flatMap(e=>e.groupIds));
       const selection = s.selected.map(e => {
         const p=program(e.programId), mine=gs.filter(g=>e.groupIds.includes(g.id)), effectiveUnits=M.effectiveUnits(e,p,gs);
-        return { ...copy(e), effectiveUnits, status:M.entryStatus(e,p,gs,C.TARIFFS), analysis:M.analyze({groups:mine,ratio:p.ratio,units:effectiveUnits,sharing:e.sharing,simIds:e.simIds}) };
+        return { ...copy(e), effectiveUnits, outsideRecommended:mine.filter(g=>!(p.recommendedGrades||p.grades).includes(g.gradeId)).map(g=>g.id), status:M.entryStatus(e,p,gs,C.TARIFFS), analysis:M.analyze({groups:mine,ratio:p.ratio,units:effectiveUnits,sharing:e.sharing,simIds:e.simIds}) };
       });
       const projectionRows=totals.rows.filter(r=>r.quote&&r.entry.plan!=='INTEGRA');
       const projectionStudents=M.uniqueStudents(gs,[...new Set(projectionRows.flatMap(r=>r.entry.groupIds))]);
       const projection=projectionRows.length&&projectionStudents?M.simulateAll(projectionRows.map(r=>r.quote),projectionStudents,s.useSuggested!==false?null:s.fee,C.FISCAL,!!s.iva):null;
       const modalities=['INTEGRA','FLEX','EV8','EV16'].map(plan=>{const rows=totals.rows.filter(r=>r.quote&&r.entry.plan===plan);return {plan,count:rows.length,net:rows.reduce((n,r)=>n+r.quote.net,0),tax:rows.reduce((n,r)=>n+r.quote.tax,0),total:rows.reduce((n,r)=>n+r.quote.total,0)};}).filter(m=>m.count);
-      return copy({revision,canUndo:!!undo,step:s.step,catalog:{levels:C.LEVELS,programs:C.PROGRAMS,plans:C.PLANS},enrollment:s.enroll,groups:gs,selection,
+      return copy({revision,canUndo:!!undo,step:s.step,policy:{gradeRules:'allowed_grades_with_recommendations',note:'Cada programa tiene grados permitidos (grades): fuera de ellos no se puede usar. Solo si trae recommendedGrades, esos son los ideales y los demás grados permitidos también se pueden usar con aviso (outsideRecommended). Tale-Bot es solo para preprimaria; la realidad virtual, solo básico y bachillerato por seguridad. Recomienda lo ideal sin imponerlo cuando el grado está permitido.'},catalog:{levels:C.LEVELS,programs:C.PROGRAMS,plans:C.PLANS},enrollment:s.enroll,groups:gs,selection,
         settings:{iva:s.iva,useSuggested:s.useSuggested,fee:s.fee},
         summary:{projection,modalities,net:totals.net,tax:totals.tax,total:totals.total,complete:totals.complete,pricedCount:totals.pricedCount,unpricedCount:totals.unpricedCount,
           registered:gs.reduce((n,g)=>n+(g.students||0),0),participants:M.uniqueStudents(gs,[...covered]),

@@ -223,9 +223,12 @@ test('proporciones aprobadas: Tale-Bot 2; Robot Master, SPIKE Prime, electrónic
 
 test('compatibilidad por grado según el catálogo', () => {
   const grades = id => C.PROGRAMS.find(p => p.id === id).grades;
-  // Robot Master: primaria, básico y bachillerato. SPIKE Prime: desde 6.º primaria hasta bachillerato.
+  // Tale-Bot: solo preprimaria. Robot Master: primaria, básico y bachillerato.
+  assert.deepEqual(grades('tale'), ['pk', 'ki', 'pr']);
   assert.deepEqual(grades('master'), ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'b1', 'b2', 'b3', 'bc4', 'bc5']);
-  assert.deepEqual(grades('spike'), ['p6', 'b1', 'b2', 'b3', 'bc4', 'bc5']);
+  // SPIKE Prime: se puede usar desde 1.º primaria, pero se recomienda de 4.º primaria a bachillerato.
+  assert.deepEqual(grades('spike'), ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'b1', 'b2', 'b3', 'bc4', 'bc5']);
+  assert.deepEqual(C.PROGRAMS.find(p => p.id === 'spike').recommendedGrades, ['p4', 'p5', 'p6', 'b1', 'b2', 'b3', 'bc4', 'bc5']);
   // Drones: primaria alta (4.º a 6.º) en adelante.
   assert.deepEqual(grades('drones'), ['p4', 'p5', 'p6', 'b1', 'b2', 'b3', 'bc4', 'bc5']);
   // Electrónica: toda primaria, básico y bachillerato.

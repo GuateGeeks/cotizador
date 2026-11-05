@@ -25,9 +25,14 @@
   const BAS = ['b1', 'b2', 'b3'];
   const BACH = ['bc4', 'bc5'];
 
-  // Compatibilidad (grades) y ratio (estudiantes máximos por equipo) por programa.
-  // Robótica: Tale-Bot 2, Robot Master 3, SPIKE Prime 3. Electrónica, drones y Meta Quest: 3.
-  // Drones: de 4.º primaria en adelante. Meta Quest: solo básico y bachillerato.
+  // grades = grados en los que el programa se puede usar (regla: fuera de esos grados no se ofrece).
+  // recommendedGrades (opcional) = grados ideales cuando son menos que los permitidos; fuera de ellos se puede usar, con aviso.
+  //   Tale-Bot: solo preprimaria (edades específicas).
+  //   Robot Master: primaria, básico y bachillerato (primer acercamiento, variedad de actividades).
+  //   SPIKE Prime: se recomienda de 4.º primaria a bachillerato, pero la institución puede usarlo desde 1.º primaria.
+  //   Drones: de 4.º primaria a bachillerato. Electrónica: toda primaria, básico y bachillerato.
+  //   Meta Quest (realidad virtual): solo básico y bachillerato, por seguridad.
+  // ratio = estudiantes máximos por equipo: Tale-Bot 2; Robot Master, SPIKE Prime, electrónica, drones y Meta Quest 3.
   // ratio: null = "Equipamiento por definir con GuateGeeks" (no se calcula ni se cotiza).
   const PROGRAMS = [
     { id: 'tale', name: 'Robótica para pequeños', icon: 'robot', area: 'Robótica', hardware: 'Tale-Bot', ratio: 2,
@@ -38,7 +43,7 @@
       levels: ['prim', 'bas', 'bach'], grades: [...PRIM, ...BAS, ...BACH] },
     { id: 'spike', name: 'Robótica con SPIKE Prime', icon: 'robot', area: 'Robótica', hardware: 'LEGO SPIKE Prime', ratio: 3,
       short: 'Sensores, mecánica y programación progresiva con proyectos de ingeniería.',
-      levels: ['prim', 'bas', 'bach'], grades: ['p6', ...BAS, ...BACH] },
+      levels: ['prim', 'bas', 'bach'], grades: [...PRIM, ...BAS, ...BACH], recommendedGrades: ['p4', 'p5', 'p6', ...BAS, ...BACH] },
     { id: 'electronics', name: 'Electrónica creativa', icon: 'robot', area: 'Electrónica', hardware: 'Kit de electrónica', ratio: 3,
       short: 'Circuitos, sensores y proyectos que conectan la teoría con la práctica.',
       levels: ['prim', 'bas', 'bach'], grades: [...PRIM, ...BAS, ...BACH] },

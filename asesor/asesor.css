@@ -1433,3 +1433,11 @@ html,body,body:has(.campus-layout){background:var(--canvas)}
 
 .img-failed img{visibility:hidden}
 .img-failed.product-media,.img-failed.small-photo,.img-failed.lc-photo{background:var(--plum-wash)}
+
+/* grados recomendados: una guía, no un límite */
+.rec-lead{margin:14px 0 8px;font-size:13px;font-weight:700;color:var(--plum-dark)}
+.more-programs{margin:16px 0 6px}.more-programs>summary{cursor:pointer;font-size:13px;font-weight:700;color:var(--plum-dark);padding:8px 0}
+.rec-hint{display:flex;gap:8px;align-items:flex-start;margin:8px 0 0;font-size:12px;line-height:1.5;color:var(--muted)}.rec-hint .icon{width:16px;height:16px;flex:none;margin-top:1px;stroke:var(--plum)}
+.chip.off-rec{border-style:dashed}
+.proposal-note.rec{background:var(--plum-wash);color:var(--ink)}
+.prog.off-rec{background:#fcfbfe}

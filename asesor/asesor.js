@@ -92,7 +92,17 @@ const icon = name => `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">$
 // ---------- Datos derivados (todo sale del motor) ----------
 const groups = () => M.groupsOf(state.enroll, LEVELS, state.levels);
 const activeLevels = () => LEVELS.filter(l => state.levels.includes(l.id));
+// grades = dónde se puede usar el programa (regla); recommendedGrades = grados ideales cuando son menos (solo SPIKE Prime), fuera de ellos se puede usar con aviso.
 const compatible = (p, g) => p.grades.includes(g.gradeId);
+const recommended = (p, g) => (p.recommendedGrades || p.grades).includes(g.gradeId);
+function recText(p) {
+  const ids = p.recommendedGrades || p.grades;
+  const parts = LEVELS.map(l => { const names = l.grades.filter(g => ids.includes(g[0])).map(g => g[1]); if (!names.length) return ''; return names.length === l.grades.length ? l.name : gradesText(names); }).filter(Boolean);
+  return joinY(parts);
+}
+// Grados de la entrada que quedan fuera de lo recomendado para su programa (informativo, no bloquea).
+const outsideRec = s => { const p = findP(s.programId); return [...new Set(entryGroups(s).filter(g => g.students > 0 && !recommended(p, g)).map(g => groupGrade(g)))]; };
+const recNote = s => { const out = outsideRec(s); if (!out.length) return ''; const p = findP(s.programId); return `Recomendamos ${p.hardware} para ${recText(p)}. Incluiste ${joinY(out)}: puedes continuar así, la cotización se calcula igual.`; };
 const entryGroups = s => groups().filter(g => s.groupIds.includes(g.id));
 const participation = s => entryGroups(s).reduce((n, g) => n + (g.students || 0), 0);
 const registered = () => groups().reduce((n, g) => n + (g.students || 0), 0);
@@ -840,7 +850,7 @@ function coverage() {
   const open = miss.filter(g => !skipped.has(g.id)), hosted = g => hostsFor([g]).length > 0;
   return { gs, covered, uncovered: open, pending: open.filter(hosted), outside: open.filter(g => !hosted(g)), skipped: miss.filter(g => skipped.has(g.id)), students: gs.filter(g => covered.has(g.id)).reduce((n, g) => n + g.students, 0), total: gs.reduce((n, g) => n + g.students, 0) };
 }
-const hostsFor = gs => state.selected.filter(s => gs.some(g => compatible(findP(s.programId), g)));
+const hostsFor = gs => state.selected.filter(s => gs.some(g => recommended(findP(s.programId), g)));
 const assignPending = () => coverage().pending;
 // Una fila por grado con su estado: incluido, pendiente (hay un programa elegido compatible), fuera (ningún programa elegido aplica) o descartado.
 function coverageRows() {
@@ -882,7 +892,7 @@ function catalogFromAssign() { ui.assign = false; render(); }
 function applyAssign() {
   const pend = coverage().uncovered, jobs = [];
   state.selected.forEach(s => {
-    const add = pend.filter(g => ui.assignSel[s.id + '|' + g.levelId] !== false && compatible(findP(s.programId), g) && !s.groupIds.includes(g.id));
+    const add = pend.filter(g => ui.assignSel[s.id + '|' + g.levelId] !== false && recommended(findP(s.programId), g) && !s.groupIds.includes(g.id));
     if (add.length) jobs.push([s, add]);
   });
   if (!jobs.length) { notify('Marca al menos un programa o elige otros programas para esos grados.'); return; }
@@ -898,7 +908,7 @@ function renderAssign() {
   const cards = levels.map(l => {
     const gs = pend.filter(g => g.levelId === l.id), n = gs.reduce((a, g) => a + g.students, 0), grades = [...new Set(gs.map(groupGrade))], hosts = hostsFor(gs);
     const rows = hosts.map(s => {
-      const p = findP(s.programId), key = s.id + '|' + l.id, ok = gs.filter(g => compatible(p, g)), u = unitsOf(s);
+      const p = findP(s.programId), key = s.id + '|' + l.id, ok = gs.filter(g => recommended(p, g)), u = unitsOf(s);
       return `<label class="assign-row"><input type="checkbox" ${ui.assignSel[key] !== false ? 'checked' : ''} onchange="toggleAssign('${key}', this.checked)"><span><b>${esc(progTitle(s))}</b><small>${esc(p.hardware)}${u ? ' · hoy ' + u + ' equipos' : ''} · sumaría ${esc(joinY([...new Set(ok.map(groupGrade))]))}</small></span></label>`;
     }).join('');
     return `<article class="assign-card"><div class="assign-head"><h2>${esc(l.name)}</h2><span class="status amber">${n} ${plural(n, 'estudiante', 'estudiantes')} sin programa</span></div><p class="assign-grades">${esc(joinY(grades))}</p>${rows ? `<p class="assign-ask">¿Quieres usar con este nivel alguno de los programas que ya elegiste?</p>${rows}` : '<p class="assign-ask">Ninguno de tus programas elegidos es compatible con estos grados. Elige un programa para este nivel en el catálogo.</p>'}</article>`;
@@ -909,20 +919,20 @@ function renderAssign() {
 }
 
 // ---------- Paso 3: catálogo ----------
-// Agrega el programa con un solo conjunto de equipos para todos los niveles compatibles (se puede separar por nivel al configurarlo).
+// Cada nivel elige sus propios programas: agregar desde un nivel suma solo los grupos de ESE nivel. Compartir el mismo equipo entre niveles es opcional (al configurar).
 function entryAt(pid, level) { return state.selected.findIndex(s => s.programId === pid && entryGroups(s).some(g => g.levelId === level)); }
 function addProgram(id, level) {
-  const p = findP(id), others = state.selected.filter(s => s.programId === id);
+  const p = findP(id);
   if (entryAt(id, level) !== -1) return;
-  const used = new Set(others.flatMap(s => s.groupIds));
-  let pool = groups().filter(g => g.students > 0 && compatible(p, g) && !used.has(g.id));
-  if (others.length) pool = pool.filter(g => g.levelId === level);
+  const used = new Set(state.selected.filter(s => s.programId === id).flatMap(s => s.groupIds));
+  const inLevel = groups().filter(g => g.levelId === level && g.students > 0 && compatible(p, g) && !used.has(g.id));
+  // Por defecto, los grados recomendados del nivel; si el nivel solo tiene grados permitidos no recomendados (SPIKE Prime en 1.º a 3.º), esos.
+  const pool = inLevel.some(g => recommended(p, g)) ? inLevel.filter(g => recommended(p, g)) : inLevel;
   if (!pool.length) return;
-  const lv = [...new Set(pool.map(g => g.levelId))];
   ui.preview = null; // agregar confirma el alcance: la vista previa deja de ser necesaria
-  state.selected.push({ id: id + '@' + lv.join('+'), programId: id, groupIds: pool.map(g => g.id), sharing: pool.length > 1 ? null : 'separate', simIds: [], units: null, stations: false, plan: 'UNDECIDED', flexBimestres: 1, confirmed: false, calc: null });
+  state.selected.push({ id: id + '@' + level, programId: id, groupIds: pool.map(g => g.id), sharing: pool.length > 1 ? null : 'separate', simIds: [], units: null, stations: false, plan: 'UNDECIDED', flexBimestres: 1, confirmed: false, calc: null });
   render();
-  notify(lv.length > 1 ? p.hardware + ' se agregó para ' + joinY(lv.map(x => findL(x).name)) + ' con el mismo equipo. Puedes separarlo por nivel al configurarlo.' : 'Programa agregado. Puedes seguir explorando otros niveles.');
+  notify('Programa agregado para ' + findL(level).name + '. Puedes elegir otros programas en los demás niveles.');
 }
 // Separa un programa compartido en un conjunto de equipos por nivel.
 function splitByLevel() {
@@ -971,7 +981,7 @@ function renderPrograms() {
       const list = PROGRAMS.filter(p => p.levels.includes(l.id) && groups().some(g => g.levelId === l.id && g.students > 0 && compatible(p, g)));
       return `<div class="catalog-level"><h2>${esc(l.name)}</h2><small>${l.grades.reduce((n, g) => n + groups().filter(x => x.gradeId === g[0]).reduce((a, x) => a + (x.students || 0), 0), 0)} estudiantes registrados</small></div><div class="program-grid">${list.map(p => {
         const idx = entryAt(p.id, l.id), selected = idx !== -1, shared = selected && entryLevels(state.selected[idx]).length > 1;
-        return `<article class="prog ${selected ? 'chosen' : ''}">${media(p, l.id)}<div class="prog-body"><div class="eyebrow">${esc(p.area)}</div><h3>${esc(p.name)}</h3><p>${esc(p.short)}</p><details><summary>Ver qué incluye</summary><ul class="inc-bullets"><li><b>Equipo:</b> ${esc(p.hardware)}${p.ratio ? ', hasta ' + p.ratio + ' estudiantes por equipo' : ''}</li><li><b>Grados:</b> ${esc(joinY(l.grades.filter(g => p.grades.includes(g[0])).map(g => g[1])))}</li><li><b>Comprar (Integra):</b> equipo propio, orientación inicial y 1 hora de capacitación</li><li><b>Rentar (Flex):</b> equipo en renta, capacitación docente, seguimiento y soporte, Sócrates Aprende</li><li><b>Pagar en cuotas (Evoluciona):</b> el equipo pasa a ser del colegio, capacitación, recursos para el aula, seguimiento y soporte, Sócrates Aprende</li><li><b>Siguiente paso:</b> eliges los grupos, la cantidad de equipos y la modalidad</li></ul></details></div><footer><div class="equip-label"><strong>${esc(p.hardware)}</strong>${p.ratio ? 'Hasta ' + p.ratio + ' estudiantes por equipo' : 'Equipamiento por definir con GuateGeeks'}</div>${selected ? `<div class="status green" style="align-self:start">Agregado a tu propuesta</div>${shared ? `<p class="help-line" style="margin:0">Equipo compartido entre ${esc(levelsLabel(state.selected[idx]))}.</p>` : ''}<div class="prog-actions"><button class="btn btn-outline" onclick="editProgram(${idx})">Configurar este programa ${icon('arrow')}</button><button class="icon-btn" onclick="removeProgram(${idx})" aria-label="Quitar ${esc(p.name)}">${icon('trash')}</button></div>` : `<div class="prog-actions prog-actions-add"><button class="btn btn-primary" onclick="addProgram('${p.id}','${l.id}')">Agregar a mi propuesta ${icon('plus')}</button><button type="button" class="btn btn-outline preview-btn" data-preview="${p.id}" aria-pressed="${ui.preview?.programId === p.id}" aria-label="Ver ${esc(p.name)} en el campus, sin agregarlo" onclick="togglePreview('${p.id}')">${icon('eye')}<span>${ui.preview?.programId === p.id ? 'Quitar vista previa' : 'Ver en el campus'}</span></button></div>`}</footer></article>`;
+        return `<article class="prog ${selected ? 'chosen' : ''}">${media(p, l.id)}<div class="prog-body"><div class="eyebrow">${esc(p.area)}</div><h3>${esc(p.name)}</h3><p>${esc(p.short)}</p>${groups().some(g => g.levelId === l.id && g.students > 0 && compatible(p, g) && !recommended(p, g)) ? `<p class="rec-hint">${icon('info')} Se recomienda para ${esc(recText(p))}. También puedes usarlo en los demás grados de ${esc(l.name)}.</p>` : ''}<details><summary>Ver qué incluye</summary><ul class="inc-bullets"><li><b>Equipo:</b> ${esc(p.hardware)}${p.ratio ? ', hasta ' + p.ratio + ' estudiantes por equipo' : ''}</li><li><b>Grados:</b> ${esc(joinY(l.grades.filter(g => p.grades.includes(g[0])).map(g => g[1])))}</li><li><b>Comprar (Integra):</b> equipo propio, orientación inicial y 1 hora de capacitación</li><li><b>Rentar (Flex):</b> equipo en renta, capacitación docente, seguimiento y soporte, Sócrates Aprende</li><li><b>Pagar en cuotas (Evoluciona):</b> el equipo pasa a ser del colegio, capacitación, recursos para el aula, seguimiento y soporte, Sócrates Aprende</li><li><b>Siguiente paso:</b> eliges los grupos, la cantidad de equipos y la modalidad</li></ul></details></div><footer><div class="equip-label"><strong>${esc(p.hardware)}</strong>${p.ratio ? 'Hasta ' + p.ratio + ' estudiantes por equipo' : 'Equipamiento por definir con GuateGeeks'}</div>${selected ? `<div class="status green" style="align-self:start">Agregado a tu propuesta</div>${shared ? `<p class="help-line" style="margin:0">Equipo compartido entre ${esc(levelsLabel(state.selected[idx]))}.</p>` : ''}<div class="prog-actions"><button class="btn btn-outline" onclick="editProgram(${idx})">Configurar este programa ${icon('arrow')}</button><button class="icon-btn" onclick="removeProgram(${idx})" aria-label="Quitar ${esc(p.name)}">${icon('trash')}</button></div>` : `<div class="prog-actions prog-actions-add"><button class="btn btn-primary" onclick="addProgram('${p.id}','${l.id}')">Agregar a mi propuesta ${icon('plus')}</button><button type="button" class="btn btn-outline preview-btn" data-preview="${p.id}" aria-pressed="${ui.preview?.programId === p.id}" aria-label="Ver ${esc(p.name)} en el campus, sin agregarlo" onclick="togglePreview('${p.id}')">${icon('eye')}<span>${ui.preview?.programId === p.id ? 'Quitar vista previa' : 'Ver en el campus'}</span></button></div>`}</footer></article>`;
       }).join('')}</div>`;
     }).join('') || '<div class="empty">Registra estudiantes para descubrir los programas compatibles.</div>'}<div class="foot"><button class="btn btn-outline" onclick="step(2)">← Editar estudiantes</button><button class="btn btn-primary" onclick="nextFromPrograms()" ${!state.selected.length ? 'disabled' : ''}>Configurar mis programas ${icon('arrow')}</button></div>`);
 }
@@ -1104,7 +1114,7 @@ function cfgGroups(s, p) {
   const share = lv.length > 1
     ? `<div class="sub-pick"><b>Mismo equipo para ${esc(levelsLabel(s))}</b><p class="help-line" style="margin:6px 0 10px">${esc(p.hardware)} puede usarse en estos niveles, así que sugerimos un solo conjunto de equipos que se comparte entre los grupos en horarios distintos. Si cada nivel tendrá su propio equipo, sepáralos.</p><button class="btn btn-small btn-outline" onclick="splitByLevel()">Usar un equipo distinto por nivel</button></div>`
     : others ? `<div class="sub-pick"><p class="help-line" style="margin:0 0 10px">Este equipo es solo para ${esc(levelsLabel(s))}. ${esc(p.hardware)} también puede compartirse con los demás niveles.</p><button class="btn btn-small btn-outline" onclick="mergeLevels()">Compartir el mismo equipo entre niveles</button></div>` : '';
-  return `<div class="chips big">${opts.map(g => `<button class="chip ${s.groupIds.includes(g.id) ? 'on' : ''}" onclick="toggleGroup('${g.id}')" aria-pressed="${s.groupIds.includes(g.id)}">${s.groupIds.includes(g.id) ? '✓ ' : ''}${esc(g.label)} · ${g.students}${g.confirmed ? '' : ' (provisional)'}</button>`).join('')}</div><p class="help-line">Participan <b>${participation(s)} estudiantes</b>. Todos vienen marcados; quita los que no cursarán este programa.</p>${share}`;
+  return `<div class="chips big">${opts.map(g => `<button class="chip ${s.groupIds.includes(g.id) ? 'on' : ''} ${recommended(p, g) ? '' : 'off-rec'}" onclick="toggleGroup('${g.id}')" aria-pressed="${s.groupIds.includes(g.id)}" ${recommended(p, g) ? '' : 'title="Fuera de los grados recomendados; puedes incluirlo"'}>${s.groupIds.includes(g.id) ? '✓ ' : ''}${esc(g.label)} · ${g.students}${g.confirmed ? '' : ' (provisional)'}</button>`).join('')}</div><p class="help-line">Participan <b>${participation(s)} estudiantes</b>. Todos vienen marcados; quita los que no cursarán este programa.</p>${p.recommendedGrades ? `<p class="rec-hint">${icon('info')} Recomendamos ${esc(p.hardware)} para ${esc(recText(p))}. Puedes incluir también los demás grados que se muestran.</p>` : ''}${share}`;
 }
 function cfgSharing(s, p) {
   const opts = [['separate', 'Sí, en horarios distintos', 'Un mismo conjunto de equipos se usa con un grupo a la vez.'], ['simultaneous', 'Algunos grupos trabajan al mismo tiempo', 'Elige cuáles coinciden; los demás se tratan como sesiones independientes.'], ['unknown', 'Todavía no lo sé', 'Verás un escenario mínimo y uno máximo hasta confirmar los horarios.']];
@@ -1229,7 +1239,7 @@ function setIva(on) { state.iva = !!on; store(); render(); }
 
 function proposalCard(s, i, row) {
   const p = findP(s.programId), an = analysis(s), note = noteFor(s, p, an), u = row.units;
-  return `<article class="proposal-card"><div class="proposal-main">${media(p, levelKey(s), 'summary-media')}<div class="proposal-content"><div class="proposal-heading"><div><div class="eyebrow">${esc(p.area)}</div><h3>${esc(progTitle(s))}</h3></div><div class="proposal-tools"><button class="icon-btn" onclick="editProgram(${i})" aria-label="Editar ${esc(p.name)}">${icon('edit')}</button><button class="icon-btn" onclick="removeProgram(${i})" aria-label="Quitar ${esc(p.name)}">${icon('trash')}</button></div></div><p>${esc(p.hardware)}${row.status === 'draft' || row.status === 'quote' || row.status === 'plan' ? ' · ' + statusChip(row.status) : ''}</p><div class="groups-line">${entryGroups(s).map(g => `<span>${esc(g.label.replace(', Sección ', ' · ').replace(' · Sección ', ' · '))}</span>`).join('')}</div>${capacityTiles(s, p, u, an)}</div></div>${note.pending && row.status !== 'draft' ? `<div class="proposal-note pending">${icon('info')}<span>${note.text}</span></div>` : ''}${modalityPicker(s, i, u)}</article>`;
+  return `<article class="proposal-card"><div class="proposal-main">${media(p, levelKey(s), 'summary-media')}<div class="proposal-content"><div class="proposal-heading"><div><div class="eyebrow">${esc(p.area)}</div><h3>${esc(progTitle(s))}</h3></div><div class="proposal-tools"><button class="icon-btn" onclick="editProgram(${i})" aria-label="Editar ${esc(p.name)}">${icon('edit')}</button><button class="icon-btn" onclick="removeProgram(${i})" aria-label="Quitar ${esc(p.name)}">${icon('trash')}</button></div></div><p>${esc(p.hardware)}${row.status === 'draft' || row.status === 'quote' || row.status === 'plan' ? ' · ' + statusChip(row.status) : ''}</p><div class="groups-line">${entryGroups(s).map(g => `<span>${esc(g.label.replace(', Sección ', ' · ').replace(' · Sección ', ' · '))}</span>`).join('')}</div>${capacityTiles(s, p, u, an)}</div></div>${note.pending && row.status !== 'draft' ? `<div class="proposal-note pending">${icon('info')}<span>${note.text}</span></div>` : ''}${recNote(s) ? `<div class="proposal-note rec">${icon('info')}<span>${esc(recNote(s))}</span></div>` : ''}${modalityPicker(s, i, u)}</article>`;
 }
 
 // ---- Modalidad por programa (sin precios) e inversión unificada agrupada por modalidad ----
@@ -1395,7 +1405,7 @@ function pdfModel(includeSim = false) {
     if (p.ratio && u) tiles.push({ v: String(u), l: p.hardware + ' en total' }, { v: String(u * p.ratio), l: 'estudiantes trabajan a la vez' });
     return {
       eyebrow: p.area, title: progTitle(s), sub: p.hardware + (r.quote ? ' · ' + modLabel(s) : ''), groups: entryGroups(s).map(g => g.label.replace(', Sección ', ' · ').replace(' · Sección ', ' · ')),
-      photo: s.id, tiles, explain: capacityText(s, p, u, an), note: note.pending && r.status !== 'draft' ? note.text : '',
+      photo: s.id, tiles, explain: capacityText(s, p, u, an), note: [note.pending && r.status !== 'draft' ? note.text : '', recNote(s)].filter(Boolean).join(' '),
       price: r.quote ? { planName: modLabel(s), net: null, pay: modPlain(s), own: isEvo(s.plan) ? { title: 'El equipo se queda en tu institución', text: `Al completar los ${r.quote.months} meses, los ${u} ${p.hardware} pasan a ser propiedad del colegio.` } : null, minNote: '', includes: includesFor(s, p, u) } : null,
       pending: r.status === 'draft' ? 'Falta configurar este programa para calcular su inversión.' : r.status === 'quote' ? 'Requiere cotización personalizada.' : r.status === 'plan' ? 'Falta elegir la modalidad de este programa.' : ''
     };
@@ -1538,7 +1548,7 @@ function coveragePanel() {
   <div class="cov-top"><div class="cov-num"><b>${okN}</b><span>${allOk ? 'estudiantes participan' : 'de ' + cov.total + ' participan'}</span></div><div class="cov-bar"><div class="cov-meter" role="img" aria-label="${okN} de ${cov.total} estudiantes incluidos"><i style="width:${pct}%"></i></div><p>${lead}</p></div></div>
   ${included ? `<ul class="cov-list cov-progs">${included}</ul>` : ''}
   ${pending ? `<div class="cov-group warn"><h3>Pueden sumarse a un programa que ya elegiste</h3><ul class="cov-list">${pending}</ul><p class="cov-help">${n(pendN)} podrían usar ${esc(names)}. <button type="button" class="text-btn" onclick="openAssign()">Configurar ahora</button></p></div>` : ''}
-  ${outside ? `<div class="cov-group out"><h3>No disponibles con los programas elegidos</h3><ul class="cov-list">${outside}</ul><p class="cov-help">${esc(names)} no está disponible para estos grados. Puedes continuar y descargar tu cotización con los grados incluidos. Si quieres atenderlos, <button type="button" class="text-btn" onclick="state.skipped=[];step(3)">elige otro programa para ellos</button>.</p></div>` : ''}</section>`;
+  ${outside ? `<div class="cov-group out"><h3>No disponibles con los programas elegidos</h3><ul class="cov-list">${outside}</ul><p class="cov-help">${esc(names)} no se recomienda o no está disponible para estos grados. Puedes continuar y descargar tu cotización con los grados incluidos. Si quieres atenderlos, <button type="button" class="text-btn" onclick="state.skipped=[];step(3)">elige otro programa para ellos</button>.</p></div>` : ''}</section>`;
 }
 function renderSummary() {
   const list = state.selected;
