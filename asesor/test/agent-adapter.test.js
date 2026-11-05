@@ -366,3 +366,124 @@ test('cada nivel puede llevar programas distintos: robótica en preprimaria; ele
   assert.equal(ctx.summary.uncovered.length,0);
   assert.ok(ctx.summary.total>0);
 });
+
+test('set_level_students registra un nivel completo en una sola acción y un solo cambio',()=>{
+  const x=setup();x.manual(st=>{st.levels=['pre','prim'];st.enroll={};st.selected=[];});
+  const before=x.api.getContext().revision;
+  const r=update(x,'set_level_students',{levelId:'pre',students:10});
+  assert.equal(r.ok,true);assert.equal(r.revision,before+1);
+  const pre=x.api.getContext().groups.filter(g=>g.levelId==='pre');
+  assert.equal(JSON.stringify(pre.map(g=>g.students)),'[10,10,10]');
+  assert.equal(x.api.getContext().groups.filter(g=>g.levelId==='prim').every(g=>g.students===null),true);
+  assert.equal(update(x,'set_level_students',{levelId:'prim',students:15}).ok,true);
+  assert.equal(x.api.getContext().summary.registered,3*10+6*15);
+  assert.equal(x.api.executeTool('undo_cotizador',{expectedRevision:x.api.getContext().revision}).ok,true);
+  assert.equal(x.api.getContext().groups.filter(g=>g.levelId==='prim').every(g=>g.students===null),true);
+});
+test('set_level_students es atómica: nivel no elegido, secciones múltiples o argumentos inválidos no cambian nada',()=>{
+  const x=setup();x.manual(st=>{st.levels=['pre','prim'];st.enroll={p2:{confirmed:true,sections:[{id:'p2-1',name:'A',students:null},{id:'p2-2',name:'B',students:null}]}};st.selected=[];});
+  const snapshot=JSON.stringify(x.state),revision=x.api.getContext().revision;
+  for(const args of [{levelId:'bas',students:10},{levelId:'xx',students:10},{levelId:'prim',students:10},{levelId:'pre',students:-1},{levelId:'pre',students:5,extra:1},{levelId:'pre',students:null}]){
+    const r=update(x,'set_level_students',args);assert.equal(r.ok,false,JSON.stringify(args));
+  }
+  assert.equal(JSON.stringify(x.state),snapshot);assert.equal(x.api.getContext().revision,revision);
+  assert.equal(update(x,'set_level_students',{levelId:'prim',students:10},revision+99).ok,false);
+});
+test('flujo de venta con matrícula por nivel: cada programa solo en sus grados y cotización completa con horarios',()=>{
+  const x=setup();x.manual(st=>{st.levels=[];st.enroll={};st.selected=[];});
+  assert.equal(update(x,'set_levels',{levelIds:['pre','prim']}).ok,true);
+  assert.equal(update(x,'set_level_students',{levelId:'pre',students:10}).ok,true);
+  assert.equal(update(x,'set_level_students',{levelId:'prim',students:15}).ok,true);
+  const gs=x.api.getContext().groups,ids=lv=>gs.filter(g=>g.levelId===lv).map(g=>g.id);
+  assert.equal(update(x,'add_program',{programId:'tale',groupIds:ids('prim')}).ok,false,'Tale-Bot solo preprimaria');
+  assert.equal(update(x,'add_program',{programId:'tale',groupIds:ids('pre')}).ok,true);
+  assert.equal(update(x,'add_program',{programId:'master',groupIds:ids('prim')}).ok,true);
+  assert.equal(x.api.getContext().summary.complete,false,'sin horarios queda en borrador');
+  for(const e of x.api.getContext().selection){assert.equal(update(x,'set_schedule',{entryId:e.id,sharing:'separate',simIds:[]}).ok,true);assert.equal(update(x,'set_modality',{entryId:e.id,plan:'EV8'}).ok,true);}
+  const c=x.api.getContext();assert.equal(c.summary.complete,true);assert.ok(c.summary.total>0);
+});
+test('escenario positivo: un promedio por nivel llena todos los grados de preprimaria, primaria, básico y bachillerato',()=>{
+  const x=setup();x.manual(st=>{st.levels=[];st.enroll={};st.selected=[];});
+  assert.equal(update(x,'set_levels',{levelIds:['pre','prim','bas','bach']}).ok,true);
+  const promedio={pre:10,prim:20,bas:25,bach:30},esperado={pre:3,prim:6,bas:3,bach:2};
+  for(const [levelId,students] of Object.entries(promedio)){
+    const r=update(x,'set_level_students',{levelId,students});assert.equal(r.ok,true,levelId);
+    const grupos=x.api.getContext().groups.filter(g=>g.levelId===levelId);
+    assert.equal(grupos.length,esperado[levelId],levelId);
+    assert.equal(grupos.every(g=>g.students===students),true,levelId+' debe quedar con '+students+' en cada grado');
+  }
+  assert.equal(x.api.getContext().summary.registered,3*10+6*20+3*25+2*30);
+  assert.equal(update(x,'set_students',{gradeId:'p4',sectionId:'p4-1',students:18}).ok,true,'ajuste manual de un solo grado');
+  const prim=x.api.getContext().groups.filter(g=>g.levelId==='prim').map(g=>g.students);
+  assert.equal(JSON.stringify(prim),'[20,20,20,18,20,20]');
+});
+test('escenario positivo: cifra distinta por grado se registra grado por grado con la revisión devuelta',()=>{
+  const x=setup();x.manual(st=>{st.levels=['pre'];st.enroll={};st.selected=[];});
+  let revision=x.api.getContext().revision;
+  for(const [gradeId,students] of [['pk',8],['ki',12],['pr',15]]){
+    const r=update(x,'set_students',{gradeId,sectionId:gradeId+'-1',students},revision);
+    assert.equal(r.ok,true,gradeId);revision=r.revision;
+  }
+  assert.equal(JSON.stringify(x.api.getContext().groups.map(g=>g.students)),'[8,12,15]');
+});
+test('escenario negativo: sin matrícula no se agrega programa y el error permite explicar la causa',()=>{
+  const x=setup();x.manual(st=>{st.levels=['pre'];st.enroll={};st.selected=[];});
+  const snapshot=JSON.stringify(x.state),revision=x.api.getContext().revision;
+  const ids=x.api.getContext().groups.map(g=>g.id);
+  const r=update(x,'add_program',{programId:'tale',groupIds:ids});
+  assert.equal(r.ok,false);assert.ok(r.error||r.message,'debe devolver motivo');
+  assert.equal(JSON.stringify(x.state),snapshot);assert.equal(x.api.getContext().revision,revision);
+});
+test('escenario negativo: cifras inválidas por nivel (texto, decimal, negativa, enorme) se rechazan sin cambios',()=>{
+  const x=setup();x.manual(st=>{st.levels=['pre'];st.enroll={};st.selected=[];});
+  const snapshot=JSON.stringify(x.state),revision=x.api.getContext().revision;
+  for(const students of ['diez',10.5,-3,1001,NaN,undefined]){
+    assert.equal(update(x,'set_level_students',{levelId:'pre',students}).ok,false,String(students));
+  }
+  assert.equal(JSON.stringify(x.state),snapshot);assert.equal(x.api.getContext().revision,revision);
+});
+test('escenario negativo: conflicto de revisión no cambia nada y reintentar con la revisión vigente continúa el flujo',()=>{
+  const x=setup();x.manual(st=>{st.levels=['pre','prim'];st.enroll={};st.selected=[];});
+  const vieja=x.api.getContext().revision;
+  assert.equal(update(x,'set_level_students',{levelId:'pre',students:10},vieja).ok,true);
+  const choque=update(x,'set_level_students',{levelId:'prim',students:15},vieja);
+  assert.equal(choque.ok,false);assert.equal(choque.error,'revision_conflict');
+  assert.equal(x.api.getContext().groups.filter(g=>g.levelId==='prim').every(g=>g.students===null),true);
+  assert.equal(update(x,'set_level_students',{levelId:'prim',students:15}).ok,true);
+  assert.equal(x.api.getContext().summary.registered,3*10+6*15);
+});
+test('grados que la institución no tiene: excludeGradeIds los deja vacíos y la cotización sigue solo con lo indicado',()=>{
+  const x=setup();x.manual(st=>{st.levels=[];st.enroll={};st.selected=[];});
+  assert.equal(update(x,'set_levels',{levelIds:['pre','prim']}).ok,true);
+  assert.equal(update(x,'set_level_students',{levelId:'pre',students:10,excludeGradeIds:['pk']}).ok,true);
+  assert.equal(update(x,'set_level_students',{levelId:'prim',students:20,excludeGradeIds:['p6']}).ok,true);
+  const gs=x.api.getContext().groups,by=id=>gs.find(g=>g.gradeId===id);
+  assert.equal(by('pk').students,null);assert.equal(by('ki').students,10);assert.equal(by('pr').students,10);
+  assert.equal(by('p6').students,null);assert.equal(by('p1').students,20);
+  assert.equal(x.api.getContext().summary.registered,2*10+5*20);
+  const ids=lv=>gs.filter(g=>g.levelId===lv&&g.students>0).map(g=>g.id);
+  assert.equal(ids('pre').length,2);assert.equal(ids('prim').length,5);
+  assert.equal(update(x,'add_program',{programId:'tale',groupIds:ids('pre')}).ok,true);
+  assert.equal(update(x,'add_program',{programId:'master',groupIds:ids('prim')}).ok,true);
+  for(const e of x.api.getContext().selection){assert.equal(update(x,'set_schedule',{entryId:e.id,sharing:'separate',simIds:[]}).ok,true);assert.equal(update(x,'set_modality',{entryId:e.id,plan:'EV8'}).ok,true);}
+  const c=x.api.getContext();assert.equal(c.summary.complete,true);assert.equal(c.summary.uncovered.length,0);
+  assert.equal(c.groups.find(g=>g.gradeId==='p6').students,null,'el grado omitido no aparece como pendiente ni cubierto');
+});
+test('excluir un grado después de registrarlo lo vacía y lo retira de los programas ya agregados',()=>{
+  const x=setup();x.manual(st=>{st.levels=['prim'];st.enroll={};st.selected=[];});
+  assert.equal(update(x,'set_level_students',{levelId:'prim',students:12}).ok,true);
+  const gs=x.api.getContext().groups;
+  assert.equal(update(x,'add_program',{programId:'master',groupIds:gs.map(g=>g.id)}).ok,true);
+  assert.equal(update(x,'set_level_students',{levelId:'prim',students:12,excludeGradeIds:['p6']}).ok,true);
+  const c=x.api.getContext();
+  assert.equal(c.groups.find(g=>g.gradeId==='p6').students,null);
+  assert.equal(c.selection.every(e=>!e.groupIds.includes(gs.find(g=>g.gradeId==='p6').id)),true);
+  assert.equal(c.summary.registered,5*12);
+});
+test('excludeGradeIds inválido (de otro nivel, repetido, todos los grados) no cambia nada',()=>{
+  const x=setup();x.manual(st=>{st.levels=['pre','prim'];st.enroll={};st.selected=[];});
+  const snapshot=JSON.stringify(x.state),revision=x.api.getContext().revision;
+  for(const excludeGradeIds of [['p6'],['pk','pk'],['pk','ki','pr'],['zz'],'pk'])
+    assert.equal(update(x,'set_level_students',{levelId:'pre',students:10,excludeGradeIds}).ok,false,JSON.stringify(excludeGradeIds));
+  assert.equal(JSON.stringify(x.state),snapshot);assert.equal(x.api.getContext().revision,revision);
+});
