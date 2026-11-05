@@ -487,3 +487,36 @@ test('excludeGradeIds inválido (de otro nivel, repetido, todos los grados) no c
     assert.equal(update(x,'set_level_students',{levelId:'pre',students:10,excludeGradeIds}).ok,false,JSON.stringify(excludeGradeIds));
   assert.equal(JSON.stringify(x.state),snapshot);assert.equal(x.api.getContext().revision,revision);
 });
+
+test('context.guide indica el siguiente paso en cada etapa del flujo', () => {
+  const x = setup(); x.manual(st => { st.levels = []; st.enroll = {}; st.selected = []; });
+  assert.equal(x.api.getContext().guide.next, 'levels');
+  assert.equal(update(x, 'set_levels', { levelIds: ['pre', 'prim'] }).ok, true);
+  let g = x.api.getContext().guide;
+  assert.equal(g.next, 'students'); assert.equal(g.levelId, 'pre'); assert.equal(JSON.stringify(g.pendingLevels), '["pre","prim"]');
+  assert.match(g.say, /set_level_students/); assert.match(g.say, /No agregues programas/);
+  assert.equal(update(x, 'set_level_students', { levelId: 'pre', students: 10, excludeGradeIds: ['pk'] }).ok, true);
+  g = x.api.getContext().guide; assert.equal(g.next, 'students'); assert.equal(g.levelId, 'prim');
+  assert.equal(update(x, 'set_level_students', { levelId: 'prim', students: 15, excludeGradeIds: ['p6'] }).ok, true);
+  assert.equal(x.api.getContext().guide.next, 'programs');
+  const gs = x.api.getContext().groups, ids = lv => gs.filter(q => q.levelId === lv && q.students > 0).map(q => q.id);
+  assert.equal(update(x, 'add_program', { programId: 'tale', groupIds: ids('pre') }).ok, true);
+  assert.equal(update(x, 'add_program', { programId: 'master', groupIds: ids('prim') }).ok, true);
+  g = x.api.getContext().guide; assert.equal(g.next, 'schedule'); assert.match(g.say, /set_schedule/); assert.ok(g.entryId);
+  for (const e of x.api.getContext().selection) assert.equal(update(x, 'set_schedule', { entryId: e.id, sharing: 'separate', simIds: [] }).ok, true);
+  g = x.api.getContext().guide; assert.equal(g.next, 'modality'); assert.match(g.say, /set_modality/);
+  for (const e of x.api.getContext().selection) assert.equal(update(x, 'set_modality', { entryId: e.id, plan: 'EV8' }).ok, true);
+  g = x.api.getContext().guide; assert.equal(g.next, 'summary'); assert.equal(x.api.getContext().summary.complete, true);
+});
+test('los errores devuelven una pista accionable para el modelo sin cambiar el mensaje al cliente', () => {
+  const x = setup(); x.manual(st => { st.levels = ['pre']; st.enroll = {}; st.selected = []; });
+  const rev = x.api.getContext().revision;
+  const conflict = update(x, 'set_level_students', { levelId: 'pre', students: 10 }, rev + 7);
+  assert.equal(conflict.error, 'revision_conflict'); assert.match(conflict.hint, new RegExp('expectedRevision ' + rev)); assert.equal(conflict.message, 'Revisa los argumentos y el contexto antes de volver a intentar.');
+  const ids = x.api.getContext().groups.map(q => q.id);
+  const incompatible = update(x, 'add_program', { programId: 'tale', groupIds: ids });
+  assert.equal(incompatible.error, 'incompatible_group'); assert.match(incompatible.hint, /set_level_students/);
+  const missing = x.api.executeTool('update_cotizador', { action: 'set_students', args: { gradeId: 'pk', sectionId: 'pk-1', students: 5 } });
+  assert.equal(missing.ok, false); assert.match(missing.hint, /expectedRevision/);
+  assert.equal(x.api.getContext().revision, rev);
+});

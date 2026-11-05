@@ -97,6 +97,45 @@
     }
     return H.getState();
   }
+  // Guía derivada del estado: solo orienta al agente, no cambia precios ni el flujo manual.
+  function buildGuide(s, gs, selection) {
+    const level = id => C.LEVELS.find(l => l.id === id);
+    if (!s.levels.length) return { next: 'levels', say: 'Pregunta qué niveles tiene el colegio y regístralos con set_levels. No agregues estudiantes ni programas todavía.' };
+    const empty = s.levels.filter(id => !gs.some(g => g.levelId === id && g.students > 0));
+    if (empty.length) {
+      const l = level(empty[0]);
+      return { next: 'students', levelId: l.id, pendingLevels: empty, grades: l.grades.map(([gradeId, name]) => ({ gradeId, name })),
+        say: 'Falta la matrícula de ' + l.name + '. Pregunta cuántos estudiantes hay por grado (o un promedio por grado) y si algún grado no existe. Regístralo con UNA acción set_level_students (levelId "' + l.id + '", students y, si aplica, excludeGradeIds). No agregues programas hasta tener la matrícula; si ese nivel no aplica, quítalo con set_levels.' };
+    }
+    if (!selection.length) return { next: 'programs', say: 'La matrícula está lista. Propone el programa que corresponde a cada nivel según sus grados permitidos y agrégalo con add_program solo con los groupIds que ya tienen estudiantes en grados permitidos para ese programa.' };
+    const pending = selection.find(e => e.status !== 'priced');
+    if (pending) {
+      const name = program(pending.programId).name;
+      const byStatus = {
+        draft: ['schedule', 'Define los horarios de ' + name + ': pregunta una sola vez si sus grupos usan los equipos por separado o a la vez y aplica set_schedule (entryId "' + pending.id + '").'],
+        plan: ['modality', 'Pregunta la modalidad de ' + name + ' (comprar INTEGRA, rentar FLEX o cuotas EV8/EV16) y aplica set_modality (entryId "' + pending.id + '").'],
+        stale: ['calculate', 'Aplica calculate para actualizar el precio de ' + name + '.'],
+        quote: ['unavailable', name + ' no tiene tarifa para cotizar: dilo y sugiere escribir por WhatsApp.']
+      };
+      const [next, say] = byStatus[pending.status] || ['unavailable', 'Revisa el estado de ' + name + ' en el contexto.'];
+      return { next, entryId: pending.id, say };
+    }
+    return { next: 'summary', say: 'La cotización está completa. Lleva a la persona al paso 5 y presenta solo las cifras de summary del cotizador.' };
+  }
+  const ERROR_HINTS = {
+    invalid_arguments: 'Faltó o sobra un campo. Envía siempre action, args y expectedRevision con los campos exactos de context.actions.',
+    revision_conflict: r => 'Tu revisión estaba desactualizada. Repite la acción con expectedRevision ' + r + ' y envía las llamadas de una en una.',
+    incompatible_group: 'Ese grupo no tiene estudiantes o el programa no admite su grado. Registra antes la matrícula (set_level_students) y usa solo grupos con estudiantes en grados permitidos.',
+    unknown_level: 'Ese nivel no está elegido. Usa un levelId de context.groups o elígelo con set_levels.',
+    unknown_grade: 'Ese grado no pertenece a un nivel elegido o a este nivel. Usa los gradeId de context.groups.',
+    unknown_section: 'Esa sección no existe. Usa el id de sección de context.groups.',
+    unknown_entry: 'Ese entryId no existe. Léelo de context.selection; nunca se lo pidas a la persona.',
+    unknown_program: 'Ese programa no existe. Usa un id de context.catalog.',
+    multiple_sections: 'Un grado tiene varias secciones. Usa set_students por sección.',
+    no_grades_left: 'No se pueden excluir todos los grados del nivel. Si el nivel no aplica, quítalo con set_levels.',
+    step_unavailable: 'Esa vista aún no está disponible: falta completar el paso anterior. Sigue context.guide.',
+    invalid_schedule: 'Revisa sharing y simIds en context.actions.set_schedule.'
+  };
   function getContext() {
     const s = observe();
     try {
@@ -111,7 +150,7 @@
       const projectionStudents=M.uniqueStudents(gs,[...new Set(projectionRows.flatMap(r=>r.entry.groupIds))]);
       const projection=projectionRows.length&&projectionStudents?M.simulateAll(projectionRows.map(r=>r.quote),projectionStudents,s.useSuggested!==false?null:s.fee,C.FISCAL,!!s.iva):null;
       const modalities=['INTEGRA','FLEX','EV8','EV16'].map(plan=>{const rows=totals.rows.filter(r=>r.quote&&r.entry.plan===plan);return {plan,count:rows.length,net:rows.reduce((n,r)=>n+r.quote.net,0),tax:rows.reduce((n,r)=>n+r.quote.tax,0),total:rows.reduce((n,r)=>n+r.quote.total,0)};}).filter(m=>m.count);
-      return copy({revision,canUndo:!!undo,step:s.step,policy:{gradeRules:'allowed_grades_with_recommendations',note:'Cada programa tiene grados permitidos (grades): fuera de ellos no se puede usar. Solo si trae recommendedGrades, esos son los ideales y los demás grados permitidos también se pueden usar con aviso (outsideRecommended). Tale-Bot es solo para preprimaria; la realidad virtual, solo básico y bachillerato por seguridad. Recomienda lo ideal sin imponerlo cuando el grado está permitido.'},catalog:{levels:C.LEVELS,programs:C.PROGRAMS,plans:C.PLANS},enrollment:s.enroll,groups:gs,selection,
+      return copy({revision,canUndo:!!undo,step:s.step,guide:buildGuide(s,gs,selection),policy:{gradeRules:'allowed_grades_with_recommendations',note:'Cada programa tiene grados permitidos (grades): fuera de ellos no se puede usar. Solo si trae recommendedGrades, esos son los ideales y los demás grados permitidos también se pueden usar con aviso (outsideRecommended). Tale-Bot es solo para preprimaria; la realidad virtual, solo básico y bachillerato por seguridad. Recomienda lo ideal sin imponerlo cuando el grado está permitido.'},catalog:{levels:C.LEVELS,programs:C.PROGRAMS,plans:C.PLANS},enrollment:s.enroll,groups:gs,selection,
         settings:{iva:s.iva,useSuggested:s.useSuggested,fee:s.fee},
         summary:{projection,modalities,net:totals.net,tax:totals.tax,total:totals.total,complete:totals.complete,pricedCount:totals.pricedCount,unpricedCount:totals.unpricedCount,
           registered:gs.reduce((n,g)=>n+(g.students||0),0),participants:M.uniqueStudents(gs,[...covered]),
@@ -242,7 +281,7 @@
         revision++;observed=signature();observedCommercial=commercialSignature();
       }
       return {ok:true,revision,message:'Cotización actualizada.',context:getContext()};
-    } catch(e) { return {ok:false,error:e.code||'action_failed',message:e.code?'Revisa los argumentos y el contexto antes de volver a intentar.':'No se pudo completar la acción.',revision,context:getContext()}; }
+    } catch(e) { return {ok:false,error:e.code||'action_failed',message:e.code?'Revisa los argumentos y el contexto antes de volver a intentar.':'No se pudo completar la acción.',hint:(h=>typeof h==='function'?h(revision):h)(ERROR_HINTS[e.code]),revision,context:getContext()}; }
   }
   // Scene controls have an independent allowlist and never write quotation state.
   const executeQuoteTool=executeTool;
