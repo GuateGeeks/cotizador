@@ -11,6 +11,7 @@ const icons = {
   play:'<path d="m8 5 11 7-11 7V5Z"/>'
 };
 const svg = name => '<svg class="geeky-symbol" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+icons[name]+'</svg>';
+const WHATSAPP_URL='https://wa.me/50230044972?text='+encodeURIComponent('Hola, necesito ayuda con mi cotización en el cotizador de GuateGeeks.');
 const activityCopy={idle:'Listo para tus ideas',listening:'Te escucho',thinking:'Estoy pensando…',speaking:'Te cuento…',acting:'Estoy ajustando tu propuesta…',connecting:'Conectando contigo…',error:'Vamos a intentarlo de nuevo'};
 const actionCopy={set_levels:'Niveles actualizados.',set_students:'Matrícula actualizada.',add_section:'Sección agregada.',remove_section:'Sección retirada.',add_program:'Programa agregado a tu propuesta.',remove_program:'Programa retirado.',set_program_groups:'Grupos actualizados.',set_schedule:'Horarios actualizados.',set_equipment:'Equipos actualizados.',set_modality:'Modalidad actualizada.',set_tax:'Vista de impuestos actualizada.',set_projection:'Proyección actualizada.',calculate:'Propuesta revisada.'};
 
@@ -28,7 +29,7 @@ export function mountGeeky({config=window.GG_AGENT_CONFIG || {},adapter=()=>wind
     '<div class="geeky-actionbar"><span id="geeky-action" role="status">Tú decides. Yo te ayudo a darle forma.</span><button type="button" id="geeky-undo" hidden>'+svg('undo')+'Deshacer</button></div>',
     '<form id="geeky-form" class="geeky-compose"><label for="geeky-input" class="geeky-sr-only">Tu mensaje para Geeky</label><textarea id="geeky-input" rows="2" maxlength="4000" placeholder="Cuéntame cómo imaginas tu colegio…" enterkeyhint="send"></textarea><div class="geeky-compose-tools"><button type="button" id="geeky-voice" aria-pressed="false">'+svg('mic')+'<span>Activar voz</span></button><button type="submit" id="geeky-send" aria-label="Enviar mensaje">'+svg('send')+'</button></div></form>',
     '<p class="geeky-privacy" id="geeky-privacy">Asistente de IA · micrófono apagado</p>',
-    '<details class="geeky-disclosure"><summary>Sobre tu conversación</summary><p>Geeky es un asistente de IA. Al conversar, OpenAI procesa tus mensajes y el contexto de la cotización. El micrófono solo se usa al activar la voz.</p></details></section>'
+    '<details class="geeky-disclosure"><summary>Sobre tu conversación</summary><p>Geeky es un asistente de IA. Al conversar, OpenAI procesa tus mensajes y el contexto de la cotización. El micrófono solo se usa al activar la voz.</p><p>¿Necesitas ayuda? <a href="'+WHATSAPP_URL+'" target="_blank" rel="noopener noreferrer">Escríbenos por WhatsApp al 3004 4972</a>.</p></details></section>'
   ].join('');
   document.body.append(host);
   const el=id=>host.querySelector('#geeky-'+id);
@@ -60,7 +61,11 @@ export function mountGeeky({config=window.GG_AGENT_CONFIG || {},adapter=()=>wind
     el('motion').innerHTML=svg(characterPaused||campusPaused?'play':'pause');
     updateCharacter();
   }
-  function error(message){hasError=!!message;el('error').textContent=message;el('error').hidden=!message;updateCharacter();}
+  function error(message){
+    hasError=!!message;const box=el('error');box.textContent=message;
+    if(message){const help=document.createElement('a');help.href=WHATSAPP_URL;help.target='_blank';help.rel='noopener noreferrer';help.textContent='Escríbenos por WhatsApp al 3004 4972';box.append(' ',help);}
+    box.hidden=!message;updateCharacter();
+  }
   function gesture(name){try{adapter()?.executeTool?.('control_campus',{action:'gesture',args:{name}});}catch{/* optional scene never blocks chat */}}
   function showMessage({id,role,text,final}){
     let item=messages.get(id);
