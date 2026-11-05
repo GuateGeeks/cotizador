@@ -919,20 +919,25 @@ function renderAssign() {
 }
 
 // ---------- Paso 3: catálogo ----------
-// Cada nivel elige sus propios programas: agregar desde un nivel suma solo los grupos de ESE nivel. Compartir el mismo equipo entre niveles es opcional (al configurar).
+// Agrega el programa con un solo conjunto de equipos para todos los niveles donde aplica (se puede separar por nivel al configurarlo).
+// Un mismo kit sirve a varios niveles: no se duplica por nivel. Por defecto entran los grados recomendados; los demás grados permitidos se pueden sumar al configurar.
 function entryAt(pid, level) { return state.selected.findIndex(s => s.programId === pid && entryGroups(s).some(g => g.levelId === level)); }
 function addProgram(id, level) {
-  const p = findP(id);
+  const p = findP(id), others = state.selected.filter(s => s.programId === id);
   if (entryAt(id, level) !== -1) return;
-  const used = new Set(state.selected.filter(s => s.programId === id).flatMap(s => s.groupIds));
-  const inLevel = groups().filter(g => g.levelId === level && g.students > 0 && compatible(p, g) && !used.has(g.id));
-  // Por defecto, los grados recomendados del nivel; si el nivel solo tiene grados permitidos no recomendados (SPIKE Prime en 1.º a 3.º), esos.
-  const pool = inLevel.some(g => recommended(p, g)) ? inLevel.filter(g => recommended(p, g)) : inLevel;
+  const used = new Set(others.flatMap(s => s.groupIds));
+  let scope = groups().filter(g => g.students > 0 && compatible(p, g) && !used.has(g.id));
+  // Si el programa ya se separó por nivel, agregar desde otro nivel suma solo ese nivel.
+  if (others.length) scope = scope.filter(g => g.levelId === level);
+  // Grados recomendados; si el nivel desde donde se agrega no tiene ninguno (SPIKE Prime en 1.º a 3.º), entran sus grados permitidos.
+  const hereRec = scope.some(g => g.levelId === level && recommended(p, g));
+  const pool = scope.filter(g => recommended(p, g) || (!hereRec && g.levelId === level));
   if (!pool.length) return;
+  const lv = [...new Set(pool.map(g => g.levelId))];
   ui.preview = null; // agregar confirma el alcance: la vista previa deja de ser necesaria
-  state.selected.push({ id: id + '@' + level, programId: id, groupIds: pool.map(g => g.id), sharing: pool.length > 1 ? null : 'separate', simIds: [], units: null, stations: false, plan: 'UNDECIDED', flexBimestres: 1, confirmed: false, calc: null });
+  state.selected.push({ id: id + '@' + lv.join('+'), programId: id, groupIds: pool.map(g => g.id), sharing: pool.length > 1 ? null : 'separate', simIds: [], units: null, stations: false, plan: 'UNDECIDED', flexBimestres: 1, confirmed: false, calc: null });
   render();
-  notify('Programa agregado para ' + findL(level).name + '. Puedes elegir otros programas en los demás niveles.');
+  notify(lv.length > 1 ? p.hardware + ' se agregó para ' + joinY(lv.map(x => findL(x).name)) + ' con el mismo equipo. Puedes separarlo por nivel al configurarlo.' : 'Programa agregado. Puedes seguir explorando otros niveles.');
 }
 // Separa un programa compartido en un conjunto de equipos por nivel.
 function splitByLevel() {
