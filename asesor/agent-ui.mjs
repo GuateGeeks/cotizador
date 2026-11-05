@@ -12,7 +12,7 @@ const icons = {
 };
 const svg = name => '<svg class="geeky-symbol" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+icons[name]+'</svg>';
 const activityCopy={idle:'Listo para tus ideas',listening:'Te escucho',thinking:'Estoy pensando…',speaking:'Te cuento…',acting:'Estoy ajustando tu propuesta…',connecting:'Conectando contigo…',error:'Vamos a intentarlo de nuevo'};
-const actionCopy={set_levels:'Niveles actualizados.',set_students:'Matrícula actualizada.',add_section:'Sección agregada.',remove_section:'Sección retirada.',add_program:'Programa agregado a tu propuesta.',remove_program:'Programa retirado.',set_program_groups:'Grupos actualizados.',set_schedule:'Horarios actualizados.',set_equipment:'Equipos actualizados.',set_modality:'Modalidad actualizada.',set_tax:'Vista de impuestos actualizada.',set_projection:'Proyección actualizada.',calculate:'Propuesta revisada.'};
+const actionCopy={set_levels:'Niveles actualizados.',set_students:'Matrícula actualizada.',set_level_students:'Matrícula del nivel actualizada.',add_section:'Sección agregada.',remove_section:'Sección retirada.',add_program:'Programa agregado a tu propuesta.',remove_program:'Programa retirado.',set_program_groups:'Grupos actualizados.',set_schedule:'Horarios actualizados.',set_equipment:'Equipos actualizados.',set_modality:'Modalidad actualizada.',set_tax:'Vista de impuestos actualizada.',set_projection:'Proyección actualizada.',calculate:'Propuesta revisada.'};
 
 export function mountGeeky({config=window.GG_AGENT_CONFIG || {},adapter=()=>window.GGCotizadorAgent,createClient}={}) {
   if(config.enabled===false || document.getElementById('geeky-companion'))return;

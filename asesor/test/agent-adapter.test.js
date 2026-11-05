@@ -366,3 +366,39 @@ test('cada nivel puede llevar programas distintos: robótica en preprimaria; ele
   assert.equal(ctx.summary.uncovered.length,0);
   assert.ok(ctx.summary.total>0);
 });
+
+test('set_level_students registra un nivel completo en una sola acción y un solo cambio',()=>{
+  const x=setup();x.manual(st=>{st.levels=['pre','prim'];st.enroll={};st.selected=[];});
+  const before=x.api.getContext().revision;
+  const r=update(x,'set_level_students',{levelId:'pre',students:10});
+  assert.equal(r.ok,true);assert.equal(r.revision,before+1);
+  const pre=x.api.getContext().groups.filter(g=>g.levelId==='pre');
+  assert.equal(JSON.stringify(pre.map(g=>g.students)),'[10,10,10]');
+  assert.equal(x.api.getContext().groups.filter(g=>g.levelId==='prim').every(g=>g.students===null),true);
+  assert.equal(update(x,'set_level_students',{levelId:'prim',students:15}).ok,true);
+  assert.equal(x.api.getContext().summary.registered,3*10+6*15);
+  assert.equal(x.api.executeTool('undo_cotizador',{expectedRevision:x.api.getContext().revision}).ok,true);
+  assert.equal(x.api.getContext().groups.filter(g=>g.levelId==='prim').every(g=>g.students===null),true);
+});
+test('set_level_students es atómica: nivel no elegido, secciones múltiples o argumentos inválidos no cambian nada',()=>{
+  const x=setup();x.manual(st=>{st.levels=['pre','prim'];st.enroll={p2:{confirmed:true,sections:[{id:'p2-1',name:'A',students:null},{id:'p2-2',name:'B',students:null}]}};st.selected=[];});
+  const snapshot=JSON.stringify(x.state),revision=x.api.getContext().revision;
+  for(const args of [{levelId:'bas',students:10},{levelId:'xx',students:10},{levelId:'prim',students:10},{levelId:'pre',students:-1},{levelId:'pre',students:5,extra:1},{levelId:'pre',students:null}]){
+    const r=update(x,'set_level_students',args);assert.equal(r.ok,false,JSON.stringify(args));
+  }
+  assert.equal(JSON.stringify(x.state),snapshot);assert.equal(x.api.getContext().revision,revision);
+  assert.equal(update(x,'set_level_students',{levelId:'prim',students:10},revision+99).ok,false);
+});
+test('flujo de venta con matrícula por nivel: cada programa solo en sus grados y cotización completa con horarios',()=>{
+  const x=setup();x.manual(st=>{st.levels=[];st.enroll={};st.selected=[];});
+  assert.equal(update(x,'set_levels',{levelIds:['pre','prim']}).ok,true);
+  assert.equal(update(x,'set_level_students',{levelId:'pre',students:10}).ok,true);
+  assert.equal(update(x,'set_level_students',{levelId:'prim',students:15}).ok,true);
+  const gs=x.api.getContext().groups,ids=lv=>gs.filter(g=>g.levelId===lv).map(g=>g.id);
+  assert.equal(update(x,'add_program',{programId:'tale',groupIds:ids('prim')}).ok,false,'Tale-Bot solo preprimaria');
+  assert.equal(update(x,'add_program',{programId:'tale',groupIds:ids('pre')}).ok,true);
+  assert.equal(update(x,'add_program',{programId:'master',groupIds:ids('prim')}).ok,true);
+  assert.equal(x.api.getContext().summary.complete,false,'sin horarios queda en borrador');
+  for(const e of x.api.getContext().selection){assert.equal(update(x,'set_schedule',{entryId:e.id,sharing:'separate',simIds:[]}).ok,true);assert.equal(update(x,'set_modality',{entryId:e.id,plan:'EV8'}).ok,true);}
+  const c=x.api.getContext();assert.equal(c.summary.complete,true);assert.ok(c.summary.total>0);
+});
