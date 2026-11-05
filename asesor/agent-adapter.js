@@ -16,7 +16,7 @@
   const actions = {
     set_levels: shape({ levelIds: { ...ids, minItems: 0 } }),
     set_students: shape({ gradeId: str, sectionId: str, students: nullable(num(0, 1000)) }),
-    set_level_students: shape({ levelId: str, students: num(0, 1000) }),
+    set_level_students: shape({ levelId: str, students: num(0, 1000), excludeGradeIds: { ...ids, minItems: 0 } }, ['excludeGradeIds']),
     add_section: shape({ gradeId: str, students: nullable(num(0, 1000)) }, ['students']),
     remove_section: shape({ gradeId: str, sectionId: str }),
     add_program: shape({ programId: str, groupIds: ids }),
@@ -157,7 +157,7 @@
   function mutate(s,action,a) {
     const original = JSON.stringify(s), previousGroups = groups(s);
     const signatures = new Map(s.selected.map(e => [e.id, M.entrySignature(e,previousGroups)]));
-    let e, levelSectionIds = [];
+    let e, levelSectionIds = [], excludedSectionIds = [];
     if(has(a,'entryId'))e=findEntry(s,a.entryId);
     switch(action) {
       case 'set_levels': if(a.levelIds.some(id=>!C.LEVELS.some(l=>l.id===id)))fail('unknown_level'); s.levels=C.LEVELS.filter(l=>a.levelIds.includes(l.id)).map(l=>l.id);break;
@@ -165,9 +165,16 @@
       case 'set_level_students': {
         // Matrícula de todos los grados de un nivel en una sola acción atómica (un promedio por grado). Solo aplica si cada grado tiene una única sección.
         const lv=C.LEVELS.find(l=>l.id===a.levelId);if(!lv||!s.levels.includes(lv.id))fail('unknown_level');
-        const rows=lv.grades.map(([gid])=>ensureGrade(s,gid));
-        if(rows.some(g=>g.sections.length!==1))fail('multiple_sections');
-        rows.forEach(g=>{g.sections[0].students=a.students;levelSectionIds.push(g.sections[0].id);});break;
+        // excludeGradeIds: grados que la institución no tiene; quedan sin estudiantes y fuera de cualquier programa.
+        const skip=a.excludeGradeIds||[];
+        if(skip.some(id=>!lv.grades.some(([gid])=>gid===id)))fail('unknown_grade');
+        if(skip.length>=lv.grades.length)fail('no_grades_left');
+        const rows=lv.grades.map(([gid])=>[gid,ensureGrade(s,gid)]);
+        if(rows.some(([gid,g])=>!skip.includes(gid)&&g.sections.length!==1))fail('multiple_sections');
+        rows.forEach(([gid,g])=>{
+          if(skip.includes(gid)){g.sections.forEach(sec=>{sec.students=null;excludedSectionIds.push(sec.id);levelSectionIds.push(sec.id);});}
+          else{g.sections[0].students=a.students;levelSectionIds.push(g.sections[0].id);}
+        });break;
       }
       case 'add_section': {const g=ensureGrade(s,a.gradeId);if(g.sections.length>=12)fail('section_limit');let id;do{id=a.gradeId+'-agent-'+(++sequence);}while(groups(s).some(g=>g.id===id));g.sections.push({id,name:'',students:a.students??null});break;}
       case 'remove_section': {const g=ensureGrade(s,a.gradeId);if(!g.sections.some(sec=>sec.id===a.sectionId))fail('unknown_section');g.sections=g.sections.filter(sec=>sec.id!==a.sectionId);if(!g.sections.length)g.sections=[{id:a.gradeId+'-agent-'+(++sequence),name:'A',students:null}];break;}
@@ -198,7 +205,7 @@
       const removedIds = new Set();
       if (action === 'set_levels') { const currentIds=new Set(groups(s).map(g=>g.id)); previousGroups.filter(g=>!currentIds.has(g.id)).forEach(g=>removedIds.add(g.id)); }
       if (action === 'remove_section' || action === 'set_students' && !(a.students > 0)) removedIds.add(a.sectionId);
-      if (action === 'set_level_students' && !(a.students > 0)) levelSectionIds.forEach(id=>removedIds.add(id));
+      if (action === 'set_level_students') (a.students > 0 ? excludedSectionIds : levelSectionIds).forEach(id=>removedIds.add(id));
       const touchedIds = new Set();
       if (e && s.selected.includes(e)) touchedIds.add(e.id);
       if (action === 'set_students') s.selected.filter(e=>e.groupIds.includes(a.sectionId)).forEach(e=>touchedIds.add(e.id));
