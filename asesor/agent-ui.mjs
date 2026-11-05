@@ -37,7 +37,7 @@ export function mountGeeky({config=window.GG_AGENT_CONFIG || {},adapter=()=>wind
   const favicon=document.querySelector('link[rel="icon"]');
   if(favicon){const fallback=new Image();fallback.src=new URL('guategeeks-ojos.png',favicon.href).href;fallback.alt='';fallback.className='geeky-character-fallback';face.append(fallback);}
   let client=null,connecting=null,connected=false,voice=false,busy=false,voiceBusy=false,generation=0,messageCount=0,opened=false;
-  let failStreak=0,activity='idle',hasError=false,character=null,characterPaused=false,campusPaused=false,lastAction='';
+  let activity='idle',hasError=false,character=null,characterPaused=false,campusPaused=false,lastAction='';
   const messages=new Map();
   const displayState=()=>hasError?'error':busy?'connecting':activity;
   function updateCharacter(){
@@ -88,12 +88,8 @@ export function mountGeeky({config=window.GG_AGENT_CONFIG || {},adapter=()=>wind
     else if(event.type==='message')showMessage(event);
     else if(event.type==='error')error(event.message);
     else if(event.type==='action'){
-      if(event.result?.ok===false){
-        // El agente se corrige solo tras un fallo aislado (revisión vieja, grupo sin matrícula): al cliente solo se le avisa si se repite.
-        if(++failStreak>=2)error(event.result.message||'No pude aplicar ese cambio. Revisemos los datos.');
-      }
+      if(event.result?.ok===false)error(event.result.message||'No pude aplicar ese cambio. Revisemos los datos.');
       else if(event.name!=='get_cotizador_context'){
-        failStreak=0;
         el('action').textContent=lastAction||event.result?.message||'Listo. Tu propuesta está actualizada.';
         character?.react('success');gesture('nod');lastAction='';
       }
