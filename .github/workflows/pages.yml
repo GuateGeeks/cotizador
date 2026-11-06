@@ -48,14 +48,16 @@ jobs:
           cp -R asesor/vendor _site/vendor
           cp -R assets _site/assets
           node --input-type=module <<'JS'
-          import {writeFileSync} from 'node:fs';
+          import {readFileSync, writeFileSync} from 'node:fs';
           const endpoint = process.env.GEEKY_AGENT_ENDPOINT || '';
           // Keep the checked-in public configuration when no repository override exists.
           if (!endpoint) process.exit(0);
           if (endpoint && (new URL(endpoint).protocol !== 'https:' || new URL(endpoint).username || new URL(endpoint).password)) {
             throw new Error('GEEKY_AGENT_ENDPOINT must be a public HTTPS endpoint without credentials');
           }
-          writeFileSync('_site/agent-config.js', 'window.GG_AGENT_CONFIG = Object.freeze(' + JSON.stringify({enabled:true, endpoint}) + ');\n');
+          // El interruptor `enabled` sale siempre del archivo versionado: el override del endpoint nunca reactiva a Geeky.
+          const enabled = !/enabled:\s*false/.test(readFileSync('asesor/agent-config.js', 'utf8'));
+          writeFileSync('_site/agent-config.js', 'window.GG_AGENT_CONFIG = Object.freeze(' + JSON.stringify({enabled, endpoint}) + ');\n');
           JS
           # el asesor vive en la raíz del sitio: sus rutas ../assets pasan a assets
           sed -i.bak 's#\.\./assets/#assets/#g' _site/index.html _site/asesor.js _site/config.js
