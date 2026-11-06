@@ -19,7 +19,7 @@
     set_level_students: shape({ levelId: str, students: num(0, 1000), excludeGradeIds: { ...ids, minItems: 0 } }, ['excludeGradeIds']),
     add_section: shape({ gradeId: str, students: nullable(num(0, 1000)) }, ['students']),
     remove_section: shape({ gradeId: str, sectionId: str }),
-    add_program: shape({ programId: str, groupIds: ids }),
+    add_program: shape({ programId: str, groupIds: ids }, ['groupIds']),
     remove_program: shape(entry),
     set_program_groups: shape({ ...entry, groupIds: ids }),
     set_schedule: shape({ ...entry, sharing: en(['separate', 'simultaneous', 'unknown']), simIds: { ...ids, minItems: 0 } }),
@@ -127,6 +127,18 @@
     if (!s.enroll[gid]) s.enroll[gid]=copy(M.gradeData(s.enroll,gid));
     return s.enroll[gid];
   }
+  // Grados por defecto cuando el agente no los indica: la misma regla que el alta manual (un solo kit para todos los niveles,
+  // grados recomendados y sin solapar kits de la misma área). El cliente ajusta los grados después; el motor no cambia.
+  function defaultGroupIds(s, programId) {
+    const p=program(programId), rec=g=>(p.recommendedGrades||p.grades).includes(g.gradeId);
+    const used=new Set(s.selected.filter(x=>x.programId===programId).flatMap(x=>x.groupIds));
+    const areaCovered=new Set(s.selected.filter(x=>x.programId!==programId&&program(x.programId).area===p.area).flatMap(x=>x.groupIds));
+    const scope=groups(s).filter(g=>g.students>0&&p.grades.includes(g.gradeId)&&!used.has(g.id)&&!areaCovered.has(g.id));
+    // Si ningún grado recomendado tiene estudiantes (SPIKE Prime con solo 1.º a 3.º), entran los permitidos libres.
+    const pool=scope.some(rec)?scope.filter(rec):scope;
+    if(!pool.length)fail('no_free_groups');
+    return pool.map(g=>g.id);
+  }
   function participating(s,e,ids_) {
     const gs=groups(s), p=program(e.programId);
     for (const id of ids_) {
@@ -182,7 +194,8 @@
         if(!program(a.programId))fail('unknown_program');
         let id; do { id=a.programId+'@agent-'+(++sequence); } while(s.selected.some(e=>e.id===id));
         e={id,programId:a.programId,groupIds:[],sharing:null,simIds:[],units:null,stations:false,plan:'UNDECIDED',flexBimestres:1,confirmed:false,calc:null};
-        participating(s,e,a.groupIds);e.groupIds=a.groupIds.slice();s.selected.push(e);break;
+        const chosen=a.groupIds||defaultGroupIds(s,a.programId);
+        participating(s,e,chosen);e.groupIds=chosen.slice();s.selected.push(e);break;
       }
       case 'remove_program':s.selected=s.selected.filter(x=>x!==e);break;
       case 'set_program_groups':participating(s,e,a.groupIds);e.groupIds=a.groupIds.slice();e.units=null;e.stations=false;e.simIds=[];e.sharing=e.groupIds.length===1?'separate':null;break;

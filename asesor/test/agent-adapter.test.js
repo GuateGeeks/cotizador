@@ -487,3 +487,61 @@ test('excludeGradeIds inválido (de otro nivel, repetido, todos los grados) no c
     assert.equal(update(x,'set_level_students',{levelId:'pre',students:10,excludeGradeIds}).ok,false,JSON.stringify(excludeGradeIds));
   assert.equal(JSON.stringify(x.state),snapshot);assert.equal(x.api.getContext().revision,revision);
 });
+
+test('add_program sin groupIds usa los grados por defecto del cotizador: un solo kit para todos los niveles', () => {
+  const x = setup(); x.manual(st => { st.levels = []; st.enroll = {}; st.selected = []; });
+  assert.equal(update(x, 'set_levels', { levelIds: ['prim', 'bas', 'bach'] }).ok, true);
+  for (const [levelId, students] of [['prim', 20], ['bas', 25], ['bach', 30]]) assert.equal(update(x, 'set_level_students', { levelId, students }).ok, true);
+  const r = update(x, 'add_program', { programId: 'master' });
+  assert.equal(r.ok, true);
+  const sel = x.api.getContext().selection;
+  assert.equal(sel.length, 1, 'una sola entrada, no una por nivel');
+  assert.equal(JSON.stringify(sel[0].groupIds), JSON.stringify(['p1-1', 'p2-1', 'p3-1', 'p4-1', 'p5-1', 'p6-1', 'b1-1', 'b2-1', 'b3-1', 'bc4-1', 'bc5-1']));
+});
+test('add_program sin groupIds reparte kits de la misma área sin repetir grados', () => {
+  const x = setup(); x.manual(st => { st.levels = []; st.enroll = {}; st.selected = []; });
+  update(x, 'set_levels', { levelIds: ['prim', 'bas', 'bach'] });
+  for (const [levelId, students] of [['prim', 20], ['bas', 25], ['bach', 30]]) update(x, 'set_level_students', { levelId, students });
+  update(x, 'add_program', { programId: 'master' });
+  const master = x.api.getContext().selection[0];
+  assert.equal(update(x, 'set_program_groups', { entryId: master.id, groupIds: ['p1-1', 'p2-1', 'p3-1'] }).ok, true);
+  assert.equal(update(x, 'add_program', { programId: 'spike' }).ok, true);
+  const spike = x.api.getContext().selection.find(e => e.programId === 'spike');
+  assert.equal(JSON.stringify(spike.groupIds), JSON.stringify(['p4-1', 'p5-1', 'p6-1', 'b1-1', 'b2-1', 'b3-1', 'bc4-1', 'bc5-1']));
+  const all = x.api.getContext().selection.flatMap(e => e.groupIds);
+  assert.equal(new Set(all).size, all.length, 'ningún grado con dos kits de robótica');
+});
+test('add_program sin groupIds respeta los grados permitidos y las exclusiones', () => {
+  const x = setup(); x.manual(st => { st.levels = []; st.enroll = {}; st.selected = []; });
+  update(x, 'set_levels', { levelIds: ['pre', 'prim', 'bas'] });
+  update(x, 'set_level_students', { levelId: 'pre', students: 10, excludeGradeIds: ['pk'] });
+  update(x, 'set_level_students', { levelId: 'prim', students: 20 });
+  update(x, 'set_level_students', { levelId: 'bas', students: 25 });
+  assert.equal(update(x, 'add_program', { programId: 'tale' }).ok, true);
+  assert.equal(JSON.stringify(x.api.getContext().selection[0].groupIds), JSON.stringify(['ki-1', 'pr-1']), 'Tale-Bot solo preprimaria y sin el grado omitido');
+  assert.equal(update(x, 'add_program', { programId: 'drones' }).ok, true);
+  assert.equal(JSON.stringify(x.api.getContext().selection[1].groupIds), JSON.stringify(['p4-1', 'p5-1', 'p6-1', 'b1-1', 'b2-1', 'b3-1']), 'drones desde 4.º primaria');
+  assert.equal(update(x, 'add_program', { programId: 'immersive' }).ok, true);
+  assert.equal(JSON.stringify(x.api.getContext().selection[2].groupIds), JSON.stringify(['b1-1', 'b2-1', 'b3-1']), 'realidad virtual solo básico');
+});
+test('add_program sin groupIds: SPIKE Prime con solo 1.º a 3.º entra con los permitidos y sin grados libres no cambia nada', () => {
+  const x = setup(); x.manual(st => { st.levels = []; st.enroll = {}; st.selected = []; });
+  update(x, 'set_levels', { levelIds: ['prim'] });
+  for (const gradeId of ['p1', 'p2', 'p3']) update(x, 'set_students', { gradeId, sectionId: gradeId + '-1', students: 20 });
+  assert.equal(update(x, 'add_program', { programId: 'spike' }).ok, true);
+  assert.equal(JSON.stringify(x.api.getContext().selection[0].groupIds), JSON.stringify(['p1-1', 'p2-1', 'p3-1']));
+  const snapshot = JSON.stringify(x.state), rev = x.api.getContext().revision;
+  const again = update(x, 'add_program', { programId: 'spike' });
+  assert.equal(again.ok, false); assert.equal(again.error, 'no_free_groups');
+  const noTale = update(x, 'add_program', { programId: 'tale' });
+  assert.equal(noTale.ok, false); assert.equal(noTale.error, 'no_free_groups');
+  assert.equal(JSON.stringify(x.state), snapshot); assert.equal(x.api.getContext().revision, rev);
+});
+test('add_program con groupIds explícitos sigue igual y se valida como antes', () => {
+  const x = setup(); x.manual(st => { st.levels = ['prim']; st.enroll = {}; st.selected = []; });
+  update(x, 'set_level_students', { levelId: 'prim', students: 20 });
+  assert.equal(update(x, 'add_program', { programId: 'master', groupIds: ['p1-1', 'p2-1'] }).ok, true);
+  assert.equal(JSON.stringify(x.api.getContext().selection[0].groupIds), JSON.stringify(['p1-1', 'p2-1']));
+  assert.equal(update(x, 'add_program', { programId: 'tale', groupIds: ['p1-1'] }).error, 'incompatible_group');
+  assert.equal(update(x, 'add_program', { programId: 'master', groupIds: ['p1-1'] }).error, 'incompatible_group', 'un grado no se repite dentro del mismo programa');
+});
