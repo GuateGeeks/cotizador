@@ -1,9 +1,9 @@
 {
   "repository": "https://github.com/GuateGeeks/geeky-agent",
   "version": "0.1.0",
-  "commit": "6cc7767939f0ee3c047c241411d2525f594ebb69",
+  "commit": "1473c9eb01612fc452a7447da1ab439a8a6e6ccb",
   "files": {
-    "client.mjs": "dc6bc884201a8ba056abc11f4e11e394d531e3582101b4ff85ba8845a5ad2879",
-    "protocol.mjs": "f331ec157085c67746547863370018a5ead29f8cd57cd1cd12960db0a4644188"
+    "client.mjs": "6df51e08d1db436cac118eb920d651b197c9dd42a609d7027401d1b30e4412fe",
+    "protocol.mjs": "edd26614f34177672159c540a8fcdac76b33cf27aaf094ddb7c6c095df85d3df"
   }
 }
